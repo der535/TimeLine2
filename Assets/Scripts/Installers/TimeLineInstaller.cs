@@ -1,0 +1,102 @@
+using System;
+using EventBus;
+using TimeLine.EventBus.Events.Misc;
+using TimeLine.Input;
+using UnityEngine;
+using Zenject;
+
+namespace TimeLine.Installers
+{
+    public class TimeLineInstaller : MonoInstaller
+    {
+        [SerializeField] private TimeLineConverter timeLineConverter;
+        [SerializeField] private Main main;
+        [SerializeField] private BarBeatCounter barBeatCounter;
+        [SerializeField] private TimeLineRenderer timeLineRenderer;
+        [SerializeField] private TimeMarkerRenderer timeMarkerRenderer;
+        [SerializeField] private CurrentTimeMarkerRenderer currentTimeMarkerRenderer;
+        [SerializeField] private Scroll scroll;
+        [SerializeField] private CursorBeatPosition cursorBeatPosition;
+        [SerializeField] private TrackObjectSpawner trackObjectSpawner;
+        [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
+        [SerializeField] private SettingPanel settingPanel;
+        [SerializeField] private BranchCollection branchCollection;
+        [SerializeField] private TrackObjectStorage trackObjectStorage;
+        [SerializeField] private TrackStorage trackStorage;
+        [SerializeField] private TreeViewUI treeViewUI;
+        [SerializeField] private TimeLineSettings settings;
+        [SerializeField] private TimeLineScroll timeLineScroll;
+        [SerializeField] private SceneObjectAddKeyFrame sceneObjectAddKeyFrame;
+        
+        [SerializeField] private MainObjects mainObjects;
+        
+        private GameEventBus _gameEventBus;
+        
+        // ReSharper disable Unity.PerformanceAnalysis
+        public override void InstallBindings()
+        {
+            Container.Bind<TimeLineConverter>().FromInstance(timeLineConverter).AsSingle();
+            Container.Bind<BarBeatCounter>().FromInstance(barBeatCounter).AsSingle();
+            Container.Bind<TimeLineRenderer>().FromInstance(timeLineRenderer).AsSingle();
+            Container.Bind<TimeMarkerRenderer>().FromInstance(timeMarkerRenderer).AsSingle();
+            Container.Bind<CurrentTimeMarkerRenderer>().FromInstance(currentTimeMarkerRenderer).AsSingle();
+            Container.Bind<Scroll>().FromInstance(scroll).AsSingle();
+            Container.Bind<CursorBeatPosition>().FromInstance(cursorBeatPosition).AsSingle();
+            Container.Bind<TrackObjectSpawner>().FromInstance(trackObjectSpawner).AsSingle();
+            Container.Bind<KeyframeTrackStorage>().FromInstance(keyframeTrackStorage).AsSingle();
+            Container.Bind<SettingPanel>().FromInstance(settingPanel).AsSingle();
+            Container.Bind<BranchCollection>().FromInstance(branchCollection).AsSingle();
+            Container.Bind<TrackObjectStorage>().FromInstance(trackObjectStorage).AsSingle();
+            Container.Bind<TrackStorage>().FromInstance(trackStorage).AsSingle();
+            Container.Bind<TreeViewUI>().FromInstance(treeViewUI).AsSingle();
+            Container.Bind<TimeLineScroll>().FromInstance(timeLineScroll).AsSingle();
+            Container.Bind<SceneObjectAddKeyFrame>().FromInstance(sceneObjectAddKeyFrame).AsSingle();
+            
+            
+            // Сначала создаем и привязываем EventBus
+            _gameEventBus = new GameEventBus();
+            Container.Bind<GameEventBus>().FromInstance(_gameEventBus).AsSingle();
+            
+            // Затем привязываем MainObjects и внедряем зависимости
+            Container.Bind<MainObjects>().FromInstance(mainObjects).AsSingle();
+            mainObjects.Init(_gameEventBus);
+            
+            Container.Bind<TimeLineSettings>().FromInstance(settings).AsSingle();
+            Container.Bind<Main>().FromInstance(main).AsSingle();
+        }
+    }
+
+    [Serializable]
+    public class MainObjects
+    {
+        [SerializeField] private RectTransform canvasRectTransform;
+        [SerializeField] private RectTransform contentRectTransform;
+
+        private GameEventBus _gameEventBus;
+
+        public void Init(GameEventBus gameEventBus)
+        {
+            _gameEventBus = gameEventBus;
+        }
+
+        public RectTransform CanvasRectTransform
+        {
+            get => canvasRectTransform;
+            set => canvasRectTransform = value;
+        }
+
+        public RectTransform ContentRectTransform => contentRectTransform;
+
+        public void NotifyContentRectChanged()
+        {
+            if (_gameEventBus != null)
+            {
+                _gameEventBus.Raise(new ContentRectTransformChangedEvent(contentRectTransform));
+            }
+            else
+            {
+                Debug.LogWarning("EventBus is not initialized! ContentRectTransform change not notified.");
+            }
+        }
+    }
+}

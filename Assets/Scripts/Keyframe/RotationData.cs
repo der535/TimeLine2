@@ -1,0 +1,26 @@
+﻿namespace TimeLine.Keyframe
+{
+    using UnityEngine;
+
+    [System.Serializable]
+    public class RotationData : AnimationData
+    {
+        public Quaternion rotation;
+    
+        public RotationData(Quaternion rotation)
+        {
+            this.rotation = rotation;
+        }
+    
+        public override AnimationData Interpolate(AnimationData other, float t)
+        {
+            RotationData otherRot = (RotationData)other;
+            return new RotationData(Quaternion.Lerp(rotation, otherRot.rotation, t));
+        }
+    
+        public override void Apply(GameObject target)
+        {
+            target.transform.rotation = rotation;
+        }
+    }
+}
