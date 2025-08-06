@@ -1,4 +1,5 @@
-﻿namespace TimeLine.Keyframe
+﻿
+namespace TimeLine.Keyframe
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -19,55 +20,41 @@
 
         public Keyframe AddKeyframe(float time, AnimationData adata = null)
         {
-            // Ищем существующий ключевой кадр
-            Keyframe keyframe = keyframes.FirstOrDefault(k => Mathf.Approximately(k.time, time));
-            if (keyframe == null)
-            {
-                keyframe = new Keyframe(time);
-                keyframes.Add(keyframe);
-                SortKeyframes();
-            }
+            Keyframe newKeyframe = new Keyframe(time);
 
-            if (adata != null)
-            {
-                keyframe.AddData(adata);
-            }
-            return keyframe;
+            // if (adata == null)
+            // {
+            //     foreach (IAnimatable animatable in targetObject.GetComponents<IAnimatable>())
+            //     {
+            //         foreach (AnimationData data in animatable.GetAnimationData())
+            //         {
+            //             newKeyframe.AddData(data);
+            //         }
+            //     }
+            // }
+            newKeyframe.AddData(adata);
+            
+
+            keyframes.Add(newKeyframe);
+            SortKeyframes();
+            return newKeyframe;
         }
 
         public void Evaluate(float time)
         {
             if (keyframes.Count == 0 || targetObject == null) return;
-
-            // Бинарный поиск ближайшего ключевого кадра
-            int low = 0;
-            int high = keyframes.Count - 1;
-            int closestIndex = 0;
-
-            while (low <= high)
-            {
-                int mid = (low + high) / 2;
-                if (keyframes[mid].time < time)
-                {
-                    closestIndex = mid;
-                    low = mid + 1;
-                }
-                else
-                {
-                    high = mid - 1;
-                }
-            }
-
-            // Используем оптимизацию для последовательного воспроизведения
-            if (closestIndex < lastFoundIndex) lastFoundIndex = 0;
-            closestIndex = Mathf.Max(lastFoundIndex, closestIndex);
-            lastFoundIndex = closestIndex;
-
-            Keyframe prev = keyframes[closestIndex];
-            Keyframe next = (closestIndex < keyframes.Count - 1) ? keyframes[closestIndex + 1] : null;
-
+        
+            // Находим текущий и следующий ключевые кадры
+            Keyframe prev = keyframes.LastOrDefault(k => k.time <= time);
+            Keyframe next = keyframes.FirstOrDefault(k => k.time >= time);
+            
+            Debug.Log(prev?.time);
+            Debug.Log(next?.time);
+        
             if (prev == null && next == null) return;
-
+            
+            Debug.Log("Супер");
+        
             // Если только один ключевой кадр
             if (prev == null) next.Apply(targetObject);
             else if (next == null) prev.Apply(targetObject);
@@ -75,10 +62,12 @@
             else if (prev != next)
             {
                 float t = Mathf.InverseLerp(prev.time, next.time, time);
+                Debug.Log("Интерполяция");
                 prev.Interpolate(next, targetObject, t);
             }
             else
             {
+                Debug.Log("Применение");
                 prev.Apply(targetObject);
             }
         }

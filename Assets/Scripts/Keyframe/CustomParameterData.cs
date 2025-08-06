@@ -18,18 +18,23 @@
 
         public override AnimationData Interpolate(AnimationData other, float t)
         {
-            if (!(other is CustomParameterData otherData)) return this;
-
-            if (Value is float floatVal && otherData.Value is float otherFloat)
-                return new CustomParameterData(ParameterName, Mathf.Lerp(floatVal, otherFloat, t));
-    
-            if (Value is Vector2 vec2Val && otherData.Value is Vector2 otherVec2)
-                return new CustomParameterData(ParameterName, Vector2.Lerp(vec2Val, otherVec2, t));
-    
-            if (Value is int intVal && otherData.Value is int otherInt)
-                return new CustomParameterData(ParameterName, (int)Mathf.Lerp(intVal, otherInt, t));
-    
-            return this; // Без интерполяции
+            CustomParameterData otherData = (CustomParameterData)other;
+            
+            if (valueType == typeof(float))
+            {
+                float a = (float)Value;
+                float b = (float)otherData.Value;
+                return new CustomParameterData(ParameterName, Mathf.Lerp(a, b, t));
+            }
+            else if (valueType == typeof(Vector2))
+            {
+                Vector2 a = (Vector2)Value;
+                Vector2 b = (Vector2)otherData.Value;
+                return new CustomParameterData(ParameterName, Vector2.Lerp(a, b, t));
+            }
+            // Добавьте другие типы по необходимости
+            
+            return this; // Если тип не поддерживает интерполяцию
         }
 
         public override void Apply(GameObject target)

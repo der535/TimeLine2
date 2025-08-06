@@ -20,7 +20,7 @@
     
         public override void Apply(GameObject target)
         {
-            
+            target.GetComponent<TintComponent>().Tint = value;
         }
     }
 }

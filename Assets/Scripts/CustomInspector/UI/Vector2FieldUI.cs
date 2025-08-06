@@ -1,8 +1,6 @@
 ﻿using System;
-using EventBus;
 using TMPro;
 using UnityEngine;
-using Zenject;
 
 namespace TimeLine
 {
@@ -10,10 +8,9 @@ namespace TimeLine
     {
         [SerializeField] private TMP_InputField x;
         [SerializeField] private TMP_InputField y;
-        
-        public override void Setup(IField<Vector2> field, Action onValueChanged, GameObject target, string component, SceneObjectAddKeyFrame sceneObjectAddKeyFrame, GameEventBus eventBus)
+        public override void Setup(IField<Vector2> field, Action onValueChanged)
         {
-            base.Setup(field, onValueChanged, target, component, sceneObjectAddKeyFrame, eventBus);
+            base.Setup(field, onValueChanged);
             
             x.text = field.Value.ToString();
             x.onEndEdit.AddListener(arg0 =>
