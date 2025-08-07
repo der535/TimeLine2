@@ -63,9 +63,9 @@ GameObject:
   - component: {fileID: 2960653962264612017}
   - component: {fileID: 3414714404056203588}
   - component: {fileID: 899381088387071087}
-  - component: {fileID: 6631782479619589105}
+  - component: {fileID: 7689157657677522894}
   m_Layer: 5
-  m_Name: IntFieldUI
+  m_Name: FloatFieldUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -131,7 +131,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &6631782479619589105
+--- !u!114 &7689157657677522894
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -140,7 +140,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2514367800227592561}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ee5a5c55dba4e47a5d719f20037633a, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e69cc659d078b940b64da10c1bc7942, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1255220235600383408}

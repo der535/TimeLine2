@@ -2,6 +2,7 @@ using EventBus;
 using TimeLine;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.Installers;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

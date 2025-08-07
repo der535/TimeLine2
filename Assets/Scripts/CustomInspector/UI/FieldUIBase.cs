@@ -10,7 +10,7 @@ namespace TimeLine
         [SerializeField] private TextMeshProUGUI text;
         [SerializeField] private Button keyframe;
 
-        public virtual void Setup(IField<T> field, Action onValueChanged)
+        public virtual void Setup(IField<T> field, Action onChangeCustomInspector)
         {
             text.text = field.Name;
         }

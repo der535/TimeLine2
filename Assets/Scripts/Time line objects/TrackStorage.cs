@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TimeLine.Installers;
+using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;

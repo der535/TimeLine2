@@ -13,9 +13,7 @@
         {
             this.time = time;
         }
-
-
-
+        
         public void AddData(AnimationData data)
         {
             animationData.Add(data);

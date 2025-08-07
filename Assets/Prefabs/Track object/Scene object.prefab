@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 4208151903064431207}
   - component: {fileID: 842520435012109194}
   - component: {fileID: 2618708430259583678}
+  - component: {fileID: 7871515140614823592}
   - component: {fileID: 5381749590687444745}
   - component: {fileID: 4699521894587136033}
-  - component: {fileID: 7871515140614823592}
   m_Layer: 0
   m_Name: Scene object
   m_TagString: Untagged
@@ -104,6 +104,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spriteRenderer: {fileID: 842520435012109194}
+--- !u!114 &7871515140614823592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379475969384284283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 665565b7b9da1b54490c7084c123328e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  xPosition:
+    name: Position/X
+    value: 0
+  yPosition:
+    name: Position/Y
+    value: 0
+  xRotation:
+    name: Rotation/X
+    value: 0
+  yRotation:
+    name: Rotation/Y
+    value: 0
+  zRotation:
+    name: Rotation/Z
+    value: 0
 --- !u!114 &5381749590687444745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -162,21 +189,3 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &7871515140614823592
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 379475969384284283}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 665565b7b9da1b54490c7084c123328e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _field1:
-    name: Field1
-    value: 0
-  _field2:
-    name: Field2
-    value: {x: 0, y: 0}

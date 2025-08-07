@@ -1,24 +1,26 @@
-using TimeLine;
 using TMPro;
 using UnityEngine;
 using Zenject;
 
-public class SetTime : MonoBehaviour
+namespace TimeLine.Input
 {
-    [SerializeField] private TimeLineSettings settings;
-    [Space]
-    [SerializeField] private TMP_InputField inputField;
+    public class SetTime : MonoBehaviour
+    {
+        [SerializeField] private TimeLineSettings settings;
+        [Space]
+        [SerializeField] private TMP_InputField inputField;
     
-    private Main _main;
+        private Main _main;
 
-    [Inject]
-    private void Construct(Main main)
-    {
-        _main = main;
-    }
+        [Inject]
+        private void Construct(Main main)
+        {
+            _main = main;
+        }
 
-    private void Start()
-    {
-        inputField.onEndEdit.AddListener(time => _main.SetTime(float.Parse(time)));
+        private void Start()
+        {
+            inputField.onEndEdit.AddListener(time => _main.SetTime(float.Parse(time)));
+        }
     }
 }

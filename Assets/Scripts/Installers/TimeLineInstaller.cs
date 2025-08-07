@@ -1,7 +1,6 @@
-using System;
 using EventBus;
-using TimeLine.EventBus.Events.Misc;
 using TimeLine.Input;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -63,40 +62,6 @@ namespace TimeLine.Installers
             
             Container.Bind<TimeLineSettings>().FromInstance(settings).AsSingle();
             Container.Bind<Main>().FromInstance(main).AsSingle();
-        }
-    }
-
-    [Serializable]
-    public class MainObjects
-    {
-        [SerializeField] private RectTransform canvasRectTransform;
-        [SerializeField] private RectTransform contentRectTransform;
-
-        private GameEventBus _gameEventBus;
-
-        public void Init(GameEventBus gameEventBus)
-        {
-            _gameEventBus = gameEventBus;
-        }
-
-        public RectTransform CanvasRectTransform
-        {
-            get => canvasRectTransform;
-            set => canvasRectTransform = value;
-        }
-
-        public RectTransform ContentRectTransform => contentRectTransform;
-
-        public void NotifyContentRectChanged()
-        {
-            if (_gameEventBus != null)
-            {
-                _gameEventBus.Raise(new ContentRectTransformChangedEvent(contentRectTransform));
-            }
-            else
-            {
-                Debug.LogWarning("EventBus is not initialized! ContentRectTransform change not notified.");
-            }
         }
     }
 }

@@ -2,7 +2,7 @@ using TimeLine.Installers;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.TimeLine
 {
     public class TimeLineConverter : MonoBehaviour
     {
@@ -57,7 +57,12 @@ namespace TimeLine
         
         public float GetAnchorPositionFromBeatPosition(float time)
         {
-            return time * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan);
+            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
+        }
+        
+        public float GetAnchorPosition(float time, float distanceBetweenBeats, float pan)
+        {
+            return time * (distanceBetweenBeats + pan);
         }
     }
 }

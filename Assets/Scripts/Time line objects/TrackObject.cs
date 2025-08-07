@@ -2,6 +2,7 @@ using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.Installers;
+using TimeLine.TimeLine;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
