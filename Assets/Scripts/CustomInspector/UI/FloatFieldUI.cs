@@ -2,22 +2,25 @@
 using System.Globalization;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TimeLine
 {
-    public class FloatFieldUI : FieldUIBase<float>
+    public class FloatFieldUI : MonoBehaviour
     {
+        [SerializeField] private TextMeshProUGUI parameterName;
         [SerializeField] private TMP_InputField inputField;
-        public override void Setup(IField<float> field, Action onChangeCustomInspector)
+        [SerializeField] private Button createKeyframeButton;
+
+        public void Setup(FloatParameter floatParameter, Action createKeyframe)
         {
-            base.Setup(field, onChangeCustomInspector);
+            parameterName.text = floatParameter.Name;
+            inputField.text = floatParameter.Value.ToString(CultureInfo.InvariantCulture);
             
-            inputField.text = field.Value.ToString(CultureInfo.InvariantCulture);
-            inputField.onEndEdit.AddListener(arg0 =>
-            {
-                field.Value = float.Parse(arg0);
-                onChangeCustomInspector.Invoke();
-            });
+            floatParameter.OnValueChanged += () => inputField.text = floatParameter.Value.ToString(CultureInfo.InvariantCulture);
+
+            inputField.onEndEdit.AddListener(arg0 => floatParameter.Value = float.Parse(arg0));
+            createKeyframeButton.onClick.AddListener(() => createKeyframe());
         }
     }
 }

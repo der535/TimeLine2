@@ -7,74 +7,79 @@ namespace TimeLine.Keyframe
 
     public class Track
     {
-        public GameObject targetObject;
-        public string trackName;
-        public List<Keyframe> keyframes = new List<Keyframe>();
-        private int lastFoundIndex = 0;
+        public GameObject TargetObject;
+        public string TrackName;
+        public List<Keyframe> Keyframes = new List<Keyframe>();
+        private int _lastFoundIndex = 0;
 
         public Track(GameObject target, string trackName)
         {
-            this.trackName = trackName;
-            targetObject = target;
+            this.TrackName = trackName;
+            TargetObject = target;
         }
 
         public Keyframe AddKeyframe(float time, AnimationData adata = null)
         {
             Keyframe newKeyframe = new Keyframe(time);
-
-            // if (adata == null)
-            // {
-            //     foreach (IAnimatable animatable in targetObject.GetComponents<IAnimatable>())
-            //     {
-            //         foreach (AnimationData data in animatable.GetAnimationData())
-            //         {
-            //             newKeyframe.AddData(data);
-            //         }
-            //     }
-            // }
+            
             newKeyframe.AddData(adata);
             
-
-            keyframes.Add(newKeyframe);
+            Keyframes.Add(newKeyframe);
             SortKeyframes();
             return newKeyframe;
         }
 
+        public void RemoveKeyframe(Keyframe keyframe)
+        {
+            Keyframes.Remove(keyframe);
+            SortKeyframes();
+        }
+        
+        public void AddKeyframe(Keyframe newKeyframe)
+        {
+            Keyframes.Add(newKeyframe);
+            SortKeyframes();
+        }
+
         public void Evaluate(float time)
         {
-            if (keyframes.Count == 0 || targetObject == null) return;
+            if (Keyframes.Count == 0 || TargetObject == null) return;
         
             // Находим текущий и следующий ключевые кадры
-            Keyframe prev = keyframes.LastOrDefault(k => k.time <= time);
-            Keyframe next = keyframes.FirstOrDefault(k => k.time >= time);
-            
-            Debug.Log(prev?.time);
-            Debug.Log(next?.time);
+            Keyframe prev = Keyframes.LastOrDefault(k => k.time <= time);
+            Keyframe next = Keyframes.FirstOrDefault(k => k.time >= time);
         
             if (prev == null && next == null) return;
             
-            Debug.Log("Супер");
-        
             // Если только один ключевой кадр
-            if (prev == null) next.Apply(targetObject);
-            else if (next == null) prev.Apply(targetObject);
+            if (prev == null) next.Apply(TargetObject);
+            else if (next == null) prev.Apply(TargetObject);
             // Интерполяция между кадрами
             else if (prev != next)
             {
                 float t = Mathf.InverseLerp(prev.time, next.time, time);
-                Debug.Log("Интерполяция");
-                prev.Interpolate(next, targetObject, t);
+                prev.Interpolate(next, TargetObject, t);
             }
             else
             {
-                Debug.Log("Применение");
-                prev.Apply(targetObject);
+                prev.Apply(TargetObject);
             }
         }
-
-        private void SortKeyframes()
+        
+        // Добавленный метод копирования трека
+        public Track Copy(GameObject target)
         {
-            keyframes = keyframes.OrderBy(k => k.time).ToList();
+            // Создаем новый трек с теми же параметрами
+            Track newTrack = new Track(target, this.TrackName);
+            
+            // Глубокое копирование ключевых кадров
+            newTrack.Keyframes = this.Keyframes.Select(kf => kf.Clone()).ToList();
+            return newTrack;
+        }
+
+        public void SortKeyframes()
+        {
+            Keyframes = Keyframes.OrderBy(k => k.time).ToList();
         }
     }
 }

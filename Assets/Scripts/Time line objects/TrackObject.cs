@@ -17,16 +17,28 @@ namespace TimeLine
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private RectTransform rect;
 
+        #region Вспомогательные переменные
+
         private TimeLineSettings _timeLineSettings;
         private TrackObjectStorage _trackObjectStorage;
         private TrackStorage _trackStorage;
         private TimeLineConverter _timeLineConverter;
-        private Scroll _scroll;
         private MainObjects _mainObjects;
-        private Main _main;
         private GameEventBus _gameEventBus;
         private TimeLineScroll _timeLineScroll;
+        private GridUI _gridUI;
 
+        private bool _isDragging;
+        private bool _isResizing;
+        private bool _isRightResizing;
+
+        private float _mouseOffset;
+        private float _startResizingDuraction;
+        private float _startResizingTime;
+
+        private Vector2 _startMousePosition;
+
+        #endregion
 
         internal float StartTime { get; private set; }
         internal float TimeDuraction { get; private set; }
@@ -34,10 +46,6 @@ namespace TimeLine
         internal float BeatDuraction { get; private set; } //В секундах
         internal string Name { get; private set; }
 
-        public RectTransform RectTransform => rect;
-        
-        private bool _isDragging;
-        private float _mouseOffset;
 
         [Inject]
         private void Construct(
@@ -45,20 +53,18 @@ namespace TimeLine
             TrackObjectStorage trackObjectStorage,
             TrackStorage trackStorage,
             TimeLineConverter timeLineConverter,
-            Scroll scroll,
             MainObjects mainObjects,
             GameEventBus gameEventBus,
-            Main main,
-            TimeLineScroll timeLineScroll)
+            TimeLineScroll timeLineScroll,
+            GridUI gridUI)
         {
+            _gridUI = gridUI;
             _timeLineSettings = timeLineSettings;
             _trackObjectStorage = trackObjectStorage;
             _trackStorage = trackStorage;
             _timeLineConverter = timeLineConverter;
-            _scroll = scroll;
             _mainObjects = mainObjects;
             _gameEventBus = gameEventBus;
-            _main = main;
             _timeLineScroll = timeLineScroll;
         }
 
@@ -68,16 +74,22 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<PanEvent>(OnScrollPan);
         }
 
+        private void OnDestroy()
+        {
+            _gameEventBus.UnsubscribeFrom<ScrollTimeLineEvent>(OnScroll);
+            _gameEventBus.UnsubscribeFrom<PanEvent>(OnScrollPan);
+        }
+
         internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, float startTime)
         {
             StartTime = startTime;
             TrackLine = trackLine;
 
             BeatDuraction = trackObjectSo.startLiveTime;
-            TimeDuraction =  _timeLineConverter.GetTimeFromBeatPosition(BeatDuraction);
+            TimeDuraction = _timeLineConverter.GetTimeFromBeatPosition(BeatDuraction);
 
-
-            rect.sizeDelta = new Vector2(BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
+            rect.sizeDelta = new Vector2(
+                BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
                 rect.sizeDelta.y);
 
             Name = trackObjectSo.name;
@@ -89,36 +101,102 @@ namespace TimeLine
                     rect.anchoredPosition.y);
         }
 
+        private Vector2 GetMousePosition()
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _mainObjects.CanvasRectTransform,
+                Mouse.current.position.ReadValue(),
+                _mainObjects.MainCamera,
+                out var currentLocalPosition);
+            return currentLocalPosition;
+        }
+
+        public void SetResizeRight(bool isResizing)
+        {
+            _startResizingDuraction = TimeDuraction;
+            _isRightResizing = true;
+            _isResizing = isResizing;
+            if (_isResizing)
+                _startMousePosition = GetMousePosition();
+        }
+
+        public void SetResizeLeft(bool isResizing)
+        {
+            _startResizingDuraction = TimeDuraction;
+            _startResizingTime = StartTime;
+            _isRightResizing = false;
+            _isResizing = isResizing;
+            if (_isResizing)
+                _startMousePosition = GetMousePosition();
+            else
+            {
+
+            }
+        }
+
         private void Update()
         {
             Drag();
+            if (_isResizing)
+            {
+                if (_isRightResizing)
+                {
+                    ChangeDuration(_startResizingDuraction + (_timeLineConverter.GetTimeFromAnchorPosition(
+                        GetMousePosition().x - _startMousePosition.x
+                    )));
+                }
+                else
+                {
+                    float newTime = _timeLineConverter.GetTimeFromAnchorPosition(
+                        _startMousePosition.x - GetMousePosition().x);
+                    
+                    float difference = (newTime + _startResizingDuraction) - _startResizingDuraction;
+                    
+                    print(difference);
+                    print(_startResizingTime);
+                    print(_startResizingTime - difference);
+                    
+                    StartTime = _gridUI.RoundTimeToGrid(_startResizingTime - difference);
+                    
+                    ChangeDuration(_startResizingDuraction + newTime,
+                        -((newTime + _startResizingDuraction) - _startResizingDuraction));
+                }
+            }
         }
 
-        public void ChangeDuration(float duration)
+        public void ChangeDuration(float duration, float timeOffset = 0)
         {
-            TimeDuraction = duration;
+            TimeDuraction = _gridUI.RoundTimeToGrid(duration);
             BeatDuraction = _timeLineConverter.GetBeatPositionFromTime(TimeDuraction);
             
-            rect.sizeDelta = new Vector2(BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
+            
+            
+
+            
+            
+            
+
+            rect.sizeDelta = new Vector2(
+                BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
                 rect.sizeDelta.y);
-            rect.anchoredPosition =
-                new Vector2(
-                    _timeLineConverter.GetAnchorPositionFromTime(StartTime) + rect.sizeDelta.x / 2,
-                    rect.anchoredPosition.y);
+            CalculatePosition();
         }
 
         private void OnScroll(ref ScrollTimeLineEvent scrollTimeLineEvent)
         {
-            rect.anchoredPosition =
-                new Vector2(
-                    _timeLineConverter.GetAnchorPositionFromTime(StartTime) + rect.sizeDelta.x / 2,
-                    rect.anchoredPosition.y);
+            CalculatePosition();
         }
 
         public void OnScrollPan(ref PanEvent panEvent)
         {
-            rect.sizeDelta = new Vector2(BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset),
+            rect.sizeDelta = new Vector2(
+                BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset),
                 rect.sizeDelta.y);
+            CalculatePosition();
+        }
+
+        private void CalculatePosition()
+        {
             rect.anchoredPosition =
                 new Vector2(
                     _timeLineConverter.GetAnchorPositionFromTime(StartTime) + rect.sizeDelta.x / 2,
@@ -127,8 +205,8 @@ namespace TimeLine
 
         private void UpdatePosition()
         {
-            StartTime = _timeLineConverter.GetTimeFromBeatPosition(
-                _timeLineConverter.GetCursorBeatPosition(_timeLineScroll.Pan, (rect.sizeDelta.x / 2)+_mouseOffset));
+            StartTime = _gridUI.RoundTimeToGrid(_timeLineConverter.GetTimeFromBeatPosition(
+                _timeLineConverter.GetCursorBeatPosition(_timeLineScroll.Pan, (rect.sizeDelta.x / 2) + _mouseOffset)));
             _trackObjectStorage.UpdatePositionSelectedTrackObject();
         }
 
@@ -147,12 +225,12 @@ namespace TimeLine
         {
             float mousePosition =
                 Mouse.current.position.ReadValue().x - _mainObjects.CanvasRectTransform.sizeDelta.x / 2;
-
-            _mouseOffset = mousePosition - rect.anchoredPosition.x;
             
+            _mouseOffset =  mousePosition - rect.anchoredPosition.x;
+
             _isDragging = true;
         }
-        
+
         public void OnMouseUp()
         {
             _isDragging = false;
@@ -160,21 +238,15 @@ namespace TimeLine
 
         private void Drag()
         {
-            if(_isDragging == false) return;
+            if (_isDragging == false) return;
             
             TrackLine = _trackStorage.CheckTracks(this);
-            if(transform.parent != TrackLine.RectTransform) transform.parent = TrackLine.RectTransform;
+            if (transform.parent != TrackLine.RectTransform) transform.parent = TrackLine.RectTransform;
             rect.offsetMax = new Vector2(rect.offsetMax.x, 0);
             rect.offsetMin = new Vector2(rect.offsetMin.x, 0);
-
-            float mousePosition =
-                Mouse.current.position.ReadValue().x - _mainObjects.CanvasRectTransform.sizeDelta.x / 2;
             
-
-            rect.anchoredPosition =
-                new Vector2(mousePosition - _mouseOffset,
-                    rect.anchoredPosition.y);
             UpdatePosition();
+            CalculatePosition();
         }
     }
 }

@@ -32,7 +32,7 @@ namespace TimeLine
         {
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.sceneObject.SetActive(trackObject.trackObject.StartTime < smoothTimeEvent.Time &&
+                trackObject.sceneObject.SetActive(trackObject.trackObject.StartTime <= smoothTimeEvent.Time &&
                                                   trackObject.trackObject.TimeDuraction + trackObject.trackObject.StartTime  >
                                                   smoothTimeEvent.Time);
             }
@@ -41,6 +41,11 @@ namespace TimeLine
         internal void Add(GameObject sceneObject, TrackObject selectedObject, Branch branch)
         {
             _trackObjects.Add(new TrackObjectData(sceneObject, selectedObject, branch));
+        }
+
+        internal void Remove(TrackObjectData trackObjectData)
+        {
+            _trackObjects.Remove(trackObjectData);
         }
 
         internal TrackObjectData GetTrackObjectData(GameObject gObject)

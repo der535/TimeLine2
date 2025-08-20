@@ -1,96 +1,60 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace TimeLine
 {
-    public class TransformComponent : MonoBehaviour, IFieldProvider
+    public class TransformComponent : MonoBehaviour, ICopyableComponent
     {
-        [SerializeField] private FloatField xPosition = new("Position/X", 0);
-        [SerializeField] private FloatField yPosition = new("Position/Y", 0);
-        [Space]
-        [SerializeField] private FloatField xRotation = new("Rotation/X", 0);
-        [SerializeField] private FloatField yRotation = new("Rotation/Y", 0);
-        [SerializeField] private FloatField zRotation = new("Rotation/Z", 0);
-        // [Space]
-        // [SerializeField] private FloatField xScale = new("Scale/X", 0);
-        // [SerializeField] private FloatField yScale = new("Scale/Y", 0);
-        // [SerializeField] private FloatField zScale = new("Scale/Z", 0);
+        public FloatParameter XPosition = new("Position-X", 0);
+        public FloatParameter YPosition = new("Position-Y", 0);
 
-        public Action OnChangeCustomInspector { get; set; }
-
+        public FloatParameter XRotation = new("Rotation-X", 0);
+        public FloatParameter YRotation = new("Rotation-Y", 0);
+        public FloatParameter ZRotation = new("Rotation-Z", 0);
+        
+        public FloatParameter XScale = new("Scale-X", 1);
+        public FloatParameter YScale = new("Scale-Y", 1);
+        
         private void Awake()
         {
-            OnChangeCustomInspector += (() =>
-            {
-                XPosition = xPosition.Value;
-                YPosition = yPosition.Value;
-                XRotation = xRotation.Value;
-                YRotation = yRotation.Value;
-                ZRotation = zRotation.Value;
-            });
+            XPosition.OnValueChanged += () => transform.position = new Vector3(XPosition.Value, transform.position.y, transform.position.z);
+            YPosition.OnValueChanged += () => transform.position = new Vector3(transform.position.x, YPosition.Value, transform.position.z);
+
+            XRotation.OnValueChanged += () => transform.rotation = Quaternion.Euler(XRotation.Value, transform.rotation.y, transform.rotation.z);
+            YRotation.OnValueChanged += () => transform.rotation = Quaternion.Euler(transform.rotation.x,YRotation.Value, transform.rotation.z);
+            ZRotation.OnValueChanged += () => transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, ZRotation.Value);
+            
+            XScale.OnValueChanged += () => transform.localScale = new Vector3(XScale.Value, transform.localScale.y, transform.localScale.z);
+            YScale.OnValueChanged += () => transform.localScale = new Vector3(transform.localScale.x, YScale.Value, transform.localScale.z);
         }
 
-        public IEnumerable<IField> GetFields()
+        public void CopyTo(Component targetComponent)
         {
-            yield return xPosition;
-            yield return yPosition;
-            yield return xRotation;
-            yield return yRotation;
-            yield return zRotation;
-            // yield return xScale;
-            // yield return yScale;
-            // yield return zScale;
-        }
-        
-        public float XPosition
-        {
-            get => transform.position.x;
-            set
+            if (targetComponent is TransformComponent other)
             {
-                transform.position = new Vector3(value, transform.position.y, transform.position.z);
-                xPosition.Value = value;
+                other.XPosition.Value = XPosition.Value;
+                print($"Оп вставил {other.XPosition.Value}");
+                other.YPosition.Value = YPosition.Value;
+                
+                other.XRotation.Value = XRotation.Value;
+                other.YRotation.Value = YRotation.Value;
+                other.ZRotation.Value = ZRotation.Value;
+                
+                other.XScale.Value = XScale.Value;
+                other.YScale.Value = YScale.Value;
+            }
+            else
+            {
+                throw new ArgumentException("Target component must be of type TransformComponent");
             }
         }
 
-        public float YPosition
+        public Component Copy(GameObject targetGameObject)
         {
-            get => transform.position.y;
-            set
-            {
-                transform.position = new Vector3(transform.position.x, value, transform.position.z);
-                yPosition.Value = value;
-            }
-        }
-
-        public float XRotation
-        {
-            get => transform.rotation.x;
-            set
-            {
-                transform.rotation = Quaternion.Euler(value, transform.rotation.y, transform.rotation.z);
-                yRotation.Value = value;
-            }
-        }
-
-        public float YRotation
-        {
-            get => transform.rotation.y;
-            set
-            {
-                transform.rotation = Quaternion.Euler(transform.rotation.x, value, transform.rotation.z);
-                yRotation.Value = value;
-            }
-        }
-
-        public float ZRotation
-        {
-            get => transform.rotation.z;
-            set
-            {
-                transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, value);
-                zRotation.Value = value;
-            }
+            var component = targetGameObject.GetComponent<TransformComponent>();
+            CopyTo(component);
+            print("Оп скопировал");
+            return component;
         }
     }
 }

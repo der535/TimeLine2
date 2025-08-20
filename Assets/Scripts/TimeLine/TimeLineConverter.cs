@@ -12,7 +12,8 @@ namespace TimeLine.TimeLine
         private TimeLineSettings _timeLineSettings;
 
         [Inject]
-        private void Construct(MainObjects mainObjects, Scroll scroll, Main main, TimeLineScroll timeLineScroll, TimeLineSettings timeLineSettings)
+        private void Construct(MainObjects mainObjects, Scroll scroll, Main main, TimeLineScroll timeLineScroll,
+            TimeLineSettings timeLineSettings)
         {
             _mainObjects = mainObjects;
             _main = main;
@@ -38,11 +39,16 @@ namespace TimeLine.TimeLine
                    (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan);
         }
 
+        public float GetTimeFromAnchorPosition(float anchorPosition)
+        {
+            return GetTimeFromBeatPosition(anchorPosition / _timeLineSettings.DistanceBetweenBeatLines);
+        }
+
         public float GetTimeFromBeatPosition(float beatPosition)
         {
             return 60 / _main.MusicDataSo.bpm * beatPosition;
         }
-        
+
         public float GetBeatPositionFromTime(float time)
         {
             return (time * _main.MusicDataSo.bpm) / 60f;
@@ -54,12 +60,12 @@ namespace TimeLine.TimeLine
             return GetAnchorPositionFromBeatPosition(time / (60 / _main.MusicDataSo.bpm)) +
                    _mainObjects.ContentRectTransform.offsetMin.x;
         }
-        
+
         public float GetAnchorPositionFromBeatPosition(float time)
         {
             return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
         }
-        
+
         public float GetAnchorPosition(float time, float distanceBetweenBeats, float pan)
         {
             return time * (distanceBetweenBeats + pan);

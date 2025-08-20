@@ -35,6 +35,11 @@ namespace TimeLine
                 track.Evaluate(smoothTimeEvent.Time - trackObject.StartTime);
             }
         }
+
+        public void RemoveTrack(TreeNode treeNode)
+        {
+            tracks.Remove(treeNode);
+        }
         
         public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject)
         {
@@ -51,6 +56,7 @@ namespace TimeLine
 
         public void AddKeyframe(TreeNode treeNode, float time, AnimationData data)
         {
+            print(time);
             Track track;
             (track, _) = tracks[treeNode];
             _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));

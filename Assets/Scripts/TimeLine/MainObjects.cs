@@ -10,6 +10,7 @@ namespace TimeLine.Installers
     {
         [SerializeField] private RectTransform canvasRectTransform;
         [SerializeField] private RectTransform contentRectTransform;
+        [SerializeField] private Camera mainCamera;
 
         private GameEventBus _gameEventBus;
 
@@ -23,6 +24,8 @@ namespace TimeLine.Installers
             get => canvasRectTransform;
             set => canvasRectTransform = value;
         }
+        
+        public Camera MainCamera => mainCamera;
 
         public RectTransform ContentRectTransform => contentRectTransform;
 

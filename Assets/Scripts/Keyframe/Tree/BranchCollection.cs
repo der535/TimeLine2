@@ -1,14 +1,31 @@
 using System.Collections.Generic;
 using System.Linq;
+using NaughtyAttributes;
 using UnityEngine;
 
 public class BranchCollection : MonoBehaviour
 {
     public List<Branch> Branches { get; } = new List<Branch>();
 
+    [Button]
+    public void printTree()
+    {
+        foreach (var branch in Branches)
+        {
+            branch.PrintTree();
+        }
+    }
+    
     public Branch AddBranch(string id, string name)
     {
         var newBranch = new Branch(id, name);
+        Branches.Add(newBranch);
+        return newBranch;
+    }
+
+    public Branch CopyBranch(Branch branch, string id)
+    {
+        var newBranch = new Branch(branch, id);
         Branches.Add(newBranch);
         return newBranch;
     }

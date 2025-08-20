@@ -2,6 +2,7 @@ using EventBus;
 using TimeLine.Input;
 using TimeLine.TimeLine;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine.Installers
@@ -26,6 +27,7 @@ namespace TimeLine.Installers
         [SerializeField] private TimeLineSettings settings;
         [SerializeField] private TimeLineScroll timeLineScroll;
         [SerializeField] private SceneObjectAddKeyFrame sceneObjectAddKeyFrame;
+        [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -50,6 +52,7 @@ namespace TimeLine.Installers
             Container.Bind<TreeViewUI>().FromInstance(treeViewUI).AsSingle();
             Container.Bind<TimeLineScroll>().FromInstance(timeLineScroll).AsSingle();
             Container.Bind<SceneObjectAddKeyFrame>().FromInstance(sceneObjectAddKeyFrame).AsSingle();
+            Container.Bind<GridUI>().FromInstance(gridUI).AsSingle();
             
             
             // Сначала создаем и привязываем EventBus

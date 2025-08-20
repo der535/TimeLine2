@@ -17,10 +17,13 @@ namespace TimeLine
         private Main _main;
         private GameEventBus _gameEventBus;
         private TimeLineSettings _timeLineSettings;
+        private GridUI _gridUI;
 
         [Inject]
-        private void Construct(Main main, GameEventBus gameEventBus, TimeLineSettings timeLineSettings)
+        private void Construct(Main main, GameEventBus gameEventBus, TimeLineSettings timeLineSettings,
+            GridUI gridUI)
         {
+            _gridUI = gridUI;
             _main = main;
             _gameEventBus = gameEventBus;
             _timeLineSettings = timeLineSettings;
@@ -46,16 +49,23 @@ namespace TimeLine
 
         public void OnDragTrackObject(ref DragTrackObjectEvent dragTrackObjectEvent)
         {
-            UpdatePosition(_main.CurrentTime);
+            UpdatePosition(_main.CurrentTime, dragTrackObjectEvent.Track.trackObject);
+        }
+
+        private void UpdatePosition(float time, TrackObject trackObject)
+        {
+            print(trackObject.StartTime);
+            rect.anchoredPosition =
+                new Vector2((time - trackObject.StartTime) * _timeLineSettings.DistanceBetweenBeatLines *
+                            (_main.MusicDataSo.bpm / 60), rect.anchoredPosition.y);
         }
 
         private void UpdatePosition(float time)
         {
             if (_trackObject)
                 rect.anchoredPosition =
-                    new Vector2(
-                        (time - _trackObject.StartTime) * _timeLineSettings.DistanceBetweenBeatLines *
-                        (_main.MusicDataSo.bpm / 60), rect.anchoredPosition.y);
+                    new Vector2((time - _trackObject.StartTime) * _timeLineSettings.DistanceBetweenBeatLines *
+                                (_main.MusicDataSo.bpm / 60), rect.anchoredPosition.y);
         }
     }
 }

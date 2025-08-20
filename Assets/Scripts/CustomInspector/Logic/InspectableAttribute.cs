@@ -1,0 +1,1 @@
+public class InspectableAttribute : System.Attribute { }

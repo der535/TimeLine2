@@ -63,7 +63,7 @@ GameObject:
   - component: {fileID: 2960653962264612017}
   - component: {fileID: 3414714404056203588}
   - component: {fileID: 899381088387071087}
-  - component: {fileID: 7689157657677522894}
+  - component: {fileID: 5731739427603357501}
   m_Layer: 5
   m_Name: FloatFieldUI
   m_TagString: Untagged
@@ -131,7 +131,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7689157657677522894
+--- !u!114 &5731739427603357501
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -140,12 +140,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2514367800227592561}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e69cc659d078b940b64da10c1bc7942, type: 3}
+  m_Script: {fileID: 11500000, guid: 3897b78497d74bf5a2495c64d35b1235, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text: {fileID: 1255220235600383408}
-  keyframe: {fileID: 0}
+  parameterName: {fileID: 1255220235600383408}
   inputField: {fileID: 3179526120159072883}
+  createKeyframeButton: {fileID: 4997702055195756633}
 --- !u!1 &3557532134884741993
 GameObject:
   m_ObjectHideFlags: 0

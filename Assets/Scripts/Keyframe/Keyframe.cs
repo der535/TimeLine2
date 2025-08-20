@@ -26,6 +26,17 @@
                 data.Apply(target);
             }
         }
+        
+        // Добавленный метод клонирования ключевого кадра
+        public Keyframe Clone()
+        {
+            Keyframe clone = new Keyframe(this.time);
+            foreach (AnimationData data in this.animationData)
+            {
+                clone.animationData.Add(data.Clone());
+            }
+            return clone;
+        }
 
         public void Interpolate(Keyframe next, GameObject target, float t)
         {
@@ -33,14 +44,7 @@
             var allTypes = animationData.Select(d => d.GetType())
                 .Union(next.animationData.Select(d => d.GetType()))
                 .Distinct();
-
-            Debug.Log(allTypes.Count());
             
-            foreach (var VARIABLE in allTypes)
-            {
-                Debug.Log(VARIABLE);
-            }
-        
             foreach (System.Type type in allTypes)
             {
                 AnimationData currentData = animationData.FirstOrDefault(d => d.GetType() == type);
