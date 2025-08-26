@@ -1,8 +1,7 @@
 using System;
-using TimeLine.Installers;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.InputSystem;
-using Zenject;
 
 namespace TimeLine
 {
@@ -84,18 +83,14 @@ namespace TimeLine
         private void Update()
         {
             if (_currentScaleMode == ScaleMode.None) return;
-            
-            Vector2 currentLocalPosition;
+
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _toolTransform,
                 Mouse.current.position.ReadValue(),
                 _camera,
-                out currentLocalPosition);
+                out var currentLocalPosition);
             
-            print(currentLocalPosition);
-
-            
-            Vector2 delta = _dragStartPosition - currentLocalPosition;
+            var delta = _dragStartPosition - currentLocalPosition;
 
             switch (_currentScaleMode)
             {
@@ -108,6 +103,10 @@ namespace TimeLine
                 case ScaleMode.All:
                     HandleAllScaling(-((delta.x + delta.y) / 2f));
                     break;
+                case ScaleMode.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -143,9 +142,6 @@ namespace TimeLine
             
             _yHandle.sizeDelta = new Vector2(_yHandle.sizeDelta.x, newYSize);
             _xHandle.sizeDelta = new Vector2(newXSize, _xHandle.sizeDelta.y);
-            
-            print(newYSize);
-            print((newYSize/100));
             
             HorizontalDelta?.Invoke(newYSize/100);
             VerticalDelta?.Invoke(newXSize/100);

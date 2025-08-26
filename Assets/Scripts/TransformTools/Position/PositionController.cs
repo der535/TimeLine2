@@ -60,7 +60,7 @@ namespace TimeLine
                 
                 float rotationAngle = -_rectTransformPositionTool.localEulerAngles.z;
                 
-                Vector2 calculatedPosition = gridScene.FloatSnapToGrid(convertedPosition, Quaternion.Euler(0, 0, rotationAngle));
+                Vector2 calculatedPosition = gridScene.PositionFloatSnapToGrid(convertedPosition, Quaternion.Euler(0, 0, rotationAngle));
 
                 _transformComponent.XPosition.Value = calculatedPosition.x;
                 _transformComponent.YPosition.Value = calculatedPosition.y;

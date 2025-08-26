@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using EventBus;
+using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
@@ -10,8 +12,8 @@ namespace TimeLine
 {
     public class KeyframeTrackStorage : MonoBehaviour
     {
-        private Dictionary<TreeNode, (Track, TrackObject)> tracks = new();
-        
+        private List<TrackData> tracks = new();
+
         private GameEventBus _gameEventBus;
 
         [Inject]
@@ -25,41 +27,84 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<SmoothTimeEvent>(Evaluate);
         }
 
+        [Button]
+        void PrintTracks()
+        {
+            foreach (var VARIABLE in tracks)
+            {
+                print(VARIABLE.Track.TrackName);
+                print(VARIABLE.Track.Keyframes.Count);
+            }
+        }
+
         private void Evaluate(ref SmoothTimeEvent smoothTimeEvent)
         {
+            print("event");
+
             foreach (var variable in tracks)
             {
-                TrackObject trackObject;
-                Track track;
-                (track, trackObject) = variable.Value;
-                track.Evaluate(smoothTimeEvent.Time - trackObject.StartTime);
+                // if (variable.Active)
+                // {
+                    print(variable.Track.Keyframes.Count);
+                    variable.Track.Evaluate(smoothTimeEvent.Time - variable.TrackObject.StartTime);
+                // }
             }
         }
 
         public void RemoveTrack(TreeNode treeNode)
         {
-            tracks.Remove(treeNode);
+            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            {
+                tracks.Remove(track);
+            }
         }
-        
+
+        public void SetActiveTrack(TreeNode treeNode, bool active)
+        {
+            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            {
+                track.Active = active;
+            }
+        }
+
         public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject)
         {
-            tracks.Add(treeNode, (track, trackObject));
+            print(track.TrackName);
+            print(treeNode.Name);
+            tracks.Add(new TrackData(treeNode, track, trackObject));
             _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
         public Track GetTrack(TreeNode treeNode)
         {
-            Track track;
-            (track, _) = tracks.GetValueOrDefault(treeNode);
-            return track;
+            // print(treeNode.Name);
+            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            {
+                return track.Track;
+            }
+
+            return null;
         }
 
         public void AddKeyframe(TreeNode treeNode, float time, AnimationData data)
         {
-            print(time);
-            Track track;
-            (track, _) = tracks[treeNode];
+            Track track = GetTrack(treeNode);
             _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));
+        }
+
+        class TrackData
+        {
+            public TrackData(TreeNode treeNode, Track track, TrackObject trackObject)
+            {
+                TreeNode = treeNode;
+                Track = track;
+                TrackObject = trackObject;
+            }
+
+            public TreeNode TreeNode;
+            public Track Track;
+            public TrackObject TrackObject;
+            public bool Active;
         }
     }
 }

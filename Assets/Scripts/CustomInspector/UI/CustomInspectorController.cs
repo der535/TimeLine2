@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.CustomInspector.UI;
+using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
 using Zenject;
@@ -31,6 +32,9 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref SelectSceneObject data) => Draw(data.GameObject));
             
             _componentDrawers.Add(new TransformComponentDrawer());
+            _componentDrawers.Add(new RandomTransformComponentDrawer());
+            _componentDrawers.Add(new DynamicTransformDrawer());
+            _componentDrawers.Add(new NameDrawer());
         }
         
         private void Draw(GameObject target)

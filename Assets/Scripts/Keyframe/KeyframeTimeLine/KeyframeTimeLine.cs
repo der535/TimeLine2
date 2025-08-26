@@ -54,7 +54,6 @@ namespace TimeLine
 
         private void UpdatePosition(float time, TrackObject trackObject)
         {
-            print(trackObject.StartTime);
             rect.anchoredPosition =
                 new Vector2((time - trackObject.StartTime) * _timeLineSettings.DistanceBetweenBeatLines *
                             (_main.MusicDataSo.bpm / 60), rect.anchoredPosition.y);

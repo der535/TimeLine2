@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -6,7 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class Branch
 {
-    public string Name { get; }
+    public string Name { get; private set; }
     public string ID { get; }
     public TreeNode Root { get; }
     public List<TreeNode> Nodes { get; } = new();
@@ -42,6 +41,11 @@ public class Branch
                 Nodes.Add(copiedNode);
             }
         }
+    }
+
+    internal void Rename(string name)
+    {
+        Name = name;
     }
     
     public void PrintTree()
@@ -79,6 +83,34 @@ public class Branch
             var flags = new List<bool>(parentLastFlags) { i == childCount - 1 };
             BuildTreeString(sb, node.Children[i], flags);
         }
+    }
+    
+    public TreeNode FindNode(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return Root;
+
+        string[] parts = path.Split('/');
+        TreeNode currentNode = Root;
+
+        foreach (string part in parts)
+        {
+            bool found = false;
+            foreach (TreeNode child in currentNode.Children)
+            {
+                if (child.Name == part)
+                {
+                    currentNode = child;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+                return null;
+        }
+
+        return currentNode;
     }
     
     public TreeNode AddNode(string path, string nodeName)

@@ -13,24 +13,23 @@ namespace TimeLine
         [SerializeField] private RotateTool rotateTool;
         [SerializeField] private Camera camera;
         [SerializeField] private RectTransform toolCanvas;
+        [SerializeField] private GridScene gridScene;
 
         private Action _toolFollowingObject;
 
         private GameEventBus _gameEventBus;
         private TransformComponent _transformComponent;
-        private MainObjects _mainObjects;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, MainObjects mainObjects)
+        private void Construct(GameEventBus gameEventBus)
         {
             _gameEventBus = gameEventBus;
-            _mainObjects = mainObjects;
         }
 
         private void Awake()
         {
             _gameEventBus.SubscribeTo<SelectSceneObject>(Select);
-            rotateTool.onRotate = (value) => _transformComponent.ZRotation.Value = value;
+            rotateTool.onRotate = (value) => _transformComponent.ZRotation.Value = gridScene.RotateSnapToGrid(value);
         }
 
         private void Select(ref SelectSceneObject data)

@@ -39,7 +39,7 @@ public class TreeViewUI : MonoBehaviour
         
         NodeObjects = new List<TreeNodeObject>();
         
-        BuildNodeRecursive(branch.Root, root, 1);
+        BuildNodeRecursive(branch.Root, root, 1, branch.Name);
     }
 
     private void RebuildBranch(ref AddTrackEvent addTrackEvent)
@@ -48,10 +48,10 @@ public class TreeViewUI : MonoBehaviour
         
         NodeObjects = new List<TreeNodeObject>();
         
-        BuildNodeRecursive(CurrentBranch.Root, root, 1);
+        BuildNodeRecursive(CurrentBranch.Root, root, 1, CurrentBranch.Name);
     }
 
-    private void BuildNodeRecursive(TreeNode node, Transform parent, int level)
+    private void BuildNodeRecursive(TreeNode node, Transform parent, int level, string customName = null)
     {
         GameObject nodeObj = Instantiate(nodePrefab, parent);
         TreeNodeObject uiNode = nodeObj.GetComponent<TreeNodeObject>();
@@ -59,7 +59,8 @@ public class TreeViewUI : MonoBehaviour
 
         if (uiNode != null)
         {
-            uiNode.Initialize(node);
+            // print(node.Name);
+            uiNode.Initialize(node, customName);
             SetupNodeVisuals(uiNode, level);
         }
 

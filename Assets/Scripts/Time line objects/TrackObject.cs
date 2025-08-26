@@ -80,6 +80,11 @@ namespace TimeLine
             _gameEventBus.UnsubscribeFrom<PanEvent>(OnScrollPan);
         }
 
+        internal void Rename(string name)
+        {
+            nameText.text = name;
+        }
+
         internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, float startTime)
         {
             StartTime = startTime;

@@ -43,17 +43,22 @@ namespace TimeLine.Keyframe
 
         public void Evaluate(float time)
         {
+            Debug.Log(TrackName);
             if (Keyframes.Count == 0 || TargetObject == null) return;
         
             // Находим текущий и следующий ключевые кадры
             Keyframe prev = Keyframes.LastOrDefault(k => k.time <= time);
             Keyframe next = Keyframes.FirstOrDefault(k => k.time >= time);
-        
+
+            Debug.Log(prev);
+            Debug.Log(next);
+            
             if (prev == null && next == null) return;
             
             // Если только один ключевой кадр
             if (prev == null) next.Apply(TargetObject);
             else if (next == null) prev.Apply(TargetObject);
+            
             // Интерполяция между кадрами
             else if (prev != next)
             {

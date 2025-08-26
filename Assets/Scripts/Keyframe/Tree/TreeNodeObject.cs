@@ -24,10 +24,10 @@ public class TreeNodeObject : MonoBehaviour
     public Toggle SelectionToggle => selectionToggle;
     public TreeNode LogicalNode => _logicalNode;
 
-    public void Initialize(TreeNode node)
+    public void Initialize(TreeNode node, string customName = null)
     {
         _logicalNode = node;
-        text.text = node.Name;
+        text.text = customName != null ? customName : node.Name;
     }
 
     public void AddOffset(float offset)

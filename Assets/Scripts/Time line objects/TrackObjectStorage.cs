@@ -40,7 +40,9 @@ namespace TimeLine
         
         internal void Add(GameObject sceneObject, TrackObject selectedObject, Branch branch)
         {
-            _trackObjects.Add(new TrackObjectData(sceneObject, selectedObject, branch));
+            TrackObjectData trackObjectData = new TrackObjectData(sceneObject, selectedObject, branch);
+            _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectData));
+            _trackObjects.Add(trackObjectData);
         }
 
         internal void Remove(TrackObjectData trackObjectData)

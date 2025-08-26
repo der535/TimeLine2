@@ -3,17 +3,17 @@ using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
 {
     public class ScaleController : MonoBehaviour
     {
+        [FormerlySerializedAs("_gridScene")] [SerializeField] private GridScene gridScene;
         [SerializeField] private Camera camera;
         [SerializeField] private RectTransform tool;
         [SerializeField] private ScaleTool _scaleTool;
-
-        private Canvas _canvas;
 
         private GameEventBus _eventBus;
         private MainObjects _mainObjects;
@@ -38,7 +38,6 @@ namespace TimeLine
 
         private void Awake()
         {
-            _canvas = tool.GetComponentInParent<Canvas>();
             _eventBus.SubscribeTo<SelectSceneObject>(SetPosition);
 
             _toolFollowingObject = () =>
@@ -52,8 +51,8 @@ namespace TimeLine
             _scaleTool.HorizontalDeltaStart += SetStartScale;
             _scaleTool.VerticalDeltaStart += SetStartScale;
 
-            _scaleTool.HorizontalDelta += (f) => _transformComponent.XScale.Value = _startXScale * f;
-            _scaleTool.VerticalDelta += (f) => _transformComponent.YScale.Value = _startYScale * f;
+            _scaleTool.HorizontalDelta += f => _transformComponent.XScale.Value = gridScene.ScaleSnapToGrid(_startXScale * f);
+            _scaleTool.VerticalDelta += f => _transformComponent.YScale.Value = gridScene.ScaleSnapToGrid(_startYScale * f);
         }
 
         void SetStartScale()
@@ -63,7 +62,6 @@ namespace TimeLine
                 _startXScale = _transformComponent.XScale.Value;
                 _startYScale = _transformComponent.YScale.Value;
             }
-
         }
 
         private void SetPosition(ref SelectSceneObject data)

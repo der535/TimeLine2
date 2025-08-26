@@ -12,8 +12,9 @@ public class TreeNode
     {
         Name = name;
         Path = path;
-        Debug.Log(path);
+        // Debug.Log(path);
     }
+    
     
     // Метод глубокого копирования
     public TreeNode DeepCopy(Dictionary<TreeNode, TreeNode> mapping)

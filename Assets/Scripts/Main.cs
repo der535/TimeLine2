@@ -2,8 +2,6 @@ using TimeLine;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using UnityEngine;
-using UnityEngine.InputSystem.iOS;
-using UnityEngine.Serialization;
 using Zenject;
 
 public class Main : MonoBehaviour
