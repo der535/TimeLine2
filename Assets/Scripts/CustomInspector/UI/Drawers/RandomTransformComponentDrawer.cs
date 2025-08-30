@@ -1,7 +1,6 @@
-﻿using TimeLine.CustomInspector.UI;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace TimeLine
+namespace TimeLine.CustomInspector.UI.Drawers
 {
     public class RandomTransformComponentDrawer : IComponentDrawer
     {

@@ -29,11 +29,14 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectSceneObject data) => Draw(data.GameObject));
+            // _gameEventBus.SubscribeTo((ref SelectSceneObject data) => Draw(data.GameObject));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Track.sceneObject));
+            
             
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new RandomTransformComponentDrawer());
             _componentDrawers.Add(new DynamicTransformDrawer());
+            _componentDrawers.Add(new ParentDrawer());
             _componentDrawers.Add(new NameDrawer());
         }
         

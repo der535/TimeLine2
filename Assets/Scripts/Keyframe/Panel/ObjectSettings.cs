@@ -1,6 +1,5 @@
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
 
@@ -9,23 +8,19 @@ namespace TimeLine
     public class ObjectSettings : MonoBehaviour
     {
         private GameEventBus _gameEventBus;
+        private TrackObjectStorage _trackObjectStorage;
 
         [Inject]
-        public void Construct(GameEventBus gameEventBus)
+        public void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage)
         {
             _gameEventBus = gameEventBus;
+            _trackObjectStorage = trackObjectStorage;
         }
 
         private void OnMouseDown()
         {
-            _gameEventBus.Raise(new SelectSceneObject(gameObject));
-            // _settingPanel.Select(gameObject.transform, AddKeyframe);
-            print("Select");
-        }
-
-        public void AddKeyframe()
-        {
-
+            // _gameEventBus.Raise(new SelectSceneObject(gameObject));
+            _gameEventBus.Raise(new SelectObjectEvent(_trackObjectStorage.GetTrackObjectData(gameObject)));
         }
     }
 }

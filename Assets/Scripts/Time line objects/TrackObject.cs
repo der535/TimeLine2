@@ -218,6 +218,10 @@ namespace TimeLine
         public void Select()
         {
             _trackObjectStorage.SelectObject(this);
+        }
+
+        public void SelectColor()
+        {
             image.color = Color.yellow;
         }
 

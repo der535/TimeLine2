@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f7b5204594e311428033b7323fa0a45, type: 3}
+  m_Name: dark
+  m_EditorClassIdentifier: 
+  musicName: dark
+  authorName: 
+  music: {fileID: 8300000, guid: 5f3ed484c0ab0af4e944835a42590572, type: 3}
+  bpm: 130
+  startOffset: 0

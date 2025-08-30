@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using TimeLine.CustomInspector.Logic.Parameter;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

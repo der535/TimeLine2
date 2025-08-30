@@ -1,7 +1,7 @@
-﻿namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
-{
-    using UnityEngine;
+﻿using UnityEngine;
 
+namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
+{
     [System.Serializable]
     public class ZRotationData : AnimationData
     {

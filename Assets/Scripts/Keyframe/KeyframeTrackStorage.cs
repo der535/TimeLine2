@@ -4,11 +4,10 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.Keyframe
 {
     public class KeyframeTrackStorage : MonoBehaviour
     {
@@ -43,11 +42,11 @@ namespace TimeLine
 
             foreach (var variable in tracks)
             {
-                // if (variable.Active)
-                // {
+                if (variable.Active)
+                {
                     print(variable.Track.Keyframes.Count);
                     variable.Track.Evaluate(smoothTimeEvent.Time - variable.TrackObject.StartTime);
-                // }
+                }
             }
         }
 
@@ -104,7 +103,7 @@ namespace TimeLine
             public TreeNode TreeNode;
             public Track Track;
             public TrackObject TrackObject;
-            public bool Active;
+            public bool Active = true;
         }
     }
 }

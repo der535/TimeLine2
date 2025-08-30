@@ -1,20 +1,23 @@
-public class StringParameter : InspectableParameter
+namespace TimeLine.CustomInspector.Logic.Parameter
 {
-    private string _value;
-    public string Value
+    public class StringParameter : InspectableParameter
     {
-        get => _value;
-        set
+        private string _value;
+        public string Value
         {
-            if (_value == value) return;
-            _value = value;
-            NotifyValueChanged();
+            get => _value;
+            set
+            {
+                if (_value == value) return;
+                _value = value;
+                NotifyValueChanged();
+            }
         }
-    }
 
-    public StringParameter(string name, string initialValue) 
-        : base(name, typeof(string))
-    {
-        _value = initialValue;
+        public StringParameter(string name, string initialValue) 
+            : base(name, typeof(string))
+        {
+            _value = initialValue;
+        }
     }
 }

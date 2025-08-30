@@ -1,7 +1,7 @@
-﻿namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
-{
-    using UnityEngine;
+﻿using UnityEngine;
 
+namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Position
+{
     [System.Serializable]
     public class YPositionData : AnimationData
     {

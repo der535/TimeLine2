@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace TimeLine.CustomInspector.UI
+namespace TimeLine.CustomInspector.UI.Drawers
 {
     public interface IComponentDrawer
     {

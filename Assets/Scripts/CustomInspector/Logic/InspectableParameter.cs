@@ -1,15 +1,18 @@
-public abstract class InspectableParameter
+namespace TimeLine.CustomInspector.Logic
 {
-    public string Name { get; }
-    public System.Type ValueType { get; }
-    
-    public event System.Action OnValueChanged;
-
-    protected InspectableParameter(string name, System.Type valueType)
+    public abstract class InspectableParameter
     {
-        Name = name;
-        ValueType = valueType;
-    }
+        public string Name { get; }
+        public System.Type ValueType { get; }
+    
+        public event System.Action OnValueChanged;
 
-    public void NotifyValueChanged() => OnValueChanged?.Invoke();
+        protected InspectableParameter(string name, System.Type valueType)
+        {
+            Name = name;
+            ValueType = valueType;
+        }
+
+        public void NotifyValueChanged() => OnValueChanged?.Invoke();
+    }
 }

@@ -1,1 +1,4 @@
-public class InspectableAttribute : System.Attribute { }
+namespace TimeLine.CustomInspector.Logic
+{
+    public class InspectableAttribute : System.Attribute { }
+}

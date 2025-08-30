@@ -1,12 +1,10 @@
-using System;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.Keyframe
 {
     public class KeyframeSelect : MonoBehaviour
     {

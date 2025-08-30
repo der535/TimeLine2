@@ -32,7 +32,8 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<SmoothTimeEvent>(OnTimeChangedSmooth);
-            _gameEventBus.SubscribeTo<SelectTrackObjectEvent>(OnSelectTrackObject);
+            // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => OnSelectTrackObject(data.Track));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
         }
 
@@ -41,9 +42,9 @@ namespace TimeLine
             UpdatePosition(smoothTimeEvent.Time);
         }
 
-        public void OnSelectTrackObject(ref SelectTrackObjectEvent selectTrackObjectEvent)
+        public void OnSelectTrackObject(TrackObjectData trackObjectData)
         {
-            _trackObject = selectTrackObjectEvent.Track.trackObject;
+            _trackObject = trackObjectData.trackObject;
             UpdatePosition(_main.CurrentTime);
         }
 

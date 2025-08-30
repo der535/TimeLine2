@@ -23,12 +23,13 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo<SelectTrackObjectEvent>(OnSelectTrackObject);
+            // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => OnSelectTrackObject(data.Track));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
         }
 
-        public void OnSelectTrackObject(ref SelectTrackObjectEvent selectTrackObjectEvent)
+        public void OnSelectTrackObject(TrackObjectData trackObjectData)
         {
-            UpdateArea(selectTrackObjectEvent.Track.trackObject.BeatDuraction);
+            UpdateArea(trackObjectData.trackObject.BeatDuraction);
         }
 
         private void UpdateArea(float duraction)

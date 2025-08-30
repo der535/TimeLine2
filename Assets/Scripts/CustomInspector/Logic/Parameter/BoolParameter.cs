@@ -1,20 +1,23 @@
-public class BoolParameter : InspectableParameter
+namespace TimeLine.CustomInspector.Logic.Parameter
 {
-    private bool _value;
-    public bool Value
+    public class BoolParameter : InspectableParameter
     {
-        get => _value;
-        set
+        private bool _value;
+        public bool Value
         {
-            if (_value == value) return;
-            _value = value;
-            NotifyValueChanged();
+            get => _value;
+            set
+            {
+                if (_value == value) return;
+                _value = value;
+                NotifyValueChanged();
+            }
         }
-    }
 
-    public BoolParameter(string name, bool initialValue) 
-        : base(name, typeof(bool))
-    {
-        _value = initialValue;
+        public BoolParameter(string name, bool initialValue) 
+            : base(name, typeof(bool))
+        {
+            _value = initialValue;
+        }
     }
 }

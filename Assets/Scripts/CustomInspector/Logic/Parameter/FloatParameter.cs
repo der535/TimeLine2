@@ -1,20 +1,23 @@
-public class FloatParameter : InspectableParameter
+namespace TimeLine.CustomInspector.Logic.Parameter
 {
-    private float _value;
-    public float Value
+    public class FloatParameter : InspectableParameter
     {
-        get => _value;
-        set
+        private float _value;
+        public float Value
         {
-            if (_value == value) return;
-            _value = value;
-            NotifyValueChanged();
+            get => _value;
+            set
+            {
+                if (_value == value) return;
+                _value = value;
+                NotifyValueChanged();
+            }
         }
-    }
 
-    public FloatParameter(string name, float initialValue) 
-        : base(name, typeof(float))
-    {
-        _value = initialValue;
+        public FloatParameter(string name, float initialValue) 
+            : base(name, typeof(float))
+        {
+            _value = initialValue;
+        }
     }
 }

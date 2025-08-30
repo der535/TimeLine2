@@ -28,13 +28,15 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo<SelectSceneObject>(Select);
+            // _gameEventBus.SubscribeTo<SelectSceneObject>(((ref SelectSceneObject data) => Select(data.GameObject)));
+            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Track.sceneObject)));
+            
             rotateTool.onRotate = (value) => _transformComponent.ZRotation.Value = gridScene.RotateSnapToGrid(value);
         }
 
-        private void Select(ref SelectSceneObject data)
+        private void Select(GameObject data)
         {
-            _transformComponent = data.GameObject.GetComponent<TransformComponent>();
+            _transformComponent = data.GetComponent<TransformComponent>();
             rotateTool.currentRotation = _transformComponent.ZRotation.Value;
             
             bool isInside = RectTransformUtility.ScreenPointToLocalPointInRectangle(

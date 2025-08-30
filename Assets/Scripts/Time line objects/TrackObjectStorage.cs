@@ -11,9 +11,10 @@ namespace TimeLine
 {
     public class TrackObjectStorage : MonoBehaviour
     {
-        private readonly List<TrackObjectData> _trackObjects = new();
+        private List<TrackObjectData> _trackObjects = new();
 
         public TrackObjectData _selectedObject;
+        public TrackObjectData _oldSelectedObject;
         
         private GameEventBus _gameEventBus;
 
@@ -26,6 +27,7 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<SmoothTimeEvent>(ActiveSceneObject);
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Track.trackObject));
         }
 
         private void ActiveSceneObject(ref SmoothTimeEvent smoothTimeEvent)
@@ -47,6 +49,7 @@ namespace TimeLine
 
         internal void Remove(TrackObjectData trackObjectData)
         {
+            _gameEventBus.Raise(new RemoveTrackObjectDataEvent(trackObjectData));
             _trackObjects.Remove(trackObjectData);
         }
 
@@ -64,17 +67,23 @@ namespace TimeLine
         {
             foreach (var trackObject in _trackObjects)
             {
-                if (trackObject.trackObject == selectedObject)
-                {
-                    _gameEventBus.Raise(new SelectTrackObjectEvent(trackObject));
-                    _selectedObject = trackObject;
-                }
+                trackObject.trackObject.Deselect();
             }
-            
             
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.trackObject.Deselect();
+                if (trackObject.trackObject == selectedObject)
+                {
+                    if (trackObject == _oldSelectedObject)
+                    {
+                        trackObject.trackObject.SelectColor();
+                        return;
+                    }
+                    _gameEventBus.Raise(new SelectObjectEvent(trackObject));
+                    _selectedObject = trackObject;
+                    _oldSelectedObject = trackObject;
+                    trackObject.trackObject.SelectColor();
+                }
             }
         }
 
@@ -82,7 +91,8 @@ namespace TimeLine
         {
             _selectedObject?.trackObject.Deselect();
             _selectedObject = null;
-            _gameEventBus.Raise(new SelectTrackObjectEvent(_selectedObject));
+            // _gameEventBus.Raise(new SelectTrackObjectEvent(_selectedObject));
+            _gameEventBus.Raise(new SelectObjectEvent(_selectedObject));
         }
     }
     

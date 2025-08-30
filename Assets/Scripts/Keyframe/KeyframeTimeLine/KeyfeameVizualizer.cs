@@ -40,7 +40,8 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent _) => Build());
+            // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
         }
 

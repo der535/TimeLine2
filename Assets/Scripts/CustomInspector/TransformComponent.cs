@@ -1,4 +1,6 @@
 using System;
+using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
 
@@ -48,49 +50,49 @@ namespace TimeLine
             XPositionActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,XPosition.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,XPosition.Name);
                 _keyframeTrackStorage.SetActiveTrack(node, XPositionActive.Value);
             };
             
             YPositionActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,YPosition.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,YPosition.Name);
                 _keyframeTrackStorage.SetActiveTrack(node ,YPositionActive.Value);
             };
             
             XRotationActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,XRotation.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,XRotation.Name);
                 _keyframeTrackStorage.SetActiveTrack(node ,XRotationActive.Value);
             };
             
             YRotationActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,YRotation.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,YRotation.Name);
                 _keyframeTrackStorage.SetActiveTrack(node ,YRotationActive.Value);
             };
             
             ZRotationActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,ZRotation.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,ZRotation.Name);
                 _keyframeTrackStorage.SetActiveTrack(node ,ZRotationActive.Value);
             };
             
             XScaleActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,XScale.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,XScale.Name);
                 _keyframeTrackStorage.SetActiveTrack(node ,XScaleActive.Value);
             };
             
             YScaleActive.OnValueChanged += () =>
             {
                 TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                TreeNode node = data.branch.AddNode(gameObject.name,YScale.Name);
+                TreeNode node = data.branch.AddNode(this.GetType().Name,YScale.Name);
                 _keyframeTrackStorage.SetActiveTrack(node ,YScaleActive.Value);
             };
         }

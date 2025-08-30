@@ -1,8 +1,9 @@
-﻿using TimeLine.CustomInspector.UI;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent;
+﻿using TimeLine.Keyframe.AnimationDatas.TransformComponent;
+using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
 using UnityEngine;
 
-namespace TimeLine
+namespace TimeLine.CustomInspector.UI.Drawers
 {
     public class TransformComponentDrawer : IComponentDrawer
     {
@@ -30,46 +31,45 @@ namespace TimeLine
                     () =>
                     {
                         _keyframeCreater.CreateKeyframe(new XPositionData(componentComponent.XPosition.Value), target,
-                            componentComponent.name, componentComponent.XPosition.Name);
+                            componentComponent.GetType().Name, componentComponent.XPosition.Name);
                     });
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.XPositionActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.YPosition,
                     () => _keyframeCreater.CreateKeyframe(new YPositionData(componentComponent.YPosition.Value), target,
-                        componentComponent.name, componentComponent.YPosition.Name));
+                        componentComponent.GetType().Name, componentComponent.YPosition.Name));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YPositionActive);
 
                 _customInspectorDrawer.AddSpace(30);
                 _customInspectorDrawer.CreateFloatField(componentComponent.XRotation,
                     () => _keyframeCreater.CreateKeyframe(new XRotationData(componentComponent.XRotation.Value), target,
-                        componentComponent.name, componentComponent.XRotation.Name));
+                        componentComponent.GetType().Name, componentComponent.XRotation.Name));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.XRotationActive);
-
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.YRotation,
                     () => _keyframeCreater.CreateKeyframe(new YRotationData(componentComponent.YRotation.Value), target,
-                        componentComponent.name, componentComponent.YRotation.Name));
+                        componentComponent.GetType().Name, componentComponent.YRotation.Name));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YRotationActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.ZRotation,
                     () => _keyframeCreater.CreateKeyframe(new ZRotationData(componentComponent.ZRotation.Value), target,
-                        componentComponent.name, componentComponent.ZRotation.Name));
+                        componentComponent.GetType().Name, componentComponent.ZRotation.Name));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.ZRotationActive);
                 _customInspectorDrawer.AddSpace(30);
                 _customInspectorDrawer.CreateFloatField(componentComponent.XScale,
                     () => _keyframeCreater.CreateKeyframe(new XScaleData(componentComponent.XScale.Value), target,
-                        componentComponent.name, componentComponent.XScale.Name));
+                        componentComponent.GetType().Name, componentComponent.XScale.Name));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.XScaleActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.YScale,
                     () => _keyframeCreater.CreateKeyframe(new YScaleData(componentComponent.YScale.Value), target,
-                        componentComponent.name, componentComponent.YScale.Name));
+                        componentComponent.GetType().Name, componentComponent.YScale.Name));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YScaleActive);
             }

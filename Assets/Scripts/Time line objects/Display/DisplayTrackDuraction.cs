@@ -22,7 +22,8 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => _inputField.text = data.Track.trackObject.TimeDuraction.ToString());
+            // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => _inputField.text = data.Track.trackObject.TimeDuraction.ToString());
+            _gameEventBus.SubscribeTo<SelectObjectEvent>(((ref SelectObjectEvent data) => _inputField.text = data.Track.trackObject.TimeDuraction.ToString()));
             
             _inputField.onEndEdit.AddListener(text =>
             {

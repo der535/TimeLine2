@@ -38,7 +38,8 @@ namespace TimeLine
 
         private void Awake()
         {
-            _eventBus.SubscribeTo<SelectSceneObject>(SetPosition);
+            // _eventBus.SubscribeTo<SelectSceneObject>(((ref SelectSceneObject data) => SetPosition(data.GameObject)));
+            _eventBus.SubscribeTo(((ref SelectObjectEvent data) => SetPosition(data.Track.sceneObject)));
 
             _toolFollowingObject = () =>
             {
@@ -64,18 +65,19 @@ namespace TimeLine
             }
         }
 
-        private void SetPosition(ref SelectSceneObject data)
+        private void SetPosition(GameObject data)
         {
+            print("SetPosition");
             if (_transformComponent)
             {
                 _transformComponent.XPosition.OnValueChanged -= _toolFollowingObject;
                 _transformComponent.YPosition.OnValueChanged -= _toolFollowingObject;
             }
             
-            tool.anchoredPosition = camera.WorldToScreenPoint(data.GameObject.transform.position);
+            tool.anchoredPosition = camera.WorldToScreenPoint(data.transform.position);
             tool.anchoredPosition -= _mainObjects.CanvasRectTransform.sizeDelta / 2;
 
-            _transformComponent = data.GameObject.GetComponent<TransformComponent>();
+            _transformComponent = data.GetComponent<TransformComponent>();
 
             tool.rotation = Quaternion.Euler(tool.rotation.x, tool.rotation.y, _transformComponent.ZRotation.Value);
 

@@ -1,5 +1,6 @@
 using EventBus;
 using TimeLine.Input;
+using TimeLine.Keyframe;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -28,6 +29,7 @@ namespace TimeLine.Installers
         [SerializeField] private TimeLineScroll timeLineScroll;
         [SerializeField] private SceneObjectAddKeyFrame sceneObjectAddKeyFrame;
         [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
+        [SerializeField] private ParentMain parentMain;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -53,6 +55,7 @@ namespace TimeLine.Installers
             Container.Bind<TimeLineScroll>().FromInstance(timeLineScroll).AsSingle();
             Container.Bind<SceneObjectAddKeyFrame>().FromInstance(sceneObjectAddKeyFrame).AsSingle();
             Container.Bind<GridUI>().FromInstance(gridUI).AsSingle();
+            Container.Bind<ParentMain>().FromInstance(parentMain).AsSingle();
             
             
             // Сначала создаем и привязываем EventBus

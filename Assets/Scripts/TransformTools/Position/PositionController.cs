@@ -31,19 +31,21 @@ namespace TimeLine
         }
         private void Start()
         {
-            _gameEventBus.SubscribeTo<SelectSceneObject>(SelectObject);
+            // _gameEventBus.SubscribeTo<SelectSceneObject>(((ref SelectSceneObject data) => SelectObject(data.GameObject)));
+            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Track.sceneObject)));
             coordinateSystem.OnCoordinateChanged += b => _rectTransformPositionTool.rotation = Quaternion.Euler(0f, 0f, b ? 0f : _transformComponent.ZRotation.Value);
         }
-        private void SelectObject(ref SelectSceneObject data)
+        private void SelectObject(GameObject data)
         {
+            print("SelectObject");
             if (_transformComponent)
             {
                 _transformComponent.XPosition.OnValueChanged -= _toolFollowingObject;
                 _transformComponent.YPosition.OnValueChanged -= _toolFollowingObject;
             }
             
-            _transformComponent = data.GameObject.gameObject.GetComponent<TransformComponent>();
-            _rectTransformPositionTool.anchoredPosition = camera.WorldToScreenPoint(data.GameObject.transform.position);
+            _transformComponent = data.gameObject.GetComponent<TransformComponent>();
+            _rectTransformPositionTool.anchoredPosition = camera.WorldToScreenPoint(data.transform.position);
             _rectTransformPositionTool.anchoredPosition -= _mainObjects.CanvasRectTransform.sizeDelta / 2;
 
             _rectTransformPositionTool.rotation = Quaternion.Euler(0f, 0f, coordinateSystem.IsGlobal ? 0f : _transformComponent.ZRotation.Value);
