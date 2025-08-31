@@ -40,20 +40,15 @@ namespace TimeLine.Input
             {
                 // Получаем позицию курсора
                 Vector2 cursorPos = GetCursorPosition();
-                print(cursorPos);
                 float pixelX = cursorPos.x - _mainObjects.ContentRectTransform.offsetMin.x;
                 
                 // Вычисляем позицию в тиках
                 double ticksPerPixel = Main.TICKS_PER_BEAT / (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan);
                 double rawTicks = pixelX * ticksPerPixel;
                 
-                print(rawTicks);
-                
                 // Округляем до сетки
                 double gridSizeInTicks = gridUI.GetGridSizeInTicks();
                 double roundedTicks = Math.Round(rawTicks / gridSizeInTicks) * gridSizeInTicks;
-                
-                print(roundedTicks);
                 
                 // Устанавливаем время
                 _main.SetTimeInTicks(roundedTicks);

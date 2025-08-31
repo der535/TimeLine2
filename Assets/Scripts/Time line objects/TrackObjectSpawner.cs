@@ -102,7 +102,7 @@ namespace TimeLine
             trackObject.Setup(new TrackObjectSO()
             {
                 name = trackObjectData.trackObject.Name,
-                startLiveTime = trackObjectData.trackObject.BeatDuraction
+                startLiveTime = (float)trackObjectData.trackObject.BeatDuraction
             }, _trackStorage.TrackLines[0], _main.CurrentTime);
             
             Branch branch = _branchCollection.CopyBranch(trackObjectData.branch, id);

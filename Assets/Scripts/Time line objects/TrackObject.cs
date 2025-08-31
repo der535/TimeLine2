@@ -27,25 +27,31 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
         private TimeLineScroll _timeLineScroll;
         private GridUI _gridUI;
+        private Main _main;
 
         private bool _isDragging;
         private bool _isResizing;
         private bool _isRightResizing;
 
-        private float _mouseOffset;
-        private float _startResizingDuraction;
-        private float _startResizingTime;
+        private double _startResizingDuractionInTicks;
+        private double _startResizingTimeInTicks;
 
         private Vector2 _startMousePosition;
+        private double _startTrackObjectTicks;
+        private double _startMouseTicks;
+        private float _startMouseXLocal; // Добавлено: начальная позиция мыши в локальных координатах
 
         #endregion
 
-        internal float StartTime { get; private set; }
-        internal float TimeDuraction { get; private set; }
+        internal double StartTimeInTicks { get; private set; }
+        internal double TimeDuractionInTicks { get; private set; }
         internal TrackLine TrackLine { get; private set; }
-        internal float BeatDuraction { get; private set; } //В секундах
         internal string Name { get; private set; }
 
+        // Свойства для обратной совместимости (в секундах)
+        internal float StartTime => (float)TicksToSeconds(StartTimeInTicks);
+        internal float TimeDuraction => (float)TicksToSeconds(TimeDuractionInTicks);
+        internal float BeatDuraction => (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
 
         [Inject]
         private void Construct(
@@ -56,7 +62,8 @@ namespace TimeLine
             MainObjects mainObjects,
             GameEventBus gameEventBus,
             TimeLineScroll timeLineScroll,
-            GridUI gridUI)
+            GridUI gridUI,
+            Main main)
         {
             _gridUI = gridUI;
             _timeLineSettings = timeLineSettings;
@@ -66,6 +73,7 @@ namespace TimeLine
             _mainObjects = mainObjects;
             _gameEventBus = gameEventBus;
             _timeLineScroll = timeLineScroll;
+            _main = main;
         }
 
         internal void Awake()
@@ -85,25 +93,18 @@ namespace TimeLine
             nameText.text = name;
         }
 
-        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, float startTime)
+        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
         {
-            StartTime = startTime;
+            StartTimeInTicks = startTimeInTicks;
             TrackLine = trackLine;
 
-            BeatDuraction = trackObjectSo.startLiveTime;
-            TimeDuraction = _timeLineConverter.GetTimeFromBeatPosition(BeatDuraction);
-
-            rect.sizeDelta = new Vector2(
-                BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
-                rect.sizeDelta.y);
+            // Конвертируем длительность из битов в тики
+            TimeDuractionInTicks = trackObjectSo.startLiveTime * Main.TICKS_PER_BEAT;
 
             Name = trackObjectSo.name;
             nameText.text = trackObjectSo.name;
 
-            rect.anchoredPosition =
-                new Vector2(
-                    _timeLineConverter.GetAnchorPositionFromTime(StartTime) + rect.sizeDelta.x / 2,
-                    rect.anchoredPosition.y);
+            UpdateVisuals();
         }
 
         private Vector2 GetMousePosition()
@@ -118,7 +119,7 @@ namespace TimeLine
 
         public void SetResizeRight(bool isResizing)
         {
-            _startResizingDuraction = TimeDuraction;
+            _startResizingDuractionInTicks = TimeDuractionInTicks;
             _isRightResizing = true;
             _isResizing = isResizing;
             if (_isResizing)
@@ -127,16 +128,12 @@ namespace TimeLine
 
         public void SetResizeLeft(bool isResizing)
         {
-            _startResizingDuraction = TimeDuraction;
-            _startResizingTime = StartTime;
+            _startResizingDuractionInTicks = TimeDuractionInTicks;
+            _startResizingTimeInTicks = StartTimeInTicks;
             _isRightResizing = false;
             _isResizing = isResizing;
             if (_isResizing)
                 _startMousePosition = GetMousePosition();
-            else
-            {
-
-            }
         }
 
         private void Update()
@@ -146,73 +143,58 @@ namespace TimeLine
             {
                 if (_isRightResizing)
                 {
-                    ChangeDuration(_startResizingDuraction + (_timeLineConverter.GetTimeFromAnchorPosition(
-                        GetMousePosition().x - _startMousePosition.x
-                    )));
+                    double deltaTicks = AnchorPositionToTicks(GetMousePosition().x - _startMousePosition.x);
+                    ChangeDurationInTicks(_startResizingDuractionInTicks + deltaTicks);
                 }
                 else
                 {
-                    float newTime = _timeLineConverter.GetTimeFromAnchorPosition(
-                        _startMousePosition.x - GetMousePosition().x);
+                    double deltaTicks = AnchorPositionToTicks(_startMousePosition.x - GetMousePosition().x);
+                    double newStartTimeInTicks = _startResizingTimeInTicks - deltaTicks;
+                    double newDurationInTicks = _startResizingDuractionInTicks + deltaTicks;
                     
-                    float difference = (newTime + _startResizingDuraction) - _startResizingDuraction;
+                    // Округляем до сетки
+                    newStartTimeInTicks = RoundTicksToGrid(newStartTimeInTicks);
+                    newDurationInTicks = RoundTicksToGrid(newDurationInTicks);
                     
-                    print(difference);
-                    print(_startResizingTime);
-                    print(_startResizingTime - difference);
-                    
-                    StartTime = _gridUI.RoundTimeToGrid(_startResizingTime - difference);
-                    
-                    ChangeDuration(_startResizingDuraction + newTime,
-                        -((newTime + _startResizingDuraction) - _startResizingDuraction));
+                    StartTimeInTicks = newStartTimeInTicks;
+                    ChangeDurationInTicks(newDurationInTicks);
                 }
             }
         }
 
-        public void ChangeDuration(float duration, float timeOffset = 0)
+        public void ChangeDurationInTicks(double durationInTicks)
         {
-            TimeDuraction = _gridUI.RoundTimeToGrid(duration);
-            BeatDuraction = _timeLineConverter.GetBeatPositionFromTime(TimeDuraction);
-            
-            
-            
-
-            
-            
-            
-
-            rect.sizeDelta = new Vector2(
-                BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
-                rect.sizeDelta.y);
-            CalculatePosition();
+            TimeDuractionInTicks = durationInTicks;
+            UpdateVisuals();
         }
 
         private void OnScroll(ref ScrollTimeLineEvent scrollTimeLineEvent)
         {
-            CalculatePosition();
+            UpdateVisuals();
         }
 
         public void OnScrollPan(ref PanEvent panEvent)
         {
+            UpdateVisuals();
+        }
+
+        private void UpdateVisuals()
+        {
+            // Конвертируем тики в секунды для UI
+            float durationInBeats = (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
             rect.sizeDelta = new Vector2(
-                BeatDuraction * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset),
+                durationInBeats * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
                 rect.sizeDelta.y);
+            
             CalculatePosition();
         }
 
         private void CalculatePosition()
         {
-            rect.anchoredPosition =
-                new Vector2(
-                    _timeLineConverter.GetAnchorPositionFromTime(StartTime) + rect.sizeDelta.x / 2,
-                    rect.anchoredPosition.y);
-        }
-
-        private void UpdatePosition()
-        {
-            StartTime = _gridUI.RoundTimeToGrid(_timeLineConverter.GetTimeFromBeatPosition(
-                _timeLineConverter.GetCursorBeatPosition(_timeLineScroll.Pan, (rect.sizeDelta.x / 2) + _mouseOffset)));
-            _trackObjectStorage.UpdatePositionSelectedTrackObject();
+            float startTimeInSeconds = (float)TicksToSeconds(StartTimeInTicks);
+            rect.anchoredPosition = new Vector2(
+                _timeLineConverter.GetAnchorPositionFromTime(startTimeInSeconds) + rect.sizeDelta.x / 2,
+                rect.anchoredPosition.y);
         }
 
         public void Select()
@@ -232,11 +214,16 @@ namespace TimeLine
 
         public void OnMouseDown()
         {
-            float mousePosition =
-                Mouse.current.position.ReadValue().x - _mainObjects.CanvasRectTransform.sizeDelta.x / 2;
+            // Сохраняем начальные позиции при начале перетаскивания
+            _startTrackObjectTicks = StartTimeInTicks;
             
-            _mouseOffset =  mousePosition - rect.anchoredPosition.x;
-
+            // Получаем позицию мыши в локальных координатах канваса
+            Vector2 mousePos = GetMousePosition();
+            _startMouseXLocal = mousePos.x;
+            
+            // Конвертируем позицию мыши в тики
+            _startMouseTicks = AnchorPositionToTicks(_startMouseXLocal);
+            
             _isDragging = true;
         }
 
@@ -257,5 +244,70 @@ namespace TimeLine
             UpdatePosition();
             CalculatePosition();
         }
+
+        private void UpdatePosition()
+        {
+            // Получаем текущую позицию мыши в локальных координатах
+            Vector2 currentMousePos = GetMousePosition();
+            float currentMouseXLocal = currentMousePos.x;
+            
+            // Вычисляем смещение мыши в локальных координатах
+            float mouseDeltaXLocal = currentMouseXLocal - _startMouseXLocal;
+            
+            // Конвертируем смещение в тики
+            double deltaTicks = AnchorPositionDeltaToTicks(mouseDeltaXLocal);
+            
+            // Вычисляем новую позицию
+            StartTimeInTicks = RoundTicksToGrid(_startTrackObjectTicks + deltaTicks);
+            
+            _trackObjectStorage.UpdatePositionSelectedTrackObject();
+        }
+
+        private double AnchorPositionDeltaToTicks(float deltaAnchorPosition)
+        {
+            // Вычисляем изменение времени на основе смещения в координатах
+            // Учитываем текущий масштаб (DistanceBetweenBeatLines + Pan)
+            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
+            float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
+            return beatsDelta * Main.TICKS_PER_BEAT;
+        }
+
+        #region Конвертация методов
+
+        private double TicksToSeconds(double ticks)
+        {
+            return ticks * (60.0 / (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
+        }
+
+        private double SecondsToTicks(double seconds)
+        {
+            return seconds * (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
+        }
+
+        private double AnchorPositionToTicks(float anchorPosition)
+        {
+            float timeInSeconds = _timeLineConverter.GetTimeFromAnchorPosition(anchorPosition);
+            return SecondsToTicks(timeInSeconds);
+        }
+
+        private double TicksToAnchorPosition(double ticks)
+        {
+            float timeInSeconds = (float)TicksToSeconds(ticks);
+            return _timeLineConverter.GetAnchorPositionFromTime(timeInSeconds);
+        }
+
+        private double BeatPositionToTicks(double beatPosition)
+        {
+            return beatPosition * Main.TICKS_PER_BEAT;
+        }
+
+        private double RoundTicksToGrid(double ticks)
+        {
+            float timeInSeconds = (float)TicksToSeconds(ticks);
+            float roundedTimeInSeconds = _gridUI.RoundTimeToGrid(timeInSeconds);
+            return SecondsToTicks(roundedTimeInSeconds);
+        }
+
+        #endregion
     }
 }

@@ -29,7 +29,7 @@ namespace TimeLine
 
         public void OnSelectTrackObject(TrackObjectData trackObjectData)
         {
-            UpdateArea(trackObjectData.trackObject.BeatDuraction);
+            UpdateArea((float)trackObjectData.trackObject.BeatDuraction);
         }
 
         private void UpdateArea(float duraction)

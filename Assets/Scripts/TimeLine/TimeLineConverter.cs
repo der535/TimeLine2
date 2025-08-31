@@ -21,13 +21,13 @@ namespace TimeLine.TimeLine
             _timeLineScroll = timeLineScroll;
         }
 
-        public Vector2 CursorPosition()
+        public Vector2 CursorPosition() //todo пофиксить
         {
             return (new Vector2(UnityEngine.Input.mousePosition.x - _mainObjects.CanvasRectTransform.sizeDelta.x / 2,
                 UnityEngine.Input.mousePosition.y - _mainObjects.CanvasRectTransform.sizeDelta.y / 2));
         }
 
-        public float GetCursorBeatPosition(float pan, float offset = 0)
+        public double GetCursorBeatPosition(float pan, double offset = 0)
         {
             return (CursorPosition().x - offset - _mainObjects.ContentRectTransform.offsetMin.x) /
                    (_timeLineSettings.DistanceBetweenBeatLines + pan);
