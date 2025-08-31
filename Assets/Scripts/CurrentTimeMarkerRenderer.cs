@@ -15,7 +15,7 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
     private TimeLineSettings _timeLineSettings;
     private TimeLineScroll _timeLineScroll;
 
-    private float _timeSaved;
+    private double _ticksSaved;
 
     [Inject]
     private void Construct(Main main, Scroll scroll, GameEventBus gameEventBus, TimeLineScroll timeLineScroll, TimeLineSettings timeLineSettings)
@@ -29,28 +29,39 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
 
     private void Awake()
     {
-        _gameEventBus.SubscribeTo<SmoothTimeEvent>(OnTimeChangedSmooth);
+        _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(OnTimeChangedSmooth);
         _gameEventBus.SubscribeTo<PanEvent>(OnScrollPan);
     }
 
-    public void OnTimeChangedSmooth(ref SmoothTimeEvent timeEvent)
+    public void OnTimeChangedSmooth(ref TickSmoothTimeEvent timeEvent)
     {
-        marker.transform.localPosition =
-            new Vector3(
-                timeEvent.Time * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
-                (_main.MusicDataSo.bpm / 60),
-                marker.transform.localPosition.y,
-                marker.transform.localPosition.z);
-        _timeSaved = timeEvent.Time;
+        // Конвертируем тики в позицию на таймлайне
+        double beats = timeEvent.Time / Main.TICKS_PER_BEAT;
+        double seconds = beats * (60.0 / _main.MusicDataSo.bpm);
+        
+        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) * (_main.MusicDataSo.bpm / 60.0));
+        
+        marker.transform.localPosition = new Vector3(
+            positionX,
+            marker.transform.localPosition.y,
+            marker.transform.localPosition.z
+        );
+
+        _ticksSaved = timeEvent.Time;
     }
 
     public void OnScrollPan(ref PanEvent panEvent)
     {
-        marker.transform.localPosition =
-            new Vector3(
-                _timeSaved * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset) *
-                (_main.MusicDataSo.bpm / 60),
-                marker.transform.localPosition.y,
-                marker.transform.localPosition.z);
+        // Используем сохраненные тики и BPM для пересчета позиции
+        double beats = _ticksSaved / Main.TICKS_PER_BEAT;
+        double seconds = beats * (60.0 / _main.MusicDataSo.bpm);
+        
+        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset) * (_main.MusicDataSo.bpm / 60.0));
+        
+        marker.transform.localPosition = new Vector3(
+            positionX,
+            marker.transform.localPosition.y,
+            marker.transform.localPosition.z
+        );
     }
 }

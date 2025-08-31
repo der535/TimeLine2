@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TimeLine.Installers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -16,62 +17,73 @@ namespace TimeLine
             dropdown.ClearOptions();
             dropdown.AddOptions(new List<string>()
             {
-                "none",
-                "1/6 step",
-                "1/4 step",
-                "1/3 step",
-                "1/2 step",
+                "None",
+                "1/64",
+                "1/48",
+                "1/32",
+                "1/24",
+                "1/16",
+                "1/12",
+                "1/8",
+                "1/6",
+                "1/4",
+                "1/3",
+                "1/2",
                 "Step",
-                "1/6 beat",
-                "1/4 beat",
-                "1/3 beat",
-                "1/2 beat",
-                "Beat",
-                "Bar",
+                "Whole Note"
             });
+            
             dropdown.onValueChanged.AddListener(arg0 =>
             {
                 switch (dropdown.options[arg0].text)
                 {
-                    case "none":
-                        gridUI.GridSize = 1;
+                    case "None":
+                        gridUI.GridSize = 1f/(float)Main.TICKS_PER_BEAT;
                         break;
-                    case "1/6 step":
-                        gridUI.GridSize = 1000/4/4/6;
+                    case "1/64":
+                        gridUI.GridSize = 1f/64f;
                         break;
-                    case "1/4 step":
-                        gridUI.GridSize = 1000/4/4/4;
+                    case "1/48":
+                        gridUI.GridSize = 1f/48f;
                         break;
-                    case "1/3 step":
-                        gridUI.GridSize = 1000/4/4/3;
+                    case "1/32":
+                        gridUI.GridSize = 1f/32f;
                         break;
-                    case "1/2 step":
-                        gridUI.GridSize = 1000/4/4/2;
+                    case "1/24":
+                        gridUI.GridSize = 1f/24f;
+                        break;
+                    case "1/16":
+                        gridUI.GridSize = 1f/16f;
+                        break;
+                    case "1/12":
+                        gridUI.GridSize = 1f/12f;
+                        break;
+                    case "1/8":
+                        gridUI.GridSize = 1f/8f;
+                        break;
+                    case "1/6":
+                        gridUI.GridSize = 1f/6f;
+                        break;
+                    case "1/4":
+                        gridUI.GridSize = 1f/4f;
+                        break;
+                    case "1/3":
+                        gridUI.GridSize = 1f/3f;
+                        break;
+                    case "1/2":
+                        gridUI.GridSize = 1f/2f;
                         break;
                     case "Step":
-                        gridUI.GridSize = 1000/4/4;
+                        gridUI.GridSize = 1f;
                         break;
-                    case "1/6 beat":
-                        gridUI.GridSize = 1000/4/6;
-                        break;
-                    case "1/4 beat":
-                        gridUI.GridSize = 1000/4/4;
-                        break;
-                    case "1/3 beat":
-                        gridUI.GridSize = 1000/4/3;
-                        break;
-                    case "1/2 beat":
-                        gridUI.GridSize = 1000/4/2;
-                        break;
-                    case "Beat":
-                        gridUI.GridSize = 1000/4;
-                        break;
-                    case "Bar":
-                        gridUI.GridSize = 1000;
+                    case "Whole Note":
+                        gridUI.GridSize = 4f; // 4 beats for a whole note in 4/4 time
                         break;
                 }
             });
-            dropdown.value = 10;
+            
+            // Set default value to 1/4 note
+            dropdown.value = dropdown.options.FindIndex(option => option.text == "1/4");
         }
     }
 }

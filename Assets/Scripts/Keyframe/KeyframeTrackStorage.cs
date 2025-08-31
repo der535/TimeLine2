@@ -38,8 +38,6 @@ namespace TimeLine.Keyframe
 
         private void Evaluate(ref SmoothTimeEvent smoothTimeEvent)
         {
-            print("event");
-
             foreach (var variable in tracks)
             {
                 if (variable.Active)

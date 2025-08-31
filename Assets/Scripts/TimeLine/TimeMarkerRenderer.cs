@@ -9,6 +9,7 @@ public class TimeMarkerRenderer : MonoBehaviour
 {
     [Space] [SerializeField] private GameObject beatLinesPrefab;
     [SerializeField] private int countBeatLines;
+    [SerializeField] private Canvas canvas;
     [Space] private Dictionary<RectTransform, Vector2> _lines = new();
     
     private TimeLineSettings _timeLineSettings;
@@ -30,7 +31,7 @@ public class TimeMarkerRenderer : MonoBehaviour
         {
             Vector3 position = new Vector3(_timeLineSettings.DistanceBetweenBeatLines * i, 0, 0);
             TimeMarker beatLine = Instantiate(beatLinesPrefab, _mainObjects.ContentRectTransform).GetComponent<TimeMarker>();
-            beatLine.Set(i);
+            beatLine.Setup(canvas, i);
             RectTransform beatLineRectTransform = beatLine.GetComponent<RectTransform>();
             beatLineRectTransform.anchoredPosition = position;
             _lines.Add(beatLineRectTransform, beatLineRectTransform.anchoredPosition);

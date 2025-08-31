@@ -7,7 +7,9 @@ namespace TimeLine
     {
         [SerializeField] private TimeLineSettings _timeLineSettings;
         [SerializeField] private Main main;
-        [Range(0, 1000)] [SerializeField] private float gridSize;
+        
+        [Tooltip("Grid size in beats (0.25 = 1/4, 0.125 = 1/8, etc.)")]
+        private float gridSize = 0.25f;
 
         public float GridSize
         {
@@ -15,31 +17,41 @@ namespace TimeLine
             set => gridSize = value;
         }
 
-        public float RoundBeatPositionToGrid(float time)
+        // Конвертирует размер сетки в тики для текущего BPM
+        public double GetGridSizeInTicks()
         {
-            var calculatedTime = time * 1000;
-            calculatedTime = (float)Math.Round(calculatedTime / gridSize) * gridSize;
-            calculatedTime /= 1000;
-            return calculatedTime;
+            return gridSize * Main.TICKS_PER_BEAT;
         }
 
+        // Округляет позицию в тиках до ближайшей сетки
+        public double RoundTicksToGrid(double ticks)
+        {
+            double gridSizeInTicks = GetGridSizeInTicks();
+            return Math.Round(ticks / gridSizeInTicks) * gridSizeInTicks;
+        }
+
+        // Округляет позицию в секундах до сетки
         public float RoundTimeToGrid(float time)
         {
-            float beatInSecond = 60 / main.MusicDataSo.bpm;
-            float calculatedGridMultipluer = gridSize / 1000;
-            float beatInSecondMultiplierd = calculatedGridMultipluer * beatInSecond;
-            float calculatedTime = (float)Math.Round(time / beatInSecondMultiplierd) * beatInSecondMultiplierd;
-
-            // print($"beatInSecond {beatInSecond} === time {time} === calculatedTime {calculatedTime}");
-
-            return calculatedTime;
+            double ticks = main.SecondsToTicks(time);
+            double roundedTicks = RoundTicksToGrid(ticks);
+            return (float)main.TicksToSeconds(roundedTicks);
         }
 
+        // Округляет позицию в пикселях до сетки
         public float RoundAnchorPositionToGrid(float position)
         {
-            float grid = (_timeLineSettings.DistanceBetweenBeatLines * (gridSize / 1000));
-            float calculatedPosition = (float)Math.Round(position / grid) * grid;
-            return calculatedPosition;
+            double ticksPerPixel = Main.TICKS_PER_BEAT / _timeLineSettings.DistanceBetweenBeatLines;
+            double ticks = position * ticksPerPixel;
+            double roundedTicks = RoundTicksToGrid(ticks);
+            return (float)(roundedTicks / ticksPerPixel);
+        }
+        
+        public double RoundTimeToGridInTicks(double ticks)
+        {
+            double seconds = ticks * (60.0 / (main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
+            double roundedSeconds = RoundTimeToGrid((float)seconds);
+            return roundedSeconds * (main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
     }
 }

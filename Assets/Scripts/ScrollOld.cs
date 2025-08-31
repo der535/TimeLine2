@@ -36,7 +36,7 @@ public class ScrollOld : MonoBehaviour
         _gameEventBus.SubscribeTo((ref OldPanEvent oldPanEvent) => _oldPan = oldPanEvent.OldPanOffset,1);
         _gameEventBus.SubscribeTo((ref PanEvent oldPanEvent) =>
         {
-            float curPos = _timeLineConverter.GetCursorBeatPosition(_oldPan, 0);
+            float curPos = (float)_timeLineConverter.GetCursorBeatPosition(_oldPan, 0);
             _timeLineRenderer.SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos) -
                                             _timeLineConverter.CursorPosition().x));
         },1);

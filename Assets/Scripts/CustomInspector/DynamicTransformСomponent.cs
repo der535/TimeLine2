@@ -32,39 +32,50 @@ namespace TimeLine
         private TrackObjectStorage _trackObjectStorage;
         
         private TrackObject _trackObject;
+        private Main _main;
 
         [Inject]
-        private void Construct(GameEventBus eventBus, TrackObjectStorage trackObjectStorage)
+        private void Construct(GameEventBus eventBus, TrackObjectStorage trackObjectStorage, Main main)
         {
             _gameEventBus = eventBus;
             _trackObjectStorage = trackObjectStorage;
+            _main = main;
         }
         
         private void Start()
         {
-            _gameEventBus.SubscribeTo((ref SmoothTimeEvent data) => UpdateValues(data.Time));
+            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) => UpdateValues(data.Time));
             _component = GetComponent<TransformComponent>();
             _trackObjectStorage.GetTrackObjectData(gameObject);
         }
 
-        private void UpdateValues(float time)
+        private void UpdateValues(double ticks)
         {
             if(ComponentActive.Value == false || gameObject.activeSelf == false) return;
             
+            // Конвертируем тики в секунды с учетом BPM
+            double seconds = TicksToSeconds(ticks, _main.MusicDataSo.bpm);
+            
             if(DynamicXPositionActive.Value)
-                _component.XPosition.Value = DynamicXPosition.Value.x + time * DynamicXPosition.Value.y;
+                _component.XPosition.Value = (float)(DynamicXPosition.Value.x + seconds * DynamicXPosition.Value.y);
             if(DynamicYPositionActive.Value)
-                _component.YPosition.Value = DynamicYPosition.Value.x + time * DynamicYPosition.Value.y;
+                _component.YPosition.Value = (float)(DynamicYPosition.Value.x + seconds * DynamicYPosition.Value.y);
             if(DynamicXRotationActive.Value)
-                _component.XRotation.Value = DynamicXRotation.Value.x + time * DynamicXRotation.Value.y;
+                _component.XRotation.Value = (float)(DynamicXRotation.Value.x + seconds * DynamicXRotation.Value.y);
             if(DynamicYRotationActive.Value)
-                _component.YRotation.Value = DynamicYRotation.Value.x + time * DynamicYRotation.Value.y;
+                _component.YRotation.Value = (float)(DynamicYRotation.Value.x + seconds * DynamicYRotation.Value.y);
             if(DynamicZRotationActive.Value)
-                _component.ZRotation.Value = DynamicZRotation.Value.x + time * DynamicZRotation.Value.y;
+                _component.ZRotation.Value = (float)(DynamicZRotation.Value.x + seconds * DynamicZRotation.Value.y);
             if(DynamicXScaleActive.Value)
-                _component.XScale.Value = DynamicXScale.Value.x + time * DynamicXScale.Value.y;
+                _component.XScale.Value = (float)(DynamicXScale.Value.x + seconds * DynamicXScale.Value.y);
             if(DynamicYScaleActive.Value)
-                _component.YScale.Value = DynamicYScale.Value.x + time * DynamicYScale.Value.y;
+                _component.YScale.Value = (float)(DynamicYScale.Value.x + seconds * DynamicYScale.Value.y);
         }
+        private double TicksToSeconds(double ticks, double bpm)
+        {
+            // Конвертация тиков в секунды: ticks * (60 / (bpm * TICKS_PER_BEAT))
+            return ticks * (60.0 / (bpm * Main.TICKS_PER_BEAT));
+        }
+
     }
 }

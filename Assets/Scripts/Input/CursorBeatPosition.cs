@@ -8,7 +8,6 @@ namespace TimeLine.Input
 {
     public class CursorBeatPosition : MonoBehaviour
     {
-        // [Range(0, 1000)] [SerializeField] private int gridSize;
         [SerializeField] private TimeLineSettings timeLineSettings;
         [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
 
@@ -32,7 +31,6 @@ namespace TimeLine.Input
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_mainObjects.CanvasRectTransform,
                 UnityEngine.Input.mousePosition, _mainObjects.MainCamera, out var vector2);
-
             return vector2;
         }
 
@@ -40,13 +38,25 @@ namespace TimeLine.Input
         {
             if (UnityEngine.Input.GetKey(KeyCode.Mouse0) && _isActive)
             {
-               float time = (GetCursorPosition().x - _mainObjects.ContentRectTransform.offsetMin.x) /
-                      (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
-                      (60 / _main.MusicDataSo.bpm) * (_main.MusicDataSo.bpm / 60);
-
-               time = gridUI.RoundBeatPositionToGrid(time);
-               
-               _main.SetTime(time);
+                // Получаем позицию курсора
+                Vector2 cursorPos = GetCursorPosition();
+                print(cursorPos);
+                float pixelX = cursorPos.x - _mainObjects.ContentRectTransform.offsetMin.x;
+                
+                // Вычисляем позицию в тиках
+                double ticksPerPixel = Main.TICKS_PER_BEAT / (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan);
+                double rawTicks = pixelX * ticksPerPixel;
+                
+                print(rawTicks);
+                
+                // Округляем до сетки
+                double gridSizeInTicks = gridUI.GetGridSizeInTicks();
+                double roundedTicks = Math.Round(rawTicks / gridSizeInTicks) * gridSizeInTicks;
+                
+                print(roundedTicks);
+                
+                // Устанавливаем время
+                _main.SetTimeInTicks(roundedTicks);
             }
         }
     }
