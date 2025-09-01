@@ -23,7 +23,7 @@ namespace TimeLine
         private Vector2 _toolStartPosition;
         private Quaternion _inverseRotation;
 
-        public Action<Vector2> OnChangePosition;
+        public Action<RectTransform> OnChangePosition;
 
         public bool isGlobal;
 
@@ -108,7 +108,7 @@ namespace TimeLine
                 toolTransform.anchoredPosition = _toolStartPosition + new Vector2(0, delta.y);
             }
 
-            OnChangePosition?.Invoke(toolTransform.anchoredPosition);
+            OnChangePosition?.Invoke(toolTransform);
         }
 
         private void MoveX()
@@ -136,7 +136,7 @@ namespace TimeLine
                 toolTransform.anchoredPosition = _toolStartPosition + new Vector2(delta.x, 0);
             }
 
-            OnChangePosition?.Invoke(toolTransform.anchoredPosition);
+            OnChangePosition?.Invoke(toolTransform);
         }
 
         private void FreeMove()
@@ -146,7 +146,7 @@ namespace TimeLine
             Vector2 currentMousePos = GetMousePositionInParentSpace();
             Vector2 delta = currentMousePos - _mouseOffset;
             toolTransform.anchoredPosition = _toolStartPosition + delta;
-            OnChangePosition?.Invoke(toolTransform.anchoredPosition);
+            OnChangePosition?.Invoke(toolTransform);
         }
     }
 }

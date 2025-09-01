@@ -27,6 +27,7 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
         private TimeLineScroll _timeLineScroll;
         private GridUI _gridUI;
+        private ScrollOld _scrollOld;
         private Main _main;
 
         private bool _isDragging;
@@ -39,7 +40,7 @@ namespace TimeLine
         private Vector2 _startMousePosition;
         private double _startTrackObjectTicks;
         private double _startMouseTicks;
-        private float _startMouseXLocal; // Добавлено: начальная позиция мыши в локальных координатах
+        private float _startMouseXLocal; 
 
         #endregion
 
@@ -47,10 +48,7 @@ namespace TimeLine
         internal double TimeDuractionInTicks { get; private set; }
         internal TrackLine TrackLine { get; private set; }
         internal string Name { get; private set; }
-
-        // Свойства для обратной совместимости (в секундах)
-        internal float StartTime => (float)TicksToSeconds(StartTimeInTicks);
-        internal float TimeDuraction => (float)TicksToSeconds(TimeDuractionInTicks);
+        
         internal float BeatDuraction => (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
 
         [Inject]
@@ -123,7 +121,9 @@ namespace TimeLine
             _isRightResizing = true;
             _isResizing = isResizing;
             if (_isResizing)
+            {
                 _startMousePosition = GetMousePosition();
+            }
         }
 
         public void SetResizeLeft(bool isResizing)
@@ -133,7 +133,9 @@ namespace TimeLine
             _isRightResizing = false;
             _isResizing = isResizing;
             if (_isResizing)
+            {
                 _startMousePosition = GetMousePosition();
+            }
         }
 
         private void Update()
@@ -141,21 +143,28 @@ namespace TimeLine
             Drag();
             if (_isResizing)
             {
+                // Получаем актуальное расстояние между линиями с учетом панорамирования
+                float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
+        
                 if (_isRightResizing)
                 {
-                    double deltaTicks = AnchorPositionToTicks(GetMousePosition().x - _startMousePosition.x);
-                    ChangeDurationInTicks(_startResizingDuractionInTicks + deltaTicks);
+                    Vector2 currentMousePosition = GetMousePosition();
+                    float deltaPixels = currentMousePosition.x - _startMousePosition.x;
+                    double deltaTicks = (deltaPixels / pixelsPerBeat) * Main.TICKS_PER_BEAT;
+                    ChangeDurationInTicks(RoundTicksToGrid(_startResizingDuractionInTicks + deltaTicks));
                 }
                 else
                 {
-                    double deltaTicks = AnchorPositionToTicks(_startMousePosition.x - GetMousePosition().x);
+                    Vector2 currentMousePosition = GetMousePosition();
+                    float deltaPixels = _startMousePosition.x - currentMousePosition.x;
+                    double deltaTicks = (deltaPixels / pixelsPerBeat) * Main.TICKS_PER_BEAT;
                     double newStartTimeInTicks = _startResizingTimeInTicks - deltaTicks;
                     double newDurationInTicks = _startResizingDuractionInTicks + deltaTicks;
-                    
+            
                     // Округляем до сетки
                     newStartTimeInTicks = RoundTicksToGrid(newStartTimeInTicks);
                     newDurationInTicks = RoundTicksToGrid(newDurationInTicks);
-                    
+            
                     StartTimeInTicks = newStartTimeInTicks;
                     ChangeDurationInTicks(newDurationInTicks);
                 }
@@ -164,7 +173,7 @@ namespace TimeLine
 
         public void ChangeDurationInTicks(double durationInTicks)
         {
-            TimeDuractionInTicks = durationInTicks;
+            TimeDuractionInTicks = Mathf.Round((float)durationInTicks);
             UpdateVisuals();
         }
 
@@ -265,8 +274,7 @@ namespace TimeLine
 
         private double AnchorPositionDeltaToTicks(float deltaAnchorPosition)
         {
-            // Вычисляем изменение времени на основе смещения в координатах
-            // Учитываем текущий масштаб (DistanceBetweenBeatLines + Pan)
+            // Используем актуальное расстояние между линиями с учетом панорамирования
             float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
             float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
             return beatsDelta * Main.TICKS_PER_BEAT;
@@ -286,6 +294,9 @@ namespace TimeLine
 
         private double AnchorPositionToTicks(float anchorPosition)
         {
+            // Используем актуальное расстояние между линиями с учетом панорамирования
+            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
+            // Предполагая, что _timeLineConverter работает с пикселями, а не с битами
             float timeInSeconds = _timeLineConverter.GetTimeFromAnchorPosition(anchorPosition);
             return SecondsToTicks(timeInSeconds);
         }

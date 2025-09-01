@@ -17,10 +17,10 @@
             return new RotationData(this.rotation);
         }
     
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             RotationData otherRot = (RotationData)other;
-            return new RotationData(Quaternion.Lerp(rotation, otherRot.rotation, t));
+            return new RotationData(Quaternion.Lerp(rotation, otherRot.rotation, (float)t));
         }
     
         public override void Apply(GameObject target)

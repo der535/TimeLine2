@@ -13,14 +13,14 @@ namespace TimeLine.Keyframe
         private MainObjects _mainObjects;
         private TimeLineConverter _timeLineConverter;
         private GridUI _gridUI;
-        
+
         private Vector2 _startMousePosition;
         private Vector2 _startObjectPosition;
-        
-        public Keyframe _keyframe {get; private set;}
+
+        public Keyframe _keyframe { get; private set; }
 
         private Action _sortKeyframes;
-        
+
         private bool _isDragging;
 
         public float time;
@@ -48,12 +48,13 @@ namespace TimeLine.Keyframe
         {
             print(_mainObjects.CanvasRectTransform);
             print(_mainObjects.MainCamera);
-            
+
             RectTransformUtility.ScreenPointToLocalPointInRectangle
-                (_mainObjects.CanvasRectTransform, Mouse.current.position.ReadValue(), _mainObjects.MainCamera, out var localPoint);
+            (_mainObjects.CanvasRectTransform, Mouse.current.position.ReadValue(), _mainObjects.MainCamera,
+                out var localPoint);
             return localPoint;
         }
-        
+
         public void Drag(bool isDragging)
         {
             _isDragging = isDragging;
@@ -62,13 +63,18 @@ namespace TimeLine.Keyframe
             _startMousePosition = GetMousePosition();
             _startObjectPosition = _rectTransform.anchoredPosition;
         }
-        
+
         private void Update()
         {
             if (_isDragging)
             {
-                _rectTransform.anchoredPosition = new Vector2(_gridUI.RoundAnchorPositionToGrid(_startObjectPosition.x - (_startMousePosition.x - GetMousePosition().x)), _rectTransform.anchoredPosition.y);
-                _keyframe.time = _timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x);
+                _rectTransform.anchoredPosition =
+                    new Vector2(
+                        _gridUI.RoundAnchorPositionToGrid(_startObjectPosition.x -
+                                                          (_startMousePosition.x - GetMousePosition().x)),
+                        _rectTransform.anchoredPosition.y);
+
+                _keyframe.ticks = _timeLineConverter.SecondsToTicks(_timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x));
                 _sortKeyframes.Invoke();
             }
         }

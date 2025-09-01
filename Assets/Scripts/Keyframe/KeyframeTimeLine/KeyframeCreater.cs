@@ -31,7 +31,7 @@ namespace TimeLine
                 _keyframeTrackStorage.AddTrack(node, new Track(target, target.name),
                     trackObjectData.trackObject);
             
-            _keyframeTrackStorage.AddKeyframe(node, _main.CurrentTime - trackObjectData.trackObject.StartTime,
+            _keyframeTrackStorage.AddKeyframe(node, _main.TicksCurrentTime() - trackObjectData.trackObject.StartTimeInTicks,
                 animationData);
         }
     }

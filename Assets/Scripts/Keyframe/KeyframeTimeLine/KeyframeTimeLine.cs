@@ -42,18 +42,18 @@ namespace TimeLine
         public void OnSelectTrackObject(TrackObjectData trackObjectData)
         {
             _trackObject = trackObjectData.trackObject;
-            UpdatePosition(SecondsToTicks(_main.CurrentTime, _main.MusicDataSo.bpm));
+            UpdatePosition(_main.TicksCurrentTime());
         }
 
         public void OnDragTrackObject(ref DragTrackObjectEvent dragTrackObjectEvent)
         {
-            UpdatePosition(SecondsToTicks(_main.CurrentTime, _main.MusicDataSo.bpm), dragTrackObjectEvent.Track.trackObject);
+            UpdatePosition(_main.TicksCurrentTime(), dragTrackObjectEvent.Track.trackObject);
         }
 
         private void UpdatePosition(double ticks, TrackObject trackObject)
         {
             // Конвертируем StartTime трек-объекта в тики
-            double startTimeTicks = SecondsToTicks(trackObject.StartTime, _main.MusicDataSo.bpm);
+            double startTimeTicks = trackObject.StartTimeInTicks;
             
             // Вычисляем разницу во времени в тиках
             double timeDiffTicks = ticks - startTimeTicks;

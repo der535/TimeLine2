@@ -29,6 +29,8 @@ namespace TimeLine
         private float _startXScale;
         private float _startYScale;
 
+        private Vector2 _initialToolSize;
+
         [Inject]
         private void Construct(GameEventBus gameEventBus, MainObjects mainObjects)
         {
@@ -38,31 +40,65 @@ namespace TimeLine
 
         private void Awake()
         {
-            // _eventBus.SubscribeTo<SelectSceneObject>(((ref SelectSceneObject data) => SetPosition(data.GameObject)));
             _eventBus.SubscribeTo(((ref SelectObjectEvent data) => SetPosition(data.Track.sceneObject)));
 
             _toolFollowingObject = () =>
             {
-                Vector2 position = camera.WorldToScreenPoint(new Vector2(_transformComponent.XPosition.Value,
-                    _transformComponent.YPosition.Value));
-                position -= _mainObjects.CanvasRectTransform.sizeDelta / 2;
-                tool.anchoredPosition = position;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(  
+                    _mainObjects.ToolRectTransform,
+                    camera.WorldToScreenPoint(new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value)),
+                    camera,
+                    out var localPoint
+                );
+                tool.anchoredPosition = localPoint;
+                
+                // Обновляем размер инструмента при изменении позиции объекта
+                UpdateToolSize();
             };
 
             _scaleTool.HorizontalDeltaStart += SetStartScale;
             _scaleTool.VerticalDeltaStart += SetStartScale;
 
-            _scaleTool.HorizontalDelta += f => _transformComponent.XScale.Value = gridScene.ScaleSnapToGrid(_startXScale * f);
-            _scaleTool.VerticalDelta += f => _transformComponent.YScale.Value = gridScene.ScaleSnapToGrid(_startYScale * f);
+            _scaleTool.HorizontalDelta += f => 
+            {
+                float newScale = gridScene.SnapToGrid(_startXScale * f);
+                _transformComponent.XScale.Value = newScale;
+                UpdateToolSize(); // Немедленно обновляем размер инструмента
+            };
+            
+            _scaleTool.VerticalDelta += f => 
+            {
+                float newScale = gridScene.SnapToGrid(_startYScale * f);
+                _transformComponent.YScale.Value = newScale;
+                UpdateToolSize(); // Немедленно обновляем размер инструмента
+            };
+            
+            // Сохраняем начальный размер инструмента
+            _initialToolSize = tool.sizeDelta;
         }
 
         void SetStartScale()
         {
             if (_transformComponent)
             {
-                _startXScale = _transformComponent.XScale.Value;
-                _startYScale = _transformComponent.YScale.Value;
+                _startXScale = gridScene.SnapToGrid(_transformComponent.XScale.Value);
+                _startYScale = gridScene.SnapToGrid(_transformComponent.YScale.Value);
             }
+        }
+
+        private void UpdateToolSize()
+        {
+            if (_transformComponent == null) return;
+            
+            // Привязываем размер инструмента к сетке
+            float snappedXScale = gridScene.SnapToGrid(_transformComponent.XScale.Value);
+            float snappedYScale = gridScene.SnapToGrid(_transformComponent.YScale.Value);
+            
+            // Масштабируем инструмент пропорционально объекту
+            tool.sizeDelta = new Vector2(
+                _initialToolSize.x * snappedXScale,
+                _initialToolSize.y * snappedYScale
+            );
         }
 
         private void SetPosition(GameObject data)
@@ -72,17 +108,34 @@ namespace TimeLine
             {
                 _transformComponent.XPosition.OnValueChanged -= _toolFollowingObject;
                 _transformComponent.YPosition.OnValueChanged -= _toolFollowingObject;
+                _transformComponent.XScale.OnValueChanged -= UpdateToolSize;
+                _transformComponent.YScale.OnValueChanged -= UpdateToolSize;
             }
             
-            tool.anchoredPosition = camera.WorldToScreenPoint(data.transform.position);
-            tool.anchoredPosition -= _mainObjects.CanvasRectTransform.sizeDelta / 2;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(  
+                _mainObjects.ToolRectTransform,
+                camera.WorldToScreenPoint(data.transform.position),
+                camera,
+                out var localPoint
+            );
+            
+            tool.anchoredPosition = localPoint;
 
             _transformComponent = data.GetComponent<TransformComponent>();
 
+            // Привязываем начальный масштаб к сетке
+            _transformComponent.XScale.Value = gridScene.SnapToGrid(_transformComponent.XScale.Value);
+            _transformComponent.YScale.Value = gridScene.SnapToGrid(_transformComponent.YScale.Value);
+            
             tool.rotation = Quaternion.Euler(tool.rotation.x, tool.rotation.y, _transformComponent.ZRotation.Value);
+
+            // Обновляем размер инструмента
+            UpdateToolSize();
 
             _transformComponent.XPosition.OnValueChanged += _toolFollowingObject;
             _transformComponent.YPosition.OnValueChanged += _toolFollowingObject;
+            _transformComponent.XScale.OnValueChanged += UpdateToolSize;
+            _transformComponent.YScale.OnValueChanged += UpdateToolSize;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -8,7 +9,9 @@ namespace TimeLine.Parent
     public class ParentComponent : MonoBehaviour
     {
         private ParentMain _parentMain;
+        
         private TMP_Dropdown _dropdown;
+        private GameObject _sceneObject;
 
         private TrackObjectData _currentParent; // Текущий выбранный родительский объект
 
@@ -17,14 +20,22 @@ namespace TimeLine.Parent
         {
             _parentMain = parentMain;
         }
-        
-        internal void Setup(TMP_Dropdown dropdown)
+
+        private void Start()
+        {
+            _parentMain.OnTrackObjectSelected += _ => InitializeDropdown();
+        }
+
+        internal void Setup(TMP_Dropdown dropdown, GameObject sceneObject)
         {
             _dropdown = dropdown;
-            _parentMain.OnTrackObjectSelected += _ => InitializeDropdown();
+            _sceneObject = sceneObject;
+            dropdown.onValueChanged = new TMP_Dropdown.DropdownEvent();
             dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
             _parentMain.InvokeOnTrackObjectSelected();
             InitializeDropdown();
+            
+            print(sceneObject.gameObject.name);
         }
 
         private void InitializeDropdown()
@@ -37,7 +48,7 @@ namespace TimeLine.Parent
             // Добавляем объекты в Dropdown
             foreach (var obj in _parentMain.sceneGameObjects)
             {
-                if (obj != null)
+                if (obj != null && obj.sceneObject != _sceneObject)
                 {
                     options.Add(obj.sceneObject != null ? obj.sceneObject.name : "Empty");
                 }
@@ -62,8 +73,6 @@ namespace TimeLine.Parent
                 _dropdown.value = 0;
                 _currentParent = _parentMain.sceneGameObjects[0];
             }
-            
-            print(_dropdown.options.Count); 
         }
 
         private void OnDropdownValueChanged(int index)

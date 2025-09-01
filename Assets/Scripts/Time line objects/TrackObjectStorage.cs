@@ -26,16 +26,16 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo<SmoothTimeEvent>(ActiveSceneObject);
+            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(ActiveSceneObject);
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Track.trackObject));
         }
 
-        private void ActiveSceneObject(ref SmoothTimeEvent smoothTimeEvent)
+        private void ActiveSceneObject(ref TickSmoothTimeEvent smoothTimeEvent)
         {
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.sceneObject.SetActive(trackObject.trackObject.StartTime <= smoothTimeEvent.Time &&
-                                                  trackObject.trackObject.TimeDuraction + trackObject.trackObject.StartTime  >
+                trackObject.sceneObject.SetActive(trackObject.trackObject.StartTimeInTicks <= smoothTimeEvent.Time &&
+                                                  trackObject.trackObject.TimeDuractionInTicks + trackObject.trackObject.StartTimeInTicks  >
                                                   smoothTimeEvent.Time);
             }
         }

@@ -9,6 +9,7 @@ namespace TimeLine.Installers
     public class MainObjects
     {
         [SerializeField] private RectTransform canvasRectTransform;
+        [SerializeField] private RectTransform toolRectTransform;
         [SerializeField] private RectTransform contentRectTransform;
         [SerializeField] private Camera mainCamera;
 
@@ -28,6 +29,7 @@ namespace TimeLine.Installers
         public Camera MainCamera => mainCamera;
 
         public RectTransform ContentRectTransform => contentRectTransform;
+        public RectTransform ToolRectTransform => toolRectTransform;
 
         public void NotifyContentRectChanged()
         {

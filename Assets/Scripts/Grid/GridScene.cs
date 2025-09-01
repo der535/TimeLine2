@@ -4,40 +4,31 @@ namespace TimeLine
 {
     public class GridScene : MonoBehaviour
     {
-        [SerializeField] private float _gridSize = 1000;
-        [SerializeField] private float _rotate = 360;
+        [SerializeField] private float _gridSize = 1f;
+        [SerializeField] private float _rotateStep = 90f;
 
-        public Vector2 PositionFloatSnapToGrid(Vector2 value, Quaternion localEulerAngles)
+        public Vector2 PositionFloatSnapToGrid(Vector2 value, Quaternion rotation)
         {
-            Vector2 currentValue = value * 1000;
-            currentValue =
-                new Vector2
-                (Mathf.Round(currentValue.x / _gridSize),
-                    Mathf.Round(currentValue.y / _gridSize)) * _gridSize;
+            // Переводим значение в глобальную систему координат
+            Vector3 globalValue = rotation * new Vector3(value.x, value.y, 0);
+            
+            // Снаппим к сетке в глобальных координатах
+            globalValue.x = SnapToGrid(globalValue.x);
+            globalValue.y = SnapToGrid(globalValue.y);
 
-            // Преобразуем движение обратно в глобальное пространство
-            Vector2 globalMovement =  localEulerAngles * currentValue;
-
-            return globalMovement / 1000;
-        }
-
-        public float ScaleSnapToGrid(float value)
-        {
-            float calculatedScale = value;
-            print(calculatedScale);
-            calculatedScale *= 1000;
-            print(calculatedScale);
-            calculatedScale = Mathf.Round(calculatedScale/_gridSize)*_gridSize;
-            print(calculatedScale);
-            print(calculatedScale/1000);
-            return calculatedScale/1000;
+            // Возвращаем в локальные координаты
+            return (Quaternion.Inverse(rotation) * globalValue);
         }
         
         public float RotateSnapToGrid(float value)
         {
-            float calculatedScale = value;
-            calculatedScale = Mathf.Round(calculatedScale/_rotate)*_rotate;
-            return calculatedScale;
+            return Mathf.Round(value / _rotateStep) * _rotateStep;
+        }
+
+        public float SnapToGrid(float value)
+        {
+            if (_gridSize <= 0) return value;
+            return Mathf.Round(value / _gridSize) * _gridSize;
         }
     }
 }

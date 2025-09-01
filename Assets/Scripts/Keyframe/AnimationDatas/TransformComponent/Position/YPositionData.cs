@@ -17,10 +17,10 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Position
             return new YPositionData(value);
         }
 
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             YPositionData otherPos = (YPositionData)other;
-            return new YPositionData(Mathf.Lerp(value, otherPos.value, t));
+            return new YPositionData(Mathf.Lerp(value, otherPos.value, (float)t));
         }
 
         public override void Apply(GameObject target)

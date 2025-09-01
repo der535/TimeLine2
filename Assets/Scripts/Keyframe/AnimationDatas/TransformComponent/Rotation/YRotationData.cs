@@ -17,10 +17,10 @@
             return new YRotationData(value);
         }
 
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             YRotationData otherPos = (YRotationData)other;
-            return new YRotationData(Mathf.Lerp(value, otherPos.value, t));
+            return new YRotationData(Mathf.Lerp(value, otherPos.value, (float)t));
         }
 
         public override void Apply(GameObject target)

@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace TimeLine.Keyframe
 {
     using System.Collections.Generic;
@@ -18,9 +20,11 @@ namespace TimeLine.Keyframe
             TargetObject = target;
         }
 
-        public Keyframe AddKeyframe(float time, AnimationData adata = null)
+        public Keyframe AddKeyframe(double time, AnimationData adata = null)
         {
-            Keyframe newKeyframe = new Keyframe(time);
+            var time2 = Mathf.RoundToInt((float)time);
+            Debug.Log(time2);
+            Keyframe newKeyframe = new Keyframe(time2);
             
             newKeyframe.AddData(adata);
             
@@ -41,14 +45,14 @@ namespace TimeLine.Keyframe
             SortKeyframes();
         }
 
-        public void Evaluate(float time)
+        public void Evaluate(double time)
         {
             Debug.Log(TrackName);
             if (Keyframes.Count == 0 || TargetObject == null) return;
         
             // Находим текущий и следующий ключевые кадры
-            Keyframe prev = Keyframes.LastOrDefault(k => k.time <= time);
-            Keyframe next = Keyframes.FirstOrDefault(k => k.time >= time);
+            Keyframe prev = Keyframes.LastOrDefault(k => k.ticks <= time);
+            Keyframe next = Keyframes.FirstOrDefault(k => k.ticks >= time);
 
             Debug.Log(prev);
             Debug.Log(next);
@@ -62,7 +66,8 @@ namespace TimeLine.Keyframe
             // Интерполяция между кадрами
             else if (prev != next)
             {
-                float t = Mathf.InverseLerp(prev.time, next.time, time);
+                double t = Mathf.InverseLerp((float)prev.ticks, (float)next.ticks, (float)time);
+                Debug.Log(t);
                 prev.Interpolate(next, TargetObject, t);
             }
             else
@@ -70,6 +75,8 @@ namespace TimeLine.Keyframe
                 prev.Apply(TargetObject);
             }
         }
+        
+
         
         // Добавленный метод копирования трека
         public Track Copy(GameObject target)
@@ -84,7 +91,7 @@ namespace TimeLine.Keyframe
 
         public void SortKeyframes()
         {
-            Keyframes = Keyframes.OrderBy(k => k.time).ToList();
+            Keyframes = Keyframes.OrderBy(k => k.ticks).ToList();
         }
     }
 }

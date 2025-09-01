@@ -17,10 +17,10 @@
             return new XPositionData(value);
         }
 
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             XPositionData otherPos = (XPositionData)other;
-            return new XPositionData(Mathf.Lerp(value, otherPos.value, t));
+            return new XPositionData(Mathf.Lerp(value, otherPos.value, (float)t));
         }
 
         public override void Apply(GameObject target)

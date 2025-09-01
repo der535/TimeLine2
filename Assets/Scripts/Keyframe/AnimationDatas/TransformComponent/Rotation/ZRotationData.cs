@@ -17,10 +17,10 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
             return new ZRotationData(value);
         }
 
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             ZRotationData otherPos = (ZRotationData)other;
-            return new ZRotationData(Mathf.Lerp(value, otherPos.value, t));
+            return new ZRotationData(Mathf.Lerp(value, otherPos.value, (float)t));
         }
 
         public override void Apply(GameObject target)

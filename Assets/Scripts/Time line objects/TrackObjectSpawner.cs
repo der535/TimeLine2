@@ -47,7 +47,7 @@ namespace TimeLine
             
             TrackObject trackObject = _container.InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
             
-            trackObject.Setup(trackObjectSO, _trackStorage.TrackLines[0], _main.CurrentTime);
+            trackObject.Setup(trackObjectSO, _trackStorage.TrackLines[0], _main.TicksCurrentTime());
 
             Branch branch = _branchCollection.AddBranch(id, trackObjectSO.name);
             
@@ -103,7 +103,7 @@ namespace TimeLine
             {
                 name = trackObjectData.trackObject.Name,
                 startLiveTime = (float)trackObjectData.trackObject.BeatDuraction
-            }, _trackStorage.TrackLines[0], _main.CurrentTime);
+            }, _trackStorage.TrackLines[0], _main.TicksCurrentTime());
             
             Branch branch = _branchCollection.CopyBranch(trackObjectData.branch, id);
 

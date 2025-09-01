@@ -23,7 +23,7 @@ namespace TimeLine.Keyframe
 
         void Awake()
         {
-            _gameEventBus.SubscribeTo<SmoothTimeEvent>(Evaluate);
+            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(Evaluate);
         }
 
         [Button]
@@ -36,14 +36,14 @@ namespace TimeLine.Keyframe
             }
         }
 
-        private void Evaluate(ref SmoothTimeEvent smoothTimeEvent)
+        private void Evaluate(ref TickSmoothTimeEvent smoothTimeEvent)
         {
             foreach (var variable in tracks)
             {
                 if (variable.Active)
                 {
                     print(variable.Track.Keyframes.Count);
-                    variable.Track.Evaluate(smoothTimeEvent.Time - variable.TrackObject.StartTime);
+                    variable.Track.Evaluate(smoothTimeEvent.Time - variable.TrackObject.StartTimeInTicks);
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace TimeLine.Keyframe
             return null;
         }
 
-        public void AddKeyframe(TreeNode treeNode, float time, AnimationData data)
+        public void AddKeyframe(TreeNode treeNode, double time, AnimationData data)
         {
             Track track = GetTrack(treeNode);
             _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));

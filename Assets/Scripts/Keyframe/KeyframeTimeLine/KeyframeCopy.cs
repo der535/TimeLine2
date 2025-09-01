@@ -33,7 +33,7 @@ namespace TimeLine
         private void Copy(Keyframe.Keyframe keyframe, Track track, TrackObject trackObject)
         {
             Keyframe.Keyframe copyKeyframe = keyframe.Clone();
-            copyKeyframe.time = _main.CurrentTime - trackObject.StartTime;
+            copyKeyframe.ticks = _main.TicksCurrentTime() - trackObject.StartTimeInTicks;
             track.AddKeyframe(copyKeyframe);
             _gameEventBus.Raise(new AddKeyframeEvent(copyKeyframe));
         }

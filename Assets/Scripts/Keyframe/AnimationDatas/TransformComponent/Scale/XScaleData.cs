@@ -19,10 +19,10 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
             return new XScaleData(value);
         }
 
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             XScaleData otherPos = (XScaleData)other;
-            return new XScaleData(Mathf.Lerp(value, otherPos.value, t));
+            return new XScaleData(Mathf.Lerp(value, otherPos.value, (float)t));
         }
 
         public override void Apply(GameObject target)

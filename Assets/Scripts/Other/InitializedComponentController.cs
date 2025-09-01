@@ -36,12 +36,12 @@ namespace TimeLine
         {
             foreach (var VARIABLE in _components)
             {
-                if (_main.CurrentTime <= VARIABLE.TrackObject.StartTime && VARIABLE.Initialized == false)
+                if (_main.TicksCurrentTime() <= VARIABLE.TrackObject.StartTimeInTicks && VARIABLE.Initialized == false)
                 {
                     VARIABLE.IInitializedComponent.Initialized();
                     VARIABLE.Initialized = true;
                 }
-                else if(_main.CurrentTime > VARIABLE.TrackObject.StartTime)
+                else if(_main.TicksCurrentTime() > VARIABLE.TrackObject.StartTimeInTicks)
                 {
                     VARIABLE.Initialized = false;
                 }

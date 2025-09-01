@@ -25,7 +25,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
             if (component is ParentComponent parentComponent)
             {
                 TMP_Dropdown dropdown = _customInspectorDrawer.CreateDropDownField("Parent object");
-                parentComponent.Setup(dropdown);
+                parentComponent.Setup(dropdown, target);
             }
         }
     }

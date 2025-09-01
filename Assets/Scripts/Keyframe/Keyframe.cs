@@ -6,12 +6,12 @@
 
     public class Keyframe
     {
-        public float time;
+        public double ticks; // Время в тиках
         private List<AnimationData> animationData = new List<AnimationData>();
 
-        public Keyframe(float time)
+        public Keyframe(double ticks)
         {
-            this.time = time;
+            this.ticks = ticks;
         }
         
         public void AddData(AnimationData data)
@@ -27,18 +27,17 @@
             }
         }
         
-        // Добавленный метод клонирования ключевого кадра
         public Keyframe Clone()
         {
-            Keyframe clone = new Keyframe(this.time);
-            foreach (AnimationData data in this.animationData)
+            Keyframe clone = new Keyframe(ticks);
+            foreach (AnimationData data in animationData)
             {
                 clone.animationData.Add(data.Clone());
             }
             return clone;
         }
 
-        public void Interpolate(Keyframe next, GameObject target, float t)
+        public void Interpolate(Keyframe next, GameObject target, double t)
         {
             // Для каждого типа данных
             var allTypes = animationData.Select(d => d.GetType())

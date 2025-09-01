@@ -3,6 +3,7 @@ using TimeLine.EventBus.Events.TimeLine;
 using UnityEngine;
 using Zenject;
 using System;
+using TimeLine.TimeLine;
 
 namespace TimeLine
 {
@@ -18,8 +19,12 @@ namespace TimeLine
         private const double SECONDS_IN_MINUTE = 60.0;
         
         public MusicDataSO MusicDataSo => musicData;
-    
-        public float CurrentTime => audioSource.time;
+        private TimeLineConverter _timeLineConverter;
+        
+        public double TicksCurrentTime()
+        {
+           return _timeLineConverter.SecondsToTicks(audioSource.time);
+        }
 
         private double _smoothTimeInTicks;
         private double _exactTimeInTicks;
@@ -33,17 +38,17 @@ namespace TimeLine
         private double TicksPerSecond => 1.0 / SecondsPerTick;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, TimeLineSettings timeLineSettings)
+        private void Construct(GameEventBus gameEventBus, TimeLineSettings timeLineSettings, TimeLineConverter timeLineConverter)
         {
             _gameEventBus = gameEventBus;
             _timeLineSettings = timeLineSettings;
+            _timeLineConverter = timeLineConverter;
         }
 
         private void Awake()
         {
             audioSource.clip = musicData.music;
         }
-
         
         public float Offset() => offset * _timeLineSettings.DistanceBetweenBeatLines;
 
@@ -56,8 +61,6 @@ namespace TimeLine
         {
             return ticks * SecondsPerTick;
         }
-        
-        
     
         public void Play()
         {
@@ -80,9 +83,6 @@ namespace TimeLine
             _smoothTimeInTicks = ticks;
             _exactTimeInTicks = ticks;
             _lastAudioTime = timeInSeconds;
-            
-            _gameEventBus.Raise(new SmoothTimeEvent((float)timeInSeconds));
-            _gameEventBus.Raise(new ExactTimeEvent((float)timeInSeconds));
             
             _gameEventBus.Raise(new TickSmoothTimeEvent(ticks));
             _gameEventBus.Raise(new TickExactTimeEvent(ticks));
@@ -111,14 +111,8 @@ namespace TimeLine
             double exactVisualTimeInTicks = _exactTimeInTicks - visualOffsetTicks;
             double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
             
-            // Convert back to seconds for events
-            float exactTimeInSeconds = (float)TicksToSeconds(exactVisualTimeInTicks);
-            float smoothTimeInSeconds = (float)TicksToSeconds(smoothVisualTimeInTicks);
             
             // Raise events
-            _gameEventBus.Raise(new ExactTimeEvent(exactTimeInSeconds));
-            _gameEventBus.Raise(new SmoothTimeEvent(smoothTimeInSeconds));
-            
             _gameEventBus.Raise(new TickSmoothTimeEvent(exactVisualTimeInTicks));
             _gameEventBus.Raise(new TickExactTimeEvent(smoothVisualTimeInTicks));
             

@@ -17,10 +17,10 @@
             return new YScaleData(value);
         }
 
-        public override AnimationData Interpolate(AnimationData other, float t)
+        public override AnimationData Interpolate(AnimationData other, double t)
         {
             YScaleData otherPos = (YScaleData)other;
-            return new YScaleData(Mathf.Lerp(value, otherPos.value, t));
+            return new YScaleData(Mathf.Lerp(value, otherPos.value, (float)t));
         }
 
         public override void Apply(GameObject target)

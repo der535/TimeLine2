@@ -28,62 +28,69 @@ namespace TimeLine
 
         public void Awake()
         {
-            _gameEventBus.SubscribeTo<ExactTimeEvent>(OnTimeChangedUnSmooth);
-            _gameEventBus.SubscribeTo<TickExactTimeEvent>(Calculate);
+            _gameEventBus.SubscribeTo<TickExactTimeEvent>(OnTimeChangedUnSmooth);
         }
 
-        public void OnTimeChangedUnSmooth(ref ExactTimeEvent timeEvent)
+        public void OnTimeChangedUnSmooth(ref TickExactTimeEvent timeEvent)
         {
-            float currentTime = timeEvent.Time;
-            float beatInSeconds = SecondsInMunit / _main.MusicDataSo.bpm;
-            double currentBeat = Math.Ceiling((currentTime) / beatInSeconds);
+            double currentTimeInTicks = timeEvent.Time;
+            
+            // Вычисляем текущую долю
+            double currentBeat = Math.Ceiling(currentTimeInTicks / Main.TICKS_PER_BEAT);
+            
             if (currentBeat != _oldBeat)
             {
                 _oldBeat = currentBeat;
                 _gameEventBus.Raise(new BeatEvent((int)currentBeat));
+                
+                // Также обновляем текстовое отображение
+                UpdateTextDisplay(currentTimeInTicks);
+            }
+            else
+            {
+                // Обновляем только отображение, если доля не изменилась
+                UpdateTextDisplay(currentTimeInTicks);
             }
         }
 
-        private void Calculate(ref TickExactTimeEvent timeEvent)
+
+        private void UpdateTextDisplay(double currentTimeInTicks)
         {
-            double currentTimeInTicks = timeEvent.Time;
-    
             // Константы для преобразования
-            const double ticksPerBeat = 96.0; // TICKS_PER_BEAT
             const double beatsPerBar = 4.0;   // обычно 4 доли в такте
             const int stepsPerBeat = 4;       // 4 шага на долю (1/16 ноты)
             const int stepsPerBar = (int)(beatsPerBar * stepsPerBeat); // 16 шагов в такте
-    
+
             // Вычисляем компоненты времени
-            double totalBeats = currentTimeInTicks / ticksPerBeat;
+            double totalBeats = currentTimeInTicks / Main.TICKS_PER_BEAT;
             double bars = totalBeats / beatsPerBar;
-    
+
             // Целая часть - такты
             int wholeBars = (int)bars;
-    
+
             // Дробная часть - доли и тики
             double fractionalBar = bars - wholeBars;
             double beatsInCurrentBar = fractionalBar * beatsPerBar;
-    
+
             int wholeBeats = (int)beatsInCurrentBar;
             double fractionalBeat = beatsInCurrentBar - wholeBeats;
-            int ticks = (int)(fractionalBeat * ticksPerBeat);
-    
+            int ticks = (int)(fractionalBeat * Main.TICKS_PER_BEAT);
+
             // Формат 1: bar:beat:tick (такты:доли:тики)
             string format1 = $"{wholeBars + 1}:{wholeBeats + 1}:{ticks:00}";
-    
+
             // Формат 2: bar:step:tick (такты:шаги:тики)
             // Вычисляем общее количество шагов в текущем такте
             double totalStepsInBar = beatsInCurrentBar * stepsPerBeat;
             int wholeSteps = (int)totalStepsInBar;
             double fractionalStep = totalStepsInBar - wholeSteps;
-            int stepTicks = (int)(fractionalStep * (ticksPerBeat / stepsPerBeat));
-    
+            int stepTicks = (int)(fractionalStep * (Main.TICKS_PER_BEAT / stepsPerBeat));
+
             // Убеждаемся, что шаги в диапазоне 1-16
             int step = wholeSteps % stepsPerBar;
-    
+
             string format2 = $"{wholeBars + 1}:{step + 1}:{stepTicks:00}";
-    
+
             // Выводим оба формата
             _text.text = $"B:B:T: {format1}\nB:S:T: {format2}";
         }
