@@ -2,6 +2,7 @@ using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.Installers;
+using TimeLine.Keyframe;
 using TimeLine.TimeLine;
 using TMPro;
 using UnityEngine;
@@ -29,13 +30,16 @@ namespace TimeLine
         private GridUI _gridUI;
         private ScrollOld _scrollOld;
         private Main _main;
+        private KeyframeTrackStorage _keyframeTrackStorage;
 
         private bool _isDragging;
         private bool _isResizing;
         private bool _isRightResizing;
+        private bool _wasResizing; // Для отслеживания предыдущего состояния изменения размера
 
         private double _startResizingDuractionInTicks;
         private double _startResizingTimeInTicks;
+        private double _initialStartTimeInTicks; // Начальное время до изменения размера
 
         private Vector2 _startMousePosition;
         private double _startTrackObjectTicks;
@@ -61,7 +65,8 @@ namespace TimeLine
             GameEventBus gameEventBus,
             TimeLineScroll timeLineScroll,
             GridUI gridUI,
-            Main main)
+            Main main,
+            KeyframeTrackStorage keyframeTrackStorage)
         {
             _gridUI = gridUI;
             _timeLineSettings = timeLineSettings;
@@ -72,6 +77,7 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
             _timeLineScroll = timeLineScroll;
             _main = main;
+            _keyframeTrackStorage = keyframeTrackStorage; 
         }
 
         internal void Awake()
@@ -124,6 +130,16 @@ namespace TimeLine
             {
                 _startMousePosition = GetMousePosition();
             }
+            
+            // Если изменение размера завершено
+            if (!isResizing && _wasResizing)
+            {
+                _wasResizing = false;
+            }
+            else if (isResizing)
+            {
+                _wasResizing = true;
+            }
         }
 
         public void SetResizeLeft(bool isResizing)
@@ -132,9 +148,30 @@ namespace TimeLine
             _startResizingTimeInTicks = StartTimeInTicks;
             _isRightResizing = false;
             _isResizing = isResizing;
+            
+            if(isResizing == false) ApplyKeyframeOffset();
+            
+            
             if (_isResizing)
             {
                 _startMousePosition = GetMousePosition();
+                _initialStartTimeInTicks = StartTimeInTicks; // Сохраняем начальное время
+            }
+        }
+
+        private void ApplyKeyframeOffset()
+        {
+            double offset = Math.Round(StartTimeInTicks - _initialStartTimeInTicks);
+            print(offset);
+            if (offset != 0)
+            {
+                foreach (var node in _trackObjectStorage.GetTrackObjectData(this).branch.Nodes)
+                {
+                    foreach (var node2 in node.Children)
+                    {
+                        _keyframeTrackStorage.GetTrack(node2)?.AddOffsetKeyframes(-offset);
+                    }
+                }
             }
         }
 
@@ -168,6 +205,11 @@ namespace TimeLine
                     StartTimeInTicks = newStartTimeInTicks;
                     ChangeDurationInTicks(newDurationInTicks);
                 }
+            }
+            else if (_wasResizing) // Завершение изменения размера
+            {
+                _wasResizing = false;
+                // Теперь применение смещения происходит в SetResizeLeft(false)
             }
         }
 
@@ -294,22 +336,8 @@ namespace TimeLine
 
         private double AnchorPositionToTicks(float anchorPosition)
         {
-            // Используем актуальное расстояние между линиями с учетом панорамирования
-            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
-            // Предполагая, что _timeLineConverter работает с пикселями, а не с битами
             float timeInSeconds = _timeLineConverter.GetTimeFromAnchorPosition(anchorPosition);
             return SecondsToTicks(timeInSeconds);
-        }
-
-        private double TicksToAnchorPosition(double ticks)
-        {
-            float timeInSeconds = (float)TicksToSeconds(ticks);
-            return _timeLineConverter.GetAnchorPositionFromTime(timeInSeconds);
-        }
-
-        private double BeatPositionToTicks(double beatPosition)
-        {
-            return beatPosition * Main.TICKS_PER_BEAT;
         }
 
         private double RoundTicksToGrid(double ticks)

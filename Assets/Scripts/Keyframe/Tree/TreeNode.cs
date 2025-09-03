@@ -38,7 +38,7 @@ public class TreeNode
     {
         var child = new TreeNode(childName, childPath);
         Children.Add(child);
-        Debug.Log(childPath);
+        // Debug.Log(childPath);
         return child;
     }
 }

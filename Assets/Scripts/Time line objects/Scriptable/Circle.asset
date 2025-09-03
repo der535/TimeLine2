@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36be4919bf2fc9448b8f21526deba66e, type: 3}
   m_Name: Circle
   m_EditorClassIdentifier: 
-  sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  sprite: {fileID: -2413806693520163455, guid: a2427df75955d134a94a36a11c74d4dc, type: 3}
   name: Circle
   startLiveTime: 5

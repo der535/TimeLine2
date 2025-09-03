@@ -1,3 +1,4 @@
+using System;
 using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.EventBus.Events.TimeLine;
@@ -34,6 +35,9 @@ namespace TimeLine
         private TrackObject _trackObject;
         private Main _main;
 
+        // Используем правильный делегат EventHandler вместо Action
+        private GenericEventBus.GenericEventBus<IEvent>.EventHandler<TickSmoothTimeEvent> _tickEventHandler;
+
         [Inject]
         private void Construct(GameEventBus eventBus, TrackObjectStorage trackObjectStorage, Main main)
         {
@@ -44,9 +48,23 @@ namespace TimeLine
         
         private void Start()
         {
-            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) => UpdateValues(data.Time));
+            // Инициализируем правильный делегат EventHandler
+            _tickEventHandler = (ref TickSmoothTimeEvent data) => UpdateValues(data.Time);
+            
+            // Подписываемся с явным указанием типа
+            _gameEventBus.SubscribeTo(_tickEventHandler);
+            
             _component = GetComponent<TransformComponent>();
             _trackObjectStorage.GetTrackObjectData(gameObject);
+        }
+
+        private void OnDestroy()
+        {
+            // Отписываемся при уничтожении объекта
+            if (_gameEventBus != null && _tickEventHandler != null)
+            {
+                _gameEventBus.UnsubscribeFrom(_tickEventHandler);
+            }
         }
 
         private void UpdateValues(double ticks)
@@ -71,11 +89,11 @@ namespace TimeLine
             if(DynamicYScaleActive.Value)
                 _component.YScale.Value = (float)(DynamicYScale.Value.x + seconds * DynamicYScale.Value.y);
         }
+        
         private double TicksToSeconds(double ticks, double bpm)
         {
             // Конвертация тиков в секунды: ticks * (60 / (bpm * TICKS_PER_BEAT))
             return ticks * (60.0 / (bpm * Main.TICKS_PER_BEAT));
-        }
-
+        } 
     }
 }

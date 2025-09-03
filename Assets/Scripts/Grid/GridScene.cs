@@ -1,4 +1,7 @@
+using System.Globalization;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TimeLine
 {
@@ -6,6 +9,31 @@ namespace TimeLine
     {
         [SerializeField] private float _gridSize = 1f;
         [SerializeField] private float _rotateStep = 90f;
+        [Space]
+        [SerializeField] private TMP_InputField gridSizeInputField;
+        [SerializeField] private TMP_InputField gridRotateSizeInputField;
+
+        private void Start()
+        {
+            gridSizeInputField.text = _gridSize.ToString(CultureInfo.InvariantCulture);
+            gridRotateSizeInputField.text = _rotateStep.ToString(CultureInfo.InvariantCulture);
+            
+            gridSizeInputField.onValueChanged.AddListener(arg0 => 
+            {
+                if (float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
+                {
+                    _gridSize = result;
+                }
+            });
+
+            gridRotateSizeInputField.onValueChanged.AddListener(arg0 => 
+            {
+                if (float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
+                {
+                    _rotateStep = result;
+                }
+            });
+        }
 
         public Vector2 PositionFloatSnapToGrid(Vector2 value, Quaternion rotation)
         {

@@ -57,6 +57,11 @@ namespace TimeLine
         {
             return _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
         }
+        
+        internal TrackObjectData GetTrackObjectData(TrackObject trackObject)
+        {
+            return _trackObjects.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
+        }
 
         public void UpdatePositionSelectedTrackObject()
         {

@@ -42,7 +42,7 @@ namespace TimeLine.Keyframe
             {
                 if (variable.Active)
                 {
-                    print(variable.Track.Keyframes.Count);
+                    // print(variable.Track.Keyframes.Count);
                     variable.Track.Evaluate(smoothTimeEvent.Time - variable.TrackObject.StartTimeInTicks);
                 }
             }
@@ -66,8 +66,8 @@ namespace TimeLine.Keyframe
 
         public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject)
         {
-            print(track.TrackName);
-            print(treeNode.Name);
+            // print(track.TrackName);
+            // print(treeNode.Name);
             tracks.Add(new TrackData(treeNode, track, trackObject));
             _gameEventBus.Raise(new AddTrackEvent(track));
         }

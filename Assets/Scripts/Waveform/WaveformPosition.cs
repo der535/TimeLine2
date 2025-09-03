@@ -5,6 +5,7 @@ using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.Installers;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 namespace TimeLine.Waveform
@@ -23,6 +24,7 @@ namespace TimeLine.Waveform
         private Scroll _scroll;
         private Main _main;
         private TimeLineScroll _timeLineScroll;
+        private GameEventBus _gameEventBus;
 
         private float _panOffset;
         private float _scrollOffset;
@@ -41,12 +43,21 @@ namespace TimeLine.Waveform
             _scroll = scroll;
             _main = main;
             _timeLineScroll = timeLineScroll;
+            _gameEventBus = gameEventBus;
         }
 
-        private void Update()
+        private void Start()
         {
+            _gameEventBus.SubscribeTo((ref OldPanEvent data) => BuildWaveForm(), -2);
+            _gameEventBus.SubscribeTo((ref PanEvent data) => BuildWaveForm(), -2);
+            _gameEventBus.SubscribeTo((ref ScrollTimeLineEvent data) => BuildWaveForm(), -2);
             BuildWaveForm();
         }
+
+        // private void Update()
+        // {
+        //     BuildWaveForm();
+        // }
         
         private void BuildWaveForm()
         {

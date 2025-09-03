@@ -10,7 +10,6 @@ namespace TimeLine.Keyframe
     {
         [SerializeField] private Image image;
         [SerializeField] private KeyframeObjectData keyframeObjectData;
-        private bool _selected = false;
 
         private GameEventBus _gameEventBus;    
         
@@ -25,9 +24,12 @@ namespace TimeLine.Keyframe
             if(selected) 
                 _gameEventBus.Raise(new SelectKeyframeEvent(keyframeObjectData));
             
+        }
+
+        public void SelectColor(bool selected)
+        {
             image.color = selected ? new Color(1f, 0.3387191f, 0f) : Color.white;
-            
-            _selected = selected;
+
         }
     }
 }

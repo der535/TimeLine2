@@ -28,14 +28,33 @@ namespace TimeLine
 
         private void Awake()
         {
-            // _gameEventBus.SubscribeTo<SelectSceneObject>(((ref SelectSceneObject data) => Select(data.GameObject)));
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Track.sceneObject)));
             
             rotateTool.onRotate = (value) => _transformComponent.ZRotation.Value = gridScene.RotateSnapToGrid(value);
+
+            _toolFollowingObject += (() =>
+            {
+                bool isInside = RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    toolCanvas, // RectTransform, в системе координат которого нужно получить точку
+                    camera.WorldToScreenPoint(new Vector2(_transformComponent.XPosition.Value,
+                        _transformComponent.YPosition.Value)), // точка в экранных координатах
+                    camera, // для Overlay-канваса передаём null, для World Space — камеру
+                    out var localPoint // результат: точка в локальных координатах RectTransform
+                );
+
+                tool.anchoredPosition = localPoint;
+            });
         }
 
         private void Select(GameObject data)
         {
+            if (_transformComponent)
+            {
+                _transformComponent.XPosition.OnValueChanged -= _toolFollowingObject;
+                _transformComponent.YPosition.OnValueChanged -= _toolFollowingObject;
+            }
+
+            
             _transformComponent = data.GetComponent<TransformComponent>();
             rotateTool.currentRotation = _transformComponent.ZRotation.Value;
             
@@ -48,6 +67,9 @@ namespace TimeLine
             );
             
             tool.anchoredPosition = localPoint;
+            
+            _transformComponent.XPosition.OnValueChanged += _toolFollowingObject;
+            _transformComponent.YPosition.OnValueChanged += _toolFollowingObject;
         }
     }
 }

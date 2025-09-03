@@ -22,9 +22,7 @@ namespace TimeLine.Keyframe
         private Action _sortKeyframes;
 
         private bool _isDragging;
-
-        public float time;
-
+        
         [Inject]
         private void Construct(MainObjects mainObject, TimeLineConverter timeLineConverter, GridUI gridUI)
         {
@@ -46,9 +44,6 @@ namespace TimeLine.Keyframe
 
         private Vector2 GetMousePosition()
         {
-            print(_mainObjects.CanvasRectTransform);
-            print(_mainObjects.MainCamera);
-
             RectTransformUtility.ScreenPointToLocalPointInRectangle
             (_mainObjects.CanvasRectTransform, Mouse.current.position.ReadValue(), _mainObjects.MainCamera,
                 out var localPoint);
@@ -74,7 +69,9 @@ namespace TimeLine.Keyframe
                                                           (_startMousePosition.x - GetMousePosition().x)),
                         _rectTransform.anchoredPosition.y);
 
-                _keyframe.ticks = _timeLineConverter.SecondsToTicks(_timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x));
+                _keyframe.ticks =
+                    _timeLineConverter.SecondsToTicks(
+                        _timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x));
                 _sortKeyframes.Invoke();
             }
         }

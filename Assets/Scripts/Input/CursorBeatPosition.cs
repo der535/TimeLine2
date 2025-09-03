@@ -51,7 +51,12 @@ namespace TimeLine.Input
                 double roundedTicks = Math.Round(rawTicks / gridSizeInTicks) * gridSizeInTicks;
                 
                 // Устанавливаем время
-                _main.SetTimeInTicks(roundedTicks);
+                if(roundedTicks > 0)
+                    _main.SetTimeInTicks(roundedTicks);
+                else
+                {
+                    _main.SetTimeInTicks(0);
+                }
             }
         }
     }

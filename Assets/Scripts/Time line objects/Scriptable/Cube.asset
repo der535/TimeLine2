@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36be4919bf2fc9448b8f21526deba66e, type: 3}
   m_Name: Cube
   m_EditorClassIdentifier: 
-  sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  sprite: {fileID: 7482667652216324306, guid: cd516d339f018dd489bc68586744a981, type: 3}
   name: Square
   startLiveTime: 5

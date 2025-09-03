@@ -23,7 +23,7 @@ namespace TimeLine.Keyframe
         public Keyframe AddKeyframe(double time, AnimationData adata = null)
         {
             var time2 = Mathf.RoundToInt((float)time);
-            Debug.Log(time2);
+            // Debug.Log(time2);
             Keyframe newKeyframe = new Keyframe(time2);
             
             newKeyframe.AddData(adata);
@@ -47,15 +47,15 @@ namespace TimeLine.Keyframe
 
         public void Evaluate(double time)
         {
-            Debug.Log(TrackName);
+            // Debug.Log(TrackName);
             if (Keyframes.Count == 0 || TargetObject == null) return;
         
             // Находим текущий и следующий ключевые кадры
             Keyframe prev = Keyframes.LastOrDefault(k => k.ticks <= time);
             Keyframe next = Keyframes.FirstOrDefault(k => k.ticks >= time);
 
-            Debug.Log(prev);
-            Debug.Log(next);
+            // Debug.Log(prev);
+            // Debug.Log(next);
             
             if (prev == null && next == null) return;
             
@@ -67,7 +67,7 @@ namespace TimeLine.Keyframe
             else if (prev != next)
             {
                 double t = Mathf.InverseLerp((float)prev.ticks, (float)next.ticks, (float)time);
-                Debug.Log(t);
+                // Debug.Log(t);
                 prev.Interpolate(next, TargetObject, t);
             }
             else
@@ -75,8 +75,14 @@ namespace TimeLine.Keyframe
                 prev.Apply(TargetObject);
             }
         }
-        
 
+        public void AddOffsetKeyframes(double ticks)
+        {
+            foreach (var keyframe in Keyframes)
+            {
+                keyframe.ticks += Math.Round(ticks);
+            }
+        }
         
         // Добавленный метод копирования трека
         public Track Copy(GameObject target)

@@ -13,10 +13,10 @@ GameObject:
   - component: {fileID: 2618708430259583678}
   - component: {fileID: 4594448081098449684}
   - component: {fileID: 7871515140614823592}
-  - component: {fileID: 6567049162480969546}
   - component: {fileID: 5381749590687444745}
   - component: {fileID: 3106297127281408886}
   - component: {fileID: 8322718418036238648}
+  - component: {fileID: 3770459749258914188}
   m_Layer: 0
   m_Name: Scene object
   m_TagString: Untagged
@@ -131,18 +131,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 665565b7b9da1b54490c7084c123328e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &6567049162480969546
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 379475969384284283}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f81a592838ab4931a1e7f0aa1d3409da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5381749590687444745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,3 +167,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c85f0e9dda807334f90db5b2de5aeac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &3770459749258914188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379475969384284283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15fdab98d90e6d644bb9d88ee68256d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteRenderer: {fileID: 842520435012109194}
+  alphaThreshold: 0.5

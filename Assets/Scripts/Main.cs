@@ -79,6 +79,7 @@ namespace TimeLine
         internal void SetTimeInTicks(double ticks)
         {
             double timeInSeconds = TicksToSeconds(ticks);
+            if (timeInSeconds < 0) timeInSeconds = 0;
             audioSource.time = (float)timeInSeconds;
             _smoothTimeInTicks = ticks;
             _exactTimeInTicks = ticks;

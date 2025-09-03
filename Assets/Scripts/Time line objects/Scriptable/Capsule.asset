@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36be4919bf2fc9448b8f21526deba66e, type: 3}
   m_Name: Capsule
   m_EditorClassIdentifier: 
-  sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
+  sprite: {fileID: -9095717837082945937, guid: 2f3de495b8cf31f498594043806863c4, type: 3}
   name: Capsule
   startLiveTime: 5

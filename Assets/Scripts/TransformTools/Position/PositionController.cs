@@ -22,8 +22,8 @@ namespace TimeLine
         
         private TransformComponent _transformComponent;
         
-        private Action<RectTransform> _objectFollowingTool;
-        private Action _toolFollowingObject;
+        private bool _isUpdatingFromTool = false;
+        private bool _isUpdatingFromObject = false;
         
         [Inject]
         private void Construct(GameEventBus eventBus, MainObjects mainObjects)
@@ -40,26 +40,23 @@ namespace TimeLine
         
         private void SelectObject(GameObject data)
         {
-            print("SelectObject");
+            // print("SelectObject");
             if (_transformComponent)
             {
-                _transformComponent.XPosition.OnValueChanged -= _toolFollowingObject;
-                _transformComponent.YPosition.OnValueChanged -= _toolFollowingObject;
+                _transformComponent.XPosition.OnValueChanged -= UpdateToolFromObject;
+                _transformComponent.YPosition.OnValueChanged -= UpdateToolFromObject;
             }
             
             _transformComponent = data.gameObject.GetComponent<TransformComponent>();
             
-            // Получаем текущую позицию объекта с учетом сетки
             Vector2 snappedWorldPosition = gridScene.PositionFloatSnapToGrid(
                 new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value), 
                 Quaternion.identity
             );
             
-            // Обновляем позицию объекта к сетке
             _transformComponent.XPosition.Value = snappedWorldPosition.x;
             _transformComponent.YPosition.Value = snappedWorldPosition.y;
             
-            // Конвертируем мировые координаты в UI координаты
             RectTransformUtility.ScreenPointToLocalPointInRectangle(  
                 _mainObjects.ToolRectTransform,
                 camera.WorldToScreenPoint(snappedWorldPosition),
@@ -69,56 +66,69 @@ namespace TimeLine
             
             _rectTransformPositionTool.anchoredPosition = localPoint;
             _rectTransformPositionTool.rotation = Quaternion.Euler(0f, 0f, coordinateSystem.IsGlobal ? 0f : _transformComponent.ZRotation.Value);
-
-            if(positionTool.OnChangePosition != null)
-                positionTool.OnChangePosition -= _objectFollowingTool;
             
-            _objectFollowingTool = vector2 =>
-            {
-                Vector2 convertedPosition = TimeLineConverter.ConvertAnchorToWorldPosition(vector2, canvas);
-                
-                // Применяем привязку к сетке
-                Vector2 calculatedPosition = gridScene.PositionFloatSnapToGrid(convertedPosition, Quaternion.identity);
-
-                // Обновляем позицию объекта
-                _transformComponent.XPosition.Value = calculatedPosition.x;
-                _transformComponent.YPosition.Value = calculatedPosition.y;
-                
-                // Немедленно обновляем позицию инструмента к сетке
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(  
-                    _mainObjects.ToolRectTransform,
-                    camera.WorldToScreenPoint(calculatedPosition),
-                    camera,
-                    out var snappedLocalPoint
-                );
-                _rectTransformPositionTool.anchoredPosition = snappedLocalPoint;
-            };
-            positionTool.OnChangePosition += _objectFollowingTool;
+            positionTool.OnChangePosition -= UpdateObjectFromTool;
+            positionTool.OnChangePosition += UpdateObjectFromTool;
             
-            _toolFollowingObject = () =>
-            {
-                // Получаем текущую позицию объекта с учетом сетки
-                Vector2 snappedWorldPosition = gridScene.PositionFloatSnapToGrid(
-                    new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value), 
-                    Quaternion.identity
-                );
-                
-                // Обновляем позицию объекта к сетке (на случай, если значение было изменено извне)
-                _transformComponent.XPosition.Value = snappedWorldPosition.x;
-                _transformComponent.YPosition.Value = snappedWorldPosition.y;
-                
-                // Конвертируем мировые координаты в UI координаты
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(  
-                    _mainObjects.ToolRectTransform,
-                    camera.WorldToScreenPoint(snappedWorldPosition),
-                    camera,
-                    out var localPoint
-                );
-                _rectTransformPositionTool.anchoredPosition = localPoint;
-            };
+            _transformComponent.XPosition.OnValueChanged += UpdateToolFromObject;
+            _transformComponent.YPosition.OnValueChanged += UpdateToolFromObject;
+        }
+        
+        private void UpdateObjectFromTool(RectTransform toolTransform)
+        {
+            if (_isUpdatingFromObject) return;
+            _isUpdatingFromTool = true;
             
-            _transformComponent.XPosition.OnValueChanged += _toolFollowingObject;
-            _transformComponent.YPosition.OnValueChanged += _toolFollowingObject;
+            Vector2 convertedPosition = TimeLineConverter.ConvertAnchorToWorldPosition(toolTransform, canvas);
+            
+            float rotationAngle = -toolTransform.localEulerAngles.z;
+            Quaternion inverseRotation = Quaternion.Euler(0, 0, rotationAngle);
+            
+            Vector2 snappedPosition = gridScene.PositionFloatSnapToGrid(convertedPosition, inverseRotation);
+            
+            Vector2 localSnappedPosition = Quaternion.Inverse(inverseRotation) * (snappedPosition - (Vector2)_transformComponent.transform.position);
+            localSnappedPosition += new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value);
+            
+            _transformComponent.XPosition.Value = localSnappedPosition.x;
+            _transformComponent.YPosition.Value = localSnappedPosition.y;
+            
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(  
+                _mainObjects.ToolRectTransform,
+                camera.WorldToScreenPoint(snappedPosition),
+                camera,
+                out var snappedLocalPoint
+            );
+            _rectTransformPositionTool.anchoredPosition = snappedLocalPoint;
+            
+            _isUpdatingFromTool = false;
+        }
+        
+        private void UpdateToolFromObject()
+        {
+            if (_isUpdatingFromTool) return;
+            _isUpdatingFromObject = true;
+            
+            float rotationAngle = -_rectTransformPositionTool.localEulerAngles.z;
+            Quaternion inverseRotation = Quaternion.Euler(0, 0, rotationAngle);
+            
+            Vector2 worldPosition = new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value);
+            Vector2 snappedWorldPosition = gridScene.PositionFloatSnapToGrid(worldPosition, inverseRotation);
+            
+            Vector2 localSnappedPosition = Quaternion.Inverse(inverseRotation) * (snappedWorldPosition - (Vector2)_transformComponent.transform.position);
+            localSnappedPosition += new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value);
+            
+            _transformComponent.XPosition.Value = localSnappedPosition.x;
+            _transformComponent.YPosition.Value = localSnappedPosition.y;
+            
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(  
+                _mainObjects.ToolRectTransform,
+                camera.WorldToScreenPoint(snappedWorldPosition),
+                camera,
+                out var localPoint
+            );
+            _rectTransformPositionTool.anchoredPosition = localPoint;
+            
+            _isUpdatingFromObject = false;
         }
     }
 }

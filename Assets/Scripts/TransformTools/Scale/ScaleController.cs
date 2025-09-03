@@ -103,7 +103,7 @@ namespace TimeLine
 
         private void SetPosition(GameObject data)
         {
-            print("SetPosition");
+            // print("SetPosition");
             if (_transformComponent)
             {
                 _transformComponent.XPosition.OnValueChanged -= _toolFollowingObject;

@@ -24,11 +24,12 @@ namespace TimeLine
 
         private KeyframeSelect _keyframeObjectSelect;
         private Keyframe.Keyframe _keyframeSelect;
-private TimeLineConverter _timeLineConverter;
+        private TimeLineConverter _timeLineConverter;
         public KeyframeObjectData SelectedKeyframe { get; private set; }
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, Main main, DiContainer container, TimeLineConverter timeLineConverter)
+        private void Construct(GameEventBus gameEventBus, Main main, DiContainer container,
+            TimeLineConverter timeLineConverter)
         {
             _container = container;
             _gameEventBus = gameEventBus;
@@ -49,9 +50,9 @@ private TimeLineConverter _timeLineConverter;
             SelectedKeyframe = selectKeyframeEvent.Keyframe;
             foreach (var keyframe in keyframes)
             {
-                if (selectKeyframeEvent.Keyframe != keyframe)
-                    selectKeyframeEvent.Keyframe.KeyframeSelect.Selected(false);
+                keyframe.KeyframeSelect.SelectColor(false);
             }
+            selectKeyframeEvent.Keyframe.KeyframeSelect.SelectColor(true);
         }
 
         [Button]
@@ -72,13 +73,13 @@ private TimeLineConverter _timeLineConverter;
                         .GetComponent<KeyframeObjectData>();
                     keyframes.Add(keyframeObjectData.GetComponent<KeyframeObjectData>());
                     KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
-                    
+
                     // Конвертируем тики в позицию на таймлайне
                     float positionX = _timeLineConverter.TicksToPositionX(keyframe.ticks);
                     keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
                         positionX,
                         keyframeObjectData.RectTransform.anchoredPosition.y);
-                    
+
                     keyframeDrag.Setup(keyframe, track.SortKeyframes);
                     keyframeObjectData.Keyframe = keyframe;
                     keyframeObjectData.Track = track;

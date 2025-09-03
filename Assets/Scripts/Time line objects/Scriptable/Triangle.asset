@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36be4919bf2fc9448b8f21526deba66e, type: 3}
   m_Name: Triangle
   m_EditorClassIdentifier: 
-  sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
+  sprite: {fileID: 7482667652216324306, guid: d41e3ce507b9810488a7629d03ed4f69, type: 3}
   name: Triangle
   startLiveTime: 5

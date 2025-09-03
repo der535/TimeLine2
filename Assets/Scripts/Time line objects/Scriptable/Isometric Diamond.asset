@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36be4919bf2fc9448b8f21526deba66e, type: 3}
   m_Name: Isometric Diamond
   m_EditorClassIdentifier: 
-  sprite: {fileID: 3625043607559282579, guid: 19fb86013d8c24d6cb8410c0aadf30fa, type: 3}
+  sprite: {fileID: 3625043607559282579, guid: d0c236cc04c0aa442b8b949868dbdc0c, type: 3}
   name: Isometric Diamond
   startLiveTime: 5
