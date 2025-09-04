@@ -19,6 +19,11 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
             return new XScaleData(value);
         }
 
+        public override object GetValue()
+        {
+            return value;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             XScaleData otherPos = (XScaleData)other;

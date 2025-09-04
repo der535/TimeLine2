@@ -17,6 +17,11 @@
             return new YRotationData(value);
         }
 
+        public override object GetValue()
+        {
+            return value;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             YRotationData otherPos = (YRotationData)other;

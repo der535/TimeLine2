@@ -17,6 +17,11 @@
             return new PositionData(position);
         }
 
+        public override object GetValue()
+        {
+            return position;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             PositionData otherPos = (PositionData)other;

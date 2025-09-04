@@ -21,14 +21,15 @@ namespace TimeLine.TimeLine
             _timeLineSettings = timeLineSettings;
             _timeLineScroll = timeLineScroll;
         }
-        
-        
+
+
         // Конвертация тиков в позицию X на UI
-        public float TicksToPositionX(double ticks)
+        public float TicksToPositionX(double ticks, float pan = 0)
         {
             // Конвертируем тики в секунды, затем в позицию
             double seconds = ticks * (60.0 / (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
-            return (float)(seconds * _timeLineSettings.DistanceBetweenBeatLines * (_main.MusicDataSo.bpm / 60.0));
+            return (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + pan) *
+                           (_main.MusicDataSo.bpm / 60.0));
         }
 
         // Обратная конвертация: позиция X в тики (для Drag & Drop)
@@ -39,10 +40,13 @@ namespace TimeLine.TimeLine
             return seconds * (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
 
-        public Vector2 CursorPosition() //todo пофиксить
+        public Vector2 CursorPosition(RectTransform canvasRectTransform = null) //todo пофиксить
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(  
-                _mainObjects.CanvasRectTransform, // RectTransform, в системе координат которого нужно получить точку  
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRectTransform != null
+                    ? canvasRectTransform
+                    : _mainObjects
+                        .CanvasRectTransform, // RectTransform, в системе координат которого нужно получить точку  
                 Mouse.current.position.ReadValue(), // точка в экранных координатах  
                 _mainObjects.MainCamera, // для Overlay-канваса передаём null, для World Space — камеру  
                 out var localPoint // результат: точка в локальных координатах RectTransform  
@@ -52,7 +56,7 @@ namespace TimeLine.TimeLine
             // return (new Vector2(UnityEngine.Input.mousePosition.x - _mainObjects.CanvasRectTransform.sizeDelta.x / 2,
             //     UnityEngine.Input.mousePosition.y - _mainObjects.CanvasRectTransform.sizeDelta.y / 2));
         }
-        
+
         internal static Vector3 ConvertAnchorToWorldPosition(RectTransform rectTransform, Canvas canvas)
         {
             // Для World Space Canvas
@@ -60,13 +64,13 @@ namespace TimeLine.TimeLine
             {
                 return rectTransform.position;
             }
-        
+
             // Для Screen Space Canvas
             Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(
-                canvas.worldCamera, 
+                canvas.worldCamera,
                 rectTransform.position
             );
-        
+
             Vector3 worldPosition;
             RectTransformUtility.ScreenPointToWorldPointInRectangle(
                 rectTransform,
@@ -74,13 +78,29 @@ namespace TimeLine.TimeLine
                 canvas.worldCamera,
                 out worldPosition
             );
-        
+
             return worldPosition;
         }
 
-        public double GetCursorBeatPosition(float pan, double offset = 0)
+        public double GetCursorBeatPosition(float pan, double offset = 0, RectTransform canvasOffset = null, RectTransform canvasCursor = null)
         {
-            return (CursorPosition().x - offset - _mainObjects.ContentRectTransform.offsetMin.x) /
+            if (canvasOffset)
+            {
+                print(CursorPosition(canvasCursor).x);
+                print(canvasOffset.offsetMin.x);
+                print((_timeLineSettings.DistanceBetweenBeatLines + pan));
+                
+                print((CursorPosition(canvasCursor).x - offset - (canvasOffset != null
+                        ? canvasOffset.offsetMin.x
+                        : _mainObjects.ContentRectTransform.offsetMin.x)) /
+                    (_timeLineSettings.DistanceBetweenBeatLines + pan));
+            }
+
+            
+            
+            return (CursorPosition(canvasCursor).x - offset - (canvasOffset != null
+                       ? canvasOffset.offsetMin.x
+                       : _mainObjects.ContentRectTransform.offsetMin.x)) /
                    (_timeLineSettings.DistanceBetweenBeatLines + pan);
         }
 
@@ -104,35 +124,37 @@ namespace TimeLine.TimeLine
         {
             return (time * _main.MusicDataSo.bpm) / 60f;
         }
+
         public double SecondsToTicks(double seconds)
         {
             return seconds * (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
-        
+
         public double GetTimeInSeconds(double ticks)
         {
             return ticks * (60.0 / (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
         }
-        
+
         public float GetAnchorPositionFromTime(float time)
         {
             return GetAnchorPositionFromBeatPosition(time / (60 / _main.MusicDataSo.bpm)) +
                    _mainObjects.ContentRectTransform.offsetMin.x;
-        }        
-
-        public float GetAnchorPositionFromBeatPosition(float time)
-        {
-            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
         }
+
+        public float GetAnchorPositionFromBeatPosition(float time, float distance = 0)
+        {
+            return GetAnchorPosition(time,  distance != 0 ? distance : _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
+        }
+
         public const double TICKS_PER_BEAT = 96.0; // 96 ticks per quarter note
         public const double SECONDS_IN_MINUTE = 60.0;
         public double SecondsPerTick => SECONDS_IN_MINUTE / (_main.MusicDataSo.bpm * TICKS_PER_BEAT);
-        
+
         public double TicksToSeconds(double ticks)
         {
             return ticks * SecondsPerTick;
         }
-        
+
         public float GetAnchorPosition(float time, float distanceBetweenBeats, float pan)
         {
             return time * (distanceBetweenBeats + pan);

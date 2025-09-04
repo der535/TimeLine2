@@ -162,7 +162,6 @@ namespace TimeLine
         private void ApplyKeyframeOffset()
         {
             double offset = Math.Round(StartTimeInTicks - _initialStartTimeInTicks);
-            print(offset);
             if (offset != 0)
             {
                 foreach (var node in _trackObjectStorage.GetTrackObjectData(this).branch.Nodes)

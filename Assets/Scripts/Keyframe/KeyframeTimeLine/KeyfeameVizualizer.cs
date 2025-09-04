@@ -14,11 +14,13 @@ namespace TimeLine
     {
         [SerializeField] private KeyframeObjectData keyFrame;
         [SerializeField] private TimeLineSettings timeLineSettings;
-        [Space] [SerializeField] private TreeViewUI treeViewUI;
+        [Space]
+        [SerializeField] private TreeViewUI treeViewUI;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
+        [Space] 
+        [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
 
         private List<KeyframeObjectData> keyframes = new();
-        private Main _main;
         private DiContainer _container;
         private GameEventBus _gameEventBus;
 
@@ -28,12 +30,11 @@ namespace TimeLine
         public KeyframeObjectData SelectedKeyframe { get; private set; }
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, Main main, DiContainer container,
+        private void Construct(GameEventBus gameEventBus, DiContainer container,
             TimeLineConverter timeLineConverter)
         {
             _container = container;
             _gameEventBus = gameEventBus;
-            _main = main;
             _timeLineConverter = timeLineConverter;
         }
 
@@ -42,6 +43,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => Build());
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
         }
 
@@ -75,7 +77,7 @@ namespace TimeLine
                     KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
 
                     // Конвертируем тики в позицию на таймлайне
-                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.ticks);
+                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.ticks, _timeLineKeyframeScroll.Pan);
                     keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
                         positionX,
                         keyframeObjectData.RectTransform.anchoredPosition.y);
@@ -90,9 +92,9 @@ namespace TimeLine
 
         private void OnDestroy()
         {
-            _gameEventBus.UnsubscribeFrom<AddKeyframeEvent>((ref AddKeyframeEvent _) => Build());
-            _gameEventBus.UnsubscribeFrom<RemoveKeyframeEvent>((ref RemoveKeyframeEvent _) => Build());
-            _gameEventBus.UnsubscribeFrom<SelectObjectEvent>((ref SelectObjectEvent _) => Build());
+            _gameEventBus.UnsubscribeFrom((ref AddKeyframeEvent _) => Build());
+            _gameEventBus.UnsubscribeFrom((ref RemoveKeyframeEvent _) => Build());
+            _gameEventBus.UnsubscribeFrom((ref SelectObjectEvent _) => Build());
             _gameEventBus.UnsubscribeFrom<SelectKeyframeEvent>(SelectKeyframe);
         }
     }

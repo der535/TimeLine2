@@ -16,7 +16,12 @@
         {
             return new RotationData(this.rotation);
         }
-    
+
+        public override object GetValue()
+        {
+            return rotation;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             RotationData otherRot = (RotationData)other;

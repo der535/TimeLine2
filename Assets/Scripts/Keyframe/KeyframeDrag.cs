@@ -69,9 +69,8 @@ namespace TimeLine.Keyframe
                                                           (_startMousePosition.x - GetMousePosition().x)),
                         _rectTransform.anchoredPosition.y);
 
-                _keyframe.ticks =
-                    _timeLineConverter.SecondsToTicks(
-                        _timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x));
+                _keyframe.ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
+                        _timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x)));
                 _sortKeyframes.Invoke();
             }
         }

@@ -17,6 +17,11 @@
             return new XPositionData(value);
         }
 
+        public override object GetValue()
+        {
+            return value;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             XPositionData otherPos = (XPositionData)other;

@@ -34,7 +34,7 @@ public class TimeLineRenderer : MonoBehaviour
             _mainObjects.NotifyContentRectChanged();
         }, 1);
         _gameEventBus.SubscribeTo((ref OldPanEvent oldPanEvent) => _oldPan = oldPanEvent.OldPanOffset,1);
-        _gameEventBus.SubscribeTo((ref PanEvent oldPanEvent) =>
+        _gameEventBus.SubscribeTo((ref PanEvent _) =>
         {
             float curPos = (float)_timeLineConverter.GetCursorBeatPosition(_oldPan, 0);
             _timeLineRenderer.SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos) -

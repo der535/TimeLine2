@@ -17,6 +17,11 @@
             return new YScaleData(value);
         }
 
+        public override object GetValue()
+        {
+            return value;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             YScaleData otherPos = (YScaleData)other;

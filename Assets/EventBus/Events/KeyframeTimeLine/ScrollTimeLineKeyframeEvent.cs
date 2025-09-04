@@ -1,6 +1,6 @@
 using EventBus;
 
-namespace TimeLine.EventBus.Events.Input
+namespace TimeLine.EventBus.Events.KeyframeTimeLine
 {
     public struct ScrollTimeLineKeyframeEvent : IEvent
     {

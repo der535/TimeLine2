@@ -17,6 +17,11 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Position
             return new YPositionData(value);
         }
 
+        public override object GetValue()
+        {
+            return value;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             YPositionData otherPos = (YPositionData)other;

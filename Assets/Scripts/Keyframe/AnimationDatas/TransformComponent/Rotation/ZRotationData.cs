@@ -17,6 +17,11 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
             return new ZRotationData(value);
         }
 
+        public override object GetValue()
+        {
+            return value;
+        }
+
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             ZRotationData otherPos = (ZRotationData)other;
