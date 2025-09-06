@@ -11,6 +11,9 @@ namespace TimeLine.Installers
         [SerializeField] private RectTransform canvasRectTransform;
         [SerializeField] private RectTransform toolRectTransform;
         [SerializeField] private RectTransform contentRectTransform;
+        [Space]
+        [SerializeField] private RectTransform rightPanelRectTransform;
+        [SerializeField] private RectTransform keyframeRootRectTransform;
         [SerializeField] private Camera mainCamera;
 
         private GameEventBus _gameEventBus;
@@ -30,6 +33,8 @@ namespace TimeLine.Installers
 
         public RectTransform ContentRectTransform => contentRectTransform;
         public RectTransform ToolRectTransform => toolRectTransform;
+        public RectTransform RightPanelRectTransform => rightPanelRectTransform;
+        public RectTransform KeyframeRootRectTransform => keyframeRootRectTransform;
 
         public void NotifyContentRectChanged()
         {

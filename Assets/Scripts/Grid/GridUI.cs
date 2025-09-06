@@ -39,9 +39,9 @@ namespace TimeLine
         }
 
         // Округляет позицию в пикселях до сетки
-        public float RoundAnchorPositionToGrid(float position)
+        public float RoundAnchorPositionToGrid(float position, float pan)
         {
-            double ticksPerPixel = Main.TICKS_PER_BEAT / _timeLineSettings.DistanceBetweenBeatLines;
+            double ticksPerPixel = Main.TICKS_PER_BEAT / (_timeLineSettings.DistanceBetweenBeatLines+pan);
             double ticks = position * ticksPerPixel;
             double roundedTicks = RoundTicksToGrid(ticks);
             return (float)(roundedTicks / ticksPerPixel);

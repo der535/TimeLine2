@@ -19,6 +19,7 @@ namespace TimeLine
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
         [Space] 
         [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
+        [SerializeField] private RectTransform _content;
 
         private List<KeyframeObjectData> keyframes = new();
         private DiContainer _container;
@@ -44,6 +45,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.ScrollTimeLineKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
         }
 
@@ -77,7 +79,7 @@ namespace TimeLine
                     KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
 
                     // Конвертируем тики в позицию на таймлайне
-                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.ticks, _timeLineKeyframeScroll.Pan);
+                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.ticks, _timeLineKeyframeScroll.Pan)+_content.offsetMin.x;
                     keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
                         positionX,
                         keyframeObjectData.RectTransform.anchoredPosition.y);

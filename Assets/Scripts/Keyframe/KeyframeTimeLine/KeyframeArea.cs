@@ -30,11 +30,8 @@ namespace TimeLine
 
         private void Awake()
         {
-            // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => OnSelectTrackObject(data.Track));
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => OnSelectTrackObject(selectedTrackObjectData));
-
-
         }
 
         public void OnSelectTrackObject(TrackObjectData trackObjectData)

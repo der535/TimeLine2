@@ -84,20 +84,6 @@ namespace TimeLine.TimeLine
 
         public double GetCursorBeatPosition(float pan, double offset = 0, RectTransform canvasOffset = null, RectTransform canvasCursor = null)
         {
-            if (canvasOffset)
-            {
-                print(CursorPosition(canvasCursor).x);
-                print(canvasOffset.offsetMin.x);
-                print((_timeLineSettings.DistanceBetweenBeatLines + pan));
-                
-                print((CursorPosition(canvasCursor).x - offset - (canvasOffset != null
-                        ? canvasOffset.offsetMin.x
-                        : _mainObjects.ContentRectTransform.offsetMin.x)) /
-                    (_timeLineSettings.DistanceBetweenBeatLines + pan));
-            }
-
-            
-            
             return (CursorPosition(canvasCursor).x - offset - (canvasOffset != null
                        ? canvasOffset.offsetMin.x
                        : _mainObjects.ContentRectTransform.offsetMin.x)) /
@@ -110,9 +96,9 @@ namespace TimeLine.TimeLine
                    (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan);
         }
 
-        public float GetTimeFromAnchorPosition(float anchorPosition)
+        public float GetTimeFromAnchorPosition(float anchorPosition, float pan = 0)
         {
-            return GetTimeFromBeatPosition(anchorPosition / _timeLineSettings.DistanceBetweenBeatLines);
+            return GetTimeFromBeatPosition(anchorPosition / (_timeLineSettings.DistanceBetweenBeatLines + pan));
         }
 
         public float GetTimeFromBeatPosition(float beatPosition)
@@ -141,9 +127,14 @@ namespace TimeLine.TimeLine
                    _mainObjects.ContentRectTransform.offsetMin.x;
         }
 
-        public float GetAnchorPositionFromBeatPosition(float time, float distance = 0)
+        public float GetAnchorPositionFromBeatPosition(float time)
         {
-            return GetAnchorPosition(time,  distance != 0 ? distance : _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
+            return GetAnchorPosition(time,  _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
+        }
+        
+        public float GetAnchorPositionFromBeatPosition(float time, float pan)
+        {
+            return GetAnchorPosition(time,  _timeLineSettings.DistanceBetweenBeatLines, pan);
         }
 
         public const double TICKS_PER_BEAT = 96.0; // 96 ticks per quarter note

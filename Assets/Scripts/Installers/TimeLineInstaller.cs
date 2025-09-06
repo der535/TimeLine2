@@ -30,6 +30,7 @@ namespace TimeLine.Installers
         [SerializeField] private SceneObjectAddKeyFrame sceneObjectAddKeyFrame;
         [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
         [SerializeField] private ParentMain parentMain;
+        [SerializeField] private TimeLineKeyframeScroll timeLineKeyframeScroll;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -56,6 +57,7 @@ namespace TimeLine.Installers
             Container.Bind<SceneObjectAddKeyFrame>().FromInstance(sceneObjectAddKeyFrame).AsSingle();
             Container.Bind<GridUI>().FromInstance(gridUI).AsSingle();
             Container.Bind<ParentMain>().FromInstance(parentMain).AsSingle();
+            Container.Bind<TimeLineKeyframeScroll>().FromInstance(timeLineKeyframeScroll);
             
             
             // Сначала создаем и привязываем EventBus

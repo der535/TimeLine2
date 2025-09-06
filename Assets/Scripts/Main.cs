@@ -28,7 +28,6 @@ namespace TimeLine
 
         private double _smoothTimeInTicks;
         private double _exactTimeInTicks;
-        private double _lastAudioTime;
     
         private GameEventBus _gameEventBus;
         private TimeLineSettings _timeLineSettings;
@@ -65,7 +64,6 @@ namespace TimeLine
         public void Play()
         {
             audioSource.Play();
-            _lastAudioTime = audioSource.time;
             _exactTimeInTicks = SecondsToTicks(audioSource.time);
             _smoothTimeInTicks = _exactTimeInTicks;
         }
@@ -83,7 +81,6 @@ namespace TimeLine
             audioSource.time = (float)timeInSeconds;
             _smoothTimeInTicks = ticks;
             _exactTimeInTicks = ticks;
-            _lastAudioTime = timeInSeconds;
             
             _gameEventBus.Raise(new TickSmoothTimeEvent(ticks));
             _gameEventBus.Raise(new TickExactTimeEvent(ticks));
@@ -94,7 +91,6 @@ namespace TimeLine
             audioSource.Pause();
             _exactTimeInTicks = SecondsToTicks(audioSource.time);
             _smoothTimeInTicks = _exactTimeInTicks;
-            _lastAudioTime = audioSource.time;
         }
 
         private void Update()
@@ -112,7 +108,6 @@ namespace TimeLine
             double exactVisualTimeInTicks = _exactTimeInTicks - visualOffsetTicks;
             double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
             
-            
             // Raise events
             _gameEventBus.Raise(new TickSmoothTimeEvent(exactVisualTimeInTicks));
             _gameEventBus.Raise(new TickExactTimeEvent(smoothVisualTimeInTicks));
@@ -123,9 +118,6 @@ namespace TimeLine
             {
                 _smoothTimeInTicks = _exactTimeInTicks;
             }
-            
-            // Store current audio time for next frame
-            _lastAudioTime = audioSource.time;
         }
     }
 }

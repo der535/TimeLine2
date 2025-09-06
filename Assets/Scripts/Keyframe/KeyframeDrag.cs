@@ -13,6 +13,7 @@ namespace TimeLine.Keyframe
         private MainObjects _mainObjects;
         private TimeLineConverter _timeLineConverter;
         private GridUI _gridUI;
+        private TimeLineKeyframeScroll _timeLineKeyframeScroll;
 
         private Vector2 _startMousePosition;
         private Vector2 _startObjectPosition;
@@ -22,13 +23,18 @@ namespace TimeLine.Keyframe
         private Action _sortKeyframes;
 
         private bool _isDragging;
-        
+
         [Inject]
-        private void Construct(MainObjects mainObject, TimeLineConverter timeLineConverter, GridUI gridUI)
+        private void Construct(
+            MainObjects mainObject, 
+            TimeLineConverter timeLineConverter, 
+            GridUI gridUI,
+            TimeLineKeyframeScroll timeLineKeyframeScroll)
         {
             _gridUI = gridUI;
             _mainObjects = mainObject;
             _timeLineConverter = timeLineConverter;
+            _timeLineKeyframeScroll = timeLineKeyframeScroll;
         }
 
         private void Awake()
@@ -63,14 +69,21 @@ namespace TimeLine.Keyframe
         {
             if (_isDragging)
             {
-                _rectTransform.anchoredPosition =
-                    new Vector2(
-                        _gridUI.RoundAnchorPositionToGrid(_startObjectPosition.x -
-                                                          (_startMousePosition.x - GetMousePosition().x)),
-                        _rectTransform.anchoredPosition.y);
+                // Вычисляем новую позицию без учета смещения корня
+                float newPositionX = _startObjectPosition.x - (_startMousePosition.x - GetMousePosition().x);
+                
+                // Применяем округление к позиции относительно корня
+                float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x;
+                float relativePosition = newPositionX - rootOffset;
+                float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Pan);
+                float finalPositionX = roundedRelativePosition + rootOffset;
 
+                _rectTransform.anchoredPosition = new Vector2(finalPositionX, _rectTransform.anchoredPosition.y);
+
+                // Вычисляем тики на основе относительной позиции
                 _keyframe.ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
-                        _timeLineConverter.GetTimeFromAnchorPosition(_rectTransform.anchoredPosition.x)));
+                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan )));
+                    
                 _sortKeyframes.Invoke();
             }
         }

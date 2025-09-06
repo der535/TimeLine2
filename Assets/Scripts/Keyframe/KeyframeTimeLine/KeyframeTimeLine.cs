@@ -1,6 +1,7 @@
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Keyframe.KeyframeTimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -9,6 +10,7 @@ namespace TimeLine
     public class KeyframeTimeLine : MonoBehaviour
     {
         [SerializeField] private RectTransform rect;
+        [SerializeField] private TimeLineKeyframeScroll timeLineKeyframeScroll;
 
         private TrackObject _trackObject;
 
@@ -16,6 +18,7 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
         private TimeLineSettings _timeLineSettings;
         private GridUI _gridUI;
+        private TrackObject _trackObjectData;
 
         [Inject]
         private void Construct(Main main, GameEventBus gameEventBus, TimeLineSettings timeLineSettings,
@@ -32,6 +35,9 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
+            _gameEventBus.SubscribeTo(
+                (ref EventBus.Events.KeyframeTimeLine.PanEvent data) =>
+                    UpdatePosition(_main.TicksCurrentTime(), _trackObjectData));
         }
 
         public void OnTimeChangedSmoothTicks(ref TickSmoothTimeEvent tickEvent)
@@ -52,18 +58,21 @@ namespace TimeLine
 
         private void UpdatePosition(double ticks, TrackObject trackObject)
         {
+            _trackObjectData = trackObject;
             // Конвертируем StartTime трек-объекта в тики
             double startTimeTicks = trackObject.StartTimeInTicks;
-            
+
             // Вычисляем разницу во времени в тиках
             double timeDiffTicks = ticks - startTimeTicks;
-            
+
             // Конвертируем разницу в тиках в секунды для позиционирования
             double timeDiffSeconds = TicksToSeconds(timeDiffTicks, _main.MusicDataSo.bpm);
-            
+
             // Вычисляем позицию
-            float positionX = (float)(timeDiffSeconds * _timeLineSettings.DistanceBetweenBeatLines * (_main.MusicDataSo.bpm / 60));
-            
+            float positionX = (float)(timeDiffSeconds *
+                                      (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeScroll.Pan) *
+                                      (_main.MusicDataSo.bpm / 60));
+
             rect.anchoredPosition = new Vector2(positionX, rect.anchoredPosition.y);
         }
 
@@ -86,7 +95,8 @@ namespace TimeLine
         private void OnDestroy()
         {
             _gameEventBus.UnsubscribeFrom<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
-            _gameEventBus.UnsubscribeFrom<SelectObjectEvent>((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
+            _gameEventBus.UnsubscribeFrom<SelectObjectEvent>((ref SelectObjectEvent data) =>
+                OnSelectTrackObject(data.Track));
             _gameEventBus.UnsubscribeFrom<DragTrackObjectEvent>(OnDragTrackObject);
         }
     }

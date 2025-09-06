@@ -3,6 +3,7 @@ using EventBus;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Zenject;
 
 namespace TimeLine.Keyframe.KeyframeTimeLine
@@ -11,6 +12,7 @@ namespace TimeLine.Keyframe.KeyframeTimeLine
     {
         [SerializeField] private RectTransform panel;
         [SerializeField] private RectTransform content;
+        [SerializeField] private TimeLineKeyframeScroll scroll;
 
         private GameEventBus _gameEventBus;
         private TimeLineConverter _timeLineConverter;
@@ -43,15 +45,13 @@ namespace TimeLine.Keyframe.KeyframeTimeLine
             _gameEventBus.SubscribeTo((ref OldPanEvent oldPanEvent) => _oldPan = oldPanEvent.OldPanOffset, 1);
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) =>
             {
-                float curPos = (float)_timeLineConverter.GetCursorBeatPosition(_oldPan, 0, content, panel);
-
-                print(curPos);
-                print((_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos)));
-                print(_timeLineConverter.CursorPosition(panel).x);
-                
-                SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos) -
+                float curPos = (float)_timeLineConverter.GetCursorBeatPosition(_oldPan,0, content, panel);
+                SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos, scroll.Pan) -
                               _timeLineConverter.CursorPosition(panel).x));
             }, 1);
         }
+        
+
+
     }
 }
