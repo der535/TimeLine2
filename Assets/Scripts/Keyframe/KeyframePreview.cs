@@ -25,14 +25,14 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) =>
             {
                 _keyframe = data.Keyframe.Keyframe;
-                text.text = $"Time: {data.Keyframe.Keyframe.ticks.ToString()}, Value: {data.Keyframe.Keyframe.GetData().GetValue()}";
+                text.text = $"Time: {data.Keyframe.Keyframe.Ticks.ToString()}, Value: {data.Keyframe.Keyframe.GetData().GetValue()}";
             });
         }
 
         private void Update() //todo Удалить потом
         {
             if(_keyframe != null)
-                text.text = $"Time: {_keyframe.ticks.ToString()}, Value: {_keyframe.GetData().GetValue()}";
+                text.text = $"Time: {_keyframe.Ticks.ToString()}, Value: {_keyframe.GetData().GetValue()}";
         }
     }
 }

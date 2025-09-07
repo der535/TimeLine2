@@ -1,17 +1,15 @@
 ﻿namespace TimeLine.Keyframe
 {
-    using System.Collections.Generic;
-    using System.Linq;
     using UnityEngine;
 
     public class Keyframe
     {
-        public double ticks; // Время в тиках
+        public double Ticks { get; set; }
         private AnimationData animationData;
 
         public Keyframe(double ticks)
         {
-            this.ticks = Mathf.Round((float)ticks);
+            this.Ticks = Mathf.Round((float)ticks);
         }
 
         public void AddData(AnimationData data)
@@ -28,7 +26,7 @@
 
         public Keyframe Clone()
         {
-            Keyframe clone = new Keyframe(ticks);
+            Keyframe clone = new Keyframe(Ticks);
             animationData.Clone();
             return clone;
         }

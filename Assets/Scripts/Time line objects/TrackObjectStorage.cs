@@ -91,14 +91,6 @@ namespace TimeLine
                 }
             }
         }
-
-        public void ResetSelection()
-        {
-            _selectedObject?.trackObject.Deselect();
-            _selectedObject = null;
-            // _gameEventBus.Raise(new SelectTrackObjectEvent(_selectedObject));
-            _gameEventBus.Raise(new SelectObjectEvent(_selectedObject));
-        }
     }
     
     [Serializable]

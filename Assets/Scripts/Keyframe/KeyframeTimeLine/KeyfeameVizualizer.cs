@@ -79,7 +79,7 @@ namespace TimeLine
                     KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
 
                     // Конвертируем тики в позицию на таймлайне
-                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.ticks, _timeLineKeyframeScroll.Pan)+_content.offsetMin.x;
+                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.Ticks, _timeLineKeyframeScroll.Pan)+_content.offsetMin.x;
                     keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
                         positionX,
                         keyframeObjectData.RectTransform.anchoredPosition.y);

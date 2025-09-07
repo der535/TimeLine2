@@ -21,7 +21,14 @@
         {
             return position;
         }
-
+        public override void SetValue(object value)
+        {
+            if(value is Vector3 f) this.position = f;
+            else
+            {
+                Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a Vector3");
+            }
+        }
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             PositionData otherPos = (PositionData)other;

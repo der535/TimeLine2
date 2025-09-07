@@ -109,8 +109,8 @@ namespace TimeLine
             double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
             
             // Raise events
-            _gameEventBus.Raise(new TickSmoothTimeEvent(exactVisualTimeInTicks));
-            _gameEventBus.Raise(new TickExactTimeEvent(smoothVisualTimeInTicks));
+            _gameEventBus.Raise(new TickSmoothTimeEvent(smoothVisualTimeInTicks));
+            _gameEventBus.Raise(new TickExactTimeEvent(exactVisualTimeInTicks));
             
             // Reset if too far off (using tick-based comparison)
             double resetThresholdTicks = SecondsToTicks(minResetOffset);

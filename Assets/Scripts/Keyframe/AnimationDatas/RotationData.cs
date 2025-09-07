@@ -21,7 +21,14 @@
         {
             return rotation;
         }
-
+        public override void SetValue(object value)
+        {
+            if(value is Quaternion f) this.rotation = f;
+            else
+            {
+                Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a Quaternion");
+            }
+        }
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             RotationData otherRot = (RotationData)other;

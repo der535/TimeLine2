@@ -1,12 +1,10 @@
-﻿
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace TimeLine.Keyframe
 {
-    using System.Collections.Generic;
-    using System.Linq;
-    using UnityEngine;
-
     public class Track
     {
         public GameObject TargetObject;
@@ -22,10 +20,10 @@ namespace TimeLine.Keyframe
 
         public Keyframe AddKeyframe(double time, AnimationData adata = null)
         {
-            var time2 = Mathf.RoundToInt((float)time);
-            // Debug.Log(time2);
-            Keyframe newKeyframe = new Keyframe(time2);
+            // Удаляем существующий ключевой кадр с таким же временем
+            RemoveKeyframeAtTime(time);
             
+            Keyframe newKeyframe = new Keyframe(time);
             newKeyframe.AddData(adata);
             
             Keyframes.Add(newKeyframe);
@@ -41,33 +39,34 @@ namespace TimeLine.Keyframe
         
         public void AddKeyframe(Keyframe newKeyframe)
         {
+            // Удаляем существующий ключевой кадр с таким же временем
+            RemoveKeyframeAtTime(newKeyframe.Ticks);
+            
             Keyframes.Add(newKeyframe);
             SortKeyframes();
         }
 
+        // Новый метод для удаления ключевых кадров по времени
+        private void RemoveKeyframeAtTime(double time)
+        {
+            Keyframes.RemoveAll(k => k.Ticks == time);
+        }
+
+        // Остальные методы без изменений
         public void Evaluate(double time)
         {
-            // Debug.Log(TrackName);
             if (Keyframes.Count == 0 || TargetObject == null) return;
         
-            // Находим текущий и следующий ключевые кадры
-            Keyframe prev = Keyframes.LastOrDefault(k => k.ticks <= time);
-            Keyframe next = Keyframes.FirstOrDefault(k => k.ticks >= time);
+            Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks <= time);
+            Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks >= time);
 
-            // Debug.Log(prev);
-            // Debug.Log(next);
-            
             if (prev == null && next == null) return;
             
-            // Если только один ключевой кадр
             if (prev == null) next.Apply(TargetObject);
             else if (next == null) prev.Apply(TargetObject);
-            
-            // Интерполяция между кадрами
             else if (prev != next)
             {
-                double t = Mathf.InverseLerp((float)prev.ticks, (float)next.ticks, (float)time);
-                // Debug.Log(t);
+                double t = Mathf.InverseLerp((float)prev.Ticks, (float)next.Ticks, (float)time);
                 prev.Interpolate(next, TargetObject, t);
             }
             else
@@ -80,24 +79,20 @@ namespace TimeLine.Keyframe
         {
             foreach (var keyframe in Keyframes)
             {
-                keyframe.ticks += Math.Round(ticks);
+                keyframe.Ticks += Math.Round(ticks);
             }
         }
         
-        // Добавленный метод копирования трека
         public Track Copy(GameObject target)
         {
-            // Создаем новый трек с теми же параметрами
             Track newTrack = new Track(target, this.TrackName);
-            
-            // Глубокое копирование ключевых кадров
             newTrack.Keyframes = this.Keyframes.Select(kf => kf.Clone()).ToList();
             return newTrack;
         }
 
         public void SortKeyframes()
         {
-            Keyframes = Keyframes.OrderBy(k => k.ticks).ToList();
+            Keyframes = Keyframes.OrderBy(k => k.Ticks).ToList();
         }
     }
 }

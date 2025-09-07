@@ -1,49 +1,100 @@
-using System;
 using UnityEngine;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TMPro;
 using Zenject;
 
 public class ParentMain : MonoBehaviour
 {
-    public List<TrackObjectData> sceneGameObjects = new List<TrackObjectData>();
-    private GameEventBus _gameEventBus;
-    public Action<List<TrackObjectData>> OnTrackObjectSelected;
+    [SerializeField] private TMP_Dropdown dropdown;
     
-    [Inject]
-    void Construct(GameEventBus gameEventBus)
-    {
-        _gameEventBus = gameEventBus;
-    }
+    [SerializeField] private TrackObjectData currentParent;
+    [SerializeField] private TrackObjectData currentoObjectData;
 
-    internal void InvokeOnTrackObjectSelected()
+    private TrackObjectStorage _trackObjectStorage;
+
+    private List<TrackObjectData> _trackObjectDatas = new();
+    private List<TrackObjectData> _localtrackObjectDatas = new();
+
+    private GameEventBus _eventBus;
+
+    [Inject]
+    private void Construct(GameEventBus eventBus, TrackObjectStorage objectManager)
     {
-        print(sceneGameObjects.Count);
-        OnTrackObjectSelected?.Invoke(sceneGameObjects);
+        _eventBus = eventBus;
+        _trackObjectStorage = objectManager;
     }
 
     private void Start()
     {
-        sceneGameObjects.Add(new TrackObjectData(null, null, null));
+        _eventBus.SubscribeTo((ref AddTrackObjectDataEvent data) => UpdateDropdown(data.TrackObjectData, true));
+        _eventBus.SubscribeTo((ref RemoveTrackObjectDataEvent data) => UpdateDropdown(data.TrackObjectData, false));
+        _eventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Track));
 
-        _gameEventBus.SubscribeTo((ref AddTrackObjectDataEvent addTrackObjectDataEvent) =>
-            RefreshDropdown(addTrackObjectDataEvent.TrackObjectData, true));
-        _gameEventBus.SubscribeTo((ref RemoveTrackObjectDataEvent removeTrackObjectDataEvent) =>
-            RefreshDropdown(removeTrackObjectDataEvent.TrackObjectData, false));
-        OnTrackObjectSelected?.Invoke(sceneGameObjects);
+        UpdateDropdown(new TrackObjectData(null, null, null), true);
+
+        dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
     }
-    
 
-    // Метод для принудительного обновления dropdown из других скриптов
-    private void RefreshDropdown(TrackObjectData currentParent, bool add)
+    private void SelectObject(TrackObjectData trackObjectData)
     {
-        if (add) sceneGameObjects.Add(currentParent);
-        else
+        if (trackObjectData.sceneObject == null) return;
+
+        currentoObjectData = trackObjectData;
+        currentParent = _trackObjectStorage.GetTrackObjectData(
+            trackObjectData.sceneObject.transform.parent?.gameObject
+        );
+
+        // Создаём копию списка вместо использования ссылки
+        _localtrackObjectDatas = new List<TrackObjectData>(_trackObjectDatas);
+        _localtrackObjectDatas.Remove(trackObjectData); // Теперь это не затрагивает исходный список
+
+        dropdown.ClearOptions();
+        List<string> options = new List<string>();
+
+        foreach (TrackObjectData obj in _localtrackObjectDatas)
         {
-            sceneGameObjects.Remove(currentParent);
+            options.Add(obj.sceneObject?.name ?? "null");
         }
-        OnTrackObjectSelected?.Invoke(sceneGameObjects);
+
+        dropdown.AddOptions(options);
+
+        if (currentParent != null)
+        {
+            int index = _localtrackObjectDatas.IndexOf(currentParent);
+            if (index >= 0)
+            {
+                dropdown.SetValueWithoutNotify(index);
+                dropdown.captionText.text = currentParent.sceneObject?.name;
+            }
+        }
+        else if (_localtrackObjectDatas.Count > 0)
+        {
+            dropdown.SetValueWithoutNotify(0);
+        }
+    }
+
+    private void UpdateDropdown(TrackObjectData trackObjectData, bool isAdd)
+    {
+        if (isAdd) _trackObjectDatas.Add(trackObjectData);
+        else _trackObjectDatas.Remove(trackObjectData);
+
+        SelectObject(currentParent);
+    }
+
+    private void OnDropdownValueChanged(int index)
+    {
+        if (index >= 0 && index < _localtrackObjectDatas.Count)
+        {
+            if(_localtrackObjectDatas[index]?.sceneObject != null)
+                currentoObjectData.sceneObject.transform.SetParent(_localtrackObjectDatas[index].sceneObject.transform);
+            else
+            {
+                currentoObjectData.sceneObject.transform.SetParent(null);
+            }
+            currentParent = _localtrackObjectDatas[index];
+        }
     }
 }

@@ -23,7 +23,14 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
         {
             return value;
         }
-
+        public override void SetValue(object value)
+        {
+            if(value is float f) this.value = f;
+            else
+            {
+                Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
+            }
+        }
         public override AnimationData Interpolate(AnimationData other, double t)
         {
             XScaleData otherPos = (XScaleData)other;

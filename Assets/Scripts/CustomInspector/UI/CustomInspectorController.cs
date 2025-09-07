@@ -36,7 +36,6 @@ namespace TimeLine
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new RandomTransformComponentDrawer());
             _componentDrawers.Add(new DynamicTransformDrawer());
-            _componentDrawers.Add(new ParentDrawer());
             _componentDrawers.Add(new NameDrawer());
         }
         

@@ -81,7 +81,7 @@ namespace TimeLine.Keyframe
                 _rectTransform.anchoredPosition = new Vector2(finalPositionX, _rectTransform.anchoredPosition.y);
 
                 // Вычисляем тики на основе относительной позиции
-                _keyframe.ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
+                _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
                     _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan )));
                     
                 _sortKeyframes.Invoke();

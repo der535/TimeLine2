@@ -10,6 +10,7 @@
         // Добавленный абстрактный метод для клонирования
         public abstract AnimationData Clone();
         public abstract object GetValue();
+        public abstract void SetValue(object value);
     
         // Для кастомных параметров
         public virtual void ApplyToComponent(Component component) { }
