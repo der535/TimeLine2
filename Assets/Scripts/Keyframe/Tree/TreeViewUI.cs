@@ -29,6 +29,9 @@ public class TreeViewUI : MonoBehaviour
         _gameEventBus.SubscribeTo<AddTrackEvent>(RebuildBranch, 1);
         // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => BuildBranch(data.Track.branch), 1);
         _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => BuildBranch(data.Track.branch), 1);
+        
+        _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => ClearContent());
+
     }
 
     public void BuildBranch(Branch branch)

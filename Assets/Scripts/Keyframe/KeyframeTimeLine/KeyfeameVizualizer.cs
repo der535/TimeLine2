@@ -46,6 +46,9 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => Build());
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.ScrollTimeLineKeyframeEvent _) => Build());
+            
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
+
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
         }
 
@@ -89,6 +92,12 @@ namespace TimeLine
                     keyframeObjectData.Track = track;
                 }
             }
+        }
+
+        private void Clear()
+        {
+            foreach (var keyframe in keyframes.Where(keyframe => keyframe))
+                Destroy(keyframe.gameObject);
         }
 
 

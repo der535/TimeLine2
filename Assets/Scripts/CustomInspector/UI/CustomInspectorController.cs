@@ -29,9 +29,8 @@ namespace TimeLine
 
         private void Awake()
         {
-            // _gameEventBus.SubscribeTo((ref SelectSceneObject data) => Draw(data.GameObject));
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Track.sceneObject));
-            
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
             
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new RandomTransformComponentDrawer());
@@ -41,8 +40,8 @@ namespace TimeLine
         
         private void Draw(GameObject target)
         {
-            foreach (Transform child in rootObject)
-                Destroy(child.gameObject);
+            print(target);
+            Clear();
 
             var components = target.GetComponents<Component>();
 
@@ -57,6 +56,12 @@ namespace TimeLine
                     }
                 }
             }
+        }
+
+        private void Clear()
+        {
+            foreach (Transform child in rootObject)
+                Destroy(child.gameObject);
         }
     }
 }

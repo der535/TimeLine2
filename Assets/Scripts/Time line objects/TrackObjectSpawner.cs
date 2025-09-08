@@ -58,7 +58,7 @@ namespace TimeLine
         {
             if (UnityEngine.Input.GetKeyDown(KeyCode.Space))
             {
-                CopyObject(_trackObjectStorage._selectedObject);
+                CopyObject(_trackObjectStorage.selectedObject);
             }
         }
         

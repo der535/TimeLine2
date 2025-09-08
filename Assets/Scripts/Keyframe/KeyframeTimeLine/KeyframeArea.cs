@@ -32,6 +32,9 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => OnSelectTrackObject(selectedTrackObjectData));
+            
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
+
         }
 
         public void OnSelectTrackObject(TrackObjectData trackObjectData)
@@ -39,6 +42,12 @@ namespace TimeLine
             if (trackObjectData == null) return;
             selectedTrackObjectData = trackObjectData;
             UpdateArea((float)trackObjectData.trackObject.BeatDuraction);
+        }
+
+        private void Clear()
+        {
+            selectedTrackObjectData = null;
+            UpdateArea(0);
         }
 
         private void UpdateArea(float duraction)

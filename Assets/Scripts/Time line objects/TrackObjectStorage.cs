@@ -5,6 +5,7 @@ using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
@@ -13,8 +14,8 @@ namespace TimeLine
     {
         private List<TrackObjectData> _trackObjects = new();
 
-        public TrackObjectData _selectedObject;
-        public TrackObjectData _oldSelectedObject;
+        [FormerlySerializedAs("_selectedObject")] public TrackObjectData selectedObject;
+        [FormerlySerializedAs("_oldSelectedObject")] public TrackObjectData oldSelectedObject;
         
         private GameEventBus _gameEventBus;
 
@@ -27,16 +28,28 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(ActiveSceneObject);
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Track.trackObject));
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => DeselectObject());
+
+            // Подписываемся на событие — но НЕ вызываем SelectObject рекурсивно!
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
+            {
+                // Ищем данные объекта и вызываем внутреннюю логику БЕЗ повторного Raise
+                var trackObjectData = GetTrackObjectData(data.Track.trackObject);
+                if (trackObjectData != null)
+                {
+                    InternalSelectObject(trackObjectData);
+                }
+            });
         }
 
         private void ActiveSceneObject(ref TickSmoothTimeEvent smoothTimeEvent)
         {
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.sceneObject.SetActive(trackObject.trackObject.StartTimeInTicks <= smoothTimeEvent.Time &&
-                                                  trackObject.trackObject.TimeDuractionInTicks + trackObject.trackObject.StartTimeInTicks  >
-                                                  smoothTimeEvent.Time);
+                trackObject.sceneObject.SetActive(
+                    trackObject.trackObject.StartTimeInTicks <= smoothTimeEvent.Time &&
+                    trackObject.trackObject.TimeDuractionInTicks + trackObject.trackObject.StartTimeInTicks > smoothTimeEvent.Time
+                );
             }
         }
         
@@ -65,31 +78,48 @@ namespace TimeLine
 
         public void UpdatePositionSelectedTrackObject()
         {
-            _gameEventBus.Raise(new DragTrackObjectEvent(_selectedObject));
+            _gameEventBus.Raise(new DragTrackObjectEvent(selectedObject));
         }
 
-        public void SelectObject(TrackObject selectedObject)
+        private void DeselectObject()
         {
+            selectedObject = null;
+            oldSelectedObject = null;
             foreach (var trackObject in _trackObjects)
             {
                 trackObject.trackObject.Deselect();
             }
-            
-            foreach (var trackObject in _trackObjects)
+        }
+
+        // Публичный метод — вызывается извне (например, из ObjectSettings)
+        public void SelectObject(TrackObject trackObjectToSelect)
+        {
+            // Ищем данные
+            var targetData = GetTrackObjectData(trackObjectToSelect);
+            if (targetData == null) return;
+
+            // Сначала снимаем выделение
+            DeselectObject();
+
+            // Применяем выделение без Raise события (чтобы не вызвать рекурсию)
+            InternalSelectObject(targetData);
+
+            // Теперь безопасно вызываем событие — оно НЕ должно вызывать SelectObject снова!
+            _gameEventBus.Raise(new SelectObjectEvent(targetData));
+        }
+
+        // Внутренняя логика выделения — без Raise события
+        private void InternalSelectObject(TrackObjectData trackObjectData)
+        {
+            if (trackObjectData == oldSelectedObject)
             {
-                if (trackObject.trackObject == selectedObject)
-                {
-                    if (trackObject == _oldSelectedObject)
-                    {
-                        trackObject.trackObject.SelectColor();
-                        return;
-                    }
-                    _gameEventBus.Raise(new SelectObjectEvent(trackObject));
-                    _selectedObject = trackObject;
-                    _oldSelectedObject = trackObject;
-                    trackObject.trackObject.SelectColor();
-                }
+                trackObjectData.trackObject.SelectColor();
+                return;
             }
+
+            this.selectedObject = trackObjectData;
+            oldSelectedObject = trackObjectData;
+            trackObjectData.trackObject.SelectColor();
         }
     }
     

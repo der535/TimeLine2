@@ -26,7 +26,7 @@ namespace TimeLine
         {
             if (UnityEngine.Input.GetKeyDown(KeyCode.F))
             {
-                Copy(_keyframeVizualizer.SelectedKeyframe.Keyframe, _keyframeVizualizer.SelectedKeyframe.Track, _trackObjectStorage._selectedObject.trackObject); 
+                Copy(_keyframeVizualizer.SelectedKeyframe.Keyframe, _keyframeVizualizer.SelectedKeyframe.Track, _trackObjectStorage.selectedObject.trackObject); 
             }
         }
 

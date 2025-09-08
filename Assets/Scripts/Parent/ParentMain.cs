@@ -31,11 +31,19 @@ public class ParentMain : MonoBehaviour
     {
         _eventBus.SubscribeTo((ref AddTrackObjectDataEvent data) => UpdateDropdown(data.TrackObjectData, true));
         _eventBus.SubscribeTo((ref RemoveTrackObjectDataEvent data) => UpdateDropdown(data.TrackObjectData, false));
+        
         _eventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Track));
+        _eventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
+
 
         UpdateDropdown(new TrackObjectData(null, null, null), true);
 
         dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
+    }
+
+    private void Clear()
+    {
+        dropdown.ClearOptions();
     }
 
     private void SelectObject(TrackObjectData trackObjectData)

@@ -54,6 +54,7 @@ namespace TimeLine
             {
                 InitializeLogger();
             }
+
             Log("=== PositionController Awake ===");
         }
 
@@ -92,9 +93,9 @@ namespace TimeLine
 
             string logLine = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
             Debug.Log(logLine);
-            
+
             // Проверяем и writer тоже, на всякий случай
-            if (_logWriter != null) 
+            if (_logWriter != null)
             {
                 _logWriter?.WriteLine(logLine);
                 _logWriter?.Flush();
@@ -120,7 +121,6 @@ namespace TimeLine
             };
         }
 
-        // ⭐ Новый метод-обработчик события изменения шага сетки
         private void OnGridPositionChanged(float newStepSize)
         {
             Log($"[OnGridPositionChanged] Received GridPositionEvent. New step size: {newStepSize:F4}");
@@ -131,38 +131,45 @@ namespace TimeLine
                 return;
             }
 
-            // ⭐ Используем _lastSnappedPosition как "фиксированную" точку для пересчета оффсета.
-            // Это та позиция, которая была последней применена к объекту.
-            Vector2 fixedSnappedPosition = _lastSnappedPosition;
-            Log($"[OnGridPositionChanged] Using _lastSnappedPosition ({fixedSnappedPosition:F4}) as the fixed point for grid offset recalculation.");
+            // ⭐⭐⭐ ОСНОВНОЕ ИЗМЕНЕНИЕ: Получаем ТЕКУЩУЮ мировую позицию объекта
+            Vector2 currentWorldPosition = new Vector2(_transformComponent.transform.position.x,
+                _transformComponent.transform.position.y);
+            Log($"[OnGridPositionChanged] Current WORLD position of object: {currentWorldPosition:F4}");
 
-            Log($"[OnGridPositionChanged] Calling gridScene.SetCurrentObjectPosition({fixedSnappedPosition:F4}) to recalculate offset for new step size {newStepSize:F4}.");
-            gridScene.SetCurrentObjectPosition(fixedSnappedPosition);
+            // ⭐ Сообщаем GridScene, что текущая мировая позиция — это наша новая "база" для расчета оффсета
+            Log(
+                $"[OnGridPositionChanged] Calling gridScene.SetCurrentObjectPosition({currentWorldPosition:F4}) to recalculate offset for new step size {newStepSize:F4}.");
+            gridScene.SetCurrentObjectPosition(currentWorldPosition);
 
-            // ⭐ После пересчета оффсета в GridScene, _lastSnappedPosition по сути остается "правильным"
-            // для новой сетки. Тем не менее, для полной уверенности, пересчитаем его явно.
-            // Получаем текущую "плавную" позицию инструмента
-            Vector2 currentToolWorldPosition = TimeLineConverter.ConvertAnchorToWorldPosition(_rectTransformPositionTool, canvas);
-            // Снапаем её с новым оффсетом и шагом
-            float rotationAngle = -_rectTransformPositionTool.localEulerAngles.z;
-            Quaternion currentToolRotationInverse = Quaternion.Euler(0, 0, rotationAngle);
+            // ⭐ Получаем ГЛОБАЛЬНОЕ вращение инструмента (или объекта, если в локальной системе)
+            Quaternion currentToolGlobalRotationInverse = Quaternion.Inverse(_rectTransformPositionTool.rotation);
+            Log(
+                $"[OnGridPositionChanged] Current tool global rotation inverse: {currentToolGlobalRotationInverse.eulerAngles:F2}");
 
-            Log($"[OnGridPositionChanged] Recalculating _lastSnappedPosition based on current tool position ({currentToolWorldPosition:F4}) and new grid settings.");
-            Vector2 newSnappedPosition = gridScene.PositionFloatSnapToGrid(currentToolWorldPosition, currentToolRotationInverse);
+            // ⭐ Рассчитываем новую снапнутую позицию на основе ТЕКУЩЕЙ мировой позиции и НОВОГО шага
+            Vector2 newSnappedPosition =
+                gridScene.PositionFloatSnapToGrid(currentWorldPosition, currentToolGlobalRotationInverse);
+            Log(
+                $"[OnGridPositionChanged] New snapped WORLD position (after grid step change): {newSnappedPosition:F4}");
 
-            // Обновляем _lastSnappedPosition
+            // ⭐ Обновляем кэш последней снапнутой позиции (теперь в мировых координатах для внутренней логики)
             _lastSnappedPosition = newSnappedPosition;
-            Log($"[OnGridPositionChanged] _lastSnappedPosition updated to new snapped position: {_lastSnappedPosition:F4} based on new grid offset and step size.");
 
-            // ⭐ ВАЖНО: Убедиться, что UI инструмента также синхронизирован с новой позицией.
+            // --- Синхронизируем объект ---
+            _transformComponent.XPosition.Value = newSnappedPosition.x;
+            _transformComponent.YPosition.Value = newSnappedPosition.y;
+            Log(
+                $"[OnGridPositionChanged] Applied new snapped position to TransformComponent: X={newSnappedPosition.x:F4}, Y={newSnappedPosition.y:F4}");
+
+            // --- Синхронизируем UI инструмента ---
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _mainObjects.ToolRectTransform,
-                    camera.WorldToScreenPoint(_lastSnappedPosition),
+                    camera.WorldToScreenPoint(newSnappedPosition),
                     camera,
                     out var snappedLocalPoint))
             {
                 _rectTransformPositionTool.anchoredPosition = snappedLocalPoint;
-                Log($"[OnGridPositionChanged] [SYNC TOOL] Tool position synced to: {snappedLocalPoint:F4} after grid step change.");
+                Log($"[OnGridPositionChanged] [SYNC TOOL] Tool position synced to: {snappedLocalPoint:F4}");
             }
             else
             {
@@ -175,11 +182,6 @@ namespace TimeLine
         {
             Log($"--- SelectObject START for: {data?.name ?? "NULL"} ---");
 
-            if (_transformComponent != null)
-            {
-                Log("Unsubscribing from previous TransformComponent (if any) — currently commented out.");
-            }
-
             _transformComponent = data?.GetComponent<TransformComponent>();
             if (_transformComponent == null)
             {
@@ -188,29 +190,34 @@ namespace TimeLine
                 return;
             }
 
-            Vector2 originalPosition = new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value);
-            Log($"[SelectObject] Original object position from TransformComponent: {originalPosition:F4}");
+            // ⭐ Получаем ЛОКАЛЬНУЮ позицию для GridScene
+            Vector2 localPositionForGrid =
+                new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value);
+            Log($"[SelectObject] Local position for GridScene: {localPositionForGrid:F4}");
 
-            // ⭐⭐⭐ ВАЖНО: Сообщаем GridScene, какой объект сейчас выбран.
-            Log($"[SelectObject] Calling gridScene.SetCurrentObjectPosition({originalPosition:F4})");
-            gridScene.SetCurrentObjectPosition(originalPosition);
+            // ⭐ Получаем ГЛОБАЛЬНУЮ позицию для позиционирования UI инструмента
+            Vector2 worldPositionForUI = new Vector2(_transformComponent.transform.position.x,
+                _transformComponent.transform.position.y);
+            Log($"[SelectObject] World position for UI Tool: {worldPositionForUI:F4}");
 
-            // ⭐ Снапаем с учётом нового оффсета
-            Log($"[SelectObject] Calling gridScene.PositionFloatSnapToGrid({originalPosition:F4}, identity) to get snapped position with new offset.");
-            Vector2 snappedWorldPosition = gridScene.PositionFloatSnapToGrid(originalPosition, Quaternion.identity);
-            Log($"[SelectObject] Snapped world position (with NEW GridScene offset): {snappedWorldPosition:F4}");
+            // Сообщаем GridScene текущую локальную позицию объекта (для расчета оффсета)
+            Log($"[SelectObject] Calling gridScene.SetCurrentObjectPosition({localPositionForGrid:F4})");
+            gridScene.SetCurrentObjectPosition(localPositionForGrid);
 
-            _transformComponent.XPosition.Value = snappedWorldPosition.x;
-            _transformComponent.YPosition.Value = snappedWorldPosition.y;
+            // Кэшируем последнюю снапнутую позицию (локальную, для гистерезиса)
+            _lastSnappedPosition = localPositionForGrid;
+            Log($"[SelectObject] Cached _lastSnappedPosition (local): {_lastSnappedPosition:F4}");
 
-            // ⭐ Обновляем _lastSnappedPosition в PositionController
-            _lastSnappedPosition = snappedWorldPosition;
-            Log($"[SelectObject] Assigned final position to TransformComponent and cached snapped position as _lastSnappedPosition: {_lastSnappedPosition:F4}");
+            // Назначаем локальную позицию обратно в компонент (без снапа, как и требовалось)
+            _transformComponent.XPosition.Value = localPositionForGrid.x;
+            _transformComponent.YPosition.Value = localPositionForGrid.y;
+            Log(
+                $"[SelectObject] Assigned local position to TransformComponent: X={localPositionForGrid.x:F4}, Y={localPositionForGrid.y:F4}");
 
-            // --- Обновление UI инструмента ---
+            // --- Обновление UI инструмента с использованием ГЛОБАЛЬНОЙ позиции ---
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _mainObjects.ToolRectTransform,
-                    camera.WorldToScreenPoint(snappedWorldPosition),
+                    camera.WorldToScreenPoint(worldPositionForUI), // ⭐ Используем МИРОВУЮ позицию!
                     camera,
                     out var localPoint))
             {
@@ -219,13 +226,17 @@ namespace TimeLine
                 return;
             }
 
-            Log($"[SelectObject] Converted snapped world position {snappedWorldPosition:F4} to tool local point: {localPoint:F4}");
+            Log(
+                $"[SelectObject] Converted world position {worldPositionForUI:F4} to tool local point: {localPoint:F4}");
             _rectTransformPositionTool.anchoredPosition = localPoint;
 
-            float targetRotation = coordinateSystem.IsGlobal ? 0f : _transformComponent.ZRotation.Value;
+            // Устанавливаем вращение инструмента
+            float targetRotation =
+                coordinateSystem.IsGlobal ? 0f : _transformComponent.transform.rotation.eulerAngles.z;
             _rectTransformPositionTool.rotation = Quaternion.Euler(0f, 0f, targetRotation);
             Log($"[SelectObject] Set tool rotation to: {targetRotation:F2} degrees");
 
+            // Подписываемся на события
             positionTool.OnChangePosition -= UpdateObjectFromTool;
             positionTool.OnChangePosition += UpdateObjectFromTool;
             Log("[SelectObject] Subscribed UpdateObjectFromTool to PositionTool.OnChangePosition");
@@ -245,16 +256,19 @@ namespace TimeLine
             // 2. Применяем вращение
             float rotationAngle = -toolTransform.localEulerAngles.z;
             Quaternion inverseRotation = Quaternion.Euler(0, 0, rotationAngle);
-            Log($"[UpdateObjectFromTool] Applied inverse rotation: {rotationAngle:F2} degrees (Euler: {inverseRotation.eulerAngles:F2})");
+            Log(
+                $"[UpdateObjectFromTool] Applied inverse rotation: {rotationAngle:F2} degrees (Euler: {inverseRotation.eulerAngles:F2})");
 
             // 3. Снапаем с оффсетом — GridScene сам всё учтёт!
-            Log($"[UpdateObjectFromTool] Calling gridScene.PositionFloatSnapToGrid({smoothWorldPosition:F4}, {inverseRotation.eulerAngles:F2})");
+            Log(
+                $"[UpdateObjectFromTool] Calling gridScene.PositionFloatSnapToGrid({smoothWorldPosition:F4}, {inverseRotation.eulerAngles:F2})");
             Vector2 candidateSnappedPosition = gridScene.PositionFloatSnapToGrid(smoothWorldPosition, inverseRotation);
             Log($"[UpdateObjectFromTool] Candidate snapped position FROM GRIDSCENE: {candidateSnappedPosition:F4}");
 
             // 4. Гистерезис
             float distanceToLastSnap = Vector2.Distance(candidateSnappedPosition, _lastSnappedPosition);
-            Log($"[UpdateObjectFromTool] Distance to last snap: {distanceToLastSnap:F4}, Hysteresis threshold: {_snapHysteresis:F4}");
+            Log(
+                $"[UpdateObjectFromTool] Distance to last snap: {distanceToLastSnap:F4}, Hysteresis threshold: {_snapHysteresis:F4}");
 
             if (distanceToLastSnap > _snapHysteresis)
             {

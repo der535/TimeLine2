@@ -19,7 +19,6 @@ namespace TimeLine
 
         private void OnMouseDown()
         {
-            // _gameEventBus.Raise(new SelectSceneObject(gameObject));
             _gameEventBus.Raise(new SelectObjectEvent(_trackObjectStorage.GetTrackObjectData(gameObject)));
         }
     }

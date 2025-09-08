@@ -24,10 +24,12 @@ namespace TimeLine
         {
             // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => _inputField.text = data.Track.trackObject.TimeDuraction.ToString());
             _gameEventBus.SubscribeTo<SelectObjectEvent>(((ref SelectObjectEvent data) => _inputField.text = data.Track.trackObject.TimeDuractionInTicks.ToString()));
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => _inputField.text = "");
+
             
             _inputField.onEndEdit.AddListener(text =>
             {
-                _trackObjectStorage._selectedObject.trackObject.ChangeDurationInTicks(float.Parse(text));
+                _trackObjectStorage.selectedObject.trackObject.ChangeDurationInTicks(float.Parse(text));
             });
         }
     }

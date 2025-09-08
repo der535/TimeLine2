@@ -227,25 +227,24 @@ namespace TimeLine
         }
 
         // ⭐ Основной метод снаппинга — с поддержкой оффсета и вращения
-        public Vector2 PositionFloatSnapToGrid(Vector2 value, Quaternion rotation)
+        public Vector2 PositionFloatSnapToGrid(Vector2 value, Quaternion inverseRotation)
         {
-            LogMessage(
-                $"[PositionFloatSnapToGrid START] Input value: {value:F4}, Rotation Euler: {rotation.eulerAngles:F4}, Current _positionStepSize: {_positionStepSize:F4}, Current _gridOffset: {_gridOffset:F4}");
+            LogMessage($"[PositionFloatSnapToGrid] Input value: {value:F4}, Inverse Rotation: {inverseRotation.eulerAngles:F4}");
 
-            // Переводим значение в глобальную систему координат
-            Vector3 globalValue = rotation * new Vector3(value.x, value.y, 0);
-            Vector2 globalValue2D = new Vector2(globalValue.x, globalValue.y);
-            LogMessage($"[PositionFloatSnapToGrid] Global value: {globalValue2D:F4}");
+            // ⭐ 1. Переводим мировую позицию в локальную систему координат
+            Vector3 localValue = inverseRotation * new Vector3(value.x, value.y, 0);
+            Vector2 localValue2D = new Vector2(localValue.x, localValue.y);
+            LogMessage($"[PositionFloatSnapToGrid] Local value (after inverse rotation): {localValue2D:F4}");
 
-            // ⭐ Снаппим с оффсетом
-            Vector2 snappedGlobal = SnapToGridWithOffset(globalValue2D, _positionStepSize, _gridOffset);
-            LogMessage($"[PositionFloatSnapToGrid] Snapped global value: {snappedGlobal:F4}");
+            // ⭐ 2. Применяем снаппинг с оффсетом в ЛОКАЛЬНОЙ системе
+            Vector2 snappedLocal = SnapToGridWithOffset(localValue2D, _positionStepSize, _gridOffset);
+            LogMessage($"[PositionFloatSnapToGrid] Snapped local value: {snappedLocal:F4}");
 
-            // Возвращаем в локальные координаты
-            Vector3 snappedLocal = Quaternion.Inverse(rotation) * new Vector3(snappedGlobal.x, snappedGlobal.y, 0);
-            Vector2 result = new Vector2(snappedLocal.x, snappedLocal.y);
+            // ⭐ 3. Переводим обратно в мировую систему
+            Vector3 snappedWorld = Quaternion.Inverse(inverseRotation) * new Vector3(snappedLocal.x, snappedLocal.y, 0);
+            Vector2 result = new Vector2(snappedWorld.x, snappedWorld.y);
+            LogMessage($"[PositionFloatSnapToGrid] Final snapped world value: {result:F4}");
 
-            LogMessage($"[PositionFloatSnapToGrid END] Final snapped local value: {result:F4}");
             return result;
         }
 
@@ -276,7 +275,7 @@ namespace TimeLine
         // ⭐ Вспомогательный метод: снаппинг с оффсетом (только для внутреннего использования)
         private Vector2 SnapToGridWithOffset(Vector2 position, float step, Vector2 offset)
         {
-            LogMessage($"[SnapToGridWithOffset] Position: {position:F4}, Step: {step:F4}, Offset: {offset:F4}");
+            LogMessage($"[SnapToGridWithOffset] Input position: {position:F4}, Step: {step:F4}, Offset: {offset:F4}");
 
             if (step <= 0f)
             {
@@ -285,14 +284,17 @@ namespace TimeLine
             }
 
             Vector2 adjusted = position - offset;
+            LogMessage($"[SnapToGridWithOffset] Adjusted position (position - offset): {adjusted:F4}");
+
             Vector2 snapped = new Vector2(
                 Mathf.Round(adjusted.x / step) * step,
                 Mathf.Round(adjusted.y / step) * step
             );
-            Vector2 result = snapped + offset;
+            LogMessage($"[SnapToGridWithOffset] Snapped position (on grid): {snapped:F4}");
 
-            LogMessage(
-                $"[SnapToGridWithOffset] Adjusted position: {adjusted:F4}, Snapped position: {snapped:F4}, Final result: {result:F4}");
+            Vector2 result = snapped + offset;
+            LogMessage($"[SnapToGridWithOffset] Final result (snapped + offset): {result:F4}");
+
             return result;
         }
 

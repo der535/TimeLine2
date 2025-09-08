@@ -43,15 +43,15 @@ namespace TimeLine
             //[x] Удалить объект на сцене
             //[x] Удалить ветку 
             
-            foreach (var nodes in _trackObjectStorage._selectedObject.branch.Nodes)
+            foreach (var nodes in _trackObjectStorage.selectedObject.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
             
-            Destroy(_trackObjectStorage._selectedObject.trackObject.gameObject);
-            Destroy(_trackObjectStorage._selectedObject.sceneObject);
+            Destroy(_trackObjectStorage.selectedObject.trackObject.gameObject);
+            Destroy(_trackObjectStorage.selectedObject.sceneObject);
             
-            _trackObjectStorage.Remove(_trackObjectStorage._selectedObject);
+            _trackObjectStorage.Remove(_trackObjectStorage.selectedObject);
             
             // _trackObjectStorage._selectedObject;
             //
