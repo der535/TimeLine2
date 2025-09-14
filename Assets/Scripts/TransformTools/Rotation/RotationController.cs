@@ -28,7 +28,7 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Track.sceneObject)));
+            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Tracks[^1].sceneObject)));
             
             rotateTool.onRotate = (value) => _transformComponent.ZRotation.Value = gridScene.RotateSnapToGrid(value);
 

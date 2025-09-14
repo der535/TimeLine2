@@ -1,6 +1,7 @@
 using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
+using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.TimeLine;
@@ -31,20 +32,24 @@ namespace TimeLine
         private ScrollOld _scrollOld;
         private Main _main;
         private KeyframeTrackStorage _keyframeTrackStorage;
+        private SelectObjectController _selectObjectController;
 
         private bool _isDragging;
         private bool _isResizing;
         private bool _isRightResizing;
-        private bool _wasResizing; // Для отслеживания предыдущего состояния изменения размера
+        private bool _wasResizing;
 
         private double _startResizingDuractionInTicks;
         private double _startResizingTimeInTicks;
-        private double _initialStartTimeInTicks; // Начальное время до изменения размера
+        private double _initialStartTimeInTicks;
 
         private Vector2 _startMousePosition;
         private double _startTrackObjectTicks;
         private double _startMouseTicks;
-        private float _startMouseXLocal; 
+        private float _startMouseXLocal;
+
+        private double deltaticksRight;
+        private double deltaticksLeft;
 
         #endregion
 
@@ -52,8 +57,17 @@ namespace TimeLine
         internal double TimeDuractionInTicks { get; private set; }
         internal TrackLine TrackLine { get; private set; }
         internal string Name { get; private set; }
-        
+
+        internal Action<double> Rezise { get; set; }
+
         internal float BeatDuraction => (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
+
+        private bool lockSize;
+        private double reducedLeft;
+        private double reducedRight;
+
+        // 🔑 Новый флаг: включать/выключать ограничения ресайза
+        private bool _enableResizeLimits = true;
 
         [Inject]
         private void Construct(
@@ -66,7 +80,8 @@ namespace TimeLine
             TimeLineScroll timeLineScroll,
             GridUI gridUI,
             Main main,
-            KeyframeTrackStorage keyframeTrackStorage)
+            KeyframeTrackStorage keyframeTrackStorage,
+            SelectObjectController selectObjectController)
         {
             _gridUI = gridUI;
             _timeLineSettings = timeLineSettings;
@@ -77,7 +92,8 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
             _timeLineScroll = timeLineScroll;
             _main = main;
-            _keyframeTrackStorage = keyframeTrackStorage; 
+            _keyframeTrackStorage = keyframeTrackStorage;
+            _selectObjectController = selectObjectController;
         }
 
         internal void Awake()
@@ -92,23 +108,64 @@ namespace TimeLine
             _gameEventBus.UnsubscribeFrom<PanEvent>(OnScrollPan);
         }
 
+        internal void Hide()
+        {
+            rect.gameObject.SetActive(false);
+        }
+        internal void Show()
+        {
+            rect.gameObject.SetActive(true);
+        }
+
         internal void Rename(string name)
         {
             nameText.text = name;
         }
 
-        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
+        // 🆕 Перегрузка с флагом
+        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks,
+            bool enableResizeLimits = false)
         {
             StartTimeInTicks = startTimeInTicks;
             TrackLine = trackLine;
-
-            // Конвертируем длительность из битов в тики
             TimeDuractionInTicks = trackObjectSo.startLiveTime * Main.TICKS_PER_BEAT;
-
             Name = trackObjectSo.name;
             nameText.text = trackObjectSo.name;
 
+            reducedLeft = 0;
+            reducedRight = 0;
+            _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
+
             UpdateVisuals();
+        }
+
+        // 🆕 Перегрузка с флагом
+        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks,
+            bool enableResizeLimits = false)
+        {
+            StartTimeInTicks = startTimeInTicks;
+            TrackLine = trackLine;
+            TimeDuractionInTicks = ticksLifeTime;
+            Name = name;
+            nameText.text = name;
+
+            reducedLeft = 0;
+            reducedRight = 0;
+            _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
+
+            UpdateVisuals();
+        }
+
+        // Старые перегрузки для обратной совместимости (лимиты ВКЛЮЧЕНЫ по умолчанию)
+        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
+            => Setup(trackObjectSo, trackLine, startTimeInTicks, false);
+
+        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks)
+            => Setup(ticksLifeTime, name, trackLine, startTimeInTicks, false);
+
+        internal void GroupOffset(double tickOffset)
+        {
+            StartTimeInTicks -= tickOffset;
         }
 
         private Vector2 GetMousePosition()
@@ -130,8 +187,16 @@ namespace TimeLine
             {
                 _startMousePosition = GetMousePosition();
             }
-            
-            // Если изменение размера завершено
+            else
+            {
+                if (_enableResizeLimits)
+                {
+                    reducedRight = Math.Min(reducedRight +
+                                            RoundTicksToGrid(_startResizingDuractionInTicks + deltaticksRight) -
+                                            _startResizingDuractionInTicks, 0);
+                }
+            }
+
             if (!isResizing && _wasResizing)
             {
                 _wasResizing = false;
@@ -140,6 +205,31 @@ namespace TimeLine
             {
                 _wasResizing = true;
             }
+
+            _selectObjectController.SaveResizingData(this);
+        }
+
+        public void SaveResizingData()
+        {
+            _startResizingDuractionInTicks = TimeDuractionInTicks;
+            _startResizingTimeInTicks = StartTimeInTicks;
+        }
+
+        public void MultipleRightResize(double deltaTicks)
+        {
+            ChangeDurationInTicks(RoundTicksToGrid(_startResizingDuractionInTicks + deltaTicks));
+        }
+
+        public void MultipleLeftResize(double deltaTicks)
+        {
+            double newStartTimeInTicks = _startResizingTimeInTicks - deltaTicks;
+            double newDurationInTicks = _startResizingDuractionInTicks + deltaTicks;
+
+            newStartTimeInTicks = RoundTicksToGrid(newStartTimeInTicks);
+            newDurationInTicks = RoundTicksToGrid(newDurationInTicks);
+
+            StartTimeInTicks = newStartTimeInTicks;
+            ChangeDurationInTicks(newDurationInTicks);
         }
 
         public void SetResizeLeft(bool isResizing)
@@ -148,15 +238,25 @@ namespace TimeLine
             _startResizingTimeInTicks = StartTimeInTicks;
             _isRightResizing = false;
             _isResizing = isResizing;
-            
-            if(isResizing == false) ApplyKeyframeOffset();
-            
-            
+
+            if (!isResizing)
+            {
+                ApplyKeyframeOffset();
+                if (_enableResizeLimits)
+                {
+                    reducedLeft = Math.Min(reducedLeft +
+                                           RoundTicksToGrid(_startResizingDuractionInTicks + deltaticksLeft) -
+                                           _startResizingDuractionInTicks, 0);
+                }
+            }
+
             if (_isResizing)
             {
                 _startMousePosition = GetMousePosition();
-                _initialStartTimeInTicks = StartTimeInTicks; // Сохраняем начальное время
+                _initialStartTimeInTicks = StartTimeInTicks;
             }
+
+            _selectObjectController.SaveResizingData(this);
         }
 
         private void ApplyKeyframeOffset()
@@ -179,36 +279,77 @@ namespace TimeLine
             Drag();
             if (_isResizing)
             {
-                // Получаем актуальное расстояние между линиями с учетом панорамирования
                 float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
-        
+
                 if (_isRightResizing)
                 {
                     Vector2 currentMousePosition = GetMousePosition();
                     float deltaPixels = currentMousePosition.x - _startMousePosition.x;
                     double deltaTicks = (deltaPixels / pixelsPerBeat) * Main.TICKS_PER_BEAT;
-                    ChangeDurationInTicks(RoundTicksToGrid(_startResizingDuractionInTicks + deltaTicks));
+                    deltaticksRight = deltaTicks;
+
+                    double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
+                    double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
+                    double roundedChange = roundedProposedDuration - _startResizingDuractionInTicks;
+
+                    // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
+                    if (_enableResizeLimits && reducedRight + roundedChange > 0)
+                    {
+                        double maxAllowedChange = -reducedRight;
+                        double clampedDuration = _startResizingDuractionInTicks + maxAllowedChange;
+                        double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
+
+                        _selectObjectController.MultipleResizingRight(this, maxAllowedChange);
+                        ChangeDurationInTicks(roundedClampedDuration);
+                        return;
+                    }
+
+                    _selectObjectController.MultipleResizingRight(this, deltaTicks);
+                    ChangeDurationInTicks(roundedProposedDuration);
                 }
                 else
                 {
                     Vector2 currentMousePosition = GetMousePosition();
                     float deltaPixels = _startMousePosition.x - currentMousePosition.x;
                     double deltaTicks = (deltaPixels / pixelsPerBeat) * Main.TICKS_PER_BEAT;
+                    deltaticksLeft = deltaTicks;
+
+                    double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
+                    double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
+                    double roundedChange = roundedProposedDuration - _startResizingDuractionInTicks;
+
+                    // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
+                    if (_enableResizeLimits && reducedLeft + roundedChange > 0)
+                    {
+                        double maxAllowedChange = -reducedLeft;
+                        double clampedDuration = _startResizingDuractionInTicks + maxAllowedChange;
+                        double clampedStartTime = _startResizingTimeInTicks - maxAllowedChange;
+
+                        double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
+                        double roundedClampedStartTime = RoundTicksToGrid(clampedStartTime);
+
+                        _selectObjectController.MultipleResizingLeft(this, maxAllowedChange);
+                        Rezise?.Invoke(roundedClampedStartTime - StartTimeInTicks);
+                        StartTimeInTicks = roundedClampedStartTime;
+                        ChangeDurationInTicks(roundedClampedDuration);
+                        return;
+                    }
+
+                    _selectObjectController.MultipleResizingLeft(this, deltaTicks);
                     double newStartTimeInTicks = _startResizingTimeInTicks - deltaTicks;
                     double newDurationInTicks = _startResizingDuractionInTicks + deltaTicks;
-            
-                    // Округляем до сетки
+
                     newStartTimeInTicks = RoundTicksToGrid(newStartTimeInTicks);
                     newDurationInTicks = RoundTicksToGrid(newDurationInTicks);
-            
+
+                    Rezise?.Invoke(newStartTimeInTicks - StartTimeInTicks);
                     StartTimeInTicks = newStartTimeInTicks;
                     ChangeDurationInTicks(newDurationInTicks);
                 }
             }
-            else if (_wasResizing) // Завершение изменения размера
+            else if (_wasResizing)
             {
                 _wasResizing = false;
-                // Теперь применение смещения происходит в SetResizeLeft(false)
             }
         }
 
@@ -230,16 +371,15 @@ namespace TimeLine
 
         private void UpdateVisuals()
         {
-            // Конвертируем тики в секунды для UI
             float durationInBeats = (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
             rect.sizeDelta = new Vector2(
                 durationInBeats * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
                 rect.sizeDelta.y);
-            
+
             CalculatePosition();
         }
 
-        private void CalculatePosition()
+        internal void CalculatePosition()
         {
             float startTimeInSeconds = (float)TicksToSeconds(StartTimeInTicks);
             rect.anchoredPosition = new Vector2(
@@ -264,17 +404,17 @@ namespace TimeLine
 
         public void OnMouseDown()
         {
-            // Сохраняем начальные позиции при начале перетаскивания
             _startTrackObjectTicks = StartTimeInTicks;
-            
-            // Получаем позицию мыши в локальных координатах канваса
             Vector2 mousePos = GetMousePosition();
             _startMouseXLocal = mousePos.x;
-            
-            // Конвертируем позицию мыши в тики
             _startMouseTicks = AnchorPositionToTicks(_startMouseXLocal);
-            
             _isDragging = true;
+            _selectObjectController.StartMultipleMove(this);
+        }
+
+        public void SavePosition()
+        {
+            _startTrackObjectTicks = StartTimeInTicks;
         }
 
         public void OnMouseUp()
@@ -284,38 +424,37 @@ namespace TimeLine
 
         private void Drag()
         {
-            if (_isDragging == false) return;
-            
+            if (!_isDragging) return;
+
             TrackLine = _trackStorage.CheckTracks(this);
             if (transform.parent != TrackLine.RectTransform) transform.parent = TrackLine.RectTransform;
             rect.offsetMax = new Vector2(rect.offsetMax.x, 0);
             rect.offsetMin = new Vector2(rect.offsetMin.x, 0);
-            
+
             UpdatePosition();
             CalculatePosition();
         }
 
-        private void UpdatePosition()
+        internal void UpdatePosition()
         {
-            // Получаем текущую позицию мыши в локальных координатах
             Vector2 currentMousePos = GetMousePosition();
             float currentMouseXLocal = currentMousePos.x;
-            
-            // Вычисляем смещение мыши в локальных координатах
             float mouseDeltaXLocal = currentMouseXLocal - _startMouseXLocal;
-            
-            // Конвертируем смещение в тики
             double deltaTicks = AnchorPositionDeltaToTicks(mouseDeltaXLocal);
-            
-            // Вычисляем новую позицию
+            _selectObjectController.MultipleMove(this, deltaTicks);
             StartTimeInTicks = RoundTicksToGrid(_startTrackObjectTicks + deltaTicks);
-            
             _trackObjectStorage.UpdatePositionSelectedTrackObject();
+        }
+
+        internal void AddTicksMove(double deltaTicks)
+        {
+            StartTimeInTicks = RoundTicksToGrid(_startTrackObjectTicks + deltaTicks);
+            _trackObjectStorage.UpdatePositionSelectedTrackObject();
+            CalculatePosition();
         }
 
         private double AnchorPositionDeltaToTicks(float deltaAnchorPosition)
         {
-            // Используем актуальное расстояние между линиями с учетом панорамирования
             float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
             float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
             return beatsDelta * Main.TICKS_PER_BEAT;

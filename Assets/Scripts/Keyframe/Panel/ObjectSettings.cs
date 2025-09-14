@@ -9,17 +9,19 @@ namespace TimeLine
     {
         private GameEventBus _gameEventBus;
         private TrackObjectStorage _trackObjectStorage;
+        private SelectObjectController _selectObjectController;
 
         [Inject]
-        public void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage)
+        public void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController)
         {
             _gameEventBus = gameEventBus;
             _trackObjectStorage = trackObjectStorage;
+            _selectObjectController = selectObjectController;
         }
 
         private void OnMouseDown()
         {
-            _gameEventBus.Raise(new SelectObjectEvent(_trackObjectStorage.GetTrackObjectData(gameObject)));
+            _selectObjectController.Select(_trackObjectStorage.GetTrackObjectData(gameObject), UnityEngine.Input.GetKey(KeyCode.LeftShift));
         }
     }
 }

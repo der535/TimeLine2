@@ -33,7 +33,7 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
             _gameEventBus.SubscribeTo(
                 (ref EventBus.Events.KeyframeTimeLine.PanEvent data) =>
@@ -96,7 +96,7 @@ namespace TimeLine
         {
             _gameEventBus.UnsubscribeFrom<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
             _gameEventBus.UnsubscribeFrom<SelectObjectEvent>((ref SelectObjectEvent data) =>
-                OnSelectTrackObject(data.Track));
+                OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.UnsubscribeFrom<DragTrackObjectEvent>(OnDragTrackObject);
         }
     }

@@ -1,14 +1,15 @@
-﻿using EventBus;
+﻿using System.Collections.Generic;
+using EventBus;
 
 namespace TimeLine.EventBus.Events.TrackObject
 {
     public class SelectObjectEvent: IEvent
     {
-        public TrackObjectData Track { get; }
+        public List<TrackObjectData> Tracks { get; }
 
-        public SelectObjectEvent(TrackObjectData track)
+        public SelectObjectEvent(List<TrackObjectData> tracks)
         {
-            Track = track;
+            Tracks = tracks;
         }
     }
 }

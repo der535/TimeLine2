@@ -28,7 +28,7 @@ public class TreeViewUI : MonoBehaviour
     {
         _gameEventBus.SubscribeTo<AddTrackEvent>(RebuildBranch, 1);
         // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => BuildBranch(data.Track.branch), 1);
-        _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => BuildBranch(data.Track.branch), 1);
+        _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => BuildBranch(data.Tracks[^1].branch), 1);
         
         _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => ClearContent());
 
@@ -36,7 +36,7 @@ public class TreeViewUI : MonoBehaviour
 
     public void BuildBranch(Branch branch)
     {
-        if(CurrentBranch == branch) return;
+        // if(CurrentBranch == branch) return;
         
         CurrentBranch = branch;
         ClearContent();

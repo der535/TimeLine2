@@ -29,7 +29,7 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Track.sceneObject));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].sceneObject));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
             
             _componentDrawers.Add(new TransformComponentDrawer());
@@ -40,7 +40,6 @@ namespace TimeLine
         
         private void Draw(GameObject target)
         {
-            print(target);
             Clear();
 
             var components = target.GetComponents<Component>();

@@ -55,7 +55,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo(_tickEventHandler);
             
             _component = GetComponent<TransformComponent>();
-            _trackObjectStorage.GetTrackObjectData(gameObject);
+            // _trackObjectStorage.GetTrackObjectData(gameObject);
         }
 
         private void OnDestroy()

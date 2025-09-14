@@ -30,7 +30,7 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Track));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => OnSelectTrackObject(selectedTrackObjectData));
             
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());

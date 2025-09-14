@@ -32,7 +32,7 @@ public class ParentMain : MonoBehaviour
         _eventBus.SubscribeTo((ref AddTrackObjectDataEvent data) => UpdateDropdown(data.TrackObjectData, true));
         _eventBus.SubscribeTo((ref RemoveTrackObjectDataEvent data) => UpdateDropdown(data.TrackObjectData, false));
         
-        _eventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Track));
+        _eventBus.SubscribeTo((ref SelectObjectEvent data) => SelectObject(data.Tracks[^1]));
         _eventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
 
 
@@ -48,7 +48,7 @@ public class ParentMain : MonoBehaviour
 
     private void SelectObject(TrackObjectData trackObjectData)
     {
-        if (trackObjectData.sceneObject == null) return;
+        if (trackObjectData?.sceneObject == null) return;
 
         currentoObjectData = trackObjectData;
         currentParent = _trackObjectStorage.GetTrackObjectData(

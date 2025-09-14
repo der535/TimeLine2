@@ -1,4 +1,5 @@
 using EventBus;
+using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Input;
 using TimeLine.Keyframe;
 using TimeLine.TimeLine;
@@ -31,6 +32,10 @@ namespace TimeLine.Installers
         [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
         [SerializeField] private ParentMain parentMain;
         [SerializeField] private TimeLineKeyframeScroll timeLineKeyframeScroll;
+        [SerializeField] private SelectObjectController selectObjectController;
+        [SerializeField] private TrackObjectRemover trackObjectRemover;
+        [SerializeField] private GroupEdit groupEdit;
+        [SerializeField] private GroupCreater groupCreater;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -58,7 +63,10 @@ namespace TimeLine.Installers
             Container.Bind<GridUI>().FromInstance(gridUI).AsSingle();
             Container.Bind<ParentMain>().FromInstance(parentMain).AsSingle();
             Container.Bind<TimeLineKeyframeScroll>().FromInstance(timeLineKeyframeScroll);
-            
+            Container.Bind<SelectObjectController>().FromInstance(selectObjectController).AsSingle();
+            Container.Bind<TrackObjectRemover>().FromInstance(trackObjectRemover);
+            Container.Bind<GroupEdit>().FromInstance(groupEdit).AsSingle();
+            Container.Bind<GroupCreater>().FromInstance(groupCreater).AsSingle();
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();

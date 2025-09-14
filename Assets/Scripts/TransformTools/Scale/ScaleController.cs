@@ -40,7 +40,7 @@ namespace TimeLine
 
         private void Awake()
         {
-            _eventBus.SubscribeTo(((ref SelectObjectEvent data) => SetPosition(data.Track.sceneObject)));
+            _eventBus.SubscribeTo(((ref SelectObjectEvent data) => SetPosition(data.Tracks[^1].sceneObject)));
 
             _toolFollowingObject = () =>
             {

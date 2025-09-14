@@ -12,12 +12,14 @@ public class PixelPerfectClick : MonoBehaviour
     
     private GameEventBus _gameEventBus;
     private TrackObjectStorage _trackObjectStorage;
+    private SelectObjectController _selectObjectController;
 
     [Inject]
-    void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage)
+    void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController)
     {
         _gameEventBus = gameEventBus;
         _trackObjectStorage = trackObjectStorage;
+        _selectObjectController = selectObjectController;
     }
 
     void Start()
@@ -40,7 +42,7 @@ public class PixelPerfectClick : MonoBehaviour
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             if (IsPixelOpaque(mousePos))
             {
-                _gameEventBus.Raise(new SelectObjectEvent(_trackObjectStorage.GetTrackObjectData(gameObject)));
+                _selectObjectController.Select(_trackObjectStorage.GetTrackObjectData(gameObject), UnityEngine.Input.GetKey(KeyCode.LeftShift));
                 Debug.Log("Клик по объекту!");
                 // Здесь можно вызвать нужное действие
             }

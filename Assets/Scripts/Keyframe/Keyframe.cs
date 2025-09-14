@@ -19,6 +19,7 @@
 
         public void Apply(GameObject target)
         {
+            Debug.Log(target);
             animationData.Apply(target);
         }
         
@@ -27,7 +28,7 @@
         public Keyframe Clone()
         {
             Keyframe clone = new Keyframe(Ticks);
-            animationData.Clone();
+            clone.AddData(animationData.Clone());
             return clone;
         }
 

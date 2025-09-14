@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
+using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
@@ -13,16 +14,19 @@ namespace TimeLine
     public class TrackObjectStorage : MonoBehaviour
     {
         private List<TrackObjectData> _trackObjects = new();
+        private List<TrackObjectGroup> _trackObjectGroups = new();
 
-        [FormerlySerializedAs("_selectedObject")] public TrackObjectData selectedObject;
-        [FormerlySerializedAs("_oldSelectedObject")] public TrackObjectData oldSelectedObject;
-        
+        [FormerlySerializedAs("_selectedObject")]
+        public TrackObjectData selectedObject;
+
         private GameEventBus _gameEventBus;
+        private SelectObjectController _selectObjectController;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController)
         {
             _gameEventBus = gameEventBus;
+            _selectObjectController = selectObjectController;
         }
 
         private void Awake()
@@ -30,11 +34,9 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(ActiveSceneObject);
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => DeselectObject());
 
-            // Подписываемся на событие — но НЕ вызываем SelectObject рекурсивно!
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
-                // Ищем данные объекта и вызываем внутреннюю логику БЕЗ повторного Raise
-                var trackObjectData = GetTrackObjectData(data.Track.trackObject);
+                var trackObjectData = GetTrackObjectData(data.Tracks[^1].trackObject);
                 if (trackObjectData != null)
                 {
                     InternalSelectObject(trackObjectData);
@@ -42,38 +44,242 @@ namespace TimeLine
             });
         }
 
+        [Button]
+        private void  checkGroupIntrackObjects()
+        {
+            foreach (var objectData in _trackObjects)
+            {
+                if(objectData is TrackObjectGroup trackObjectGroup)
+                    print(trackObjectGroup.branch.ID);
+            }
+        }
+
         private void ActiveSceneObject(ref TickSmoothTimeEvent smoothTimeEvent)
         {
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.sceneObject.SetActive(
-                    trackObject.trackObject.StartTimeInTicks <= smoothTimeEvent.Time &&
-                    trackObject.trackObject.TimeDuractionInTicks + trackObject.trackObject.StartTimeInTicks > smoothTimeEvent.Time
-                );
+                CheckActiveTrackObjects(trackObject, smoothTimeEvent.Time);
+            }
+
+            foreach (var group in _trackObjectGroups)
+            {
+                CheckActiveGroup(group, smoothTimeEvent.Time);
             }
         }
-        
-        internal void Add(GameObject sceneObject, TrackObject selectedObject, Branch branch)
+
+        private void CheckActiveTrackObjects(TrackObjectData trackObject, double time)
+        {
+            if (trackObject.trackObject.gameObject.activeSelf)
+            {
+                bool shouldBeActive = trackObject.trackObject.StartTimeInTicks <= time &&
+                                      trackObject.trackObject.TimeDuractionInTicks + trackObject.trackObject.StartTimeInTicks > time;
+
+                trackObject.sceneObject.SetActive(shouldBeActive);
+                // //Debug.Log($"[TrackObject] {trackObject.trackObject.Name} | Active: {shouldBeActive} | Time: {time}");
+            }
+            else
+            {
+                trackObject.sceneObject.SetActive(false);
+            }
+        }
+
+        private void CheckActiveGroup(TrackObjectGroup group, double time, bool enchanted = false)
+        {
+            if (!enchanted && !group.trackObject.gameObject.activeSelf)
+            {
+                group.sceneObject.SetActive(false);
+                foreach (var trackObject in group.TrackObjectDatas)
+                {
+                    trackObject.sceneObject.SetActive(false);
+                }
+                return;
+            }
+            else
+            {
+                group.sceneObject.SetActive(true);
+            }
+
+            double groupStart = group.trackObject.StartTimeInTicks;
+            double groupEnd = groupStart + group.trackObject.TimeDuractionInTicks;
+            bool isGroupActive = time >= groupStart && time < groupEnd;
+
+            //Debug.Log($"[Group] {group.branch.ID} | Active: {isGroupActive} | Time: {time} | Range: [{groupStart}, {groupEnd})");
+
+            foreach (var trackObject in group.TrackObjectDatas)
+            {
+                if (!isGroupActive)
+                {
+                    trackObject.sceneObject.SetActive(false);
+                    continue;
+                }
+                
+                if (trackObject is TrackObjectGroup nestedGroup)
+                {
+                    //Debug.Log($"    → Entering nested group: {nestedGroup.branch.ID}");
+                    CheckActiveGroup(nestedGroup, time - groupStart,true); // Исправлено: передаём time, а не смещение!
+                    continue;
+                }
+
+                // if (!enchanted)
+                // {
+                    double objStart = trackObject.trackObject.StartTimeInTicks + groupStart;
+                    double objEnd = objStart + trackObject.trackObject.TimeDuractionInTicks;
+                    var isObjectActive = time >= objStart && time < objEnd;
+                    //Debug.Log($"  [Child] {trackObject.branch.ID} | Active: {isObjectActive} | Time: {time} | Range: [{objStart}, {objEnd})");
+                //
+                // }
+                // else
+                // {
+                //     isObjectActive = time >= group.trackObject.StartTimeInTicks && time < groupStart + group.trackObject.TimeDuractionInTicks;
+                // }
+                
+                trackObject.sceneObject.SetActive(isObjectActive);
+            }
+        }
+
+        internal TrackObjectData Add(GameObject sceneObject, TrackObject selectedObject, Branch branch)
         {
             TrackObjectData trackObjectData = new TrackObjectData(sceneObject, selectedObject, branch);
             _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectData));
             _trackObjects.Add(trackObjectData);
+            //Debug.Log($"[Add] TrackObject '{selectedObject.Name}' added to storage.");
+            return trackObjectData;
+        }
+
+        internal void AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
+            List<TrackObjectData> trackObjectDatas)
+        {
+            var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
+
+            foreach (var trackObjectData in objectsForGroup)
+            {
+                if (trackObjectData is TrackObjectGroup group2)
+                    _trackObjectGroups.Remove(group2);
+                else
+                    _trackObjects.Remove(trackObjectData);
+               
+                trackObjectData.trackObject.Hide();
+            }
+
+            TrackObjectGroup group = new TrackObjectGroup(sceneObject, trackObject, branch, objectsForGroup);
+            //print(_trackObjectGroups.Count);
+            _trackObjectGroups.Add(group);
+
+            //Debug.Log($"[AddGroup] Group '{trackObject.Name}' created with {objectsForGroup.Count} objects.");
+
+            // Подписка на изменение размера
+            foreach (var track in trackObjectDatas)
+            {
+                trackObject.Rezise += (value) =>
+                {
+                    //Debug.Log($"[Resize] Group '{trackObject.Name}' resized by {value}. Applying offset to child '{track.trackObject.Name}'.");
+                    track.trackObject.GroupOffset(value);
+                };
+            }
+        }
+
+        internal void HideAll()
+        {
+            foreach (var trackObject in _trackObjects)
+            {
+                trackObject.trackObject.Hide();
+            }
+
+            foreach (var group in _trackObjectGroups)
+            {
+                group.trackObject.Hide();
+            }
+            //Debug.Log("[HideAll] All track objects and groups hidden.");
+        }
+
+        internal void ShowAll()
+        {
+            foreach (var trackObject in _trackObjects)
+            {
+                trackObject.trackObject.Show();
+            }
+
+            foreach (var group in _trackObjectGroups)
+            {
+                group.trackObject.Show();
+            }
+            //Debug.Log("[ShowAll] All track objects and groups shown.");
+        }
+
+        internal void SeparetaGroup(TrackObjectGroup group)
+        {
+            foreach (var trackData in group.TrackObjectDatas)
+            {
+                if (trackData is TrackObjectGroup nestedGroup)
+                    _trackObjectGroups.Add(nestedGroup);
+                else
+                    _trackObjects.Add(trackData);
+
+            }
+            //print(group.branch.ID);
+            //print(_trackObjectGroups.Remove(group));
+            //print(_trackObjectGroups.Count);
+            //Debug.Log($"[SeparetaGroup] Group '{group.trackObject.Name}' separated into {group.TrackObjectDatas.Count} individual objects.");
         }
 
         internal void Remove(TrackObjectData trackObjectData)
         {
             _gameEventBus.Raise(new RemoveTrackObjectDataEvent(trackObjectData));
-            _trackObjects.Remove(trackObjectData);
+
+            if (trackObjectData is TrackObjectGroup group)
+            {
+                _trackObjectGroups.Remove(group);
+                //Debug.Log($"[Remove] Group '{group.trackObject.Name}' removed.");
+            }
+            else
+            {
+                _trackObjects.Remove(trackObjectData);
+                //Debug.Log($"[Remove] TrackObject '{trackObjectData.trackObject.Name}' removed.");
+            }
         }
 
         internal TrackObjectData GetTrackObjectData(GameObject gObject)
         {
-            return _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+            TrackObjectData data = _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+            if (data != null) return data;
+
+            data = _trackObjectGroups.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+            if (data != null) return data;
+
+            foreach (var group in _trackObjectGroups)
+            {
+                data = group.TrackObjectDatas.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+                if (data != null)
+                {
+                    //Debug.Log($"[GetTrackObjectData] Found object '{gObject.name}' inside group '{group.trackObject.Name}'.");
+                    return data;
+                }
+            }
+
+            //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
+            return null;
         }
-        
+
         internal TrackObjectData GetTrackObjectData(TrackObject trackObject)
         {
-            return _trackObjects.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
+            TrackObjectData data = _trackObjects.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
+            if (data != null) return data;
+
+            data = _trackObjectGroups.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
+            if (data != null) return data;
+
+            foreach (var group in _trackObjectGroups)
+            {
+                data = group.TrackObjectDatas.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
+                if (data != null)
+                {
+                    //Debug.Log($"[GetTrackObjectData] Found TrackObject '{trackObject.Name}' inside group '{group.trackObject.Name}'.");
+                    return data;
+                }
+            }
+
+            //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for TrackObject: {trackObject.Name}");
+            return null;
         }
 
         public void UpdatePositionSelectedTrackObject()
@@ -84,45 +290,50 @@ namespace TimeLine
         private void DeselectObject()
         {
             selectedObject = null;
-            oldSelectedObject = null;
             foreach (var trackObject in _trackObjects)
             {
                 trackObject.trackObject.Deselect();
             }
+
+            foreach (var group in _trackObjectGroups)
+            {
+                group.trackObject.Deselect();
+            }
+            //Debug.Log("[DeselectObject] All objects deselected.");
         }
 
-        // Публичный метод — вызывается извне (например, из ObjectSettings)
         public void SelectObject(TrackObject trackObjectToSelect)
         {
-            // Ищем данные
             var targetData = GetTrackObjectData(trackObjectToSelect);
-            if (targetData == null) return;
-
-            // Сначала снимаем выделение
-            DeselectObject();
-
-            // Применяем выделение без Raise события (чтобы не вызвать рекурсию)
-            InternalSelectObject(targetData);
-
-            // Теперь безопасно вызываем событие — оно НЕ должно вызывать SelectObject снова!
-            _gameEventBus.Raise(new SelectObjectEvent(targetData));
-        }
-
-        // Внутренняя логика выделения — без Raise события
-        private void InternalSelectObject(TrackObjectData trackObjectData)
-        {
-            if (trackObjectData == oldSelectedObject)
+            if (targetData == null)
             {
-                trackObjectData.trackObject.SelectColor();
+                //Debug.LogWarning($"[SelectObject] Cannot select: TrackObject '{trackObjectToSelect.Name}' not found in storage.");
                 return;
             }
 
+            if (!UnityEngine.Input.GetKey(KeyCode.LeftShift))
+                DeselectObject();
+
+            InternalSelectObject(targetData);
+            _selectObjectController.Select(targetData, UnityEngine.Input.GetKey(KeyCode.LeftShift));
+            SelectColor();
+        }
+
+        private void SelectColor()
+        {
+            foreach (var objectData in _selectObjectController.SelectObjects)
+            {
+                objectData.trackObject.SelectColor();
+            }
+            //Debug.Log($"[SelectColor] Applied selection color to {_selectObjectController.SelectObjects.Count} objects.");
+        }
+
+        private void InternalSelectObject(TrackObjectData trackObjectData)
+        {
             this.selectedObject = trackObjectData;
-            oldSelectedObject = trackObjectData;
-            trackObjectData.trackObject.SelectColor();
         }
     }
-    
+
     [Serializable]
     public class TrackObjectData
     {
@@ -135,6 +346,33 @@ namespace TimeLine
             this.sceneObject = sceneObject;
             this.trackObject = trackObject;
             this.branch = branch;
+        }
+    }
+
+    [Serializable]
+    public class TrackObjectGroup : TrackObjectData
+    {
+        private List<TrackObjectData> _trackObjectDatas;
+
+        public List<TrackObjectData> TrackObjectDatas
+        {
+            get { return _trackObjectDatas; }
+            set { _trackObjectDatas = value; }
+        }
+
+        public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
+            List<TrackObjectData> trackObjectDatas) : base(sceneObject, trackObject, branch)
+        {
+            this.sceneObject = sceneObject;
+            this.trackObject = trackObject;
+            this.branch = branch;
+            this.TrackObjectDatas = trackObjectDatas;
+
+            //Debug.Log($"[TrackObjectGroup Constructor] Group '{trackObject.Name}' initialized with {trackObjectDatas.Count} children.");
+            foreach (var child in trackObjectDatas)
+            {
+                //Debug.Log($"  → Child: {child.trackObject.Name} | Start: {child.trackObject.StartTimeInTicks}");
+            }
         }
     }
 }

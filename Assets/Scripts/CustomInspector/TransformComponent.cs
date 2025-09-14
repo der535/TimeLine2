@@ -121,7 +121,7 @@ namespace TimeLine
         {
             var component = targetGameObject.GetComponent<TransformComponent>();
             CopyTo(component);
-            print("Оп скопировал");
+            // print("Оп скопировал");
             return component;
         }
     }

@@ -1,7 +1,6 @@
 using System;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
-using TimeLine.Installers;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -11,18 +10,14 @@ namespace TimeLine
     public class BarBeatCounter : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _text;
-        private Main _main;
         private GameEventBus _gameEventBus;
 
-        private const float SecondsInMunit = 60f;
         private double _oldBeat;
 
         [Inject]
         private void Construct(
-            Main main,
             GameEventBus gameEventBus)
         {
-            _main = main;
             _gameEventBus = gameEventBus;
         }
 

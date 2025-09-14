@@ -105,7 +105,7 @@ namespace TimeLine
         private void Start()
         {
             Log("Subscribing to SelectObjectEvent...");
-            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Track.sceneObject)));
+            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Tracks[^1].sceneObject)));
 
             // ⭐ Подписка на GridPositionEvent
             Log("Subscribing to GridPositionEvent...");

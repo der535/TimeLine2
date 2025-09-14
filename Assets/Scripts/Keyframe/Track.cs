@@ -9,7 +9,8 @@ namespace TimeLine.Keyframe
     {
         public GameObject TargetObject;
         public string TrackName;
-        public List<Keyframe> Keyframes = new List<Keyframe>();
+        public List<Keyframe> Keyframes = new();
+        public TrackObject groupObject;
         private int _lastFoundIndex = 0;
 
         public Track(GameObject target, string trackName)
@@ -29,6 +30,11 @@ namespace TimeLine.Keyframe
             Keyframes.Add(newKeyframe);
             SortKeyframes();
             return newKeyframe;
+        }
+
+        public void SetParent(TrackObject trackObject = null)
+        {
+            groupObject = trackObject;
         }
 
         public void RemoveKeyframe(Keyframe keyframe)
@@ -52,22 +58,40 @@ namespace TimeLine.Keyframe
             Keyframes.RemoveAll(k => k.Ticks == time);
         }
 
-        // Остальные методы без изменений
         public void Evaluate(double time)
         {
             if (Keyframes.Count == 0 || TargetObject == null) return;
-        
-            Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks <= time);
-            Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks >= time);
+
+            double offset = groupObject?.StartTimeInTicks ?? 0;
+
+            Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks + offset <= time);
+            Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks + offset >= time);
 
             if (prev == null && next == null) return;
-            
-            if (prev == null) next.Apply(TargetObject);
-            else if (next == null) prev.Apply(TargetObject);
+
+            if (prev == null)
+            {
+                next.Apply(TargetObject);
+            }
+            else if (next == null)
+            {
+                prev.Apply(TargetObject);
+            }
             else if (prev != next)
             {
-                double t = Mathf.InverseLerp((float)prev.Ticks, (float)next.Ticks, (float)time);
-                prev.Interpolate(next, TargetObject, t);
+                double start = prev.Ticks + offset;
+                double end = next.Ticks + offset;
+
+                // Защита от деления на ноль
+                if (start == end)
+                {
+                    prev.Apply(TargetObject);
+                }
+                else
+                {
+                    double t = (time - start) / (end - start);
+                    prev.Interpolate(next, TargetObject, t);
+                }
             }
             else
             {
