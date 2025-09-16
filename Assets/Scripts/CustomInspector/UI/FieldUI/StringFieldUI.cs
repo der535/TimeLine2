@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Globalization;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.CustomInspector.UI.FieldUI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace TimeLine
 {
-    public class StringFieldUI : MonoBehaviour
+    public class StringFieldUI : MonoBehaviour, IGetFieldHeight
     {
+        [SerializeField] private RectTransform fieldRect;
+        [Space]
         [SerializeField] private TextMeshProUGUI parameterName;
         [SerializeField] private TMP_InputField inputField;
 
@@ -20,6 +23,11 @@ namespace TimeLine
             stringParameter.OnValueChanged += () => inputField.text = stringParameter.Value.ToString(CultureInfo.InvariantCulture);
 
             inputField.onEndEdit.AddListener(arg0 => stringParameter.Value = arg0);
+        }
+
+        public float GetFieldHeight()
+        {
+            return fieldRect.sizeDelta.y;
         }
     }
 }

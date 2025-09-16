@@ -29,32 +29,45 @@ namespace TimeLine.CustomInspector.UI.Drawers
 
         public void CreateStringField(StringParameter stringParameter)
         {
-            Instantiate(stringField, _currentComponent.RootObject).Setup(stringParameter);
+            var parameter = Instantiate(stringField, _currentComponent.RootObject);
+            parameter.Setup(stringParameter);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
         public void CreateFloatField(FloatParameter floatParameter, Action createKeyframe)
         {
-            Instantiate(floatFieldUIPrefab, _currentComponent.RootObject).Setup(floatParameter, createKeyframe);
+            var parameter = Instantiate(floatFieldUIPrefab, _currentComponent.RootObject);
+            parameter.Setup(floatParameter, createKeyframe);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         
         public TMP_Dropdown CreateDropDownField(string parameterName)
         {
-           return Instantiate(dropDownFieldUI, _currentComponent.RootObject).Setup(parameterName);
+            var parameter = Instantiate(dropDownFieldUI, _currentComponent.RootObject);
+            var dropdown = parameter.Setup(parameterName);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+            return dropdown;
         }
     
         public void CreateBoolField(BoolParameter field)
         {
-            Instantiate(boolField, _currentComponent.RootObject).Setup(field);
+            var parameter = Instantiate(boolField, _currentComponent.RootObject);
+            parameter.Setup(field);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
     
         public void AddSpace(float value)
         {
-            Instantiate(fieldSpace, _currentComponent.RootObject).Setup(value);
+            var parameter = Instantiate(fieldSpace, _currentComponent.RootObject);
+            parameter.Setup(value);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
         public void CreateVector2Field(Vector2Parameter vector2Parameter)
         {
-            Instantiate(vector2FieldUI, _currentComponent.RootObject).Setup(vector2Parameter);
+            var parameter = Instantiate(vector2FieldUI, _currentComponent.RootObject);
+            parameter.Setup(vector2Parameter);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
     }
 }

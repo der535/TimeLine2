@@ -1,14 +1,15 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.CustomInspector.UI.FieldUI;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace TimeLine
 {
-    public class Vector2FieldUI : MonoBehaviour
+    public class Vector2FieldUI : MonoBehaviour, IGetFieldHeight
     {
+        [SerializeField] private RectTransform fieldRect;
+        [Space]
         [SerializeField] private TextMeshProUGUI parameterName;
         [SerializeField] private TextMeshProUGUI XName;
         [SerializeField] private TextMeshProUGUI YName;
@@ -33,6 +34,11 @@ namespace TimeLine
                 parameter.Value = new Vector2(float.Parse(arg0), parameter.Value.y));
             inputFieldY.onEndEdit.AddListener(arg0 =>
                 parameter.Value = new Vector2(parameter.Value.x, float.Parse(arg0)));
+        }
+
+        public float GetFieldHeight()
+        {
+            return fieldRect.sizeDelta.y;
         }
     }
 }
