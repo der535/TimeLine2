@@ -55,6 +55,9 @@ namespace TimeLine
                     }
                 }
             }
+            
+            inspectorDrawer.CreateAddComponentButton(target);
+
         }
 
         private void Clear()

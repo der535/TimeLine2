@@ -18,7 +18,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
 
         public void Draw(Component component, GameObject target)
         {
-            _customInspectorDrawer.CreateComponent(component.GetType().Name);
+            _customInspectorDrawer.CreateComponent(component);
 
             if (component is RandomTransformComponent componentComponent)
             {

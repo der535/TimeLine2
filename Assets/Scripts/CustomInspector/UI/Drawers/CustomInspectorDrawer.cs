@@ -2,6 +2,7 @@
 using TimeLine.CustomInspector.Logic.Parameter;
 using TMPro;
 using UnityEngine;
+using Zenject;
 
 namespace TimeLine.CustomInspector.UI.Drawers
 {
@@ -18,19 +19,35 @@ namespace TimeLine.CustomInspector.UI.Drawers
         [SerializeField] private FieldSpace fieldSpace;
         [SerializeField] private BoolFieldUI boolField;
         [SerializeField] private StringFieldUI stringField;
+        [Space]
+        [SerializeField] private AddComponentButton button;
     
         private ComponentUI _currentComponent;
+        private DiContainer _container;
 
-        public void CreateComponent(string componentName)
+        [Inject]
+        private void Construct(DiContainer container)
         {
-            _currentComponent = Instantiate(componentUIPrefab, rootObject);
-            _currentComponent.SetName(componentName);
+            _container = container;  
+        }
+
+        public void CreateComponent(Component component)
+        {
+            _currentComponent = _container.InstantiatePrefab(componentUIPrefab, rootObject).GetComponent<ComponentUI>();
+            _currentComponent.Setup(component);
         }
 
         public void CreateStringField(StringParameter stringParameter)
         {
             var parameter = Instantiate(stringField, _currentComponent.RootObject);
             parameter.Setup(stringParameter);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+
+        public void CreateAddComponentButton(GameObject target)
+        {
+            var parameter = Instantiate(button, rootObject);
+            parameter.Setup(target);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
