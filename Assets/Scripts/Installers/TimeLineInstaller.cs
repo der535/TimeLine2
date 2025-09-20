@@ -37,6 +37,7 @@ namespace TimeLine.Installers
         [SerializeField] private GroupEdit groupEdit;
         [SerializeField] private GroupCreater groupCreater;
         [SerializeField] private ComponentVisiblyStorage componentVisiblyStorage;
+        [SerializeField] private AddComponentWindowsData componentWindowsData;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -69,6 +70,7 @@ namespace TimeLine.Installers
             Container.Bind<GroupEdit>().FromInstance(groupEdit).AsSingle();
             Container.Bind<GroupCreater>().FromInstance(groupCreater).AsSingle();
             Container.Bind<ComponentVisiblyStorage>().FromInstance(componentVisiblyStorage).AsSingle();
+            Container.Bind<AddComponentWindowsData>().FromInstance(componentWindowsData).AsSingle();
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();

@@ -2,10 +2,8 @@ using System;
 using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.Input;
-using TimeLine.EventBus.Events.Misc;
 using TimeLine.Installers;
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
 namespace TimeLine.Waveform
@@ -53,18 +51,10 @@ namespace TimeLine.Waveform
             _gameEventBus.SubscribeTo((ref ScrollTimeLineEvent data) => BuildWaveForm(), -2);
             BuildWaveForm();
         }
-
-        // private void Update()
-        // {
-        //     BuildWaveForm();
-        // }
         
+        [Button]
         private void BuildWaveForm()
         {
-            waveformRect.localPosition =
-                new Vector2(
-                    (waveformRect.sizeDelta.x / 2) + _mainObjects.ContentRectTransform.offsetMin.x +
-                    _main.Offset(), 0);
             if (toggle)
                 waveformRect.sizeDelta =
                     new Vector2(
@@ -78,6 +68,11 @@ namespace TimeLine.Waveform
                         (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
                         _main.MusicDataSo.music.length * (factor / acur), waveformRect.rect.height);
             }
+            
+            waveformRect.localPosition =
+                new Vector2(
+                    (waveformRect.sizeDelta.x / 2) + _mainObjects.ContentRectTransform.offsetMin.x +
+                    _main.Offset(), 0);
         }
     }
 }

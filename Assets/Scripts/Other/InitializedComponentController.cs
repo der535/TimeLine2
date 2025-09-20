@@ -25,6 +25,10 @@ namespace TimeLine
             {
                 Add(data.TrackObjectData.sceneObject.GetComponent<IInitializedComponent>(), data.TrackObjectData.trackObject);
             });
+            _gameEventBus.SubscribeTo((ref AddComponentObjectDataEvent data) =>
+            {
+                Add(data.InitializedComponent, data.TrackObjectData.trackObject);
+            });
         }
 
         internal void Add(IInitializedComponent component, TrackObject trackObject)
@@ -34,11 +38,12 @@ namespace TimeLine
 
         private void Update()
         {
+            // print(_components.Count);
             foreach (var VARIABLE in _components)
             {
                 if (_main.TicksCurrentTime() <= VARIABLE.TrackObject.StartTimeInTicks && VARIABLE.Initialized == false)
                 {
-                    VARIABLE.IInitializedComponent.Initialized();
+                    VARIABLE.IInitializedComponent?.Initialized();
                     VARIABLE.Initialized = true;
                 }
                 else if(_main.TicksCurrentTime() > VARIABLE.TrackObject.StartTimeInTicks)

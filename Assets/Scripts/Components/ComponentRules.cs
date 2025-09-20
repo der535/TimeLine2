@@ -34,16 +34,18 @@ namespace TimeLine.Components
             return rule.CanAdd(target);
         }
 
-        public static void AddComponentSafely(Type componentType, GameObject target)
+        public static Component AddComponentSafely(Type componentType, GameObject target)
         {
             if (CanAdd(componentType, target))
             {
                 var comp = target.AddComponent(componentType); // AddComponent с Type
+                return comp;
                 Debug.Log($"✅ Added {componentType.Name} to {target.name}");
             }
             else
             {
                 Debug.LogWarning($"❌ Cannot add {componentType.Name} to {target.name}");
+                return null;
             }
         }
     }

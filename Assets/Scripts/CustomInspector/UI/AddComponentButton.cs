@@ -1,46 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using TimeLine.Components;
+﻿using TimeLine.Components;
 using TimeLine.CustomInspector.UI.FieldUI;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using Zenject;
 
 namespace TimeLine
 {
     public class AddComponentButton : MonoBehaviour, IGetFieldHeight
     {
          [SerializeField] private RectTransform rectTransform;
-         [SerializeField] private TMP_Dropdown dropdown;
+         [SerializeField] private Button button;
          
-         private GameObject _target;
-         private Dictionary<string, Type> components;
+         private AddComponentWindowsData _addComponentWindowsData;
+
+         [Inject]
+         private void Construct(AddComponentWindowsData addComponentWindowsData)
+         {
+             _addComponentWindowsData = addComponentWindowsData;
+             print(_addComponentWindowsData);
+         }
          
          internal void Setup(GameObject target)
          {
-             _target = target;
-
-             UpdateDropdown();
-             
-             dropdown.onValueChanged.AddListener(arg0 =>
+             button.onClick.AddListener(() =>
              {
-                 Type myType = components[dropdown.options[arg0].text];
-                 ComponentRules.AddComponentSafely(myType, _target);
-                 UpdateDropdown();
+                 _addComponentWindowsData.controller.UpdateComponents(target);
+                 _addComponentWindowsData.windows.gameObject.SetActive(true);
              });
-         }
-
-         private void UpdateDropdown()
-         {
-             Dictionary<string, Type> components = ComponentRules.GetAllComponents(_target);
-             dropdown.ClearOptions();
-
-             List<string> options = new List<string>();
-             foreach (var component in components)
-             {
-                 options.Add(component.Key);
-             }
-             
-             dropdown.AddOptions(options);
          }
          
          public float GetFieldHeight()

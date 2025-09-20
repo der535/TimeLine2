@@ -46,7 +46,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
 
         public void CreateAddComponentButton(GameObject target)
         {
-            var parameter = Instantiate(button, rootObject);
+            var parameter = _container.InstantiatePrefab(button, rootObject).GetComponent<AddComponentButton>();
             parameter.Setup(target);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
