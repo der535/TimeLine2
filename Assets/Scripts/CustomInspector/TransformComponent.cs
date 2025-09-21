@@ -37,12 +37,12 @@ namespace TimeLine
         
         private void Awake()
         {
-            XPosition.OnValueChanged += () => transform.position = new Vector3(XPosition.Value, transform.position.y, transform.position.z);
-            YPosition.OnValueChanged += () => transform.position = new Vector3(transform.position.x, YPosition.Value, transform.position.z);
+            XPosition.OnValueChanged += () => transform.localPosition = new Vector3(XPosition.Value, transform.localPosition.y, transform.localPosition.z);
+            YPosition.OnValueChanged += () => transform.localPosition = new Vector3(transform.localPosition.x, YPosition.Value, transform.localPosition.z);
 
-            XRotation.OnValueChanged += () => transform.rotation = Quaternion.Euler(XRotation.Value, transform.rotation.y, transform.rotation.z);
-            YRotation.OnValueChanged += () => transform.rotation = Quaternion.Euler(transform.rotation.x,YRotation.Value, transform.rotation.z);
-            ZRotation.OnValueChanged += () => transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, ZRotation.Value);
+            XRotation.OnValueChanged += () => transform.localRotation = Quaternion.Euler(XRotation.Value, transform.rotation.y, transform.rotation.z);
+            YRotation.OnValueChanged += () => transform.localRotation = Quaternion.Euler(transform.rotation.x,YRotation.Value, transform.rotation.z);
+            ZRotation.OnValueChanged += () => transform.localRotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, ZRotation.Value);
             
             XScale.OnValueChanged += () => transform.localScale = new Vector3(XScale.Value, transform.localScale.y, transform.localScale.z);
             YScale.OnValueChanged += () => transform.localScale = new Vector3(transform.localScale.x, YScale.Value, transform.localScale.z);

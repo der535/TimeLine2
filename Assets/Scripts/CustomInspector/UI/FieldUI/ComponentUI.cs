@@ -29,14 +29,10 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
             _componentVisiblyStorage = componentVisiblyStorage;
         }
-
-        private void Awake()
-        {
-            _height += text.rectTransform.sizeDelta.y;
-        }
         
         public void Setup(Component component)
         {
+            _height += text.rectTransform.sizeDelta.y;
             _component = component;
             text.text = component.GetType().Name;
             if (_componentVisiblyStorage.GetVisibility(component.GetType()) == null)

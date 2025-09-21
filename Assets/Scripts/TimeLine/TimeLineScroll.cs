@@ -11,6 +11,8 @@ namespace TimeLine
 {
     public class TimeLineScroll : MonoBehaviour
     {
+        [SerializeField] private RectTransform timeLineRect;
+        [Space]
         [SerializeField] private float scrollMultiplier;
         [SerializeField] private float panMultiplier;
         [SerializeField] private float horizontalScroll;
@@ -31,15 +33,22 @@ namespace TimeLine
             _eventBus = eventBus;
             _mainObjects = mainObjects;
         }
+        
+        private bool GetCursorPosition()
+        {
+            return RectTransformUtility.RectangleContainsScreenPoint(timeLineRect,
+                UnityEngine.Input.mousePosition, _mainObjects.MainCamera);
+        }
 
         private void Awake()
         {
             _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
         }
-        
 
         private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
         {
+            print(GetCursorPosition());
+            if(GetCursorPosition() == false) return;
             if(UnityEngine.Input.mousePosition.y > targetObject.sizeDelta.y) return;
             
             if (!UnityEngine.Input.GetKey(KeyCode.LeftControl))

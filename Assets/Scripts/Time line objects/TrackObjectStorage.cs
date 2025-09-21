@@ -45,12 +45,11 @@ namespace TimeLine
         }
 
         [Button]
-        private void  checkGroupIntrackObjects()
+        private void checkGroupIntrackObjects()
         {
             foreach (var objectData in _trackObjects)
             {
-                if(objectData is TrackObjectGroup trackObjectGroup)
-                    print(trackObjectGroup.branch.ID);
+                print(objectData);
             }
         }
 
@@ -72,7 +71,8 @@ namespace TimeLine
             if (trackObject.trackObject.gameObject.activeSelf)
             {
                 bool shouldBeActive = trackObject.trackObject.StartTimeInTicks <= time &&
-                                      trackObject.trackObject.TimeDuractionInTicks + trackObject.trackObject.StartTimeInTicks > time;
+                                      trackObject.trackObject.TimeDuractionInTicks +
+                                      trackObject.trackObject.StartTimeInTicks > time;
 
                 trackObject.sceneObject.SetActive(shouldBeActive);
                 // //Debug.Log($"[TrackObject] {trackObject.trackObject.Name} | Active: {shouldBeActive} | Time: {time}");
@@ -92,6 +92,7 @@ namespace TimeLine
                 {
                     trackObject.sceneObject.SetActive(false);
                 }
+
                 return;
             }
             else
@@ -112,27 +113,27 @@ namespace TimeLine
                     trackObject.sceneObject.SetActive(false);
                     continue;
                 }
-                
+
                 if (trackObject is TrackObjectGroup nestedGroup)
                 {
                     //Debug.Log($"    → Entering nested group: {nestedGroup.branch.ID}");
-                    CheckActiveGroup(nestedGroup, time - groupStart,true); // Исправлено: передаём time, а не смещение!
+                    CheckActiveGroup(nestedGroup, time - groupStart, true); // Исправлено: передаём time, а не смещение!
                     continue;
                 }
 
                 // if (!enchanted)
                 // {
-                    double objStart = trackObject.trackObject.StartTimeInTicks + groupStart;
-                    double objEnd = objStart + trackObject.trackObject.TimeDuractionInTicks;
-                    var isObjectActive = time >= objStart && time < objEnd;
-                    //Debug.Log($"  [Child] {trackObject.branch.ID} | Active: {isObjectActive} | Time: {time} | Range: [{objStart}, {objEnd})");
+                double objStart = trackObject.trackObject.StartTimeInTicks + groupStart;
+                double objEnd = objStart + trackObject.trackObject.TimeDuractionInTicks;
+                var isObjectActive = time >= objStart && time < objEnd;
+                //Debug.Log($"  [Child] {trackObject.branch.ID} | Active: {isObjectActive} | Time: {time} | Range: [{objStart}, {objEnd})");
                 //
                 // }
                 // else
                 // {
                 //     isObjectActive = time >= group.trackObject.StartTimeInTicks && time < groupStart + group.trackObject.TimeDuractionInTicks;
                 // }
-                
+
                 trackObject.sceneObject.SetActive(isObjectActive);
             }
         }
@@ -157,7 +158,7 @@ namespace TimeLine
                     _trackObjectGroups.Remove(group2);
                 else
                     _trackObjects.Remove(trackObjectData);
-               
+
                 trackObjectData.trackObject.Hide();
             }
 
@@ -214,7 +215,6 @@ namespace TimeLine
                     _trackObjectGroups.Add(nestedGroup);
                 else
                     _trackObjects.Add(trackData);
-
             }
             //print(group.branch.ID);
             //print(_trackObjectGroups.Remove(group));
@@ -262,7 +262,8 @@ namespace TimeLine
 
         internal TrackObjectData GetTrackObjectData(TrackObject trackObject)
         {
-            TrackObjectData data = _trackObjects.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
+            TrackObjectData data =
+                _trackObjects.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
             if (data != null) return data;
 
             data = _trackObjectGroups.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);

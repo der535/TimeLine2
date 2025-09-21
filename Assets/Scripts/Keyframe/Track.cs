@@ -62,7 +62,17 @@ namespace TimeLine.Keyframe
         {
             if (Keyframes.Count == 0 || TargetObject == null) return;
 
-            double offset = groupObject?.StartTimeInTicks ?? 0;
+            double offset;
+            
+            if (groupObject == null)
+                offset = 0;
+            else
+            {
+                offset = groupObject.StartTimeInTicks;
+            }
+            
+            Debug.Log(groupObject);
+            Debug.Log(offset);
 
             Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks + offset <= time);
             Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks + offset >= time);

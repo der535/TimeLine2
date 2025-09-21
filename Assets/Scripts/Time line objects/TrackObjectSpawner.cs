@@ -211,11 +211,16 @@ namespace TimeLine
                 var track = _keyframeTrackStorage.GetTrack(node);
                 string[] split = node.Path.Split('/');
 
-                TreeNode newNode = split.Length > 1
-                    ? branch.AddNode(split[0], split[1])
-                    : branch.AddNode("", split[0]);
+                // TreeNode newNode = split.Length > 1
+                //     ? branch.AddNode(split[0], split[1])
+                //     : branch.AddNode("", split[0]);
 
-                if (track != null)
+
+                TreeNode newNode = null;
+                if(split.Length > 1)
+                    newNode = branch.AddNode(split[0], split[1]);
+
+                if (track != null&&newNode!=null)
                     _keyframeTrackStorage.AddTrack(newNode, track.Copy(sceneObject), trackObject);
             }
 
