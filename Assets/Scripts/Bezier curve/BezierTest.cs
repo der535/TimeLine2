@@ -9,6 +9,7 @@ namespace TimeLine
     {
         [SerializeField] private RectTransform currentTime;
         [SerializeField] private List<BezierPoint> _points;
+        [SerializeField] private AnimationCurve _acnimationCurves;
 
         [SerializeField, Range(0f, 10f)] private float value;
 
@@ -20,33 +21,74 @@ namespace TimeLine
 
         [SerializeField] private LineRenderer lineRenderer;
 
-        private void OnValidate()
+        // private void OnValidate()
+        // {
+        //     InitializeLineRenderer();
+        //     UpdateBezierCurve();
+        //
+        //     if (_points == null || _points.Count < 2) return;
+        //
+        //     int segmentIndex = Mathf.FloorToInt(value);
+        //     float t = value - segmentIndex;
+        //
+        //     if (segmentIndex >= _points.Count - 1)
+        //     {
+        //         segmentIndex = _points.Count - 2;
+        //         t = 1f;
+        //     }
+        //
+        //     BezierPoint start = _points[segmentIndex];
+        //     BezierPoint end = _points[segmentIndex + 1];
+        //
+        //     Vector2 anchoredPos = Bezier.GetPoint(
+        //         start.Point,
+        //         start.TangentRight,
+        //         end.TangentLeft,
+        //         end.Point,
+        //         t);
+        //
+        //     currentTime.anchoredPosition = anchoredPos;
+        // }
+        //
+        // [Button]
+        // public void ConvertToAnimationCurve()
+        // {
+        //     var keyframes = new UnityEngine.Keyframe[_points.Count];
+        //
+        //     for (int i = 0; i < _points.Count; i++)
+        //     {
+        //         var bp = _points[i];
+        //         Vector2 point = bp.Point;
+        //
+        //         // Получаем векторы касательных (относительно точки)
+        //         Vector2 leftHandle = (Vector2)bp.TangentLeft - point;
+        //         Vector2 rightHandle = (Vector2)bp.TangentRight - point;
+        //
+        //         float inTangent = 0f;
+        //         float outTangent = 0f;
+        //
+        //         // Рассчитываем inTangent (для входа в точку)
+        //         if (Mathf.Abs(leftHandle.x) > 1e-6f)
+        //             inTangent = leftHandle.y / leftHandle.x;
+        //
+        //         // Рассчитываем outTangent (для выхода из точки)
+        //         if (Mathf.Abs(rightHandle.x) > 1e-6f)
+        //             outTangent = rightHandle.y / rightHandle.x;
+        //
+        //         keyframes[i] = new UnityEngine.Keyframe(point.x, point.y, inTangent, outTangent);
+        //     }
+        //
+        //     _acnimationCurves = new AnimationCurve(keyframes);
+        // }
+
+        public void Clear()
         {
-            InitializeLineRenderer();
-            UpdateBezierCurve();
-
-            if (_points == null || _points.Count < 2) return;
-
-            int segmentIndex = Mathf.FloorToInt(value);
-            float t = value - segmentIndex;
-
-            if (segmentIndex >= _points.Count - 1)
-            {
-                segmentIndex = _points.Count - 2;
-                t = 1f;
-            }
-
-            BezierPoint start = _points[segmentIndex];
-            BezierPoint end = _points[segmentIndex + 1];
-
-            Vector2 anchoredPos = Bezier.GetPoint(
-                start.Point,
-                start.TangentRight,
-                end.TangentLeft,
-                end.Point,
-                t);
-
-            currentTime.anchoredPosition = anchoredPos;
+            _points.Clear();
+        }
+        
+        public void AddPoint(BezierPoint point)
+        {
+            _points.Add(point);
         }
 
         private void InitializeLineRenderer()

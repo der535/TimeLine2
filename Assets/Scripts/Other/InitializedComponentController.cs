@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace TimeLine
     {
         [SerializeField] private Main _main;
         
-        private List<InitializedComponentData> _components = new();
+        private List<InitializedComponentData> _initializedComponentData = new();
         private GameEventBus _gameEventBus;
 
         [Inject]
@@ -25,7 +26,7 @@ namespace TimeLine
             {
                 Add(data.TrackObjectData.sceneObject.GetComponent<IInitializedComponent>(), data.TrackObjectData.trackObject);
             });
-            _gameEventBus.SubscribeTo((ref AddComponentObjectDataEvent data) =>
+            _gameEventBus.SubscribeTo((ref AddComponentEvent data) =>
             {
                 Add(data.InitializedComponent, data.TrackObjectData.trackObject);
             });
@@ -33,13 +34,24 @@ namespace TimeLine
 
         internal void Add(IInitializedComponent component, TrackObject trackObject)
         {
-            _components.Add(new InitializedComponentData(trackObject, component));
+            _initializedComponentData.Add(new InitializedComponentData(trackObject, component));
+        }
+
+        internal void Remove(IInitializedComponent component)
+        {
+            foreach (var data in _initializedComponentData.ToList())
+            {
+                if (data.IInitializedComponent == component)
+                {
+                    _initializedComponentData.Remove(data);
+                }
+            }
         }
 
         private void Update()
         {
             // print(_components.Count);
-            foreach (var VARIABLE in _components)
+            foreach (var VARIABLE in _initializedComponentData)
             {
                 if (_main.TicksCurrentTime() <= VARIABLE.TrackObject.StartTimeInTicks && VARIABLE.Initialized == false)
                 {

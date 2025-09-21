@@ -38,6 +38,8 @@ namespace TimeLine.Installers
         [SerializeField] private GroupCreater groupCreater;
         [SerializeField] private ComponentVisiblyStorage componentVisiblyStorage;
         [SerializeField] private AddComponentWindowsData componentWindowsData;
+        [SerializeField] private CustomInspectorController customInspectorController;
+        [SerializeField] private InitializedComponentController initializedComponentController;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -71,6 +73,8 @@ namespace TimeLine.Installers
             Container.Bind<GroupCreater>().FromInstance(groupCreater).AsSingle();
             Container.Bind<ComponentVisiblyStorage>().FromInstance(componentVisiblyStorage).AsSingle();
             Container.Bind<AddComponentWindowsData>().FromInstance(componentWindowsData).AsSingle();
+            Container.Bind<CustomInspectorController>().FromInstance(customInspectorController).AsSingle();
+            Container.Bind<InitializedComponentController>().FromInstance(initializedComponentController).AsSingle();
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();

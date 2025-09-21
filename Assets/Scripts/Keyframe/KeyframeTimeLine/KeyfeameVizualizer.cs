@@ -99,8 +99,7 @@ namespace TimeLine
             foreach (var keyframe in keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
         }
-
-
+        
         private void OnDestroy()
         {
             _gameEventBus.UnsubscribeFrom((ref AddKeyframeEvent _) => Build());

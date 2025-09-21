@@ -31,10 +31,10 @@ namespace TimeLine.CustomInspector.UI.Drawers
             _container = container;  
         }
 
-        public void CreateComponent(Component component)
+        public void CreateComponent(Component component, bool isRemovable)
         {
             _currentComponent = _container.InstantiatePrefab(componentUIPrefab, rootObject).GetComponent<ComponentUI>();
-            _currentComponent.Setup(component);
+            _currentComponent.Setup(component, isRemovable);
         }
 
         public void CreateStringField(StringParameter stringParameter)

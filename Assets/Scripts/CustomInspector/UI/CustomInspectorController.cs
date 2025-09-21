@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.CustomInspector.UI;
@@ -21,6 +22,8 @@ namespace TimeLine
 
         private GameEventBus _gameEventBus;
 
+        private GameObject _selectedObject;
+
         [Inject]
         private void Construct(GameEventBus gameEventBus)
         {
@@ -31,15 +34,26 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].sceneObject));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
+            _gameEventBus.SubscribeTo((ref AddComponentEvent data) => StartCoroutine(Redraw()), -1);
+            _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) => StartCoroutine(Redraw()), -1);
             
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new RandomTransformComponentDrawer());
             _componentDrawers.Add(new DynamicTransformDrawer());
             _componentDrawers.Add(new NameDrawer());
         }
+
+        internal IEnumerator Redraw()
+        {
+            yield return new WaitForEndOfFrame();
+            if(_selectedObject != null)
+                Draw(_selectedObject);
+        }
         
         private void Draw(GameObject target)
         {
+            _selectedObject = target;
+            
             Clear();
 
             var components = target.GetComponents<Component>();

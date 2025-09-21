@@ -157,6 +157,7 @@ namespace TimeLine
                 }
             }
 
+            print($"ICopyableComponent {result.Count}" );
             return result;
         }
 

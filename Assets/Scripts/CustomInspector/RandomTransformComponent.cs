@@ -73,7 +73,8 @@ namespace TimeLine
 
         public Component Copy(GameObject targetGameObject)
         {
-            if (TryGetComponent(out RandomTransformComponent component))
+            print("RandomTransformComponent copy");
+            if (targetGameObject.TryGetComponent(out RandomTransformComponent component))
             {
                 CopyTo(component);
             }

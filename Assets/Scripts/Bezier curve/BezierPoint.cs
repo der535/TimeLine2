@@ -13,6 +13,7 @@ namespace TimeLine
         [SerializeField] private RectTransform tangentRight;
 
         public Action onValueChanged;
+        public RectTransform RectTransform  =>  point;
 
         private bool _isDraging;
         private bool _isDragingTangleLeft;
