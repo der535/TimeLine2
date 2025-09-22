@@ -46,7 +46,7 @@ namespace TimeLine
                     UnityEngine.Input.mousePosition, 
                     targetCamera))
             {
-                if (!UnityEngine.Input.GetKey(KeyCode.LeftControl))
+                if (!UnityEngine.Input.GetKey(KeyCode.LeftControl) && !UnityEngine.Input.GetKey(KeyCode.LeftAlt) && !UnityEngine.Input.GetKey(KeyCode.LeftShift))
                 {
                     _eventBus.Raise(new ScrollTimeLineKeyframeEvent(UnityEngine.Input.mouseScrollDelta.y * scrollMultiplier));
                 }

@@ -28,6 +28,8 @@ namespace TimeLine
         private KeyframeSelect _keyframeObjectSelect;
         private Keyframe.Keyframe _keyframeSelect;
         private TimeLineConverter _timeLineConverter;
+
+        private bool _active;
         public KeyframeObjectData SelectedKeyframe { get; private set; }
 
         [Inject]
@@ -52,6 +54,16 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
         }
 
+        public void ActiveKeyframes(bool active)
+        {
+            _active = active;
+            Build();
+            foreach (var keyframe in keyframes)
+            {
+                keyframe.RectTransform.gameObject.SetActive(active);
+            }
+        }
+
         private void SelectKeyframe(ref SelectKeyframeEvent selectKeyframeEvent)
         {
             SelectedKeyframe = selectKeyframeEvent.Keyframe;
@@ -65,6 +77,8 @@ namespace TimeLine
         [Button]
         private void Build()
         {
+            if(!_active) return;
+            
             foreach (var keyframe in keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
             keyframes = new List<KeyframeObjectData>();

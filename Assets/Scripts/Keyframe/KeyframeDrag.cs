@@ -82,7 +82,7 @@ namespace TimeLine.Keyframe
 
                 // Вычисляем тики на основе относительной позиции
                 _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
-                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan )));
+                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan)));
                     
                 _sortKeyframes.Invoke();
             }
