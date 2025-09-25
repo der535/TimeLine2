@@ -47,7 +47,7 @@ namespace TimeLine
 
         private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
         {
-            print(GetCursorPosition());
+            // print(GetCursorPosition());
             if(GetCursorPosition() == false) return;
             if(UnityEngine.Input.mousePosition.y > targetObject.sizeDelta.y) return;
             

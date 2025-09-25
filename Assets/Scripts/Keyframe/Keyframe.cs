@@ -19,7 +19,7 @@
 
         public void Apply(GameObject target)
         {
-            Debug.Log(target);
+            // Debug.Log(target);
             animationData.Apply(target);
         }
         

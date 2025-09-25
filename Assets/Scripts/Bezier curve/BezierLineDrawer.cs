@@ -7,7 +7,7 @@ namespace TimeLine
     [RequireComponent(typeof(RectTransform))]
     public class BezierLineDrawer : MonoBehaviour
     {
-        [SerializeField] private RectTransform currentTime;
+        // [SerializeField] private RectTransform currentTime;
         [SerializeField] private List<BezierPoint> _points;
         [SerializeField] private AnimationCurve _acnimationCurves;
 
@@ -18,6 +18,7 @@ namespace TimeLine
 
         [SerializeField] private Color lineColor = Color.cyan;
         [SerializeField] private float lineWidth = 0.1f;
+        [SerializeField] private RectTransform pointsRoot;
 
         [SerializeField] private LineRenderer lineRenderer;
 
@@ -90,7 +91,7 @@ namespace TimeLine
             // Локальная позиция = anchoredPosition - pivotOffset (если pivot не (0,0))
             Vector2 localPos = anchoredPosition - pivotOffset;
 
-            return new Vector3(localPos.x, localPos.y, 0f);
+            return new Vector3(localPos.x, localPos.y + pointsRoot.offsetMin.y, 0f);
         }
     }
 }

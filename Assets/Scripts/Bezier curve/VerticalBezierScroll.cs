@@ -12,7 +12,7 @@ namespace TimeLine
         [SerializeField] private RectTransform _rightPanel;
         [SerializeField] private Camera _mainCamera;
 
-        public const float ScrollMultiplier = 70;
+        private const float ScrollMultiplier = 70;
         
         private float _verticalScroll;
         
@@ -41,8 +41,7 @@ namespace TimeLine
             {
                 if (UnityEngine.Input.GetKey(KeyCode.LeftAlt))
                 {
-                    _verticalScroll += mouseScrollDeltaY.Y;
-                    _eventBus.Raise(new ScrollBezier(_verticalScroll * ScrollMultiplier));
+                    _eventBus.Raise(new ScrollBezier(mouseScrollDeltaY.Y * ScrollMultiplier));
                 }
             }
         }

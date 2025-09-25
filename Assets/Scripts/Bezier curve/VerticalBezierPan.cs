@@ -12,11 +12,13 @@ namespace TimeLine
         [SerializeField] private RectTransform _rightPanel;
         [SerializeField] private Camera _mainCamera;
 
-        private const float PanMultiplier = 20;
+        private const float PanMultiplier = 10;
         
-        private float _pan;
+        private float _pan = 70;
+        private float _oldPan = 0;
         
-        public float Pan => _pan * PanMultiplier;
+        public float Pan => _pan;
+        public float OldPan => _oldPan;
         
         private GameEventBus _eventBus;
         
@@ -32,6 +34,13 @@ namespace TimeLine
             _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
         }
 
+        internal void SetPan(float newPan)
+        {
+            _oldPan = _pan;
+            _pan = newPan;
+            _eventBus.Raise(new PanBezier(Pan, OldPan));
+        }
+
         private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
         {
             if (RectTransformUtility.RectangleContainsScreenPoint(
@@ -41,8 +50,9 @@ namespace TimeLine
             {
                 if (UnityEngine.Input.GetKey(KeyCode.LeftShift))
                 {
-                    _pan += mouseScrollDeltaY.Y;
-                    _eventBus.Raise(new PanBezier(_pan * PanMultiplier));
+                    _oldPan = _pan;
+                    _pan += mouseScrollDeltaY.Y * PanMultiplier;
+                    _eventBus.Raise(new PanBezier(Pan, OldPan));
                 }
             }
         }

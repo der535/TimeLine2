@@ -37,7 +37,14 @@ namespace TimeLine
         {
             _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
         }
-        
+
+        internal void SetPan(float value)
+        {
+            _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Pan));
+            Pan = value;
+            Pan = Mathf.Max(panMin, Pan);
+            _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Pan));
+        }
 
         private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
         {

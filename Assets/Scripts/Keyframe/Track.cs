@@ -71,8 +71,8 @@ namespace TimeLine.Keyframe
                 offset = groupObject.StartTimeInTicks;
             }
             
-            Debug.Log(groupObject);
-            Debug.Log(offset);
+            // Debug.Log(groupObject);
+            // Debug.Log(offset);
 
             Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks + offset <= time);
             Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks + offset >= time);
