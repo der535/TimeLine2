@@ -2,6 +2,7 @@
 using EventBus;
 using TimeLine.EventBus.Events.Misc;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TimeLine.Installers
 {
@@ -14,6 +15,8 @@ namespace TimeLine.Installers
         [Space]
         [SerializeField] private RectTransform rightPanelRectTransform;
         [SerializeField] private RectTransform keyframeRootRectTransform;
+        [SerializeField] private RectTransform keyframeScrollView;
+        [SerializeField] private VerticalLayoutGroup keyframeVerticalLayoutGroup;
         [SerializeField] private Camera mainCamera;
 
         private GameEventBus _gameEventBus;
@@ -35,6 +38,8 @@ namespace TimeLine.Installers
         public RectTransform ToolRectTransform => toolRectTransform;
         public RectTransform RightPanelRectTransform => rightPanelRectTransform;
         public RectTransform KeyframeRootRectTransform => keyframeRootRectTransform;
+        public RectTransform KeyframeScrollView => keyframeScrollView;
+        public VerticalLayoutGroup KeyframeVerticalLayoutGroup => keyframeVerticalLayoutGroup;
 
         public void NotifyContentRectChanged()
         {

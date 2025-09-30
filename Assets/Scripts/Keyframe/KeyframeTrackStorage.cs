@@ -74,6 +74,7 @@ namespace TimeLine.Keyframe
 
         public Track GetTrack(TreeNode treeNode)
         {
+            // print(tracks.Count);
             // print(treeNode.Name);
             foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
             {

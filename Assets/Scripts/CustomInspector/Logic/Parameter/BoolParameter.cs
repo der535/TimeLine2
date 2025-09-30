@@ -1,6 +1,8 @@
+using UnityEngine;
+
 namespace TimeLine.CustomInspector.Logic.Parameter
 {
-    public class BoolParameter : InspectableParameter
+    public class BoolParameter : InspectableParameter, IParameterColor
     {
         private bool _value;
         public bool Value
@@ -14,10 +16,13 @@ namespace TimeLine.CustomInspector.Logic.Parameter
             }
         }
 
-        public BoolParameter(string name, bool initialValue) 
+        public BoolParameter(string name, bool initialValue, Color animationColor) 
             : base(name, typeof(bool))
         {
             _value = initialValue;
+            AnimationColor = animationColor;
         }
+
+        public Color AnimationColor { get; set; }
     }
 }

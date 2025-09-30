@@ -31,45 +31,45 @@ namespace TimeLine.CustomInspector.UI.Drawers
                     () =>
                     {
                         _keyframeCreater.CreateKeyframe(new XPositionData(componentComponent.XPosition.Value), target,
-                            componentComponent.GetType().Name, componentComponent.XPosition.Name);
+                            componentComponent.GetType().Name, componentComponent.XPosition, componentComponent.XPosition);
                     });
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.XPositionActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.YPosition,
                     () => _keyframeCreater.CreateKeyframe(new YPositionData(componentComponent.YPosition.Value), target,
-                        componentComponent.GetType().Name, componentComponent.YPosition.Name));
+                        componentComponent.GetType().Name, componentComponent.YPosition, componentComponent.YPosition));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YPositionActive);
 
                 _customInspectorDrawer.AddSpace(30);
                 _customInspectorDrawer.CreateFloatField(componentComponent.XRotation,
                     () => _keyframeCreater.CreateKeyframe(new XRotationData(componentComponent.XRotation.Value), target,
-                        componentComponent.GetType().Name, componentComponent.XRotation.Name));
+                        componentComponent.GetType().Name, componentComponent.XRotation, componentComponent.XRotation));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.XRotationActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.YRotation,
                     () => _keyframeCreater.CreateKeyframe(new YRotationData(componentComponent.YRotation.Value), target,
-                        componentComponent.GetType().Name, componentComponent.YRotation.Name));
+                        componentComponent.GetType().Name, componentComponent.YRotation, componentComponent.YRotation));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YRotationActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.ZRotation,
                     () => _keyframeCreater.CreateKeyframe(new ZRotationData(componentComponent.ZRotation.Value), target,
-                        componentComponent.GetType().Name, componentComponent.ZRotation.Name));
+                        componentComponent.GetType().Name, componentComponent.ZRotation, componentComponent.ZRotation));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.ZRotationActive);
                 _customInspectorDrawer.AddSpace(30);
                 _customInspectorDrawer.CreateFloatField(componentComponent.XScale,
                     () => _keyframeCreater.CreateKeyframe(new XScaleData(componentComponent.XScale.Value), target,
-                        componentComponent.GetType().Name, componentComponent.XScale.Name));
+                        componentComponent.GetType().Name, componentComponent.XScale, componentComponent.XScale));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.XScaleActive);
                 
                 _customInspectorDrawer.CreateFloatField(componentComponent.YScale,
                     () => _keyframeCreater.CreateKeyframe(new YScaleData(componentComponent.YScale.Value), target,
-                        componentComponent.GetType().Name, componentComponent.YScale.Name));
+                        componentComponent.GetType().Name, componentComponent.YScale, componentComponent.YScale));
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YScaleActive);
             }

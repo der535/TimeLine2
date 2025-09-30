@@ -7,24 +7,24 @@ namespace TimeLine
 {
     public class RandomTransformComponent : MonoBehaviour, ICopyableComponent, IInitializedComponent
     {
-        public BoolParameter ComponentActive = new("Enabled", true);
+        public BoolParameter ComponentActive = new("Enabled", true, Color.gray);
         
         public Vector2Parameter XRandomPosition = new("Random-Position-x", "min", "max", Vector2.zero);
-        public BoolParameter XRandomPositionActive = new("p-x", false);
+        public BoolParameter XRandomPositionActive = new("p-x", false, Color.gray);
         public Vector2Parameter YRandomPosition = new("Random-Position-y", "mix", "max", Vector2.zero);
-        public BoolParameter YRandomPositionActive = new("p-y", false);
+        public BoolParameter YRandomPositionActive = new("p-y", false, Color.gray);
 
         public Vector2Parameter XRandomRotation = new("Random-Rotation-x", "mix", "max", Vector2.zero);
-        public BoolParameter XRandomRotationActive = new ("r-x", false);
+        public BoolParameter XRandomRotationActive = new ("r-x", false, Color.gray);
         public Vector2Parameter YRandomRotation = new("Random-Rotation-y", "mix", "max", Vector2.zero);
-        public BoolParameter YRandomRotationActive = new ("r-y", false);
+        public BoolParameter YRandomRotationActive = new ("r-y", false, Color.gray);
         public Vector2Parameter ZRandomRotation = new("Random-Rotation-z", "mix", "max", Vector2.zero);
-        public BoolParameter ZRandomRotationActive = new ("r-z", false);
+        public BoolParameter ZRandomRotationActive = new ("r-z", false, Color.gray);
 
         public Vector2Parameter XRandomScale = new("Random-Scale-x", "mix", "max", Vector2.zero);
-        public BoolParameter XRandomScaleActive = new ("Active-x", false);
+        public BoolParameter XRandomScaleActive = new ("Active-x", false, Color.gray);
         public Vector2Parameter YRandomScale = new("Random-Scale-y", "mix", "max", Vector2.zero);
-        public BoolParameter YRandomScaleActive = new ("Active-y", false);
+        public BoolParameter YRandomScaleActive = new ("Active-y", false, Color.gray);
 
         private TransformComponent _transform;
 

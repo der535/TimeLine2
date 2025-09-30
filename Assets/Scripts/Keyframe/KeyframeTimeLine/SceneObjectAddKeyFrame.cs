@@ -1,3 +1,4 @@
+using TimeLine.CustomInspector.Logic;
 using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
@@ -24,15 +25,15 @@ namespace TimeLine
             _main = main;
         }
 
-        public void AddKeyframe(GameObject target, AnimationData data, string componentName, string fieldName)
+        public void AddKeyframe(GameObject target, AnimationData data, string componentName, InspectableParameter fieldName, IParameterColor parameterColor)
         {
             TrackObjectData trackObjectData = _trackObjectStorage.GetTrackObjectData(target);
 
             TreeNode node = _branchCollection.AddNodeToBranch(trackObjectData.branch.ID, trackObjectData.branch.Name,
-                componentName, fieldName);
+                componentName, fieldName.Name);
 
             if (_keyframeTrackStorage.GetTrack(node) == null)
-                _keyframeTrackStorage.AddTrack(node, new Track(target, target.name), trackObjectData.trackObject);
+                _keyframeTrackStorage.AddTrack(node, new Track(target, target.name, parameterColor.AnimationColor), trackObjectData.trackObject);
 
             _keyframeTrackStorage.AddKeyframe(node, _main.TicksCurrentTime() - trackObjectData.trackObject.StartTimeInTicks,
                 new PositionData(target.transform.position));

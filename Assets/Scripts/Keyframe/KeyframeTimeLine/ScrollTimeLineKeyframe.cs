@@ -13,6 +13,7 @@ namespace TimeLine.Keyframe.KeyframeTimeLine
         [SerializeField] private RectTransform panel;
         [SerializeField] private RectTransform content;
         [SerializeField] private TimeLineKeyframeScroll scroll;
+        [Space] [SerializeField] private float offset;
 
         private GameEventBus _gameEventBus;
         private TimeLineConverter _timeLineConverter;

@@ -73,7 +73,10 @@ namespace TimeLine.Keyframe
                 float newPositionX = _startObjectPosition.x - (_startMousePosition.x - GetMousePosition().x);
                 
                 // Применяем округление к позиции относительно корня
-                float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x;
+                
+                float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x - _mainObjects.KeyframeScrollView.offsetMin.x - _mainObjects.KeyframeVerticalLayoutGroup.padding.left / 2f;
+                
+                // float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x;
                 float relativePosition = newPositionX - rootOffset;
                 float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Pan);
                 float finalPositionX = roundedRelativePosition + rootOffset;

@@ -9,14 +9,16 @@ namespace TimeLine.Keyframe
     {
         public GameObject TargetObject;
         public string TrackName;
+        public Color AnimationColor;
         public List<Keyframe> Keyframes = new();
         public TrackObject groupObject;
         private int _lastFoundIndex = 0;
 
-        public Track(GameObject target, string trackName)
+        public Track(GameObject target, string trackName, Color animationColor)
         {
             this.TrackName = trackName;
             TargetObject = target;
+            AnimationColor = animationColor;
         }
 
         public Keyframe AddKeyframe(double time, AnimationData adata = null)
@@ -119,7 +121,7 @@ namespace TimeLine.Keyframe
         
         public Track Copy(GameObject target)
         {
-            Track newTrack = new Track(target, this.TrackName);
+            Track newTrack = new Track(target, this.TrackName, this.AnimationColor);
             newTrack.Keyframes = this.Keyframes.Select(kf => kf.Clone()).ToList();
             return newTrack;
         }

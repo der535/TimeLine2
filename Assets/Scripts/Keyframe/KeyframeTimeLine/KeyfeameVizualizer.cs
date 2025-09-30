@@ -6,6 +6,8 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using TimeLine.TimeLine;
 using UnityEngine;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
 using Zenject;
 
 namespace TimeLine
@@ -20,9 +22,15 @@ namespace TimeLine
         [Space] 
         [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
         [SerializeField] private RectTransform _content;
+        [FormerlySerializedAs("keframeScrollView")]
+        [FormerlySerializedAs("keframeScrollV")]
+        [FormerlySerializedAs("fieldPanel")]
+        [Header("Keyframe offset")]
+        [SerializeField] private RectTransform keyframeScrollView;
+        [FormerlySerializedAs("verticalLayoutGroup")] [SerializeField] private VerticalLayoutGroup keyframeVerticalLayoutGroup;
 
-        private List<KeyframeObjectData> keyframes = new();
         private DiContainer _container;
+        private List<KeyframeObjectData> _keyframes = new();
         private GameEventBus _gameEventBus;
 
         private KeyframeSelect _keyframeObjectSelect;
@@ -58,7 +66,7 @@ namespace TimeLine
         {
             _active = active;
             Build();
-            foreach (var keyframe in keyframes)
+            foreach (var keyframe in _keyframes)
             {
                 keyframe.RectTransform.gameObject.SetActive(active);
             }
@@ -67,7 +75,7 @@ namespace TimeLine
         private void SelectKeyframe(ref SelectKeyframeEvent selectKeyframeEvent)
         {
             SelectedKeyframe = selectKeyframeEvent.Keyframe;
-            foreach (var keyframe in keyframes)
+            foreach (var keyframe in _keyframes)
             {
                 keyframe.KeyframeSelect.SelectColor(false);
             }
@@ -79,24 +87,37 @@ namespace TimeLine
         {
             if(!_active) return;
             
-            foreach (var keyframe in keyframes.Where(keyframe => keyframe))
+            // print("Build");
+            
+            foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
-            keyframes = new List<KeyframeObjectData>();
+            
+            _keyframes = new List<KeyframeObjectData>();
+            
+            // print(treeViewUI.AnimationLineController.Lines.Count);
 
-            foreach (var tree in treeViewUI.NodeObjects)
+            foreach (var tree in treeViewUI.AnimationLineController.Lines)
             {
                 Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
-
+                
+                // print(track);
+                
                 if (track == null) continue;
+                
+                // print(track.Keyframes.Count);
+                
                 foreach (var keyframe in track.Keyframes)
                 {
-                    KeyframeObjectData keyframeObjectData = _container.InstantiatePrefab(keyFrame, tree.RootRect)
+                    KeyframeObjectData keyframeObjectData = _container.InstantiatePrefab(keyFrame, tree.KeyframeLine)
                         .GetComponent<KeyframeObjectData>();
-                    keyframes.Add(keyframeObjectData.GetComponent<KeyframeObjectData>());
+                    
+                    _keyframes.Add(keyframeObjectData.GetComponent<KeyframeObjectData>());
                     KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
 
                     // Конвертируем тики в позицию на таймлайне
-                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.Ticks, _timeLineKeyframeScroll.Pan)+_content.offsetMin.x;
+                    float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x - keyframeVerticalLayoutGroup.padding.left / 2f;
+                    
+                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.Ticks, _timeLineKeyframeScroll.Pan) + xOffset;
                     keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
                         positionX,
                         keyframeObjectData.RectTransform.anchoredPosition.y);
@@ -110,7 +131,7 @@ namespace TimeLine
 
         private void Clear()
         {
-            foreach (var keyframe in keyframes.Where(keyframe => keyframe))
+            foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
         }
         

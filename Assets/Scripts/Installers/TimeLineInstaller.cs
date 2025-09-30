@@ -40,6 +40,8 @@ namespace TimeLine.Installers
         [SerializeField] private AddComponentWindowsData componentWindowsData;
         [SerializeField] private CustomInspectorController customInspectorController;
         [SerializeField] private InitializedComponentController initializedComponentController;
+        [SerializeField] private VerticalBezierPan verticalBezierPan;
+        [SerializeField] private BezierLineDrawer bezierLineDrawer;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -75,6 +77,8 @@ namespace TimeLine.Installers
             Container.Bind<AddComponentWindowsData>().FromInstance(componentWindowsData).AsSingle();
             Container.Bind<CustomInspectorController>().FromInstance(customInspectorController).AsSingle();
             Container.Bind<InitializedComponentController>().FromInstance(initializedComponentController).AsSingle();
+            Container.Bind<VerticalBezierPan>().FromInstance(verticalBezierPan);
+            Container.Bind<BezierLineDrawer>().FromInstance(bezierLineDrawer);
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();

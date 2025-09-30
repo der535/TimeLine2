@@ -84,7 +84,7 @@ namespace TimeLine
 
         public void Show()
         {
-            print("Show");
+            // print("Show");
             _isVisible = true;
             componentTransform.sizeDelta = new Vector2(componentTransform.sizeDelta.x, _height);
             rootObject.gameObject.SetActive(true);

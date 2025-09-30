@@ -8,22 +8,22 @@ namespace TimeLine
 {
     public class TransformComponent : MonoBehaviour, ICopyableComponent
     {
-        public FloatParameter XPosition = new("Position-X", 0);
-        public BoolParameter XPositionActive = new("x-p Active", true);
-        public FloatParameter YPosition = new("Position-Y", 0);
-        public BoolParameter YPositionActive = new("x-p Active", true);
+        public FloatParameter XPosition = new("Position-X", 0, Color.red);
+        public BoolParameter XPositionActive = new("x-p Active", true, Color.gray);
+        public FloatParameter YPosition = new("Position-Y", 0, Color.green);
+        public BoolParameter YPositionActive = new("x-p Active", true, Color.gray);
 
-        public FloatParameter XRotation = new("Rotation-X", 0);
-        public BoolParameter XRotationActive = new("x-r Active", true);
-        public FloatParameter YRotation = new("Rotation-Y", 0);
-        public BoolParameter YRotationActive = new("y-r Active", true);
-        public FloatParameter ZRotation = new("Rotation-Z", 0);
-        public BoolParameter ZRotationActive = new("z-r Active", true);
+        public FloatParameter XRotation = new("Rotation-X", 0, new Color(0.8301887f, 0.2310431f, 0.2310431f));
+        public BoolParameter XRotationActive = new("x-r Active", true, Color.gray);
+        public FloatParameter YRotation = new("Rotation-Y", 0, new Color(0.2584544f, 0.8313726f, 0.2313726f));
+        public BoolParameter YRotationActive = new("y-r Active", true, Color.gray);
+        public FloatParameter ZRotation = new("Rotation-Z", 0, new Color(0.2313726f, 0.5932469f, 0.8313726f));
+        public BoolParameter ZRotationActive = new("z-r Active", true, Color.gray);
         
-        public FloatParameter XScale = new("Scale-X", 1);
-        public BoolParameter XScaleActive = new("x-s Active", true);
-        public FloatParameter YScale = new("Scale-Y", 1);
-        public BoolParameter YScaleActive = new("y-s Active", true);
+        public FloatParameter XScale = new("Scale-X", 1, new Color(0.6132076f, 0.1918755f, 0.1918755f));
+        public BoolParameter XScaleActive = new("x-s Active", true, Color.gray);
+        public FloatParameter YScale = new("Scale-Y", 1, new Color(0.2226184f, 0.6117647f, 0.172549f));
+        public BoolParameter YScaleActive = new("y-s Active", true, Color.gray);
 
         private KeyframeTrackStorage _keyframeTrackStorage;
         private TrackObjectStorage _trackObjectStorage;

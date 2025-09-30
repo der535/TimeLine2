@@ -11,6 +11,8 @@ namespace TimeLine
         [SerializeField] private RectTransform point;         
         [SerializeField] private RectTransform tangentLeft;         
         [SerializeField] private RectTransform tangentRight;
+        [SerializeField] private BezierDragPoint _bezierDragPoint;
+
 
         public Action onValueChanged;
         public RectTransform RectTransform  =>  point;
@@ -31,6 +33,11 @@ namespace TimeLine
             _mainObjects = mainObject;
         }
         
+        public void Setup(Keyframe.Keyframe keyframe, Action sortKeyframes)
+        {
+            _bezierDragPoint.Setup(keyframe, sortKeyframes);
+        }
+        
         public void DragTangentLeftPoint(bool drag)
         {
             _isDragingTangleLeft = drag;
@@ -46,35 +53,35 @@ namespace TimeLine
             _isDraging = drag;
         }
 
-        private Vector2 GetMousePosition()
-        {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle
-            (_mainObjects.CanvasRectTransform, Mouse.current.position.ReadValue(), _mainObjects.MainCamera,
-                out var localPoint);
-            return localPoint;
-        }
+        // private Vector2 GetMousePosition()
+        // {
+        //     RectTransformUtility.ScreenPointToLocalPointInRectangle
+        //     (_mainObjects.CanvasRectTransform, Mouse.current.position.ReadValue(), _mainObjects.MainCamera,
+        //         out var localPoint);
+        //     return localPoint;
+        // }
 
-        private void Update()
-        {
-            if (_isDraging)
-            {
-                point.anchoredPosition = GetMousePosition();
-                onValueChanged?.Invoke();
-            }
-
-            if (_isDragingTangleLeft)
-            {
-                tangentLeft.anchoredPosition = GetMousePosition() - (Vector2)Point;
-                onValueChanged?.Invoke();
-                tangentRight.anchoredPosition = tangentLeft.anchoredPosition * -1;
-            }
-            
-            if (_isDragingTangleRight)
-            {
-                tangentRight.anchoredPosition = GetMousePosition() - (Vector2)Point;
-                onValueChanged?.Invoke();
-                tangentLeft.anchoredPosition = tangentRight.anchoredPosition * -1;
-            }
-        }
+        // private void Update()
+        // {
+        //     if (_isDraging)
+        //     {
+        //         point.anchoredPosition = GetMousePosition();
+        //         onValueChanged?.Invoke();
+        //     }
+        //
+        //     if (_isDragingTangleLeft)
+        //     {
+        //         tangentLeft.anchoredPosition = GetMousePosition() - (Vector2)Point;
+        //         onValueChanged?.Invoke();
+        //         tangentRight.anchoredPosition = tangentLeft.anchoredPosition * -1;
+        //     }
+        //     
+        //     if (_isDragingTangleRight)
+        //     {
+        //         tangentRight.anchoredPosition = GetMousePosition() - (Vector2)Point;
+        //         onValueChanged?.Invoke();
+        //         tangentLeft.anchoredPosition = tangentRight.anchoredPosition * -1;
+        //     }
+        // }
     }
 }

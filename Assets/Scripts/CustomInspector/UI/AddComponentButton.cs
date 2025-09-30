@@ -17,7 +17,7 @@ namespace TimeLine
          private void Construct(AddComponentWindowsData addComponentWindowsData)
          {
              _addComponentWindowsData = addComponentWindowsData;
-             print(_addComponentWindowsData);
+             // print(_addComponentWindowsData);
          }
          
          internal void Setup(GameObject target)

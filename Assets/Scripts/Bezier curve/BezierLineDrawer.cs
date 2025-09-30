@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq; // Добавьте это для использования LINQ
 using NaughtyAttributes;
+using TimeLine;
 using UnityEngine;
 
 namespace TimeLine
@@ -7,91 +9,147 @@ namespace TimeLine
     [RequireComponent(typeof(RectTransform))]
     public class BezierLineDrawer : MonoBehaviour
     {
-        // [SerializeField] private RectTransform currentTime;
-        [SerializeField] private List<BezierPoint> _points;
-        [SerializeField] private AnimationCurve _acnimationCurves;
+        private List<BezierData> _bezierDates = new();
 
         [SerializeField, Range(0f, 10f)] private float value;
 
         [Header("Визуализация")] [SerializeField]
-        private int lineResolution = 30; // Точность прорисовки кривой
+        private int lineResolution = 30;
 
-        [SerializeField] private Color lineColor = Color.cyan;
         [SerializeField] private float lineWidth = 0.1f;
         [SerializeField] private RectTransform pointsRoot;
+        [Space] [SerializeField] private LineRenderer linePrefab;
+        [SerializeField] private RectTransform root;
 
-        [SerializeField] private LineRenderer lineRenderer;
+        [Space] [SerializeField] private List<LineRenderer> bezierLines;
 
-        public void Clear()
+        internal void ClearLines()
         {
-            _points.Clear();
+            // print("Очистка");
+
+            foreach (var line in bezierLines.ToArray())
+            {
+                bezierLines.Remove(line);
+                Destroy(line.gameObject);
+            }
+
+            bezierLines.Clear();
+            // print(bezierLines.Count);
         }
-        
-        public void AddPoint(BezierPoint point)
+
+        internal void ClearBeziers()
         {
-            _points.Add(point);
+            _bezierDates.Clear();
+        }
+
+        private LineRenderer CreateLine(Color color)
+        {
+            print("Линия");
+            
+            LineRenderer line = Instantiate(linePrefab, root);
+            GradientColorKey[] colorKeys = new[] { new GradientColorKey(color, 0), new GradientColorKey(color, 1) };
+            Gradient gradient = new Gradient { colorKeys = colorKeys };
+            line.colorGradient = gradient;
+            bezierLines.Add(line);
+            return line;
+        }
+
+        public void AddPoints(List<BezierPoint> points, Color bezierColor)
+        {
+            print("Добавление точек");
+            // Защита от null и очистка уничтоженных точек
+            var validPoints = points.Where(p => p != null && p.transform != null).ToList();
+            if (validPoints.Count < 2) return;
+
+            _bezierDates.Add(new BezierData
+            {
+                BezierColor = bezierColor,
+                Points = validPoints
+            });
+            
+            print(_bezierDates.Count);
         }
 
         internal void SetActive(bool active)
         {
-            lineRenderer.enabled = active;
+            foreach (var line in bezierLines.Where(line => line != null))
+            {
+                line.enabled = active;
+            }
         }
 
-        private void InitializeLineRenderer()
-        {
-            // Настройка LineRenderer для UI
-            lineRenderer.useWorldSpace = false; // Работаем в локальном пространстве
-            lineRenderer.positionCount = 0;
-            lineRenderer.startWidth = lineWidth;
-            lineRenderer.endWidth = lineWidth;
-            lineRenderer.material = new Material(Shader.Find("UI/Default")) { color = lineColor };
-            lineRenderer.sortingOrder = 1;
-        }
-        
         [Button]
         internal void UpdateBezierCurve()
         {
-            if (_points == null || _points.Count < 2 || lineRenderer == null) return;
+            // print("UpdateBezierCurve");
+            
+            ClearLines();
 
-            int totalPoints = (_points.Count - 1) * lineResolution + 1;
-            lineRenderer.positionCount = totalPoints;
+            // print(_bezierDates.Count);
 
-            int index = 0;
-            for (int i = 0; i < _points.Count - 1; i++)
+            
+            // print(_bezierDates.Count);
+
+            foreach (var bezierData in _bezierDates)
             {
-                BezierPoint start = _points[i];
-                BezierPoint end = _points[i + 1];
+                if (bezierData.Points.Count < 2) continue;
 
-                for (int j = 0; j < lineResolution; j++)
+                int totalPoints = (bezierData.Points.Count - 1) * lineResolution + 1;
+                LineRenderer line = CreateLine(bezierData.BezierColor);
+                line.positionCount = totalPoints;
+
+                int index = 0;
+                for (int i = 0; i < bezierData.Points.Count - 1; i++)
                 {
-                    float t = (float)j / lineResolution;
-                    Vector2 anchoredPos = Bezier.GetPoint(
-                        start.Point,
-                        start.TangentRight,
-                        end.TangentLeft,
-                        end.Point,
-                        t);
+                    BezierPoint start = bezierData.Points[i];
+                    BezierPoint end = bezierData.Points[i + 1];
 
-                    lineRenderer.SetPosition(index++, RectTransformToLineRendererPosition(anchoredPos));
+                    // Пропускаем уничтоженные точки
+                    if (start == null || end == null) continue;
+
+                    for (int j = 0; j < lineResolution; j++)
+                    {
+                        float t = (float)j / lineResolution;
+                        Vector2 anchoredPos = Bezier.GetPoint(
+                            start.Point,
+                            start.TangentRight,
+                            end.TangentLeft,
+                            end.Point,
+                            t);
+
+                        line.SetPosition(index++, RectTransformToLineRendererPosition(anchoredPos));
+                    }
+                }
+
+                // Защита для последней точки
+                if (bezierData.Points[^1] != null)
+                {
+                    Vector2 lastAnchoredPos = bezierData.Points[^1].Point;
+                    line.SetPosition(totalPoints - 1, RectTransformToLineRendererPosition(lastAnchoredPos));
                 }
             }
+            
 
-            // Добавляем последнюю точку последнего сегмента
-            Vector2 lastAnchoredPos = _points[_points.Count - 1].Point;
-            lineRenderer.SetPosition(totalPoints - 1, RectTransformToLineRendererPosition(lastAnchoredPos));
         }
 
         private Vector3 RectTransformToLineRendererPosition(Vector2 anchoredPosition)
         {
-            // Преобразуем anchoredPosition в локальную позицию относительно нашего RectTransform
+            if (pointsRoot == null) return anchoredPosition;
+
             RectTransform rectTransform = (RectTransform)transform;
-            Vector2 pivotOffset = new Vector2(rectTransform.pivot.x * rectTransform.rect.width,
-                rectTransform.pivot.y * rectTransform.rect.height);
+            Vector2 pivotOffset = new Vector2(
+                rectTransform.pivot.x * rectTransform.rect.width,
+                rectTransform.pivot.y * rectTransform.rect.height
+            );
 
-            // Локальная позиция = anchoredPosition - pivotOffset (если pivot не (0,0))
             Vector2 localPos = anchoredPosition - pivotOffset;
-
             return new Vector3(localPos.x, localPos.y + pointsRoot.offsetMin.y, 0f);
         }
     }
+}
+
+class BezierData
+{
+    public List<BezierPoint> Points = new();
+    public Color BezierColor;
 }

@@ -9,24 +9,24 @@ namespace TimeLine
 {
     public class DynamicTransformСomponent : MonoBehaviour
     {
-        public BoolParameter ComponentActive = new("Component active", true);
+        public BoolParameter ComponentActive = new("Component active", true, Color.gray);
         
         public Vector2Parameter DynamicXPosition = new("DynamicXPosition", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicXPositionActive = new("p-x", false);
+        public BoolParameter DynamicXPositionActive = new("p-x", false, Color.gray);
         public Vector2Parameter DynamicYPosition = new("DynamicYPosition", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicYPositionActive = new("p-y", false);
+        public BoolParameter DynamicYPositionActive = new("p-y", false, Color.gray);
         
         public Vector2Parameter DynamicXRotation = new("DynamicXRotation", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicXRotationActive = new("p-x", false);
+        public BoolParameter DynamicXRotationActive = new("p-x", false, Color.gray);
         public Vector2Parameter DynamicYRotation = new("DynamicYRotation", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicYRotationActive = new("p-y", false);
+        public BoolParameter DynamicYRotationActive = new("p-y", false, Color.gray);
         public Vector2Parameter DynamicZRotation = new("DynamicZRotation", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicZRotationActive = new("p-z", false);
+        public BoolParameter DynamicZRotationActive = new("p-z", false, Color.gray);
         
         public Vector2Parameter DynamicXScale = new("DynamicXScale", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicXScaleActive = new("p-x", false);
+        public BoolParameter DynamicXScaleActive = new("p-x", false, Color.gray);
         public Vector2Parameter DynamicYScale = new("DynamicYScale", "startValue", "speed", Vector2.zero);
-        public BoolParameter DynamicYScaleActive = new("p-y", false);
+        public BoolParameter DynamicYScaleActive = new("p-y", false, Color.gray);
 
         private TransformComponent _component;
         private GameEventBus _gameEventBus;

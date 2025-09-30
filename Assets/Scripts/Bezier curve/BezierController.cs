@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using EventBus;
 using NaughtyAttributes;
-using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
@@ -36,10 +34,11 @@ namespace TimeLine
         [SerializeField] private VerticalBezierPan verticalBezierPan;
         [Header("Logging")]
         [SerializeField] private string logFilePath = ""; // Укажите путь вручную, например: "C:/Temp/BezierController.log"
+        [SerializeField] private SelectFieldLineController selectFieldLineController;
 
         private TimeLineSettings _timeLineSettings;
         private TimeLineConverter _timeLineConverter;
-        private List<BezierPoint> keyframes = new();
+        private List<BezierPoint> _keyframes = new();
         private bool _active;
 
         private DiContainer _container;
@@ -134,7 +133,7 @@ namespace TimeLine
 
         private void Start()
         {
-            lineDrawer?.Clear();
+            lineDrawer?.ClearLines();
             EnsureLogDirectory();
 
             LogMessage("=== BezierController Started ===");
@@ -204,7 +203,7 @@ namespace TimeLine
             _active = active;
             bezierLineDrawer?.SetActive(active);
             Build();
-            foreach (var keyframe in keyframes)
+            foreach (var keyframe in _keyframes)
             {
                 if (keyframe != null)
                     keyframe.gameObject.SetActive(active);
@@ -246,6 +245,23 @@ namespace TimeLine
             return position;
         }
 
+        private void AddList(ref List<TreeNode> treeNodes, TreeNode node)
+        {
+            treeNodes.Add(node);
+
+            foreach (var child in node.Children)
+            {
+                if (child.Children.Count > 0)
+                {
+                    AddList(ref treeNodes, child);
+                }
+                else
+                {
+                    treeNodes.AddRange(node.Children);
+                }
+            }
+        }
+
         private void Build()
         {
             if (!_active || !gameObject.activeInHierarchy)
@@ -257,33 +273,61 @@ namespace TimeLine
             LogMessage("[Build] Starting rebuild...");
 
             // Освобождаем старые объекты
-            foreach (var keyframe in keyframes)
+            foreach (var keyframe in _keyframes)
             {
                 if (keyframe != null)
                     Destroy(keyframe.gameObject);
             }
-            keyframes.Clear();
+            _keyframes.Clear();
 
-            bezierLineDrawer?.Clear();
+            bezierLineDrawer?.ClearLines();
 
             if (treeViewUI == null || keyframeTrackStorage == null || _timeLineConverter == null)
             {
                 LogMessage("[Build] WARNING: Some dependencies are not assigned.");
                 return;
             }
-
-            foreach (var tree in treeViewUI.NodeObjects)
+            
+            lineDrawer.ClearBeziers();
+            
+            List<TreeNode> activeNodes = new List<TreeNode>();
+            
+            foreach (var tree in treeViewUI.AnimationLineController.Lines)
             {
                 if (tree?.LogicalNode == null) continue;
 
                 Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
+
+                // print(selectFieldLineController.CheckActive(tree.LogicalNode));
+
+                if (!activeNodes.Contains(tree.LogicalNode))
+                {
+                    print(activeNodes.Count);
+
+                    foreach (var node in activeNodes)
+                    {
+                        print(node.Name);
+                    }
+                    
+                    if (selectFieldLineController.CheckActive(tree.LogicalNode) == false)
+                    {
+                        continue;
+                    }
+
+                    print("AddRange");
+                    AddList(ref activeNodes, tree.LogicalNode);
+                }
+
+                
                 tracksaved = track;
                 if (track == null) continue;
 
+                List<BezierPoint> points = new List<BezierPoint>();
+                
                 foreach (var keyframeData in track.Keyframes)
                 {
                     if (keyframeData.GetData().GetValue() is not float value) continue;
-
+                    
                     BezierPoint point = _container.InstantiatePrefab(bizerPrefab, rootPoints)
                         .GetComponent<BezierPoint>();
 
@@ -292,8 +336,10 @@ namespace TimeLine
                         LogMessage("[Build] ERROR: Failed to instantiate BezierPoint prefab.");
                         continue;
                     }
+                    
+                    point.Setup(keyframeData, track.SortKeyframes);
 
-                    keyframes.Add(point);
+                    _keyframes.Add(point);
 
                     // Конвертируем тики в позицию по X
                     float positionX = _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Pan) + content.offsetMin.x;
@@ -306,13 +352,15 @@ namespace TimeLine
                     point.RectTransform.anchoredPosition = new Vector2(positionX, scrolledPositionY);
                     LogMessage($"[Build] Placed point at X: {positionX:F2}, Y: {scrolledPositionY:F2} for value: {value}");
 
-                    bezierLineDrawer?.AddPoint(point);
+                    points.Add(point);
                 }
+                
+                lineDrawer.AddPoints(points, track.AnimationColor);
             }
 
             bezierLineDrawer?.UpdateBezierCurve();
 
-            LogMessage($"[Build] Completed. Total points: {keyframes.Count}");
+            LogMessage($"[Build] Completed. Total points: {_keyframes.Count}");
         }
 
         // --- Логирование в файл ---
