@@ -42,9 +42,17 @@ namespace TimeLine
             _bezierDates.Clear();
         }
 
+        internal void SortPoints()
+        {
+            foreach (var data in _bezierDates)
+            {
+                data.Points.Sort((x, y) => x.BezierDragPoint._keyframe.Ticks.CompareTo(y.BezierDragPoint._keyframe.Ticks));
+            }
+        }
+
         private LineRenderer CreateLine(Color color)
         {
-            print("Линия");
+            // print("Линия");
             
             LineRenderer line = Instantiate(linePrefab, root);
             GradientColorKey[] colorKeys = new[] { new GradientColorKey(color, 0), new GradientColorKey(color, 1) };

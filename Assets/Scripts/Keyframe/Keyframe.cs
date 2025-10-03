@@ -5,11 +5,22 @@
     public class Keyframe
     {
         public double Ticks { get; set; }
+        
+        public double OutTangent { get; set; }
+        public double InTangent { get; set; }
+        public double InWeight { get; set; }
+        public double OutWeight { get; set; }
+        
         private AnimationData animationData;
 
-        public Keyframe(double ticks)
+        public Keyframe(double ticks, double outTangent = 0, double inTangent = 0, double inWeight = 0.5f, double outWeight = 0.5f)
         {
             this.Ticks = Mathf.Round((float)ticks);
+
+            OutTangent = outTangent;
+            InTangent = inTangent;
+            InWeight = inWeight;
+            OutWeight = outWeight;
         }
 
         public void AddData(AnimationData data)
@@ -27,7 +38,7 @@
 
         public Keyframe Clone()
         {
-            Keyframe clone = new Keyframe(Ticks);
+            Keyframe clone = new Keyframe(Ticks, OutTangent, InTangent, InWeight, OutWeight);
             clone.AddData(animationData.Clone());
             return clone;
         }

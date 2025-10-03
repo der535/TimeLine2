@@ -1,87 +1,208 @@
 ﻿using System;
+using TimeLine.Bezier_curve;
 using TimeLine.Installers;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Zenject;
 
 namespace TimeLine
 {
     public class BezierPoint : MonoBehaviour
     {
-        [SerializeField] private RectTransform point;         
-        [SerializeField] private RectTransform tangentLeft;         
-        [SerializeField] private RectTransform tangentRight;
+        [SerializeField] private RectTransform point;
         [SerializeField] private BezierDragPoint _bezierDragPoint;
+        [SerializeField] private BezierSelectPoint bezierSelectPoint;
+        [Space]
+        [SerializeField] private RectTransform tangentLeft;
+        [SerializeField] private RectTransform tangentLineLeft;
+        [SerializeField] private RectTransform tangentRight;
+        [SerializeField] private RectTransform tangentLineRight;
+
+        [SerializeField] private BezierPointTangleLineDrawer bezierPointTangleLineDrawer;
 
 
         public Action onValueChanged;
-        public RectTransform RectTransform  =>  point;
+        public RectTransform RectTransform => point;
+        public BezierDragPoint BezierDragPoint => _bezierDragPoint;
+        public BezierSelectPoint BezierSelectPoint => bezierSelectPoint;
 
-        private bool _isDraging;
-        private bool _isDragingTangleLeft;
-        private bool _isDragingTangleRight;
-        
         public Vector3 Point => point.anchoredPosition;
         public Vector3 TangentLeft => tangentLeft.anchoredPosition + point.anchoredPosition;
         public Vector3 TangentRight => tangentRight.anchoredPosition + point.anchoredPosition;
 
         private MainObjects _mainObjects;
-        
+        private Main _main;
+        private TimeLineSettings _timeLineSettings;
+
+        public Keyframe.Keyframe PrevKey;
+        public Keyframe.Keyframe NextKey;
+
         [Inject]
-        private void Construct(MainObjects mainObject)
+        private void Construct(MainObjects mainObject, Main main, TimeLineSettings timeLineSettings)
         {
             _mainObjects = mainObject;
+            _main = main;
+            _timeLineSettings = timeLineSettings;
         }
-        
-        public void Setup(Keyframe.Keyframe keyframe, Action sortKeyframes)
+
+        // private void Start()
+        // {
+        //     tangentLeft.gameObject.SetActive(false);
+        //     tangentLineLeft.gameObject.SetActive(false);
+        //     tangentRight.gameObject.SetActive(false);
+        //     tangentLineRight.gameObject.SetActive(false);
+        // }
+
+        public void Setup(
+            Keyframe.Keyframe keyframe,
+            Action sortKeyframes,
+            Keyframe.Keyframe prevKey = null,
+            Keyframe.Keyframe nextKey = null,
+            float pan = 100f,
+            float verticalScale = 50f)
         {
+            pan += _timeLineSettings.DistanceBetweenBeatLines;
+            
+            PrevKey = prevKey;
+            NextKey = nextKey;
+            
+            double currentTime = _main.TicksToSeconds(keyframe.Ticks);
+            double currentValue = keyframe.GetData().GetValue() is float val ? val : 0f;
+
+            // ---------- IN ----------
+            double inWeight = keyframe.InWeight;
+            double inTangent = keyframe.InTangent;
+
+            tangentLeft.gameObject.SetActive(prevKey != null);
+            tangentLineLeft.gameObject.SetActive(prevKey != null);
+            
+            tangentRight.gameObject.SetActive(nextKey != null);
+            tangentLineRight.gameObject.SetActive(nextKey != null);
+            
+            if (prevKey != null)
+            {
+                double prevTime = _main.TicksToSeconds(prevKey.Ticks);
+                double prevValue = prevKey.GetData().GetValue() is float pVal ? pVal : 0f;
+
+                double deltaTime = currentTime - prevTime;
+
+                // нормализованный вес -> абсолютное смещение по времени
+                double inTimeOffset = deltaTime * inWeight;
+                double inValueOffset = inTimeOffset * inTangent;
+
+                tangentLeft.anchoredPosition = new Vector2(
+                    -(float)(inTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    -(float)(inValueOffset * verticalScale)
+                );
+            }
+            else
+            {
+                tangentLeft.anchoredPosition = Vector2.zero;
+            }
+
+            // ---------- OUT ----------
+            double outWeight = keyframe.OutWeight;
+            double outTangent = keyframe.OutTangent;
+
+            if (nextKey != null)
+            {
+                double nextTime = _main.TicksToSeconds(nextKey.Ticks);
+                double nextValue = nextKey.GetData().GetValue() is float nVal ? nVal : 0f;
+
+                double deltaTime = nextTime - currentTime;
+
+                double outTimeOffset = deltaTime * outWeight;
+                double outValueOffset = outTimeOffset * outTangent;
+
+                tangentRight.anchoredPosition = new Vector2(
+                    (float)(outTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    (float)(outValueOffset * verticalScale)
+                );
+            }
+            else
+            {
+                tangentRight.anchoredPosition = Vector2.zero;
+            }
+
+            // Debug.Log($"[BezierPoint.Setup] key={keyframe} " +
+            //           $"InWeight={inWeight}, InTangent={inTangent}, tangentLeft={tangentLeft.anchoredPosition} " +
+            //           $"OutWeight={outWeight}, OutTangent={outTangent}, tangentRight={tangentRight.anchoredPosition}");
+
             _bezierDragPoint.Setup(keyframe, sortKeyframes);
-        }
-        
-        public void DragTangentLeftPoint(bool drag)
-        {
-            _isDragingTangleLeft = drag;
-        }
-        
-        public void DragTangentRightPoint(bool drag)
-        {
-            _isDragingTangleRight = drag;
+            bezierPointTangleLineDrawer.UpdatePosition();
         }
 
-        public void DragPoint(bool drag)
+
+        public void UpdatePosition(
+            Keyframe.Keyframe keyframe,
+            Keyframe.Keyframe prevKey = null,
+            Keyframe.Keyframe nextKey = null,
+            float pan = 100f,
+            float verticalScale = 50f)
         {
-            _isDraging = drag;
+            pan += _timeLineSettings.DistanceBetweenBeatLines;
+            
+            double currentTime = _main.TicksToSeconds(keyframe.Ticks);
+            double currentValue = keyframe.GetData().GetValue() is float val ? val : 0f;
+
+            // ---------- IN ----------
+            double inWeight = keyframe.InWeight;
+            double inTangent = keyframe.InTangent;
+            
+            tangentLeft.gameObject.SetActive(prevKey != null);
+            tangentLineLeft.gameObject.SetActive(prevKey != null);
+            
+            tangentRight.gameObject.SetActive(nextKey != null);
+            tangentLineRight.gameObject.SetActive(nextKey != null);
+
+            if (prevKey != null)
+            {
+                double prevTime = _main.TicksToSeconds(prevKey.Ticks);
+                double prevValue = prevKey.GetData().GetValue() is float pVal ? pVal : 0f;
+
+                double deltaTime = currentTime - prevTime;
+
+                // нормализованный вес -> абсолютное смещение по времени
+                double inTimeOffset = deltaTime * inWeight;
+                double inValueOffset = inTimeOffset * inTangent;
+
+                tangentLeft.anchoredPosition = new Vector2(
+                    -(float)(inTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    -(float)(inValueOffset * verticalScale)
+                );
+            }
+            else
+            {
+                tangentLeft.anchoredPosition = Vector2.zero;
+            }
+
+            // ---------- OUT ----------
+            double outWeight = keyframe.OutWeight;
+            double outTangent = keyframe.OutTangent;
+
+            if (nextKey != null)
+            {
+                double nextTime = _main.TicksToSeconds(nextKey.Ticks);
+                double nextValue = nextKey.GetData().GetValue() is float nVal ? nVal : 0f;
+
+                double deltaTime = nextTime - currentTime;
+
+                double outTimeOffset = deltaTime * outWeight;
+                double outValueOffset = outTimeOffset * outTangent;
+
+                tangentRight.anchoredPosition = new Vector2(
+                    (float)(outTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    (float)(outValueOffset * verticalScale)
+                );
+            }
+            else
+            {
+                tangentRight.anchoredPosition = Vector2.zero;
+            }
+
+            bezierPointTangleLineDrawer.UpdatePosition();
+            // Debug.Log($"[BezierPoint.Setup] key={keyframe} " +
+            //           $"InWeight={inWeight}, InTangent={inTangent}, tangentLeft={tangentLeft.anchoredPosition} " +
+            //           $"OutWeight={outWeight}, OutTangent={outTangent}, tangentRight={tangentRight.anchoredPosition}");
         }
-
-        // private Vector2 GetMousePosition()
-        // {
-        //     RectTransformUtility.ScreenPointToLocalPointInRectangle
-        //     (_mainObjects.CanvasRectTransform, Mouse.current.position.ReadValue(), _mainObjects.MainCamera,
-        //         out var localPoint);
-        //     return localPoint;
-        // }
-
-        // private void Update()
-        // {
-        //     if (_isDraging)
-        //     {
-        //         point.anchoredPosition = GetMousePosition();
-        //         onValueChanged?.Invoke();
-        //     }
-        //
-        //     if (_isDragingTangleLeft)
-        //     {
-        //         tangentLeft.anchoredPosition = GetMousePosition() - (Vector2)Point;
-        //         onValueChanged?.Invoke();
-        //         tangentRight.anchoredPosition = tangentLeft.anchoredPosition * -1;
-        //     }
-        //     
-        //     if (_isDragingTangleRight)
-        //     {
-        //         tangentRight.anchoredPosition = GetMousePosition() - (Vector2)Point;
-        //         onValueChanged?.Invoke();
-        //         tangentLeft.anchoredPosition = tangentRight.anchoredPosition * -1;
-        //     }
-        // }
     }
 }

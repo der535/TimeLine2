@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using EventBus;
 using NaughtyAttributes;
+using TimeLine;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
@@ -38,7 +39,7 @@ namespace TimeLine
 
         private TimeLineSettings _timeLineSettings;
         private TimeLineConverter _timeLineConverter;
-        private List<BezierPoint> _keyframes = new();
+        private List<BezierPointsGroup> groups = new();
         private bool _active;
 
         private DiContainer _container;
@@ -141,10 +142,10 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref ScrollBezier _) => Build());
-            _gameEventBus.SubscribeTo((ref PanBezier _) => Build());
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => UpdatePositions());
+            _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => UpdatePositions());
+            _gameEventBus.SubscribeTo((ref ScrollBezier _) => UpdatePositions());
+            _gameEventBus.SubscribeTo((ref PanBezier _) => UpdatePositions());
 
             // Обработка скролла — смещаем root по Y
             _gameEventBus.SubscribeTo((ref ScrollBezier scrollEvent) =>
@@ -184,6 +185,16 @@ namespace TimeLine
             });
         }
 
+        internal void SortPoints()
+        {
+            foreach (var group in groups)
+            {
+                group._keyframes.Sort((x, y) => 
+                    x.BezierDragPoint._keyframe.Ticks.CompareTo(
+                        y.BezierDragPoint._keyframe.Ticks));
+            }
+        }
+
         public void SetPosition(float position)
         {
             // Защита от NaN/Infinity
@@ -203,10 +214,11 @@ namespace TimeLine
             _active = active;
             bezierLineDrawer?.SetActive(active);
             Build();
-            foreach (var keyframe in _keyframes)
+            foreach (var group in groups)
             {
-                if (keyframe != null)
-                    keyframe.gameObject.SetActive(active);
+                foreach (var keyframe in group._keyframes)
+                    if (keyframe != null)
+                        keyframe.gameObject.SetActive(active);
             }
         }
 
@@ -273,12 +285,16 @@ namespace TimeLine
             LogMessage("[Build] Starting rebuild...");
 
             // Освобождаем старые объекты
-            foreach (var keyframe in _keyframes)
+            foreach (var group in groups)
             {
-                if (keyframe != null)
-                    Destroy(keyframe.gameObject);
+                foreach (var keyframe in group._keyframes)
+                {
+                    if (keyframe != null)
+                        Destroy(keyframe.gameObject);
+                }
             }
-            _keyframes.Clear();
+            
+            groups.Clear();
 
             bezierLineDrawer?.ClearLines();
 
@@ -314,7 +330,7 @@ namespace TimeLine
                         continue;
                     }
 
-                    print("AddRange");
+                    // print("AddRange");
                     AddList(ref activeNodes, tree.LogicalNode);
                 }
 
@@ -323,11 +339,12 @@ namespace TimeLine
                 if (track == null) continue;
 
                 List<BezierPoint> points = new List<BezierPoint>();
-                
-                foreach (var keyframeData in track.Keyframes)
+
+                for (var index = 0; index < track.Keyframes.Count; index++)
                 {
+                    var keyframeData = track.Keyframes[index];
                     if (keyframeData.GetData().GetValue() is not float value) continue;
-                    
+
                     BezierPoint point = _container.InstantiatePrefab(bizerPrefab, rootPoints)
                         .GetComponent<BezierPoint>();
 
@@ -336,32 +353,92 @@ namespace TimeLine
                         LogMessage("[Build] ERROR: Failed to instantiate BezierPoint prefab.");
                         continue;
                     }
-                    
-                    point.Setup(keyframeData, track.SortKeyframes);
 
-                    _keyframes.Add(point);
+                    Keyframe.Keyframe prevKey = index - 1 >= 0 ? track.Keyframes[index - 1] : null;
+                    Keyframe.Keyframe nextKey = index + 1 < track.Keyframes.Count ? track.Keyframes[index+1] : null;
+                    
+                    point.Setup(keyframeData, track.SortKeyframes, prevKey, nextKey, timeLineKeyframeScroll.Pan, verticalBezierPan.Pan);
 
                     // Конвертируем тики в позицию по X
-                    float positionX = _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Pan) + content.offsetMin.x;
+                    float positionX =
+                        _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Pan) +
+                        content.offsetMin.x;
 
                     // Позиция по Y: сначала получаем "чистую" позицию от value и пана, потом ДОБАВЛЯЕМ скролл
                     float scrollFactor = verticalPan.Pan;
                     float basePositionY = value * scrollFactor; // ← "чистая" позиция
-                    float scrolledPositionY = basePositionY + verticalScroll.VerticalScroll * scrollFactor; // ← добавляем скролл ОДИН РАЗ
+                    float scrolledPositionY =
+                        basePositionY + verticalScroll.VerticalScroll * scrollFactor; // ← добавляем скролл ОДИН РАЗ
 
                     point.RectTransform.anchoredPosition = new Vector2(positionX, scrolledPositionY);
-                    LogMessage($"[Build] Placed point at X: {positionX:F2}, Y: {scrolledPositionY:F2} for value: {value}");
+                    LogMessage(
+                        $"[Build] Placed point at X: {positionX:F2}, Y: {scrolledPositionY:F2} for value: {value}");
 
                     points.Add(point);
                 }
-                
+                groups.Add(new BezierPointsGroup
+                {
+                    _keyframes = points, _track = track
+                });
                 lineDrawer.AddPoints(points, track.AnimationColor);
             }
 
             bezierLineDrawer?.UpdateBezierCurve();
 
-            LogMessage($"[Build] Completed. Total points: {_keyframes.Count}");
+            LogMessage($"[Build] Completed. Total points: {groups.Count}");
         }
+        
+        public void UpdatePositions()
+        {
+            if (!_active || !gameObject.activeInHierarchy)
+            {
+                LogMessage("[UpdatePositions] Skipping: not active or inactive in hierarchy.");
+                return;
+            }
+
+            if (treeViewUI == null || keyframeTrackStorage == null || _timeLineConverter == null)
+            {
+                LogMessage("[UpdatePositions] WARNING: Some dependencies are not assigned.");
+                return;
+            }
+
+            // Обновляем позиции существующих точек
+            foreach (var group in groups)
+            {
+                for (int keyframe = 0; keyframe < group._keyframes.Count; keyframe++)
+                {
+                    var point = group._keyframes[keyframe];
+                    if (point == null || point.BezierDragPoint?._keyframe == null)
+                        continue;
+
+                    var keyframeData = point.BezierDragPoint._keyframe;
+                    if (keyframeData.GetData().GetValue() is not float value)
+                        continue;
+
+                    Keyframe.Keyframe prevKey = keyframe - 1 >= 0 ? group._keyframes[keyframe - 1].BezierDragPoint._keyframe : null;
+                    Keyframe.Keyframe nextKey = keyframe + 1 < group._keyframes.Count ? group._keyframes[keyframe + 1].BezierDragPoint._keyframe : null;
+                    
+                    point.UpdatePosition(keyframeData, prevKey, nextKey, timeLineKeyframeScroll.Pan, verticalBezierPan.Pan);
+                    
+                    // Обновляем X-позицию
+                    float positionX = _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Pan) +
+                                      content.offsetMin.x;
+
+                    // Обновляем Y-позицию
+                    float scrollFactor = verticalPan.Pan;
+                    float basePositionY = value * scrollFactor;
+                    float scrolledPositionY = basePositionY + verticalScroll.VerticalScroll * scrollFactor;
+
+                    point.RectTransform.anchoredPosition = new Vector2(positionX, scrolledPositionY);
+                }
+            }
+
+            // Перерисовываем кривые
+            lineDrawer?.UpdateBezierCurve(); // или bezierLineDrawer?.UpdateBezierCurve(), в зависимости от логики
+            LogMessage($"[UpdatePositions] Updated positions for {groups.Count} points.");
+        }
+        
+     
 
         // --- Логирование в файл ---
         private void EnsureLogDirectory()
@@ -396,4 +473,10 @@ namespace TimeLine
             LogMessage("=== BezierController Destroyed ===");
         }
     }
+}
+
+class BezierPointsGroup
+{
+    public List<BezierPoint> _keyframes = new(); 
+    public Track _track;
 }

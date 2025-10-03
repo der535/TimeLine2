@@ -23,27 +23,27 @@ namespace TimeLine
         {
             if (node == null)
             {
-                print("CheckActive: node is null → returning false");
+                // print("CheckActive: node is null → returning false");
                 return false;
             }
 
-            print($"CheckActive: checking node '{node.Name}'");
+            // print($"CheckActive: checking node '{node.Name}'");
 
             if (_fieldLines.Count == 0)
             {
-                print("CheckActive: _fieldLines is empty → returning true (all nodes considered active)");
+                // print("CheckActive: _fieldLines is empty → returning true (all nodes considered active)");
                 return true;
             }
 
             bool isNodeInFieldLines = _fieldLines.Any(field => field.Node == node);
             if (isNodeInFieldLines)
             {
-                print($"CheckActive: node '{node.Name}' is directly in _fieldLines → returning true");
+                // print($"CheckActive: node '{node.Name}' is directly in _fieldLines → returning true");
                 return true;
             }
             else
             {
-                print($"CheckActive: node '{node.Name}' is NOT in _fieldLines → checking children...");
+                // print($"CheckActive: node '{node.Name}' is NOT in _fieldLines → checking children...");
                 // bool result = CheckActiveChildren(node);
                 // print($"CheckActive: result for node '{node.Name}' after checking children = {result}");
                 return false;

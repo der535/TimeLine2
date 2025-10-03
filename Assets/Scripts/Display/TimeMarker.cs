@@ -1,9 +1,6 @@
-using System;
 using System.Globalization;
-using TimeLine.Installers;
 using TMPro;
 using UnityEngine;
-using Zenject;
 
 namespace TimeLine
 {
