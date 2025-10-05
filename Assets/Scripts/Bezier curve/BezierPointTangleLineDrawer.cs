@@ -20,7 +20,7 @@ namespace TimeLine
         [Button]
         internal void UpdatePosition()
         {
-            print("Update tangle");
+            // print("Update tangle");
             // === Левая линия ===
             var leftDir = leftTangent.anchoredPosition; // это UnityEngine.Vector2
             leftLine.anchoredPosition = leftDir / 2f;

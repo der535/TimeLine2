@@ -1,4 +1,5 @@
-﻿using UnityEngine.UIElements;
+﻿using TimeLine.TimeLine;
+using UnityEngine.UIElements;
 
 namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 {
@@ -31,10 +32,21 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
             }
         }
-        public override AnimationData Interpolate(AnimationData other, double t)
+        public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next)
         {
-            XScaleData otherPos = (XScaleData)other;
-            return new XScaleData(Mathf.Lerp(value, otherPos.value, (float)t));
+            if (other is not XScaleData otherPos)
+                throw new System.ArgumentException("Interpolation requires another XPositionData.");
+
+            float localT = (float)t;
+            float interpolatedValue = TimeLineConverter.Instance.Interpolate(
+                value,
+                otherPos.value,
+                current,
+                next,
+                localT
+            );
+
+            return new XScaleData(interpolatedValue);
         }
 
         public override void Apply(GameObject target)

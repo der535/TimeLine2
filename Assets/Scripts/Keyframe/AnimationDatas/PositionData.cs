@@ -29,7 +29,7 @@
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a Vector3");
             }
         }
-        public override AnimationData Interpolate(AnimationData other, double t)
+        public override AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next)
         {
             PositionData otherPos = (PositionData)other;
             return new PositionData(Vector3.Lerp(position, otherPos.position, (float)t));

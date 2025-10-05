@@ -1,4 +1,6 @@
-﻿namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
+﻿using TimeLine.TimeLine;
+
+namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 {
     using UnityEngine;
 
@@ -30,10 +32,21 @@
             }
         }
 
-        public override AnimationData Interpolate(AnimationData other, double t)
+        public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next)
         {
-            YRotationData otherPos = (YRotationData)other;
-            return new YRotationData(Mathf.Lerp(value, otherPos.value, (float)t));
+            if (other is not YRotationData otherPos)
+                throw new System.ArgumentException("Interpolation requires another XPositionData.");
+
+            float localT = (float)t;
+            float interpolatedValue = TimeLineConverter.Instance.Interpolate(
+                value,
+                otherPos.value,
+                current,
+                next,
+                localT
+            );
+
+            return new YRotationData(interpolatedValue);
         }
 
         public override void Apply(GameObject target)

@@ -9,7 +9,7 @@ namespace TimeLine
 {
     public class BezierSelectPointsController : MonoBehaviour
     {
-        List<BezierPoint> selectedPoints = new List<BezierPoint>();
+        public List<BezierPoint> selectedPoints = new List<BezierPoint>();
         
         private GameEventBus _gameEventBus;
 
@@ -27,15 +27,34 @@ namespace TimeLine
             
             _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
             {
-                if(selectedPoints.Contains(data.BezierPoint)) return;
-                else
+                bool isShiftHold = UnityEngine.Input.GetKey(KeyCode.LeftShift);
+                var point = data.BezierPoint;
+
+                if (!selectedPoints.Contains(point) && !isShiftHold)
                 {
                     Deselect();
-                    selectedPoints.Add(data.BezierPoint);
+                    selectedPoints.Add(point);
+                }
+
+                if (isShiftHold && !selectedPoints.Contains(point))
+                {
+                    selectedPoints.Add(point);
                 }
             });
         }
 
+        private void Deselect(BezierPoint selectedPoint = null)
+        {
+            if (selectedPoints == null || selectedPoints.Count <= 0) return;
+            foreach (var point in selectedPoints)
+            {
+                if(selectedPoint == point) continue;
+                    point.BezierSelectPoint.Deselect();
+            }
+            
+            selectedPoints.Clear();
+        }
+        
         public void Deselect()
         {
             if (selectedPoints == null || selectedPoints.Count <= 0) return;

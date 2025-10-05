@@ -44,14 +44,6 @@ namespace TimeLine
             _timeLineSettings = timeLineSettings;
         }
 
-        // private void Start()
-        // {
-        //     tangentLeft.gameObject.SetActive(false);
-        //     tangentLineLeft.gameObject.SetActive(false);
-        //     tangentRight.gameObject.SetActive(false);
-        //     tangentLineRight.gameObject.SetActive(false);
-        // }
-
         public void Setup(
             Keyframe.Keyframe keyframe,
             Action sortKeyframes,
@@ -140,6 +132,8 @@ namespace TimeLine
             float verticalScale = 50f)
         {
             pan += _timeLineSettings.DistanceBetweenBeatLines;
+            PrevKey = prevKey;
+            NextKey = nextKey;
             
             double currentTime = _main.TicksToSeconds(keyframe.Ticks);
             double currentValue = keyframe.GetData().GetValue() is float val ? val : 0f;

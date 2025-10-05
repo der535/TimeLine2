@@ -119,7 +119,7 @@ namespace TimeLine
                     float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Pan);
                     float finalPositionX = roundedRelativePosition + rootOffset;
 
-                    print(rectTransform);
+                    // print(rectTransform);
                     
                     rectTransform.anchoredPosition = new Vector2(finalPositionX, rectTransform.anchoredPosition.y);
 
@@ -143,7 +143,6 @@ namespace TimeLine
                 #endregion
 
                 _bezierLineDrawer.SortPoints();
-                print(_bezierController);
                 _bezierController.SortPoints();
                 _bezierController.UpdatePositions();
                 _bezierLineDrawer.UpdateBezierCurve();
@@ -152,56 +151,64 @@ namespace TimeLine
 
             if (_isDraggingTangleRight)
             {
-
-                
-                // Вычисляем новую позицию без учета смещения корня
                 Vector2 position = tangentRight.anchoredPosition - (tangentRight.anchoredPosition - GetMousePosition(rectTransform));
+
+                // Ограничение минимального X
+                if (position.x < 0.1f) 
+                    position = new Vector2(0.1f, position.y);
+
+                print(bezierPoint.NextKey.Ticks);
                 
-                if(position.x < 0.1f) 
-                    position = new Vector2(0.1f,position.y);
-                
+                // 🔒 Ограничение максимального X, чтобы weight не превышал 1
+                double nextTimeDelta = _timeLineConverter.TicksToSeconds(bezierPoint.NextKey.Ticks - _keyframe.Ticks);
+                float maxTangentTime = (float)nextTimeDelta; // в секундах
+                float maxTangentX = maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicDataSo.bpm);
+
+                if (position.x > maxTangentX)
+                    position = new Vector2(maxTangentX, position.y);
+
                 tangentRight.anchoredPosition = position;
 
                 float tangleValue = tangentRight.anchoredPosition.y / _verticalBezierPan.Pan;
                 float tangleTime = (tangentRight.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicDataSo.bpm);
-                
-                double nextTimeDelta = _timeLineConverter.TicksToSeconds(bezierPoint.NextKey.Ticks - _keyframe.Ticks);
-                double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
 
+                double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
                 float weight = (float)(tangleTimeDelta / nextTimeDelta);
 
                 _keyframe.OutTangent = tangleValue / tangleTime;
-                _keyframe.OutWeight = weight; 
-                
+                _keyframe.OutWeight = Mathf.Clamp01(weight); // всё равно ограничиваем, на всякий случай
+
                 _bezierLineDrawer.UpdateBezierCurve();
                 bezierPointTangleLineDrawer.UpdatePosition();
             }
             
             if (_isDraggingTangleLeft)
             {
-
-                
-                print(tangentLeft.anchoredPosition);
-                
-                // Вычисляем новую позицию без учета смещения корня
                 Vector2 position = tangentLeft.anchoredPosition - (tangentLeft.anchoredPosition - GetMousePosition(rectTransform));
-                
-                if(position.x > -0.1f) 
+
+                // Ограничение максимального X (т.к. отрицательный)
+                if (position.x > -0.1f) 
                     position = new Vector2(-0.1f, position.y);
-                
+
+                // 🔒 Ограничение минимального X, чтобы weight не был больше 1
+                double prevTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks - bezierPoint.PrevKey.Ticks);
+                float maxTangentTime = (float)prevTimeDelta; // в секундах
+                float maxTangentX = -maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicDataSo.bpm);
+
+                if (position.x < maxTangentX)
+                    position = new Vector2(maxTangentX, position.y);
+
                 tangentLeft.anchoredPosition = position;
 
                 float tangleValue = tangentLeft.anchoredPosition.y / _verticalBezierPan.Pan;
                 float tangleTime = (tangentLeft.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicDataSo.bpm);
-                
-                double prevTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks - bezierPoint.PrevKey.Ticks);
-                double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
 
+                double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
                 float weight = (float)(tangleTimeDelta / prevTimeDelta);
 
                 _keyframe.InTangent = tangleValue / tangleTime;
-                _keyframe.InWeight = Math.Abs(weight); 
-                
+                _keyframe.InWeight = Mathf.Clamp01(Math.Abs(weight));
+
                 _bezierLineDrawer.UpdateBezierCurve();
                 bezierPointTangleLineDrawer.UpdatePosition();
             }

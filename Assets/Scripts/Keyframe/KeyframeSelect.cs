@@ -29,7 +29,6 @@ namespace TimeLine.Keyframe
         public void SelectColor(bool selected)
         {
             image.color = selected ? new Color(1f, 0.3387191f, 0f) : Color.white;
-
         }
     }
 }

@@ -4,7 +4,7 @@
 
     public abstract class AnimationData
     {
-        public abstract AnimationData Interpolate(AnimationData other, double t);
+        public abstract AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next);
         public abstract void Apply(GameObject target);
         
         // Добавленный абстрактный метод для клонирования

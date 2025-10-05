@@ -115,6 +115,7 @@ namespace TimeLine
                 field.SelectFieldLine.Deselect();
             }
             _fieldLines.Clear();
+            _eventBus.Raise(new DeselectFieldLineEvent());
         }
     }
 }

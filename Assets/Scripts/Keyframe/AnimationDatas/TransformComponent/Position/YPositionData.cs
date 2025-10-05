@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TimeLine.TimeLine;
+using UnityEngine;
 
 namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Position
 {
@@ -31,10 +32,21 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Position
             }
         }
 
-        public override AnimationData Interpolate(AnimationData other, double t)
+        public override AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next)
         {
-            YPositionData otherPos = (YPositionData)other;
-            return new YPositionData(Mathf.Lerp(value, otherPos.value, (float)t));
+            if (other is not YPositionData otherPos)
+                throw new System.ArgumentException("Interpolation requires another XPositionData.");
+
+            float localT = (float)t;
+            float interpolatedValue = TimeLineConverter.Instance.Interpolate(
+                value,
+                otherPos.value,
+                current,
+                next,
+                localT
+            );
+
+            return new YPositionData(interpolatedValue);
         }
 
         public override void Apply(GameObject target)

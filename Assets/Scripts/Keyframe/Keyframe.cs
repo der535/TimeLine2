@@ -50,7 +50,7 @@
 
             if (currentData != null && nextData != null)
             {
-                currentData.Interpolate(nextData, t).Apply(target);
+                currentData.Interpolate(nextData, t, this,next).Apply(target);
             }
             else if (currentData != null)
             {

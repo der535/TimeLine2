@@ -29,7 +29,7 @@
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a Quaternion");
             }
         }
-        public override AnimationData Interpolate(AnimationData other, double t)
+        public override AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next)
         {
             RotationData otherRot = (RotationData)other;
             return new RotationData(Quaternion.Lerp(rotation, otherRot.rotation, (float)t));

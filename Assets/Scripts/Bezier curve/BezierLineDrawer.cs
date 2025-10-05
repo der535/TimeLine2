@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Linq; // Добавьте это для использования LINQ
+using System.Linq;
 using NaughtyAttributes;
 using TimeLine;
 using UnityEngine;
@@ -9,24 +9,22 @@ namespace TimeLine
     [RequireComponent(typeof(RectTransform))]
     public class BezierLineDrawer : MonoBehaviour
     {
-        private List<BezierData> _bezierDates = new();
-
         [SerializeField, Range(0f, 10f)] private float value;
-
-        [Header("Визуализация")] [SerializeField]
-        private int lineResolution = 30;
-
+        [Header("Визуализация")] 
+        [SerializeField]  private int lineResolution = 30;
         [SerializeField] private float lineWidth = 0.1f;
         [SerializeField] private RectTransform pointsRoot;
-        [Space] [SerializeField] private LineRenderer linePrefab;
+        [Space]
+        [SerializeField] private BezierCurve curvePrefab;
         [SerializeField] private RectTransform root;
+        [Space] 
+        [SerializeField] private List<BezierCurve> bezierLines;
+        
+        private List<BezierData> _bezierDates = new();
 
-        [Space] [SerializeField] private List<LineRenderer> bezierLines;
 
         internal void ClearLines()
         {
-            // print("Очистка");
-
             foreach (var line in bezierLines.ToArray())
             {
                 bezierLines.Remove(line);
@@ -34,7 +32,6 @@ namespace TimeLine
             }
 
             bezierLines.Clear();
-            // print(bezierLines.Count);
         }
 
         internal void ClearBeziers()
@@ -48,18 +45,6 @@ namespace TimeLine
             {
                 data.Points.Sort((x, y) => x.BezierDragPoint._keyframe.Ticks.CompareTo(y.BezierDragPoint._keyframe.Ticks));
             }
-        }
-
-        private LineRenderer CreateLine(Color color)
-        {
-            // print("Линия");
-            
-            LineRenderer line = Instantiate(linePrefab, root);
-            GradientColorKey[] colorKeys = new[] { new GradientColorKey(color, 0), new GradientColorKey(color, 1) };
-            Gradient gradient = new Gradient { colorKeys = colorKeys };
-            line.colorGradient = gradient;
-            bezierLines.Add(line);
-            return line;
         }
 
         public void AddPoints(List<BezierPoint> points, Color bezierColor)
@@ -89,23 +74,16 @@ namespace TimeLine
         [Button]
         internal void UpdateBezierCurve()
         {
-            // print("UpdateBezierCurve");
-            
             ClearLines();
-
-            // print(_bezierDates.Count);
-
-            
-            // print(_bezierDates.Count);
 
             foreach (var bezierData in _bezierDates)
             {
                 if (bezierData.Points.Count < 2) continue;
 
                 int totalPoints = (bezierData.Points.Count - 1) * lineResolution + 1;
-                LineRenderer line = CreateLine(bezierData.BezierColor);
-                line.positionCount = totalPoints;
 
+                Vector2[] points = new Vector2[totalPoints];
+                
                 int index = 0;
                 for (int i = 0; i < bezierData.Points.Count - 1; i++)
                 {
@@ -125,33 +103,22 @@ namespace TimeLine
                             end.Point,
                             t);
 
-                        line.SetPosition(index++, RectTransformToLineRendererPosition(anchoredPos));
+                        points[index++] = anchoredPos;
                     }
                 }
 
-                // Защита для последней точки
+                BezierCurve curve = Instantiate(curvePrefab, root);
+                curve.Setup(lineWidth, bezierData.BezierColor);
+                
                 if (bezierData.Points[^1] != null)
                 {
                     Vector2 lastAnchoredPos = bezierData.Points[^1].Point;
-                    line.SetPosition(totalPoints - 1, RectTransformToLineRendererPosition(lastAnchoredPos));
+                    points[totalPoints - 1] = lastAnchoredPos;
                 }
+                
+                curve.UpdatePoints(points);
+                bezierLines.Add(curve);
             }
-            
-
-        }
-
-        private Vector3 RectTransformToLineRendererPosition(Vector2 anchoredPosition)
-        {
-            if (pointsRoot == null) return anchoredPosition;
-
-            RectTransform rectTransform = (RectTransform)transform;
-            Vector2 pivotOffset = new Vector2(
-                rectTransform.pivot.x * rectTransform.rect.width,
-                rectTransform.pivot.y * rectTransform.rect.height
-            );
-
-            Vector2 localPos = anchoredPosition - pivotOffset;
-            return new Vector3(localPos.x, localPos.y + pointsRoot.offsetMin.y, 0f);
         }
     }
 }
@@ -159,5 +126,6 @@ namespace TimeLine
 class BezierData
 {
     public List<BezierPoint> Points = new();
+    public BezierCurve BezierCurve;
     public Color BezierColor;
 }

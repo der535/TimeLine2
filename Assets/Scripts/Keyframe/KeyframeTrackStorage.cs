@@ -4,6 +4,7 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -14,6 +15,8 @@ namespace TimeLine.Keyframe
         private List<TrackData> tracks = new();
 
         private GameEventBus _gameEventBus;
+        
+        [SerializeField] private AnimationCurve curve;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus)
@@ -29,10 +32,19 @@ namespace TimeLine.Keyframe
         [Button]
         void PrintTracks()
         {
-            foreach (var VARIABLE in tracks)
+            curve.ClearKeys();
+            foreach (var k in tracks[0].Track.Keyframes)
             {
-                print(VARIABLE.Track.TrackName);
-                print(VARIABLE.Track.Keyframes.Count);
+                UnityEngine.Keyframe key = new UnityEngine.Keyframe();
+                key.weightedMode = WeightedMode.Both;
+                key.outTangent = (float)k.OutTangent;
+                key.inTangent = (float)k.InTangent;
+                key.inWeight = (float)k.InWeight;
+                key.outWeight = (float)k.OutWeight;
+                if (k.GetData().GetValue() is float value)
+                    key.value = value;
+                key.time = (float)TimeLineConverter.Instance.TicksToSeconds(k.Ticks);
+                curve.AddKey(key);
             }
         }
 

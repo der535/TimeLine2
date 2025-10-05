@@ -405,7 +405,6 @@ GameObject:
   - component: {fileID: 5559327960695461642}
   - component: {fileID: 2722263536139675259}
   - component: {fileID: 2908827350402443030}
-  - component: {fileID: 6563572684787720947}
   m_Layer: 5
   m_Name: right tangle (1)
   m_TagString: Untagged
@@ -470,51 +469,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &6563572684787720947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7368903868259489382}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 2
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 3921251063939173596}
-          m_TargetAssemblyTypeName: TimeLine.BezierDragPoint, Assembly-CSharp
-          m_MethodName: DragTangentRightPoint
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
-          m_CallState: 2
-  - eventID: 3
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 3921251063939173596}
-          m_TargetAssemblyTypeName: TimeLine.BezierDragPoint, Assembly-CSharp
-          m_MethodName: DragTangentRightPoint
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
 --- !u!1 &8487228881618380446
 GameObject:
   m_ObjectHideFlags: 0
@@ -526,7 +480,6 @@ GameObject:
   - component: {fileID: 3123433460701911165}
   - component: {fileID: 2360368826417454113}
   - component: {fileID: 8314564568871476557}
-  - component: {fileID: 7564179537024885148}
   m_Layer: 5
   m_Name: right tangle (1)
   m_TagString: Untagged
@@ -591,51 +544,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7564179537024885148
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8487228881618380446}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 2
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 3921251063939173596}
-          m_TargetAssemblyTypeName: TimeLine.BezierDragPoint, Assembly-CSharp
-          m_MethodName: DragTangentRightPoint
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
-          m_CallState: 2
-  - eventID: 3
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 3921251063939173596}
-          m_TargetAssemblyTypeName: TimeLine.BezierDragPoint, Assembly-CSharp
-          m_MethodName: DragTangentRightPoint
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
 --- !u!1 &8650936645688995517
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using EventBus;
-using NaughtyAttributes;
 using TimeLine;
+using TimeLine.EventBus.Events.Grid;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
@@ -36,6 +36,7 @@ namespace TimeLine
         [Header("Logging")]
         [SerializeField] private string logFilePath = ""; // Укажите путь вручную, например: "C:/Temp/BezierController.log"
         [SerializeField] private SelectFieldLineController selectFieldLineController;
+        [SerializeField] private BezierSelectPointsController selectPointsController;
 
         private TimeLineSettings _timeLineSettings;
         private TimeLineConverter _timeLineConverter;
@@ -60,13 +61,12 @@ namespace TimeLine
 
         private void Update()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.J))
+            if (UnityEngine.Input.GetKeyDown(KeyCode.F))
             {
                 Focus();
             }
         }
-
-        [Button]
+        
         private void Focus()
         {
             float maxTime = -1;
@@ -74,12 +74,12 @@ namespace TimeLine
             float maxValue = float.MinValue;
             float minValue = float.MaxValue;
             
-            foreach (var keyframe in tracksaved.Keyframes)
+            foreach (var keyframe in selectPointsController.selectedPoints)
             {
-                if(keyframe.Ticks > maxTime) maxTime = (float)keyframe.Ticks;
-                if(keyframe.Ticks < minTime) minTime = (float)keyframe.Ticks;
-                if(keyframe.GetData().GetValue() is float value && value > maxValue) maxValue = value;
-                if(keyframe.GetData().GetValue() is float value2 && value2 < minValue) minValue = value2;
+                if(keyframe.BezierDragPoint._keyframe.Ticks > maxTime) maxTime = (float)keyframe.BezierDragPoint._keyframe.Ticks;
+                if(keyframe.BezierDragPoint._keyframe.Ticks < minTime) minTime = (float)keyframe.BezierDragPoint._keyframe.Ticks;
+                if(keyframe.BezierDragPoint._keyframe.GetData().GetValue() is float value && value > maxValue) maxValue = value;
+                if(keyframe.BezierDragPoint._keyframe.GetData().GetValue() is float value2 && value2 < minValue) minValue = value2;
             }
             
             // print(maxTime);
@@ -123,11 +123,11 @@ namespace TimeLine
             var positionTwo = maxValue * targetHeight;
             
             var positionOffset = positionTwo - positionOne;
-            
-            print(positionOne);
-            print(positionTwo);
-            print(positionOffset);
-            print(-(positionOffset / 2 + positionOne));
+            //
+            // print(positionOne);
+            // print(positionTwo);
+            // print(positionOffset);
+            // print(-(positionOffset / 2 + positionOne));
             
             SetPosition(-(positionOffset / 2 + positionOne));
         }
@@ -142,6 +142,12 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref SelectFieldLineEvent _) => Build(), -1);
+            _gameEventBus.SubscribeTo((ref DeselectFieldLineEvent _) =>
+            {
+                print("deselected field line");
+                Build();
+            });
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollBezier _) => UpdatePositions());
@@ -329,8 +335,7 @@ namespace TimeLine
                     {
                         continue;
                     }
-
-                    // print("AddRange");
+                    
                     AddList(ref activeNodes, tree.LogicalNode);
                 }
 
@@ -438,8 +443,6 @@ namespace TimeLine
             LogMessage($"[UpdatePositions] Updated positions for {groups.Count} points.");
         }
         
-     
-
         // --- Логирование в файл ---
         private void EnsureLogDirectory()
         {

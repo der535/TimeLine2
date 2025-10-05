@@ -20,7 +20,7 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
         }
 
-        void Start()
+        private void Start()
         {
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(Setup);
         }
