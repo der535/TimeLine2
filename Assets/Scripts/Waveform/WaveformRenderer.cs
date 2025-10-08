@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿using EventBus;
+using UnityEngine;
 using UnityEngine.UI;
 using NaughtyAttributes;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
+using Zenject;
 
 [ExecuteInEditMode]
 public class WaveformRenderer : MonoBehaviour
@@ -17,22 +20,32 @@ public class WaveformRenderer : MonoBehaviour
     private RawImage[] _segmentImages;
     private float[] _cachedSamples;
     private Color _lastColor; // Для отслеживания изменений цвета
+    
+    private GameEventBus _gameEventBus;
+
+    [Inject]
+    private void Construct(GameEventBus eventBus)
+    {
+        _gameEventBus = eventBus;
+    }
+    
+    private void Awake()
+    {
+        _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
+        {
+            Init();
+        }));
+    }
 
     [Button]
-    void Start()
+    void Init()
     {
         InitializeSegments();
         CacheFullAudioData();
         GenerateWaveform();
+        print("InitializeSegments");
         _lastColor = waveColor; // Инициализируем последний цвет
     }
-
-    // void OnValidate()
-    // {
-    //     InitializeSegments();
-    //     CacheFullAudioData();
-    //     GenerateWaveform();
-    // }
 
     void Update()
     {
@@ -46,6 +59,7 @@ public class WaveformRenderer : MonoBehaviour
 
     private void InitializeSegments()
     {
+        
         if (segments == null || segments.Length == 0) return;
 
         if (_segmentImages == null || _segmentImages.Length != segments.Length)
@@ -105,6 +119,7 @@ public class WaveformRenderer : MonoBehaviour
 
     private void CacheFullAudioData()
     {
+        print(source.clip);
         if (source.clip == null) return;
         
         _cachedSamples = new float[source.clip.samples * source.clip.channels];

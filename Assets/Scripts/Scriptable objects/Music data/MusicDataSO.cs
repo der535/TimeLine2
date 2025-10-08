@@ -1,7 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Default", menuName = "ScriptableObjects/Music data", order = 1)]
-public class MusicDataSO : ScriptableObject
+public class MusicData
 {
     public string musicName;
     public string authorName;

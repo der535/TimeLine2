@@ -38,5 +38,17 @@ namespace TimeLine.CustomInspector.Logic.Parameter
             _xName = xName;
             _yName = yName;
         }
+        public override object GetValue() => _value;
+        public override void SetValue(object value)
+        {
+            if (value is Vector2 vectorValue)
+            {
+                Value = vectorValue; // используем свойство, чтобы триггернуть OnValueChanged
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot assign {value?.GetType()} to {_value.GetType().Name}");
+            }
+        }
     }
 }

@@ -3,13 +3,15 @@ using TimeLine.EventBus.Events.TimeLine;
 using UnityEngine;
 using Zenject;
 using System;
+using System.Collections;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.TimeLine;
+using UnityEngine.Networking;
 
 namespace TimeLine
 {
     public class Main : MonoBehaviour
     {
-        [SerializeField] private MusicDataSO musicData;
         [SerializeField] private float offset; // in seconds
         [Space]
         [SerializeField] private AudioSource audioSource;
@@ -18,7 +20,7 @@ namespace TimeLine
         internal const double TICKS_PER_BEAT = 96.0; // 96 ticks per quarter note
         private const double SECONDS_IN_MINUTE = 60.0;
         
-        public MusicDataSO MusicDataSo => musicData;
+        public MusicData MusicDataSo;
         private TimeLineConverter _timeLineConverter;
         
         public double TicksCurrentTime()
@@ -46,7 +48,32 @@ namespace TimeLine
 
         private void Awake()
         {
-            audioSource.clip = musicData.music;
+            MusicDataSo = new MusicData();
+            _gameEventBus.SubscribeTo<OpenEditorEvent>(((ref OpenEditorEvent data) =>
+            {
+                MusicDataSo.bpm = data.LevelInfo.bpm;
+                StartCoroutine(LoadAudioClip($"{Application.persistentDataPath}/Levels/{ data.LevelInfo.levelName}/{data.LevelInfo.songName}"));
+            }));
+        }
+        
+        IEnumerator LoadAudioClip(string filePath)
+        {
+            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(filePath, AudioType.MPEG))
+            {
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.Success)
+                {
+                    AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+                    audioSource.clip = clip;
+                    MusicDataSo.music = clip;
+                    _gameEventBus.Raise(new MusicLoadedEvent());
+                }
+                else
+                {
+                    Debug.LogError("Ошибка загрузки аудио: " + www.error);
+                }
+            }
         }
         
         public float Offset() => offset * _timeLineSettings.DistanceBetweenBeatLines;

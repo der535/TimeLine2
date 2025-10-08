@@ -2,9 +2,11 @@ using System;
 using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.Input;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
 using UnityEngine;
 using Zenject;
+using OldPanEvent = TimeLine.EventBus.Events.Input.OldPanEvent;
 
 namespace TimeLine.Waveform
 {
@@ -49,12 +51,16 @@ namespace TimeLine.Waveform
             _gameEventBus.SubscribeTo((ref OldPanEvent data) => BuildWaveForm(), -2);
             _gameEventBus.SubscribeTo((ref PanEvent data) => BuildWaveForm(), -2);
             _gameEventBus.SubscribeTo((ref ScrollTimeLineEvent data) => BuildWaveForm(), -2);
-            BuildWaveForm();
+            _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
+            {
+                BuildWaveForm();
+            }));
         }
         
-        [Button]
         private void BuildWaveForm()
         {
+            if(_main.MusicDataSo.music == null) return;
+            
             if (toggle)
                 waveformRect.sizeDelta =
                     new Vector2(

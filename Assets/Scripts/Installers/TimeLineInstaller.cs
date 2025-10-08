@@ -1,4 +1,6 @@
+using System;
 using EventBus;
+using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Input;
 using TimeLine.Keyframe;
@@ -43,6 +45,9 @@ namespace TimeLine.Installers
         [SerializeField] private VerticalBezierPan verticalBezierPan;
         [SerializeField] private BezierLineDrawer bezierLineDrawer;
         [SerializeField] private BezierController bezierController;
+        [SerializeField] private SelectSpriteController selectSpriteController;
+        [SerializeField] private SelectColorContoller selectColorContoller;
+        [SerializeField] private CollidersPrefab collidersPrefab;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -81,6 +86,9 @@ namespace TimeLine.Installers
             Container.Bind<VerticalBezierPan>().FromInstance(verticalBezierPan);
             Container.Bind<BezierLineDrawer>().FromInstance(bezierLineDrawer);
             Container.Bind<BezierController>().FromInstance(bezierController).AsSingle();
+            Container.Bind<SelectSpriteController>().FromInstance(selectSpriteController).AsSingle();
+            Container.Bind<SelectColorContoller>().FromInstance(selectColorContoller).AsSingle();
+            Container.Bind<CollidersPrefab>().FromInstance(collidersPrefab).AsSingle();
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();
@@ -94,4 +102,10 @@ namespace TimeLine.Installers
             Container.Bind<Main>().FromInstance(main).AsSingle();
         }
     }
+}
+
+[Serializable]
+class CollidersPrefab
+{
+    public BoxCollider2DOutline BoxCollider2DPrefab;
 }

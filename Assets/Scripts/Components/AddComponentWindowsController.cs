@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
-using Unity.Multiplayer.Center.Common;
 using UnityEngine;
 using Zenject;
 
@@ -14,7 +13,7 @@ namespace TimeLine.Components
         [SerializeField] private RectTransform root;
         [SerializeField] private ComponentLine componentPrefab;
         
-        private List<ComponentLine> _components = new List<ComponentLine>();
+        private List<ComponentLine> _components = new();
         private GameObject _selected;
         private GameEventBus _gameEventBus;
         private TrackObjectStorage _trackObjectStorage;

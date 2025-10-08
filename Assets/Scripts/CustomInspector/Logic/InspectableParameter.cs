@@ -1,10 +1,12 @@
+using UnityEngine;
+
 namespace TimeLine.CustomInspector.Logic
 {
     public abstract class InspectableParameter
     {
         public string Name { get; }
         public System.Type ValueType { get; }
-    
+        public Color AnimationColor { get; set; }
         public event System.Action OnValueChanged;
 
         protected InspectableParameter(string name, System.Type valueType)
@@ -14,5 +16,8 @@ namespace TimeLine.CustomInspector.Logic
         }
 
         public void NotifyValueChanged() => OnValueChanged?.Invoke();
+        
+        public abstract object GetValue();
+        public abstract void SetValue(object value);
     }
 }

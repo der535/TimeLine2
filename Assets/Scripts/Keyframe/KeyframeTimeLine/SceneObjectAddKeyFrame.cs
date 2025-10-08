@@ -25,7 +25,7 @@ namespace TimeLine
             _main = main;
         }
 
-        public void AddKeyframe(GameObject target, AnimationData data, string componentName, InspectableParameter fieldName, IParameterColor parameterColor)
+        public void AddKeyframe(GameObject target, AnimationData data, string componentName, InspectableParameter fieldName)
         {
             TrackObjectData trackObjectData = _trackObjectStorage.GetTrackObjectData(target);
 
@@ -33,7 +33,7 @@ namespace TimeLine
                 componentName, fieldName.Name);
 
             if (_keyframeTrackStorage.GetTrack(node) == null)
-                _keyframeTrackStorage.AddTrack(node, new Track(target, target.name, parameterColor.AnimationColor), trackObjectData.trackObject);
+                _keyframeTrackStorage.AddTrack(node, new Track(target, target.name, fieldName.AnimationColor), trackObjectData.trackObject);
 
             _keyframeTrackStorage.AddKeyframe(node, _main.TicksCurrentTime() - trackObjectData.trackObject.StartTimeInTicks,
                 new PositionData(target.transform.position));

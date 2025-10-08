@@ -1,17 +1,25 @@
 using NaughtyAttributes;
+using TimeLine.Installers;
 using UnityEngine;
+using Zenject;
 
-[RequireComponent(typeof(LineRenderer))]
-[RequireComponent(typeof(BoxCollider2D))]
 public class BoxCollider2DOutline : MonoBehaviour
 {
     [SerializeField] private Color color = Color.green;
     [SerializeField] private float pixelThickness = 1f; // Толщина в пикселях (по умолчанию 1)
-    [SerializeField] private Camera mainCamera;
     [Space]
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private BoxCollider2D boxCollider;
     
+    private Camera mainCamera;
+
+    public BoxCollider2D BoxCollider => boxCollider;
+    
+    [Inject]
+    private void Construct(MainObjects mainObjects)
+    {
+        mainCamera = mainObjects.MainCamera;
+    }
 
     private void Update()
     {
@@ -19,29 +27,43 @@ public class BoxCollider2DOutline : MonoBehaviour
     }
 
     [Button]
-    private void UpdateOutline()
+    internal void UpdateOutline()
     {
-        if (mainCamera == null) return;
+        if (mainCamera == null || boxCollider == null || lineRenderer == null)
+            return;
 
-        // Получаем размеры и центр коллайдера
+        // Получаем размеры и смещение коллайдера в локальном пространстве объекта
         Vector2 center = boxCollider.offset;
         Vector2 size = boxCollider.size;
 
-        // Устанавливаем позиции углов (относительно центра коллайдера)
-        lineRenderer.positionCount = 4;
-        lineRenderer.SetPosition(0, center + new Vector2(size.x / 2, size.y / 2) + (Vector2)gameObject.transform.position);
-        lineRenderer.SetPosition(1, center + new Vector2(-size.x / 2, size.y / 2) + (Vector2)gameObject.transform.position);
-        lineRenderer.SetPosition(2, center + new Vector2(-size.x / 2, -size.y / 2) + (Vector2)gameObject.transform.position);
-        lineRenderer.SetPosition(3, center + new Vector2(size.x / 2, -size.y / 2) + (Vector2)gameObject.transform.position);
+        // Определяем 4 угла прямоугольника в локальном пространстве (относительно центра коллайдера)
+        Vector2[] localCorners = new Vector2[]
+        {
+            center + new Vector2( size.x / 2f,  size.y / 2f), // верхний правый
+            center + new Vector2(-size.x / 2f,  size.y / 2f), // верхний левый
+            center + new Vector2(-size.x / 2f, -size.y / 2f), // нижний левый
+            center + new Vector2( size.x / 2f, -size.y / 2f)  // нижний правый
+        };
 
-        // Замыкаем контур (опционально, если хотите замкнутый прямоугольник)
+        // Преобразуем углы в мировое пространство с учётом поворота и скейла
+        Vector3[] worldCorners = new Vector3[4];
+        for (int i = 0; i < 4; i++)
+        {
+            worldCorners[i] = transform.TransformPoint(localCorners[i]);
+        }
+
+        // Устанавливаем позиции в LineRenderer
+        lineRenderer.positionCount = 4;
+        lineRenderer.SetPositions(worldCorners);
+
+        // Замыкаем контур
         lineRenderer.loop = true;
 
-        // Устанавливаем цвет
+        // Цвет
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
 
-        // Рассчитываем толщину в мировых единицах, соответствующую 1 пикселю на экране
+        // Толщина линии в мировых единицах
         float worldThickness = CalculateWorldThicknessFromPixels(pixelThickness);
         lineRenderer.startWidth = worldThickness;
         lineRenderer.endWidth = worldThickness;

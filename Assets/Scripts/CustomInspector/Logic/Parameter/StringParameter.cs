@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace TimeLine.CustomInspector.Logic.Parameter
 {
     public class StringParameter : InspectableParameter
@@ -18,6 +20,18 @@ namespace TimeLine.CustomInspector.Logic.Parameter
             : base(name, typeof(string))
         {
             _value = initialValue;
+        }
+        public override object GetValue() => _value;
+        public override void SetValue(object value)
+        {
+            if (value is string stringValue)
+            {
+                Value = stringValue; // используем свойство, чтобы триггернуть OnValueChanged
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot assign {value?.GetType()} to {_value.GetType().Name}");
+            }
         }
     }
 }

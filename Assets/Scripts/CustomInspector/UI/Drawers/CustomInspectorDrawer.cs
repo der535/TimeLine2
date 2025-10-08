@@ -1,5 +1,6 @@
 ﻿using System;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.CustomInspector.UI.FieldUI;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -19,6 +20,8 @@ namespace TimeLine.CustomInspector.UI.Drawers
         [SerializeField] private FieldSpace fieldSpace;
         [SerializeField] private BoolFieldUI boolField;
         [SerializeField] private StringFieldUI stringField;
+        [SerializeField] private SpriteFieldUI spriteField;
+        [SerializeField] private ColorFieldUI colorField;
         [Space]
         [SerializeField] private AddComponentButton button;
     
@@ -58,6 +61,13 @@ namespace TimeLine.CustomInspector.UI.Drawers
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         
+        public void CreateColorField(ColorParameter colorParameter)
+        {
+            var parameter = _container.InstantiatePrefab(colorField, _currentComponent.RootObject).GetComponent<ColorFieldUI>();
+            parameter.Setup(colorParameter);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
         public TMP_Dropdown CreateDropDownField(string parameterName)
         {
             var parameter = Instantiate(dropDownFieldUI, _currentComponent.RootObject);
@@ -69,6 +79,14 @@ namespace TimeLine.CustomInspector.UI.Drawers
         public void CreateBoolField(BoolParameter field)
         {
             var parameter = Instantiate(boolField, _currentComponent.RootObject);
+            parameter.Setup(field);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
+        public void CreateSpriteField(SpriteParameter field)
+        {
+            print("CreateSpriteField");
+            var parameter = _container.InstantiatePrefab(spriteField, _currentComponent.RootObject).GetComponent<SpriteFieldUI>();
             parameter.Setup(field);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }

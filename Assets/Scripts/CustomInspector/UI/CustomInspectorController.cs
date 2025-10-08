@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using EventBus;
-using TimeLine.CustomInspector.UI;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
@@ -41,6 +40,8 @@ namespace TimeLine
             _componentDrawers.Add(new RandomTransformComponentDrawer());
             _componentDrawers.Add(new DynamicTransformDrawer());
             _componentDrawers.Add(new NameDrawer());
+            _componentDrawers.Add(new SpriteRendererDrawer());
+            _componentDrawers.Add(new BoxCollider2DDrawer());
         }
 
         internal IEnumerator Redraw()
@@ -57,6 +58,8 @@ namespace TimeLine
             Clear();
 
             var components = target.GetComponents<Component>();
+            
+           
 
             foreach (var component in components)
             {

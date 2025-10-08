@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TimeLine.CustomInspector.Logic.Parameter
 {
-    public class BoolParameter : InspectableParameter, IParameterColor
+    public class BoolParameter : InspectableParameter
     {
         private bool _value;
         public bool Value
@@ -23,6 +23,18 @@ namespace TimeLine.CustomInspector.Logic.Parameter
             AnimationColor = animationColor;
         }
 
-        public Color AnimationColor { get; set; }
+        public override object GetValue() => _value;
+
+        public override void SetValue(object value)
+        {
+            if (value is bool boolValue)
+            {
+                Value = boolValue; // используем свойство, чтобы триггернуть OnValueChanged
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot assign {value?.GetType()} to BoolParameter");
+            }
+        }
     }
 }
