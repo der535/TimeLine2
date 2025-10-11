@@ -25,7 +25,7 @@ namespace TimeLine.CustomInspector.UI.FieldUI
         
         public void Setup(SpriteParameter spriteParameter)
         {
-            print("CreateSpriteField");
+            // print("CreateSpriteField");
 
             text.text = spriteParameter.Name;
 

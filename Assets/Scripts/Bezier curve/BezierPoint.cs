@@ -82,7 +82,7 @@ namespace TimeLine
                 double inValueOffset = inTimeOffset * inTangent;
 
                 tangentLeft.anchoredPosition = new Vector2(
-                    -(float)(inTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    -(float)(inTimeOffset * pan * (_main.MusicData.bpm / 60f)),
                     -(float)(inValueOffset * verticalScale)
                 );
             }
@@ -106,7 +106,7 @@ namespace TimeLine
                 double outValueOffset = outTimeOffset * outTangent;
 
                 tangentRight.anchoredPosition = new Vector2(
-                    (float)(outTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    (float)(outTimeOffset * pan * (_main.MusicData.bpm / 60f)),
                     (float)(outValueOffset * verticalScale)
                 );
             }
@@ -160,7 +160,7 @@ namespace TimeLine
                 double inValueOffset = inTimeOffset * inTangent;
 
                 tangentLeft.anchoredPosition = new Vector2(
-                    -(float)(inTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    -(float)(inTimeOffset * pan * (_main.MusicData.bpm / 60f)),
                     -(float)(inValueOffset * verticalScale)
                 );
             }
@@ -184,7 +184,7 @@ namespace TimeLine
                 double outValueOffset = outTimeOffset * outTangent;
 
                 tangentRight.anchoredPosition = new Vector2(
-                    (float)(outTimeOffset * pan * (_main.MusicDataSo.bpm / 60f)),
+                    (float)(outTimeOffset * pan * (_main.MusicData.bpm / 60f)),
                     (float)(outValueOffset * verticalScale)
                 );
             }

@@ -1,4 +1,5 @@
-﻿using TimeLine.TimeLine;
+﻿using Newtonsoft.Json.Linq;
+using TimeLine.TimeLine;
 using UnityEngine.UIElements;
 
 namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
@@ -32,6 +33,27 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
             }
         }
+        public override string GetDataType()
+        {
+            return nameof(XScaleData);
+        }
+
+        public override JObject SerializeData()
+        {
+            return new JObject
+            {
+                ["transform-scale-x"] = JToken.FromObject(value)
+            };
+        }
+
+        public override void DeserializeData(JObject data)
+        {
+            if (data.TryGetValue("transform-scale-x", out JToken token))
+            {
+                value = token.ToObject<float>();
+            }
+        }
+        
         public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next)
         {
             if (other is not XScaleData otherPos)

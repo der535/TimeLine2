@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.Keyframe;
 using UnityEngine;
@@ -6,12 +8,12 @@ using Zenject;
 
 namespace TimeLine
 {
-    public class TransformComponent : MonoBehaviour, ICopyableComponent
+    public class TransformComponent : BaseParameterComponent
     {
         public FloatParameter XPosition = new("Position-X", 0, Color.red);
         public BoolParameter XPositionActive = new("x-p Active", true, Color.gray);
         public FloatParameter YPosition = new("Position-Y", 0, Color.green);
-        public BoolParameter YPositionActive = new("x-p Active", true, Color.gray);
+        public BoolParameter YPositionActive = new("y-p Active", true, Color.gray);
 
         public FloatParameter XRotation = new("Rotation-X", 0, new Color(0.8301887f, 0.2310431f, 0.2310431f));
         public BoolParameter XRotationActive = new("x-r Active", true, Color.gray);
@@ -33,6 +35,24 @@ namespace TimeLine
         {
             _keyframeTrackStorage = keyframeTrackStorage;
             _trackObjectStorage = trackObjectStorage;
+        }
+        
+        protected override IEnumerable<InspectableParameter> GetParameters()
+        {
+            yield return XPosition;
+            yield return XPositionActive;
+            yield return YPosition;
+            yield return YPositionActive;
+            yield return XRotation;
+            yield return XRotationActive;
+            yield return YRotation;
+            yield return YRotationActive;
+            yield return ZRotation;
+            yield return ZRotationActive;
+            yield return XScale;
+            yield return XScaleActive;
+            yield return YScale;
+            yield return YScaleActive;
         }
         
         private void Awake()
@@ -96,8 +116,8 @@ namespace TimeLine
                 _keyframeTrackStorage.SetActiveTrack(node ,YScaleActive.Value);
             };
         }
-
-        public void CopyTo(Component targetComponent)
+        
+        public override void CopyTo(Component targetComponent)
         {
             if (targetComponent is TransformComponent other)
             {
@@ -117,14 +137,12 @@ namespace TimeLine
             }
         }
 
-        public Component Copy(GameObject targetGameObject)
+        public override Component Copy(GameObject targetGameObject)
         {
             var component = targetGameObject.GetComponent<TransformComponent>();
             CopyTo(component);
             // print("Оп скопировал");
             return component;
         }
-        
-        
     }
 }

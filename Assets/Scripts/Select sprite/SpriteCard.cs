@@ -10,9 +10,9 @@ namespace TimeLine
         [SerializeField] private TMPro.TextMeshProUGUI text;
         [SerializeField] private Button button;
 
-        internal void Setup(SpriteCardSO spriteCardSO, Action onClick)
+        internal void Setup(Sprite spriteCardSO, Action onClick)
         {
-            image.sprite = spriteCardSO.sprite;
+            image.sprite = spriteCardSO;
             text.text = spriteCardSO.name;
             if (onClick != null)
             {

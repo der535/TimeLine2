@@ -1,18 +1,20 @@
 using System;
+using System.Collections.Generic;
+using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using UnityEngine;
 using Zenject;
 
 namespace TimeLine
 {
-    public class SpriteRendererComponent : MonoBehaviour, ICopyableComponent
+    public class SpriteRendererComponent : BaseParameterComponent
     {
         public SpriteParameter Sprite = new("Sprite", null, Color.magenta);
         [Space]
-        public BoolParameter InvertX = new BoolParameter("InvertX", false, Color.grey);
-        public BoolParameter InvertY = new BoolParameter("InvertY", false, Color.grey);
+        public BoolParameter InvertX = new("InvertX", false, Color.grey);
+        public BoolParameter InvertY = new("InvertY", false, Color.grey);
         [Space]
-        public ColorParameter SpriteColor = new ColorParameter("SpriteColor", Color.white, Color.white);
+        public ColorParameter SpriteColor = new("SpriteColor", Color.white, Color.white);
 
         private SelectSpriteController _selectSpriteController;
         private SpriteRenderer _spriteRenderer;
@@ -45,7 +47,15 @@ namespace TimeLine
             };
         }
 
-        public void CopyTo(Component targetComponent)
+        protected override IEnumerable<InspectableParameter> GetParameters()
+        {
+            yield return Sprite;
+            yield return InvertX;
+            yield return InvertY;
+            yield return SpriteColor;
+        }
+
+        public override void CopyTo(Component targetComponent)
         {
             if (targetComponent is SpriteRendererComponent other)
             {
@@ -57,7 +67,7 @@ namespace TimeLine
             }
         }
 
-        public Component Copy(GameObject targetGameObject)
+        public override Component Copy(GameObject targetGameObject)
         {
             var component = targetGameObject.GetComponent<SpriteRendererComponent>();
             CopyTo(component);

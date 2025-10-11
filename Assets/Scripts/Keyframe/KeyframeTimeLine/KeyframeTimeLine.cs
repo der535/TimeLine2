@@ -66,12 +66,12 @@ namespace TimeLine
             double timeDiffTicks = ticks - startTimeTicks;
 
             // Конвертируем разницу в тиках в секунды для позиционирования
-            double timeDiffSeconds = TicksToSeconds(timeDiffTicks, _main.MusicDataSo.bpm);
+            double timeDiffSeconds = TicksToSeconds(timeDiffTicks, _main.MusicData.bpm);
 
             // Вычисляем позицию
             float positionX = (float)(timeDiffSeconds *
                                       (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeScroll.Pan) *
-                                      (_main.MusicDataSo.bpm / 60));
+                                      (_main.MusicData.bpm / 60));
 
             rect.anchoredPosition = new Vector2(positionX, rect.anchoredPosition.y);
         }

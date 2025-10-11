@@ -6,7 +6,7 @@ public class TreeNode
     public string Name { get; }
     public string Path { get; }
     public List<TreeNode> Children { get; } = new List<TreeNode>();
-    public object UserData { get; set; }  // Поле для пользовательских данных
+    // public object UserData { get; set; }  // Поле для пользовательских данных
 
     public TreeNode(string name, string path)
     {
@@ -21,7 +21,7 @@ public class TreeNode
     {
         // Создаем копию узла
         var copy = new TreeNode(Name, Path);
-        copy.UserData = UserData; // Поверхностная копия (для глубокой нужна доработка)
+        // copy.UserData = UserData; // Поверхностная копия (для глубокой нужна доработка)
         
         // Регистрируем в словаре
         mapping[this] = copy;

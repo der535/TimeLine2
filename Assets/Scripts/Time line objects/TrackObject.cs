@@ -62,9 +62,9 @@ namespace TimeLine
 
         internal float BeatDuraction => (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
 
-        private bool lockSize;
-        private double reducedLeft;
-        private double reducedRight;
+        private bool _lockSize;
+        private double _reducedLeft;
+        private double _reducedRight;
 
         // 🔑 Новый флаг: включать/выключать ограничения ресайза
         private bool _enableResizeLimits = true;
@@ -132,8 +132,8 @@ namespace TimeLine
             Name = trackObjectSo.name;
             nameText.text = trackObjectSo.name;
 
-            reducedLeft = 0;
-            reducedRight = 0;
+            _reducedLeft = 0;
+            _reducedRight = 0;
             _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
 
             UpdateVisuals();
@@ -149,8 +149,8 @@ namespace TimeLine
             Name = name;
             nameText.text = name;
 
-            reducedLeft = 0;
-            reducedRight = 0;
+            _reducedLeft = 0;
+            _reducedRight = 0;
             _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
 
             UpdateVisuals();
@@ -160,8 +160,8 @@ namespace TimeLine
         internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
             => Setup(trackObjectSo, trackLine, startTimeInTicks, false);
 
-        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks)
-            => Setup(ticksLifeTime, name, trackLine, startTimeInTicks, false);
+        // internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks)
+        //     => Setup(ticksLifeTime, name, trackLine, startTimeInTicks, false);
 
         internal void GroupOffset(double tickOffset)
         {
@@ -191,7 +191,7 @@ namespace TimeLine
             {
                 if (_enableResizeLimits)
                 {
-                    reducedRight = Math.Min(reducedRight +
+                    _reducedRight = Math.Min(_reducedRight +
                                             RoundTicksToGrid(_startResizingDuractionInTicks + deltaticksRight) -
                                             _startResizingDuractionInTicks, 0);
                 }
@@ -244,7 +244,7 @@ namespace TimeLine
                 ApplyKeyframeOffset();
                 if (_enableResizeLimits)
                 {
-                    reducedLeft = Math.Min(reducedLeft +
+                    _reducedLeft = Math.Min(_reducedLeft +
                                            RoundTicksToGrid(_startResizingDuractionInTicks + deltaticksLeft) -
                                            _startResizingDuractionInTicks, 0);
                 }
@@ -293,9 +293,9 @@ namespace TimeLine
                     double roundedChange = roundedProposedDuration - _startResizingDuractionInTicks;
 
                     // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
-                    if (_enableResizeLimits && reducedRight + roundedChange > 0)
+                    if (_enableResizeLimits && _reducedRight + roundedChange > 0)
                     {
-                        double maxAllowedChange = -reducedRight;
+                        double maxAllowedChange = -_reducedRight;
                         double clampedDuration = _startResizingDuractionInTicks + maxAllowedChange;
                         double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
 
@@ -319,9 +319,9 @@ namespace TimeLine
                     double roundedChange = roundedProposedDuration - _startResizingDuractionInTicks;
 
                     // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
-                    if (_enableResizeLimits && reducedLeft + roundedChange > 0)
+                    if (_enableResizeLimits && _reducedLeft + roundedChange > 0)
                     {
-                        double maxAllowedChange = -reducedLeft;
+                        double maxAllowedChange = -_reducedLeft;
                         double clampedDuration = _startResizingDuractionInTicks + maxAllowedChange;
                         double clampedStartTime = _startResizingTimeInTicks - maxAllowedChange;
 
@@ -464,12 +464,12 @@ namespace TimeLine
 
         private double TicksToSeconds(double ticks)
         {
-            return ticks * (60.0 / (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
+            return ticks * (60.0 / (_main.MusicData.bpm * Main.TICKS_PER_BEAT));
         }
 
         private double SecondsToTicks(double seconds)
         {
-            return seconds * (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
+            return seconds * (_main.MusicData.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
 
         private double AnchorPositionToTicks(float anchorPosition)

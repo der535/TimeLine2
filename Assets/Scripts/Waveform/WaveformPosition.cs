@@ -59,20 +59,20 @@ namespace TimeLine.Waveform
         
         private void BuildWaveForm()
         {
-            if(_main.MusicDataSo.music == null) return;
+            if(_main.MusicData.music == null) return;
             
             if (toggle)
                 waveformRect.sizeDelta =
                     new Vector2(
                         (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
-                        _main.MusicDataSo.music.length * _main.MusicDataSo.bpm / 60,
+                        _main.MusicData.music.length * _main.MusicData.bpm / 60,
                         waveformRect.rect.height);
             else
             {
                 waveformRect.sizeDelta =
                     new Vector2(
                         (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
-                        _main.MusicDataSo.music.length * (factor / acur), waveformRect.rect.height);
+                        _main.MusicData.music.length * (factor / acur), waveformRect.rect.height);
             }
             
             waveformRect.localPosition =

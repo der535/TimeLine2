@@ -1,4 +1,5 @@
-﻿using TimeLine.TimeLine;
+﻿using Newtonsoft.Json.Linq;
+using TimeLine.TimeLine;
 using UnityEngine;
 
 namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
@@ -28,6 +29,27 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
+            }
+        }
+        
+        public override string GetDataType()
+        {
+            return nameof(ZRotationData);
+        }
+
+        public override JObject SerializeData()
+        {
+            return new JObject
+            {
+                ["transform-rotation-z"] = JToken.FromObject(value)
+            };
+        }
+
+        public override void DeserializeData(JObject data)
+        {
+            if (data.TryGetValue("transform-rotation-z", out JToken token))
+            {
+                value = token.ToObject<float>();
             }
         }
         public override AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next)

@@ -162,7 +162,7 @@ namespace TimeLine
                 // 🔒 Ограничение максимального X, чтобы weight не превышал 1
                 double nextTimeDelta = _timeLineConverter.TicksToSeconds(bezierPoint.NextKey.Ticks - _keyframe.Ticks);
                 float maxTangentTime = (float)nextTimeDelta; // в секундах
-                float maxTangentX = maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicDataSo.bpm);
+                float maxTangentX = maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicData.bpm);
 
                 if (position.x > maxTangentX)
                     position = new Vector2(maxTangentX, position.y);
@@ -170,7 +170,7 @@ namespace TimeLine
                 tangentRight.anchoredPosition = position;
 
                 float tangleValue = tangentRight.anchoredPosition.y / _verticalBezierPan.Pan;
-                float tangleTime = (tangentRight.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicDataSo.bpm);
+                float tangleTime = (tangentRight.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicData.bpm);
 
                 double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
                 float weight = (float)(tangleTimeDelta / nextTimeDelta);
@@ -193,7 +193,7 @@ namespace TimeLine
                 // 🔒 Ограничение минимального X, чтобы weight не был больше 1
                 double prevTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks - bezierPoint.PrevKey.Ticks);
                 float maxTangentTime = (float)prevTimeDelta; // в секундах
-                float maxTangentX = -maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicDataSo.bpm);
+                float maxTangentX = -maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicData.bpm);
 
                 if (position.x < maxTangentX)
                     position = new Vector2(maxTangentX, position.y);
@@ -201,7 +201,7 @@ namespace TimeLine
                 tangentLeft.anchoredPosition = position;
 
                 float tangleValue = tangentLeft.anchoredPosition.y / _verticalBezierPan.Pan;
-                float tangleTime = (tangentLeft.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicDataSo.bpm);
+                float tangleTime = (tangentLeft.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicData.bpm);
 
                 double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
                 float weight = (float)(tangleTimeDelta / prevTimeDelta);

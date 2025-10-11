@@ -49,9 +49,9 @@ namespace TimeLine
         
         public double RoundTimeToGridInTicks(double ticks)
         {
-            double seconds = ticks * (60.0 / (main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
+            double seconds = ticks * (60.0 / (main.MusicData.bpm * Main.TICKS_PER_BEAT));
             double roundedSeconds = RoundTimeToGrid((float)seconds);
-            return roundedSeconds * (main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
+            return roundedSeconds * (main.MusicData.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
     }
 }

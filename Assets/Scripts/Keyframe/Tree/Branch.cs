@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using TimeLine;
 using UnityEngine;
 
 [System.Serializable]
@@ -7,7 +8,7 @@ public class Branch
 {
     public string Name { get; private set; }
     public string ID { get; }
-    public TreeNode Root { get; }
+    public TreeNode Root { get; set; }
     public List<TreeNode> Nodes { get; } = new();
     
     public Branch(string id, string name)
@@ -135,7 +136,8 @@ public class Branch
             // Создание отсутствующих узлов
             if (!found)
             {
-                var newNode = currentNode.AddChild(parts[i], $"{path}/{nodeName}");
+                //todo Возможно надо пофиксить но учитывается что больше одного недостающего элемента не будет
+                var newNode = currentNode.AddChild(parts[i], parts[i]);
                 Nodes.Add(newNode);
                 currentNode = newNode;
             }
@@ -149,9 +151,37 @@ public class Branch
             }
         }
         
+        Debug.Log($"{path}/{nodeName}");
         // Добавление конечного узла
         var finalNode = currentNode.AddChild(nodeName, $"{path}/{nodeName}");
         Nodes.Add(finalNode);
         return finalNode;
+    }
+    
+    public BranchSaveData ToSaveData()
+    {
+        var saveData = new BranchSaveData
+        {
+            ID = ID,
+            Name = Name
+        };
+
+        foreach (var node in Nodes)
+        {
+            saveData.Nodes.Add(new TreeNodeSaveData
+            {
+                Path = node.Path,
+                Name = node.Name
+            });
+        }
+
+        return saveData;
+    }
+
+// Вспомогательный метод: извлекает путь родителя из полного пути
+    private static string GetParentPathFromPath(string fullPath)
+    {
+        int lastSlash = fullPath.LastIndexOf('/');
+        return lastSlash > 0 ? fullPath.Substring(0, lastSlash) : "";
     }
 }

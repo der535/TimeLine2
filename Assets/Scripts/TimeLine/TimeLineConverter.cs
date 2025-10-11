@@ -41,17 +41,17 @@ namespace TimeLine.TimeLine
         public float TicksToPositionX(double ticks, float pan = 0)
         {
             // Конвертируем тики в секунды, затем в позицию
-            double seconds = ticks * (60.0 / (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
+            double seconds = ticks * (60.0 / (_main.MusicData.bpm * Main.TICKS_PER_BEAT));
             return (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + pan) *
-                           (_main.MusicDataSo.bpm / 60.0));
+                           (_main.MusicData.bpm / 60.0));
         }
 
         // Обратная конвертация: позиция X в тики (для Drag & Drop)
         public double PositionXToTicks(float positionX)
         {
             // Обратная формула: позиция -> секунды -> тики
-            double seconds = positionX / (_timeLineSettings.DistanceBetweenBeatLines * (_main.MusicDataSo.bpm / 60.0));
-            return seconds * (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
+            double seconds = positionX / (_timeLineSettings.DistanceBetweenBeatLines * (_main.MusicData.bpm / 60.0));
+            return seconds * (_main.MusicData.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
 
         public Vector2 CursorPosition(RectTransform canvasRectTransform = null) //todo пофиксить
@@ -117,27 +117,27 @@ namespace TimeLine.TimeLine
 
         public float GetTimeFromBeatPosition(float beatPosition)
         {
-            return 60 / _main.MusicDataSo.bpm * beatPosition;
+            return 60 / _main.MusicData.bpm * beatPosition;
         }
 
         public float GetBeatPositionFromTime(float time)
         {
-            return (time * _main.MusicDataSo.bpm) / 60f;
+            return (time * _main.MusicData.bpm) / 60f;
         }
 
         public double SecondsToTicks(double seconds)
         {
-            return seconds * (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT / 60.0);
+            return seconds * (_main.MusicData.bpm * Main.TICKS_PER_BEAT / 60.0);
         }
 
         public double GetTimeInSeconds(double ticks)
         {
-            return ticks * (60.0 / (_main.MusicDataSo.bpm * Main.TICKS_PER_BEAT));
+            return ticks * (60.0 / (_main.MusicData.bpm * Main.TICKS_PER_BEAT));
         }
 
         public float GetAnchorPositionFromTime(float time)
         {
-            return GetAnchorPositionFromBeatPosition(time / (60 / _main.MusicDataSo.bpm)) +
+            return GetAnchorPositionFromBeatPosition(time / (60 / _main.MusicData.bpm)) +
                    _mainObjects.ContentRectTransform.offsetMin.x;
         }
 
@@ -195,7 +195,7 @@ namespace TimeLine.TimeLine
 
         public const double TICKS_PER_BEAT = 96.0; // 96 ticks per quarter note
         public const double SECONDS_IN_MINUTE = 60.0;
-        public double SecondsPerTick => SECONDS_IN_MINUTE / (_main.MusicDataSo.bpm * TICKS_PER_BEAT);
+        public double SecondsPerTick => SECONDS_IN_MINUTE / (_main.MusicData.bpm * TICKS_PER_BEAT);
 
         public double TicksToSeconds(double ticks)
         {

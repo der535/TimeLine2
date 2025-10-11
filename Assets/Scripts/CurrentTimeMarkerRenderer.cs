@@ -37,9 +37,9 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
     {
         // Конвертируем тики в позицию на таймлайне
         double beats = timeEvent.Time / Main.TICKS_PER_BEAT;
-        double seconds = beats * (60.0 / _main.MusicDataSo.bpm);
+        double seconds = beats * (60.0 / _main.MusicData.bpm);
         
-        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) * (_main.MusicDataSo.bpm / 60.0));
+        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) * (_main.MusicData.bpm / 60.0));
         
         marker.transform.localPosition = new Vector3(
             positionX,
@@ -54,9 +54,9 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
     {
         // Используем сохраненные тики и BPM для пересчета позиции
         double beats = _ticksSaved / Main.TICKS_PER_BEAT;
-        double seconds = beats * (60.0 / _main.MusicDataSo.bpm);
+        double seconds = beats * (60.0 / _main.MusicData.bpm);
         
-        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset) * (_main.MusicDataSo.bpm / 60.0));
+        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset) * (_main.MusicData.bpm / 60.0));
         
         marker.transform.localPosition = new Vector3(
             positionX,

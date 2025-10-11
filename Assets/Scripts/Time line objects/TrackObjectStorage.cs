@@ -28,6 +28,9 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
             _selectObjectController = selectObjectController;
         }
+        
+        public List<TrackObjectData> TrackObjects => _trackObjects;
+        public List<TrackObjectGroup> TrackObjectGroups => _trackObjectGroups;
 
         private void Awake()
         {
@@ -368,12 +371,6 @@ namespace TimeLine
             this.trackObject = trackObject;
             this.branch = branch;
             this.TrackObjectDatas = trackObjectDatas;
-
-            //Debug.Log($"[TrackObjectGroup Constructor] Group '{trackObject.Name}' initialized with {trackObjectDatas.Count} children.");
-            foreach (var child in trackObjectDatas)
-            {
-                //Debug.Log($"  → Child: {child.trackObject.Name} | Start: {child.trackObject.StartTimeInTicks}");
-            }
         }
     }
 }

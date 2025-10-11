@@ -12,7 +12,6 @@ namespace TimeLine.Keyframe
         public Color AnimationColor;
         public List<Keyframe> Keyframes = new();
         public TrackObject groupObject;
-        private int _lastFoundIndex = 0;
 
         public Track(GameObject target, string trackName, Color animationColor)
         {
@@ -117,6 +116,16 @@ namespace TimeLine.Keyframe
             {
                 keyframe.Ticks += Math.Round(ticks);
             }
+        }
+
+        public List<KeyframeSaveData> SaveKeyframes()
+        {
+            List<KeyframeSaveData> keyframes = new();
+            foreach (var keyframe in Keyframes)
+            {
+                keyframes.Add(keyframe.ToSaveData());
+            }
+            return keyframes;
         }
         
         public Track Copy(GameObject target)

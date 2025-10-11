@@ -1,4 +1,8 @@
-﻿namespace TimeLine.Keyframe
+﻿using TimeLine.Keyframe.AnimationDatas.TransformComponent;
+using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
+
+namespace TimeLine.Keyframe
 {
     using UnityEngine;
 
@@ -60,6 +64,66 @@
             {
                 nextData.Apply(target);
             }
+        }
+        
+        public KeyframeSaveData ToSaveData()
+        {
+            return new KeyframeSaveData
+            {
+                Ticks = Ticks,
+                OutTangent = OutTangent,
+                InTangent = InTangent,
+                InWeight = InWeight,
+                OutWeight = OutWeight,
+                DataType = animationData?.GetDataType(),
+                Data = animationData?.SerializeData()
+            };
+        }
+        
+        public static Keyframe FromSaveData(KeyframeSaveData saveData)
+        {
+            if (saveData == null) return null;
+
+            var keyframe = new Keyframe(
+                saveData.Ticks,
+                saveData.OutTangent,
+                saveData.InTangent,
+                saveData.InWeight,
+                saveData.OutWeight
+            );
+
+            if (!string.IsNullOrEmpty(saveData.DataType) && saveData.Data != null)
+            {
+                AnimationData data = CreateAnimationData(saveData.DataType);
+                if (data != null)
+                {
+                    data.DeserializeData(saveData.Data);
+                    keyframe.AddData(data);
+                }
+                else
+                {
+                    Debug.LogWarning($"Unknown AnimationData type: {saveData.DataType}");
+                }
+            }
+
+            return keyframe;
+        }
+        
+        // 🔑 Фабрика для создания AnimationData по имени типа
+        private static AnimationData CreateAnimationData(string typeName)
+        {
+            return typeName switch
+            {
+                nameof(PositionData) => new PositionData(Vector3.zero),
+                nameof(XPositionData) => new XPositionData(0),
+                nameof(YPositionData) => new YPositionData(0),
+                nameof(XRotationData) => new XRotationData(0),
+                nameof(YRotationData) => new YRotationData(0),
+                nameof(ZRotationData) => new ZRotationData(0),
+                nameof(XScaleData) => new XScaleData(0),
+                nameof(YScaleData) => new YScaleData(0),
+                _ => null
+            };
         }
     }
 }

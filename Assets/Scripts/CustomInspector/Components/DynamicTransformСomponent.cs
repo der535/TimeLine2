@@ -72,7 +72,7 @@ namespace TimeLine
             if(ComponentActive.Value == false || gameObject.activeSelf == false) return;
             
             // Конвертируем тики в секунды с учетом BPM
-            double seconds = TicksToSeconds(ticks, _main.MusicDataSo.bpm);
+            double seconds = TicksToSeconds(ticks, _main.MusicData.bpm);
             
             if(DynamicXPositionActive.Value)
                 _component.XPosition.Value = (float)(DynamicXPosition.Value.x + seconds * DynamicXPosition.Value.y);

@@ -1,4 +1,5 @@
-﻿using TimeLine.TimeLine;
+﻿using Newtonsoft.Json.Linq;
+using TimeLine.TimeLine;
 
 namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 {
@@ -30,6 +31,27 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
+            }
+        }
+
+        public override string GetDataType()
+        {
+           return nameof(PositionData);
+        }
+
+        public override JObject SerializeData()
+        {
+            return new JObject
+            {
+                ["transform-position-x"] = JToken.FromObject(value)
+            };
+        }
+
+        public override void DeserializeData(JObject data)
+        {
+            if (data.TryGetValue("transform-position-x", out JToken token))
+            {
+                value = token.ToObject<float>();
             }
         }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using UnityEngine;
@@ -8,9 +7,9 @@ namespace TimeLine
     public class SelectSpriteController : MonoBehaviour
     {
         [SerializeField] private RectTransform windows;
-        [SerializeField] private SpriteCardSO[] baseCollection;
         [SerializeField] private SpriteCard prefab;
         [SerializeField] private RectTransform content;
+        [SerializeField] private BaseSpriteStorage storage;
 
         private List<SpriteCard> _spriteCards = new List<SpriteCard>();
         private bool _isInitialized = false;
@@ -19,7 +18,7 @@ namespace TimeLine
         {
             if (_isInitialized) return;
 
-            foreach (var card in baseCollection)
+            foreach (var card in storage.Sprites)
             {
                 SpriteCard spriteCard = Instantiate(prefab, content);
                 spriteCard.Setup(card, null); // Изначально без действия
@@ -39,9 +38,9 @@ namespace TimeLine
             for (int i = 0; i < _spriteCards.Count; i++)
             {
                 int index = i; // Замыкание для правильного захвата индекса
-                _spriteCards[index].Setup(baseCollection[index], () =>
+                _spriteCards[index].Setup(storage.Sprites[index], () =>
                 {
-                    spriteParameter.Value = baseCollection[index].sprite;
+                    spriteParameter.Value = storage.Sprites[index];
                     windows.gameObject.SetActive(false);
                 });
             }

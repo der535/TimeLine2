@@ -1,17 +1,19 @@
 using System;
+using System.Collections.Generic;
+using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using UnityEngine;
 using Zenject;
 
 namespace TimeLine
 {
-    public class BoxCollider2DComponent : MonoBehaviour, ICopyableComponent
+    public class BoxCollider2DComponent : BaseParameterComponent
     {
-        public FloatParameter OffsetX = new FloatParameter("OffsetX", 0, Color.yellow);
-        public FloatParameter OffsetY = new FloatParameter("OffsetY", 0, Color.yellow);
+        public FloatParameter OffsetX = new("OffsetX", 0, Color.yellow);
+        public FloatParameter OffsetY = new("OffsetY", 0, Color.yellow);
 
-        public FloatParameter SizeX = new FloatParameter("SizeX", 1, Color.red);
-        public FloatParameter SizeY = new FloatParameter("SizeY", 1, Color.red);
+        public FloatParameter SizeX = new("SizeX", 1, Color.red);
+        public FloatParameter SizeY = new("SizeY", 1, Color.red);
 
         private SelectSpriteController _selectSpriteController;
         private SpriteRenderer _spriteRenderer;
@@ -63,7 +65,15 @@ namespace TimeLine
             };
         }
 
-        public void CopyTo(Component targetComponent)
+        protected override IEnumerable<InspectableParameter> GetParameters()
+        {
+            yield return OffsetX;
+            yield return OffsetY;
+            yield return SizeX;
+            yield return SizeY;
+        }
+
+        public override void CopyTo(Component targetComponent)
         {
             // if (targetComponent is BoxCollider2DComponent other)
             // {
@@ -80,7 +90,7 @@ namespace TimeLine
             Destroy(_boxCollider2DOutline.gameObject);
         }
 
-        public Component Copy(GameObject targetGameObject)
+        public override Component Copy(GameObject targetGameObject)
         {
             var component = targetGameObject.GetComponent<SpriteRendererComponent>();
             CopyTo(component);

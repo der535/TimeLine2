@@ -20,7 +20,7 @@ namespace TimeLine
         internal const double TICKS_PER_BEAT = 96.0; // 96 ticks per quarter note
         private const double SECONDS_IN_MINUTE = 60.0;
         
-        public MusicData MusicDataSo;
+        public MusicData MusicData;
         private TimeLineConverter _timeLineConverter;
         
         public double TicksCurrentTime()
@@ -35,7 +35,7 @@ namespace TimeLine
         private TimeLineSettings _timeLineSettings;
     
         // Conversion properties
-        private double SecondsPerTick => SECONDS_IN_MINUTE / (MusicDataSo.bpm * TICKS_PER_BEAT);
+        private double SecondsPerTick => SECONDS_IN_MINUTE / (MusicData.bpm * TICKS_PER_BEAT);
         private double TicksPerSecond => 1.0 / SecondsPerTick;
 
         [Inject]
@@ -48,10 +48,10 @@ namespace TimeLine
 
         private void Awake()
         {
-            MusicDataSo = new MusicData();
+            MusicData = new MusicData();
             _gameEventBus.SubscribeTo<OpenEditorEvent>(((ref OpenEditorEvent data) =>
             {
-                MusicDataSo.bpm = data.LevelInfo.bpm;
+                MusicData.bpm = data.LevelInfo.bpm;
                 StartCoroutine(LoadAudioClip($"{Application.persistentDataPath}/Levels/{ data.LevelInfo.levelName}/{data.LevelInfo.songName}"));
             }));
         }
@@ -66,7 +66,7 @@ namespace TimeLine
                 {
                     AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
                     audioSource.clip = clip;
-                    MusicDataSo.music = clip;
+                    MusicData.music = clip;
                     _gameEventBus.Raise(new MusicLoadedEvent());
                 }
                 else
@@ -146,5 +146,11 @@ namespace TimeLine
                 _smoothTimeInTicks = _exactTimeInTicks;
             }
         }
+    }
+
+    public class MusicData
+    {
+        public float bpm;
+        public AudioClip music;
     }
 }

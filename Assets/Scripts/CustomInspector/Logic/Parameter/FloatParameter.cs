@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace TimeLine.CustomInspector.Logic.Parameter
@@ -26,13 +27,13 @@ namespace TimeLine.CustomInspector.Logic.Parameter
         public override object GetValue() => _value;
         public override void SetValue(object value)
         {
-            if (value is float floatValue)
+            try
             {
-                Value = floatValue; // используем свойство, чтобы триггернуть OnValueChanged
+                Value = value == null ? 0 : Convert.ToSingle(value);
             }
-            else
+            catch
             {
-                Debug.LogWarning($"Cannot assign {value?.GetType()} to {_value.GetType().Name}");
+                Debug.LogWarning($"Failed to convert {value?.GetType()} to float");
             }
         }
     }

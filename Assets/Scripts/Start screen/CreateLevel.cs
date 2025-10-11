@@ -30,7 +30,7 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
         }
         
-        private void Start()
+        public void CreateTempFolder()
         {
             string levelsPath = Path.Combine(Application.persistentDataPath, "Levels");
             Directory.CreateDirectory(levelsPath);

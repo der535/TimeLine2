@@ -1,11 +1,13 @@
 using System;
+using System.Collections.Generic;
+using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace TimeLine
 {
-    public class RandomTransformComponent : MonoBehaviour, ICopyableComponent, IInitializedComponent
+    public class RandomTransformComponent : BaseParameterComponent
     {
         public BoolParameter ComponentActive = new("Enabled", true, Color.gray);
         
@@ -53,7 +55,26 @@ namespace TimeLine
                 _transform.YScale.Value = Random.Range(YRandomScale.Value.x, YRandomScale.Value.y);
         }
 
-        public void CopyTo(Component targetComponent)
+        protected override IEnumerable<InspectableParameter> GetParameters()
+        {
+            yield return ComponentActive;
+            yield return XRandomPosition;
+            yield return XRandomPositionActive;
+            yield return YRandomPosition;
+            yield return YRandomPositionActive;
+            yield return XRandomRotation;
+            yield return XRandomRotationActive;
+            yield return YRandomRotation;
+            yield return YRandomPositionActive;
+            yield return ZRandomRotation;
+            yield return ZRandomRotationActive;
+            yield return XRandomScale;
+            yield return XRandomScaleActive;
+            yield return YRandomScale;
+            yield return YRandomScaleActive;
+        }
+
+        public override void CopyTo(Component targetComponent)
         {
             if (targetComponent is RandomTransformComponent other)
             {
@@ -71,7 +92,7 @@ namespace TimeLine
             }
         }
 
-        public Component Copy(GameObject targetGameObject)
+        public override Component Copy(GameObject targetGameObject)
         {
             print("RandomTransformComponent copy");
             if (targetGameObject.TryGetComponent(out RandomTransformComponent component))

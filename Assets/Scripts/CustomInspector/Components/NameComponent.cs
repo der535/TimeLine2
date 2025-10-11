@@ -1,11 +1,13 @@
 using System;
+using System.Collections.Generic;
+using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using UnityEngine;
 using Zenject;
 
 namespace TimeLine
 {
-    public class NameComponent : MonoBehaviour, ICopyableComponent
+    public class NameComponent : BaseParameterComponent
     {
         public StringParameter Name = new("Object name", "");
 
@@ -31,7 +33,12 @@ namespace TimeLine
             };
         }
 
-        public void CopyTo(Component targetComponent)
+        protected override IEnumerable<InspectableParameter> GetParameters()
+        {
+            yield return Name;
+        }
+
+        public override void CopyTo(Component targetComponent)
         {
             if (targetComponent is NameComponent other)
             {
@@ -43,7 +50,7 @@ namespace TimeLine
             }
         }
 
-        public Component Copy(GameObject targetGameObject)
+        public override Component Copy(GameObject targetGameObject)
         {
             var component = targetGameObject.GetComponent<NameComponent>();
             CopyTo(component);
