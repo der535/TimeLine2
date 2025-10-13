@@ -23,7 +23,6 @@ namespace TimeLine.CustomInspector.Logic.Parameter
             _value = initialValue;
             AnimationColor = animationColor;
         }
-        public Color AnimationColor { get; set; }
         public override object GetValue() => _value;
         public override void SetValue(object value)
         {

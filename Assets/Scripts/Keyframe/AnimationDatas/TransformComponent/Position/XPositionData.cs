@@ -36,7 +36,7 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 
         public override string GetDataType()
         {
-           return nameof(PositionData);
+           return nameof(XPositionData);
         }
 
         public override JObject SerializeData()

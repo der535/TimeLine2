@@ -28,19 +28,28 @@ namespace TimeLine
         private void Awake()
         {
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-            
-            Sprite.OnValueChanged += (() =>
+    
+            // Если компонент не найден — добавляем его
+            if (_spriteRenderer == null)
+            {
+                _spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+            }
+
+            Sprite.OnValueChanged += () =>
             {
                 _spriteRenderer.sprite = Sprite.Value;
-            });
+            };
+    
             InvertX.OnValueChanged += () =>
             {
                 _spriteRenderer.flipX = InvertX.Value;
             };
+    
             InvertY.OnValueChanged += () =>
             {
                 _spriteRenderer.flipY = InvertY.Value;
             };
+    
             SpriteColor.OnValueChanged += () =>
             {
                 _spriteRenderer.color = SpriteColor.Value;

@@ -4,6 +4,7 @@ using UnityEngine;
 using Zenject;
 using System;
 using System.Collections;
+using System.IO;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine.Networking;
@@ -58,7 +59,16 @@ namespace TimeLine
         
         IEnumerator LoadAudioClip(string filePath)
         {
-            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(filePath, AudioType.MPEG))
+            // Определяем расширение файла и сопоставляем с AudioType
+            AudioType audioType = GetAudioTypeFromPath(filePath);
+    
+            if (audioType == AudioType.UNKNOWN)
+            {
+                Debug.LogError("Неизвестный формат аудиофайла: " + filePath);
+                yield break;
+            }
+
+            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(filePath, audioType))
             {
                 yield return www.SendWebRequest();
 
@@ -74,6 +84,24 @@ namespace TimeLine
                     Debug.LogError("Ошибка загрузки аудио: " + www.error);
                 }
             }
+        }
+
+        private AudioType GetAudioTypeFromPath(string path)
+        {
+            string extension = Path.GetExtension(path).ToLower();
+    
+            return extension switch
+            {
+                ".mp3" => AudioType.MPEG,
+                ".wav" => AudioType.WAV,
+                ".ogg" => AudioType.OGGVORBIS,
+                ".aif" or ".aiff" => AudioType.AIFF,
+                ".xm" => AudioType.XM,
+                ".mod" => AudioType.MOD,
+                ".s3m" => AudioType.S3M,
+                ".it" => AudioType.IT,
+                _ => AudioType.UNKNOWN
+            };
         }
         
         public float Offset() => offset * _timeLineSettings.DistanceBetweenBeatLines;

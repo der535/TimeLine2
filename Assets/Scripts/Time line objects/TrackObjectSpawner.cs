@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using TimeLine.Components;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using UnityEngine;
@@ -11,13 +12,16 @@ namespace TimeLine
     public class TrackObjectSpawner : MonoBehaviour
     {
         #region Serialized Fields
+
         [SerializeField] private Transform root;
-        [Space]
-        [SerializeField] private GameObject scenePrefab;
+        [Space] [SerializeField] private GameObject scenePrefab;
+        [SerializeField] private GameObject sceneObjectBasePrefab;
         [SerializeField] private GameObject trackPrefab;
+
         #endregion
 
         #region Private Fields
+
         private KeyframeTrackStorage _keyframeTrackStorage;
         private TrackObjectStorage _trackObjectStorage;
         private BranchCollection _branchCollection;
@@ -25,9 +29,11 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
         private Main _main;
         private DiContainer _container;
+
         #endregion
 
         #region Injection
+
         [Inject]
         private void Construct(
             TrackObjectStorage trackObjectStorage,
@@ -46,28 +52,128 @@ namespace TimeLine
             _keyframeTrackStorage = keyframeTrackStorage;
             _selectObjectController = selectObjectController;
         }
+
         #endregion
 
         #region Public Methods
+
         internal void Spawn(TrackObjectSO trackObjectSO)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
 
             // Создаем сценный объект
             SceneTrackObject sceneTrackObject = CreateSceneTrackObject(trackObjectSO);
-            
+
             // Создаем трек-объект
             TrackObject trackObject = CreateTrackObject(trackObjectSO, _trackStorage.TrackLines[0]);
-            
+
             // Создаем ветку
             Branch branch = _branchCollection.AddBranch(id, trackObjectSO.name);
 
             // Добавляем в хранилище
             _trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch);
         }
+
+        internal (TrackObjectData, GameObject, Branch) LoadTrackObject(GameObjectSaveData data)
+        {
+            string id = UniqueIDGenerator.GenerateUniqueID();
+
+            // Создаем сценный объект
+            GameObject sceneObject = CreateBaseSceneTrackObject();
+
+            // Создаем трек-объект
+            TrackObject trackObject = CreateTrackObject(data.duractionTime, data.gameObjectName, _trackStorage.TrackLines[0], data.startTime);
+
+            // Создаем ветку
+            Branch branch = _branchCollection.AddBranch(id, data.gameObjectName);
+            
+            foreach (var node in data.branch.Nodes)
+            {
+                print($"Path:{node.Path} Name:{node.Name}");
+                branch.AddNode(node.Path, node.Name);
+            }
+            
+            // Добавляем в хранилище
+            TrackObjectData trackObjectData = _trackObjectStorage.Add(sceneObject.gameObject, trackObject, branch);
+            
+            print(trackObjectData);
+            
+            //Добавляем необходимые компоненты
+            foreach (var component in data.Components)
+            {
+                // print(ComponentRules.GetComponentType(component.ComponentType));
+                IParameterComponent parameterComponent =
+                    (IParameterComponent)ComponentRules.GetOrAddComponentSafely(component.ComponentType, sceneObject, _container);
+                print(parameterComponent);
+                parameterComponent.SetParameterData(component.Parameters);
+            }
+
+            // Добавляем трек и ключевые кадры
+            foreach (var track in data.tracks)
+            {
+               
+                Track trackm = new Track(sceneObject, track.branchPath, track.animationColor);
+                _keyframeTrackStorage.AddTrack(branch.FindNode(track.branchPath), trackm, trackObjectData.trackObject);
+                
+                foreach (var saveData in track.keyframeSaveData)
+                {
+                    Keyframe.Keyframe keyframe = Keyframe.Keyframe.FromSaveData(saveData);
+                    trackm.AddKeyframe(keyframe);
+                }
+            }
+            
+            return (trackObjectData, sceneObject, branch);
+        }
+
+        internal void LoadGroup(GroupGameObjectSaveData data)
+        {
+            string id = UniqueIDGenerator.GenerateUniqueID();
+            
+            TrackObject trackObject = _container.InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
+            
+            SceneTrackObject sceneTrackObject =
+                _container.InstantiatePrefab(scenePrefab, root).GetComponent<SceneTrackObject>();
+            sceneTrackObject.Setup(new TrackObjectSO()
+            {
+                name = "Group 1", 
+                startLiveTime = (float)data.duractionTime,
+            });
+            
+            
+            List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
+             
+            foreach (var childData in data.gameObjectSaveData)
+            {
+                TrackObjectData childTrackObject;
+                GameObject childSceneObject;
+                Branch childBranch;
+                
+                (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
+                
+                trackObjectDatas.Add(childTrackObject);
+                
+                childSceneObject.transform.SetParent(sceneTrackObject.gameObject.transform);
+
+                foreach (var node in childBranch.Nodes)
+                {
+                    foreach (var node2 in node.Children)
+                    {
+                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
+                    }
+                }
+            }
+            
+            trackObject.Setup((float)data.duractionTime, "Group 1", _trackStorage.TrackLines[0], data.startTime, true);
+
+            Branch branch = _branchCollection.AddBranch(data.branch.ID, data.branch.Name);
+            
+            _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas);
+        }
+
         #endregion
 
         #region Copy Methods
+
         private void Update()
         {
             if (UnityEngine.Input.GetKeyDown(KeyCode.Space))
@@ -83,7 +189,7 @@ namespace TimeLine
         {
             List<TrackObjectData> result = new List<TrackObjectData>();
             var sortedList = list.OrderBy(x => x.trackObject.StartTimeInTicks).ToList();
-            
+
             if (sortedList.Count == 0) return result;
 
             double minTimeOuter = sortedList[0].trackObject.StartTimeInTicks;
@@ -115,7 +221,7 @@ namespace TimeLine
             // Создаем копии объектов
             TrackObjectSO trackObjectSo = trackObjectData.sceneObject.GetComponent<SceneTrackObject>().Copy();
             SceneTrackObject sceneTrackObject = CreateSceneTrackObject(trackObjectSo);
-            
+
             // Копируем компоненты
             CopyComponents(trackObjectData.sceneObject, sceneTrackObject.gameObject);
 
@@ -138,9 +244,11 @@ namespace TimeLine
             else
                 return new TrackObjectData(sceneTrackObject.gameObject, trackObject, branch);
         }
+
         #endregion
 
         #region Helper Methods
+
         /// <summary>
         /// Получает все компоненты, реализующие ICopyableComponent
         /// </summary>
@@ -157,7 +265,7 @@ namespace TimeLine
                 }
             }
 
-            print($"ICopyableComponent {result.Count}" );
+            print($"ICopyableComponent {result.Count}");
             return result;
         }
 
@@ -173,6 +281,18 @@ namespace TimeLine
             return sceneTrackObject;
         }
 
+        private GameObject CreateSceneTrackObject()
+        {
+            GameObject sceneTrackObject = _container.InstantiatePrefab(scenePrefab, root);
+            return sceneTrackObject;
+        }
+        
+        private GameObject CreateBaseSceneTrackObject()
+        {
+            GameObject sceneTrackObject = _container.InstantiatePrefab(sceneObjectBasePrefab, root);
+            return sceneTrackObject;
+        }
+
         /// <summary>
         /// Создает объект трека
         /// </summary>
@@ -181,10 +301,25 @@ namespace TimeLine
             TrackObject trackObject = _container
                 .InstantiatePrefab(trackPrefab, trackLine.RectTransform)
                 .GetComponent<TrackObject>();
-            
+
             double actualStartTime = startTime >= 0 ? startTime : _main.TicksCurrentTime();
             trackObject.Setup(trackObjectSO, trackLine, actualStartTime);
-            
+
+            return trackObject;
+        }
+        
+        /// <summary>
+        /// Создает объект трека
+        /// </summary>
+        private TrackObject CreateTrackObject(double ticksLifeTime, string name, TrackLine trackLine, double startTime = -1)
+        {
+            TrackObject trackObject = _container
+                .InstantiatePrefab(trackPrefab, trackLine.RectTransform)
+                .GetComponent<TrackObject>();
+
+            double actualStartTime = startTime >= 0 ? startTime : _main.TicksCurrentTime();
+            trackObject.Setup(ticksLifeTime, name, trackLine, actualStartTime);
+
             return trackObject;
         }
 
@@ -203,7 +338,8 @@ namespace TimeLine
         /// <summary>
         /// Копирует ветку с треками
         /// </summary>
-        private Branch CopyBranchWithTracks(Branch sourceBranch, string newId, GameObject sceneObject, TrackObject trackObject)
+        private Branch CopyBranchWithTracks(Branch sourceBranch, string newId, GameObject sceneObject,
+            TrackObject trackObject)
         {
             Branch branch = _branchCollection.CopyBranch(sourceBranch, newId);
 
@@ -218,22 +354,24 @@ namespace TimeLine
 
 
                 TreeNode newNode = null;
-                if(split.Length > 1)
+                if (split.Length > 1)
                     newNode = branch.AddNode(split[0], split[1]);
 
-                if (track != null&&newNode!=null)
+                if (track != null && newNode != null)
                     _keyframeTrackStorage.AddTrack(newNode, track.Copy(sceneObject), trackObject);
             }
 
             return branch;
         }
+
         #endregion
 
         #region Private Processing Methods
+
         /// <summary>
         /// Обрабатывает копирование группы объектов
         /// </summary>
-        private void ProcessGroupCopy(TrackObjectData trackObjectData, TrackObjectGroup group, 
+        private void ProcessGroupCopy(TrackObjectData trackObjectData, TrackObjectGroup group,
             List<TrackObjectData> result, double baseTime, double minTimeOuter, bool isChildCopy)
         {
             // Рекурсивно копируем дочерние элементы
@@ -275,7 +413,8 @@ namespace TimeLine
             }
             else
             {
-                var groupResult = new TrackObjectGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch, childs);
+                var groupResult = new TrackObjectGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch,
+                    childs);
                 result.Add(groupResult);
             }
         }
@@ -283,7 +422,7 @@ namespace TimeLine
         /// <summary>
         /// Обрабатывает копирование одиночного объекта
         /// </summary>
-        private void ProcessSingleObjectCopy(TrackObjectData trackObjectData, List<TrackObjectData> result, 
+        private void ProcessSingleObjectCopy(TrackObjectData trackObjectData, List<TrackObjectData> result,
             double baseTime, double minTimeOuter)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
@@ -312,6 +451,7 @@ namespace TimeLine
 
             result.Add(_trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch));
         }
+
         #endregion
     }
 }

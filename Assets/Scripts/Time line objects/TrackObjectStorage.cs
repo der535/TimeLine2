@@ -153,6 +153,8 @@ namespace TimeLine
         internal void AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
             List<TrackObjectData> trackObjectDatas)
         {
+            print(trackObjectDatas);
+            print(trackObjectDatas.Count);
             var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
 
             foreach (var trackObjectData in objectsForGroup)
@@ -162,6 +164,8 @@ namespace TimeLine
                 else
                     _trackObjects.Remove(trackObjectData);
 
+                print(trackObjectData);
+                print(trackObjectData.trackObject);
                 trackObjectData.trackObject.Hide();
             }
 
@@ -243,6 +247,8 @@ namespace TimeLine
 
         internal TrackObjectData GetTrackObjectData(GameObject gObject)
         {
+            print(_trackObjects.Count);
+            
             TrackObjectData data = _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
             if (data != null) return data;
 

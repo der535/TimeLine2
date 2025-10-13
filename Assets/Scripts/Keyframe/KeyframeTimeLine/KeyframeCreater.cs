@@ -28,6 +28,9 @@ namespace TimeLine
             TreeNode node = _branchCollection.AddNodeToBranch(trackObjectData.branch.ID, trackObjectData.branch.Name,
                 componentName, fieldName.Name);
         
+            print(fieldName.Name);
+            print(fieldName.AnimationColor);
+            
             if (_keyframeTrackStorage.GetTrack(node) == null)
                 _keyframeTrackStorage.AddTrack(node, new Track(target, target.name, fieldName.AnimationColor),
                     trackObjectData.trackObject);

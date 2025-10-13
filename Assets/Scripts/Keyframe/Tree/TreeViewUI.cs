@@ -49,6 +49,8 @@ public class TreeViewUI : MonoBehaviour
         
         animationLineController.Clear();
         
+        if(CurrentBranch == null) return;
+        
         BuildNodeRecursive(branch.Root, root, 0, branch.Name);
     }
 
@@ -57,6 +59,8 @@ public class TreeViewUI : MonoBehaviour
         ClearContent();
         
         animationLineController.Clear();
+        
+        if(CurrentBranch == null) return;
         
         BuildNodeRecursive(CurrentBranch.Root, root, 0, CurrentBranch.Name);
     }

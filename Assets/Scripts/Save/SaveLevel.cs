@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using EventBus;
-using NaughtyAttributes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
@@ -15,6 +14,7 @@ namespace TimeLine
     {
         // === Serialized Fields ===
         [SerializeField] private TrackObjectStorage trackObjectStorage;
+        [SerializeField] private TrackObjectSpawner trackObjectSpawner;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
 
         // === Private Fields ===
@@ -57,6 +57,8 @@ namespace TimeLine
 
         public void Save()
         {
+            _saveLevelDto = new SaveLevelDTO();
+            
             foreach (var track in trackObjectStorage.TrackObjectGroups)
             {
                 _saveLevelDto.groupGameObjectSaveData.Add(SaveGroup(track));
@@ -81,13 +83,14 @@ namespace TimeLine
             // Сначала загружаем обычные объекты
             foreach (var saveData in _saveLevelDto.gameObjectSaveData)
             {
-                LoadGameObject(saveData);
+                trackObjectSpawner.LoadTrackObject(saveData);
             }
-        }
-
-        private void LoadGameObject(GameObjectSaveData data)
-        {
             
+            // загружаем группы
+            foreach (var group in _saveLevelDto.groupGameObjectSaveData)
+            {
+                trackObjectSpawner.LoadGroup(group);
+            }
         }
         
         #endregion
@@ -153,7 +156,7 @@ namespace TimeLine
             {
                 _saveData.tracks.Add(new TrackSaveData
                 {
-                    branchPath = node.Path,
+                    branchPath = $"{node.Path}/{node.Name}",
                     animationColor = track.AnimationColor,
                     keyframeSaveData = track.SaveKeyframes()
                 });

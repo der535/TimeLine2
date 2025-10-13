@@ -28,6 +28,7 @@ namespace TimeLine
                 print("Изменил");
                 gameObject.name = Name.Value;
                 TrackObjectData data = _storage.GetTrackObjectData(gameObject);
+                print(data);
                 data.branch.Rename(Name.Value);
                 data.trackObject.Rename(Name.Value);
             };

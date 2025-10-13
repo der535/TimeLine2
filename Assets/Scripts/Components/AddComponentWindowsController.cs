@@ -17,12 +17,14 @@ namespace TimeLine.Components
         private GameObject _selected;
         private GameEventBus _gameEventBus;
         private TrackObjectStorage _trackObjectStorage;
+        private DiContainer _container;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage)
+        private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage, DiContainer container)
         {
             _gameEventBus = gameEventBus;
             _trackObjectStorage = trackObjectStorage;
+            _container = container;
         }
 
         private void AddComponent(string componentName, Action onClick)
@@ -49,7 +51,7 @@ namespace TimeLine.Components
                 AddComponent(component.Key, () =>
                 {
                     componentWindow.gameObject.SetActive(false);
-                    Component comp = ComponentRules.AddComponentSafely(component.Value, _target);
+                    Component comp = ComponentRules.AddComponentSafely(component.Value, _target, _container);
                     if(comp is IInitializedComponent initializedComponent)
                         _gameEventBus.Raise(new AddComponentEvent(_trackObjectStorage.GetTrackObjectData(_target), initializedComponent));
                     UpdateComponents(_selected);

@@ -14,26 +14,16 @@ namespace TimeLine
 
         public FloatParameter SizeX = new("SizeX", 1, Color.red);
         public FloatParameter SizeY = new("SizeY", 1, Color.red);
-
-        private SelectSpriteController _selectSpriteController;
-        private SpriteRenderer _spriteRenderer;
+        
 
         private BoxCollider2DOutline _boxCollider2DOutline;
 
         [Inject]
-        private void Construct(SelectSpriteController selectSpriteController, DiContainer container, CollidersPrefab collidersPrefab)
+        private void Construct(DiContainer container, CollidersPrefab collidersPrefab)
         {
-            _selectSpriteController = selectSpriteController;
+            print("BoxCollider2DComponent");
             _boxCollider2DOutline = container.InstantiatePrefab(collidersPrefab.BoxCollider2DPrefab, transform).GetComponent<BoxCollider2DOutline>();
-        }
-
-        private void Awake()
-        {
-            _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-
-            print(_boxCollider2DOutline);
-            print(_boxCollider2DOutline.BoxCollider);
-
+            
             OffsetX.Value = _boxCollider2DOutline.BoxCollider.size.x;
             OffsetY.Value = _boxCollider2DOutline.BoxCollider.size.y;
             SizeX.Value = _boxCollider2DOutline.BoxCollider.size.x;
@@ -64,7 +54,6 @@ namespace TimeLine
                 _boxCollider2DOutline.UpdateOutline();
             };
         }
-
         protected override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return OffsetX;

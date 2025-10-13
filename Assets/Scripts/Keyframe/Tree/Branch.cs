@@ -16,7 +16,7 @@ public class Branch
         Name = name;
         ID = id;
         Root = new TreeNode(name, name);
-        Nodes.Add(Root);
+        // Nodes.Add(Root);
     }
     
     public Branch(Branch original, string id)
@@ -153,7 +153,7 @@ public class Branch
         
         Debug.Log($"{path}/{nodeName}");
         // Добавление конечного узла
-        var finalNode = currentNode.AddChild(nodeName, $"{path}/{nodeName}");
+        var finalNode = currentNode.AddChild(nodeName, $"{path}");
         Nodes.Add(finalNode);
         return finalNode;
     }
@@ -168,6 +168,8 @@ public class Branch
 
         foreach (var node in Nodes)
         {
+            // Debug.Log($"Path: {node.Path}/{node.Name}");
+            if(node.Path == node.Name) continue;
             saveData.Nodes.Add(new TreeNodeSaveData
             {
                 Path = node.Path,
