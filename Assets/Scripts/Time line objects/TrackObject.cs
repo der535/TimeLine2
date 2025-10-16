@@ -123,21 +123,21 @@ namespace TimeLine
         }
 
         // 🆕 Перегрузка с флагом
-        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks,
-            bool enableResizeLimits = false)
-        {
-            StartTimeInTicks = startTimeInTicks;
-            TrackLine = trackLine;
-            TimeDuractionInTicks = trackObjectSo.startLiveTime * Main.TICKS_PER_BEAT;
-            Name = trackObjectSo.name;
-            nameText.text = trackObjectSo.name;
-
-            _reducedLeft = 0;
-            _reducedRight = 0;
-            _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
-
-            UpdateVisuals();
-        }
+        // internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks,
+        //     bool enableResizeLimits = false)
+        // {
+        //     StartTimeInTicks = startTimeInTicks;
+        //     TrackLine = trackLine;
+        //     TimeDuractionInTicks = trackObjectSo.startLiveTime * Main.TICKS_PER_BEAT;
+        //     Name = trackObjectSo.name;
+        //     nameText.text = trackObjectSo.name;
+        //
+        //     _reducedLeft = 0;
+        //     _reducedRight = 0;
+        //     _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
+        //
+        //     UpdateVisuals();
+        // }
 
         // 🆕 Перегрузка с флагом
         internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks,
@@ -157,8 +157,8 @@ namespace TimeLine
         }
 
         // Старые перегрузки для обратной совместимости (лимиты ВКЛЮЧЕНЫ по умолчанию)
-        internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
-            => Setup(trackObjectSo, trackLine, startTimeInTicks, false);
+        // internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
+        //     => Setup(trackObjectSo, trackLine, startTimeInTicks, false);
 
         // internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks)
         //     => Setup(ticksLifeTime, name, trackLine, startTimeInTicks, false);

@@ -141,16 +141,16 @@ namespace TimeLine
             }
         }
 
-        internal TrackObjectData Add(GameObject sceneObject, TrackObject selectedObject, Branch branch)
+        internal TrackObjectData Add(GameObject sceneObject, TrackObject selectedObject, Branch branch, string id)
         {
-            TrackObjectData trackObjectData = new TrackObjectData(sceneObject, selectedObject, branch);
+            TrackObjectData trackObjectData = new TrackObjectData(sceneObject, selectedObject, branch, id);
             _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectData));
             _trackObjects.Add(trackObjectData);
             //Debug.Log($"[Add] TrackObject '{selectedObject.Name}' added to storage.");
             return trackObjectData;
         }
 
-        internal void AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
+        internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
             List<TrackObjectData> trackObjectDatas)
         {
             print(trackObjectDatas);
@@ -169,7 +169,7 @@ namespace TimeLine
                 trackObjectData.trackObject.Hide();
             }
 
-            TrackObjectGroup group = new TrackObjectGroup(sceneObject, trackObject, branch, objectsForGroup);
+            TrackObjectGroup group = new TrackObjectGroup(sceneObject, trackObject, branch, Guid.NewGuid().ToString(), objectsForGroup);
             //print(_trackObjectGroups.Count);
             _trackObjectGroups.Add(group);
 
@@ -184,6 +184,8 @@ namespace TimeLine
                     track.trackObject.GroupOffset(value);
                 };
             }
+
+            return group;
         }
 
         internal void HideAll()
@@ -328,6 +330,40 @@ namespace TimeLine
             _selectObjectController.Select(targetData, UnityEngine.Input.GetKey(KeyCode.LeftShift));
             SelectColor();
         }
+        
+        /// <summary>
+        /// Ищет TrackObjectData (включая TrackObjectGroup) по уникальному идентификатору sceneObjectID.
+        /// Поиск выполняется сначала среди отдельных объектов, затем среди групп и их вложенных объектов.
+        /// </summary>
+        /// <param name="sceneObjectID">Уникальный идентификатор объекта.</param>
+        /// <returns>Найденный TrackObjectData или null, если не найден.</returns>
+        public TrackObjectData GetTrackObjectDataBySceneObjectID(string sceneObjectID)
+        {
+            if (string.IsNullOrEmpty(sceneObjectID))
+                return null;
+
+            // Поиск среди обычных TrackObjectData
+            var found = _trackObjects.FirstOrDefault(data => data.sceneObjectID == sceneObjectID);
+            if (found != null)
+                return found;
+
+            // Поиск среди групп (включая сами группы)
+            found = _trackObjectGroups.FirstOrDefault(group => group.sceneObjectID == sceneObjectID);
+            if (found != null)
+                return found;
+
+            // Поиск внутри вложенных объектов групп
+            foreach (var group in _trackObjectGroups)
+            {
+                found = group.TrackObjectDatas.FirstOrDefault(data => data.sceneObjectID == sceneObjectID);
+                if (found != null)
+                    return found;
+            }
+
+            // Если ничего не найдено
+            //Debug.LogWarning($"[GetTrackObjectDataBySceneObjectID] No TrackObjectData found with sceneObjectID: {sceneObjectID}");
+            return null;
+        }
 
         private void SelectColor()
         {
@@ -350,12 +386,15 @@ namespace TimeLine
         public GameObject sceneObject;
         public TrackObject trackObject;
         public Branch branch;
+        
+        public string sceneObjectID;
 
-        public TrackObjectData(GameObject sceneObject, TrackObject trackObject, Branch branch)
+        public TrackObjectData(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID)
         {
             this.sceneObject = sceneObject;
             this.trackObject = trackObject;
             this.branch = branch;
+            this.sceneObjectID = sceneObjectID;
         }
     }
 
@@ -370,13 +409,14 @@ namespace TimeLine
             set { _trackObjectDatas = value; }
         }
 
-        public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
-            List<TrackObjectData> trackObjectDatas) : base(sceneObject, trackObject, branch)
+        public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID,
+            List<TrackObjectData> trackObjectDatas) : base(sceneObject, trackObject, branch, sceneObjectID)
         {
             this.sceneObject = sceneObject;
             this.trackObject = trackObject;
             this.branch = branch;
             this.TrackObjectDatas = trackObjectDatas;
+            this.sceneObjectID = sceneObjectID;
         }
     }
 }

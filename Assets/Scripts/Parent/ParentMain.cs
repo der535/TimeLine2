@@ -36,7 +36,7 @@ public class ParentMain : MonoBehaviour
         _eventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
 
 
-        UpdateDropdown(new TrackObjectData(null, null, null), true);
+        UpdateDropdown(new TrackObjectData(null, null, null, null), true);
 
         dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
     }

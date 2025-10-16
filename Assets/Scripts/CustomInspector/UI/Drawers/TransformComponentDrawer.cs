@@ -18,6 +18,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
 
         public bool GetComponent(Component component)
         {
+            Debug.Log(component);
             return component.GetType() == typeof(TransformComponent);
         }
 

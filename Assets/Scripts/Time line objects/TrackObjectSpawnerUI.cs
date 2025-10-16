@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace TimeLine
 {
@@ -6,16 +7,15 @@ namespace TimeLine
     {
         [SerializeField] private TrackObjectSpawner trackObjectSpawner;
         [SerializeField] private GameObject trackObjectUIPrefab;
-        [SerializeField] private TrackObjectSO[] trackObjects;
+        [FormerlySerializedAs("trackObjects")] [SerializeField] private Sprite[] sprites;
         [SerializeField] private RectTransform root;
 
         private void Start()
         {
-            foreach (var trackObject in trackObjects)
+            foreach (var trackObject in sprites)
             {
                TrackObjectUI trackObjectUI = Instantiate(trackObjectUIPrefab, root).GetComponent<TrackObjectUI>();
-               trackObjectUI.Setup(trackObject, () =>
-                   trackObjectSpawner.Spawn(trackObject));
+               trackObjectUI.Setup(trackObject, () => trackObjectSpawner.Spawn(trackObject));
             }
         }
     }

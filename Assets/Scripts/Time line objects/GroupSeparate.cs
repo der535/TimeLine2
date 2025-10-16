@@ -31,7 +31,9 @@ namespace TimeLine
                     foreach (var trackObject in group.TrackObjectDatas)
                     {
                         trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
-                        trackObject.sceneObject.transform.SetParent(null);
+                        
+                        if(trackObject.sceneObject.transform.parent == group.sceneObject.transform)
+                            trackObject.sceneObject.transform.SetParent(null);
 
                         foreach (var node in selectObject.branch.Nodes)
                         {
@@ -58,7 +60,9 @@ namespace TimeLine
             foreach (var trackObject in trackObjectGroup.TrackObjectDatas)
             {
                 trackObject.trackObject.GroupOffset(-trackObjectGroup.trackObject.StartTimeInTicks);
-                trackObject.sceneObject.transform.SetParent(null);
+                
+                if(trackObject.sceneObject.transform.parent == trackObject.sceneObject.transform)
+                    trackObject.sceneObject.transform.SetParent(null);
 
                 foreach (var node in trackObjectGroup.branch.Nodes)
                 {

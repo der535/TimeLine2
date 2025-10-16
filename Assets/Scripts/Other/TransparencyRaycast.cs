@@ -10,21 +10,19 @@ public class PixelPerfectClick : MonoBehaviour
     private Texture2D _spriteTexture;
     private Sprite _sprite;
     
-    private GameEventBus _gameEventBus;
     private TrackObjectStorage _trackObjectStorage;
     private SelectObjectController _selectObjectController;
 
     [Inject]
-    void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController)
+    void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController)
     {
-        _gameEventBus = gameEventBus;
         _trackObjectStorage = trackObjectStorage;
         _selectObjectController = selectObjectController;
     }
 
-    void Start()
+    internal void Setup(SpriteRenderer spriteRenderer)
     {
-        _spriteRenderer = GetComponent<SpriteRenderer>();
+        _spriteRenderer = spriteRenderer;
         _sprite = _spriteRenderer.sprite;
         
         // Проверяем, есть ли текстура у спрайта

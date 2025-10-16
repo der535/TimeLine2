@@ -12,8 +12,6 @@ namespace TimeLine
         [Space] 
         [SerializeField] private GameObject scenePrefab;
         [SerializeField] private GameObject trackPrefab;
-        [Space]
-        [SerializeField] private TrackObjectSO groupObjectSO;
         
         private SelectObjectController _selectObjectController;
         private TrackObjectStorage _trackObjectStorage;
@@ -64,21 +62,15 @@ namespace TimeLine
                     maxTime = selectObject.trackObject.StartTimeInTicks + selectObject.trackObject.TimeDuractionInTicks;
                 }
             }
-            
-            SceneTrackObject sceneTrackObject =
-                _container.InstantiatePrefab(scenePrefab, root).GetComponent<SceneTrackObject>();
-            sceneTrackObject.Setup(new TrackObjectSO()
-            {
-                name = "Group 1", 
-                startLiveTime = (float)(maxTime-minTime),
-            });
-            
-            print(minTime);
+
+            GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
             
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
-                selectObject.sceneObject.transform.SetParent(sceneTrackObject.gameObject.transform);
+                
+                if(selectObject.sceneObject.transform == null)
+                    selectObject.sceneObject.transform.SetParent(sceneObject.transform);
 
                 foreach (var node in selectObject.branch.Nodes)
                 {
@@ -91,9 +83,9 @@ namespace TimeLine
             
             trackObject.Setup(maxTime-minTime, "Group 1", _trackStorage.TrackLines[0], minTime, true);
 
-            Branch branch = _branchCollection.AddBranch(id, groupObjectSO.name);
+            Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
             
-            _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, _selectObjectController.SelectObjects);
+            _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, _selectObjectController.SelectObjects);
         }
         
         public void Create(List<TrackObjectData> trackObjects)
@@ -118,20 +110,14 @@ namespace TimeLine
                 }
             }
             
-            SceneTrackObject sceneTrackObject =
-                _container.InstantiatePrefab(scenePrefab, root).GetComponent<SceneTrackObject>();
-            sceneTrackObject.Setup(new TrackObjectSO()
-            {
-                name = "Group 1", 
-                startLiveTime = (float)(maxTime-minTime),
-            });
-            
-            print(minTime);
+            GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
             
             foreach (var selectObject in trackObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
-                selectObject.sceneObject.transform.SetParent(sceneTrackObject.gameObject.transform);
+                
+                if(selectObject.sceneObject.transform == null)
+                    selectObject.sceneObject.transform.SetParent(sceneObject.transform);
 
                 foreach (var node in selectObject.branch.Nodes)
                 {
@@ -144,9 +130,9 @@ namespace TimeLine
             
             trackObject.Setup(maxTime-minTime, "Group 1", _trackStorage.TrackLines[0], minTime, true);
 
-            Branch branch = _branchCollection.AddBranch(id, groupObjectSO.name);
+            Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
             
-            _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjects);
+            _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects);
         }
     }
 }

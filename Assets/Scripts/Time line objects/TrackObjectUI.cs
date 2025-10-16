@@ -12,10 +12,10 @@ namespace TimeLine
         [SerializeField] private Image image;
         [SerializeField] private Button button;
 
-        internal void Setup(TrackObjectSO trackObject, Action onClick)
+        internal void Setup(Sprite sprite, Action onClick)
         {
-            text.text = trackObject.name;
-            image.sprite = trackObject.sprite;
+            text.text = sprite.name;
+            image.sprite = sprite;
             button.onClick.AddListener(new UnityAction(onClick));
         }
     }

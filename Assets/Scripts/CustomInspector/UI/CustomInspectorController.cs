@@ -57,9 +57,8 @@ namespace TimeLine
             
             Clear();
 
+            print(target);
             var components = target.GetComponents<Component>();
-            
-           
 
             foreach (var component in components)
             {

@@ -13,6 +13,8 @@ namespace TimeLine.Installers
         [SerializeField] private RectTransform toolRectTransform;
         [SerializeField] private RectTransform contentRectTransform;
         [Space]
+        [SerializeField] private Transform sceneObjectParent;
+        [Space]
         [SerializeField] private RectTransform rightPanelRectTransform;
         [SerializeField] private RectTransform keyframeRootRectTransform;
         [SerializeField] private RectTransform keyframeScrollView;
@@ -39,6 +41,7 @@ namespace TimeLine.Installers
         public RectTransform RightPanelRectTransform => rightPanelRectTransform;
         public RectTransform KeyframeRootRectTransform => keyframeRootRectTransform;
         public RectTransform KeyframeScrollView => keyframeScrollView;
+        public Transform SceneObjectParent => sceneObjectParent;
         public VerticalLayoutGroup KeyframeVerticalLayoutGroup => keyframeVerticalLayoutGroup;
 
         public void NotifyContentRectChanged()

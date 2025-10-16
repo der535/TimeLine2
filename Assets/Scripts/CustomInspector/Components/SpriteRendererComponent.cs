@@ -18,15 +18,17 @@ namespace TimeLine
 
         private SelectSpriteController _selectSpriteController;
         private SpriteRenderer _spriteRenderer;
+        private PixelPerfectClick _pixelPerfectClick;
+        private DiContainer _container;
         
         [Inject]
-        private void Construct(SelectSpriteController selectSpriteController)
+        private void Construct(SelectSpriteController selectSpriteController, DiContainer container)
         {
+            print("Construct");
+            //
             _selectSpriteController = selectSpriteController;
-        }
-        
-        private void Awake()
-        {
+            _container = container;
+            
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
     
             // Если компонент не найден — добавляем его
@@ -34,6 +36,10 @@ namespace TimeLine
             {
                 _spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
             }
+
+            _pixelPerfectClick = gameObject.AddComponent<PixelPerfectClick>();
+            _container.Inject(_pixelPerfectClick);
+            _pixelPerfectClick.Setup(_spriteRenderer);
 
             Sprite.OnValueChanged += () =>
             {
@@ -54,6 +60,12 @@ namespace TimeLine
             {
                 _spriteRenderer.color = SpriteColor.Value;
             };
+        }
+
+        private void OnDestroy()
+        {
+            Destroy(_spriteRenderer);
+            Destroy(_pixelPerfectClick);
         }
 
         protected override IEnumerable<InspectableParameter> GetParameters()

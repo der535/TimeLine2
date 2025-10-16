@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using EventBus;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
+using TimeLine.Installers;
 using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
@@ -12,27 +14,23 @@ namespace TimeLine
 {
     public class SaveLevel : MonoBehaviour
     {
-        // === Serialized Fields ===
+                // === Serialized Fields ===
         [SerializeField] private TrackObjectStorage trackObjectStorage;
         [SerializeField] private TrackObjectSpawner trackObjectSpawner;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
 
         // === Private Fields ===
-        private string _data;
-        private GameObjectSaveData _saveData = new();
-        private GroupGameObjectSaveData _groupSaveData = new();
-        
-        private SaveLevelDTO _saveLevelDto = new();
-
-        private GameEventBus _gameEventBus = new();
         private LevelBaseInfo _levelBaseInfo;
-        
+        private GameEventBus _gameEventBus;
+        private MainObjects _mainObjects;
+
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, MainObjects mainObjects)
         {
             _gameEventBus = gameEventBus;
+            _mainObjects = mainObjects;
         }
-        
+
         // === Unity Lifecycle ===
         private void Awake()
         {
@@ -40,9 +38,10 @@ namespace TimeLine
             {
                 Converters = { new ColorConverter() },
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                Formatting = Formatting.Indented
+                Formatting = Formatting.Indented,
+                TypeNameHandling = TypeNameHandling.Auto
             };
-            
+
             _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) =>
             {
                 _levelBaseInfo = eventData.LevelInfo;
@@ -50,26 +49,28 @@ namespace TimeLine
             });
         }
 
-        // return JsonConvert.SerializeObject(saveData, Formatting.Indented); Сериализация
-        
         #region Buttons
-        // === Public API / Button Methods ===
 
         public void Save()
         {
-            _saveLevelDto = new SaveLevelDTO();
-            
-            foreach (var track in trackObjectStorage.TrackObjectGroups)
+            var saveLevelDto = new SaveLevelDTO();
+
+            foreach (var group in trackObjectStorage.TrackObjectGroups)
             {
-                _saveLevelDto.groupGameObjectSaveData.Add(SaveGroup(track));
-            }
-            
-            foreach (var track in trackObjectStorage.TrackObjects)
-            {
-                _saveLevelDto.gameObjectSaveData.Add(SaveGameObject(track));
+                saveLevelDto.groupGameObjectSaveData.Add(SaveGroup(group));
             }
 
-            File.WriteAllText($"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json", JsonConvert.SerializeObject(_saveLevelDto, Formatting.Indented));
+            foreach (var track in trackObjectStorage.TrackObjects)
+            {
+                saveLevelDto.gameObjectSaveData.Add(SaveGameObject(track));
+            }
+
+            string directoryPath = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}";
+            Directory.CreateDirectory(directoryPath);
+
+            string filePath = $"{directoryPath}/LevelObjects.json";
+            string json = JsonConvert.SerializeObject(saveLevelDto, Formatting.Indented);
+            File.WriteAllText(filePath, json);
         }
 
         private void Load()
@@ -77,60 +78,147 @@ namespace TimeLine
             string path = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json";
             if (!File.Exists(path)) return;
 
-            var json = File.ReadAllText(path);
-            _saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
+            string json = File.ReadAllText(path);
+            var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
 
-            // Сначала загружаем обычные объекты
-            foreach (var saveData in _saveLevelDto.gameObjectSaveData)
+            // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
+            var sortedRootObjects = TopologicalSort(saveLevelDto.gameObjectSaveData);
+            foreach (var saveData in sortedRootObjects)
             {
                 trackObjectSpawner.LoadTrackObject(saveData);
             }
+
+            // 2. Загружаем корневые ГРУППЫ в правильном порядке
+            var rootGroupsAsBase = saveLevelDto.groupGameObjectSaveData.Cast<GameObjectSaveData>().ToList();
+            var sortedRootGroups = TopologicalSort(rootGroupsAsBase);
             
-            // загружаем группы
-            foreach (var group in _saveLevelDto.groupGameObjectSaveData)
+            foreach (var groupBase in sortedRootGroups)
             {
-                trackObjectSpawner.LoadGroup(group);
+                var group = (GroupGameObjectSaveData)groupBase;
+                LoadGroup(group); // ← рекурсивная загрузка с сортировкой детей
             }
         }
-        
+
         #endregion
 
-        public GroupGameObjectSaveData SaveGroup(TrackObjectGroup group)
+        // === Рекурсивная загрузка группы с сортировкой детей ===
+        private void LoadGroup(GroupGameObjectSaveData groupData)
         {
-            GameObjectSaveData data = SaveGameObject(group);
-            _groupSaveData = new GroupGameObjectSaveData();
+            // Сначала создаём саму группу
+            trackObjectSpawner.LoadTrackObject(groupData);
 
-            _groupSaveData.gameObjectName = data.gameObjectName;
-            _groupSaveData.startTime = data.startTime;
-            _groupSaveData.duractionTime = data.duractionTime;
-            _groupSaveData.branch = data.branch;
-            _groupSaveData.Components = data.Components;
-            _groupSaveData.tracks = data.tracks;
-            
-            _groupSaveData.gameObjectSaveData = new List<GameObjectSaveData>();
-            
-            foreach (var trackObject in group.TrackObjectDatas)
+            // Затем сортируем и загружаем её детей (могут быть и объекты, и подгруппы)
+            var sortedChildren = TopologicalSort(groupData.children);
+            foreach (var child in sortedChildren)
             {
-                _groupSaveData.gameObjectSaveData.Add(SaveGameObject(trackObject));
+                if (child is GroupGameObjectSaveData childGroup)
+                {
+                    LoadGroup(childGroup); // рекурсия
+                }
+                else
+                {
+                    trackObjectSpawner.LoadTrackObject(child);
+                }
+            }
+        }
+
+        // === УНИВЕРСАЛЬНАЯ топологическая сортировка для любого List<GameObjectSaveData> ===
+        private static List<GameObjectSaveData> TopologicalSort(List<GameObjectSaveData> objects)
+        {
+            if (objects == null || objects.Count == 0)
+                return new List<GameObjectSaveData>();
+
+            var idToData = objects.ToDictionary(o => o.sceneObjectID, o => o);
+            var childrenMap = new Dictionary<string, List<string>>();
+            var allIds = new HashSet<string>(idToData.Keys);
+
+            // Строим связи: parent → children
+            foreach (var obj in objects)
+            {
+                if (!string.IsNullOrEmpty(obj.parentObjectID))
+                {
+                    if (allIds.Contains(obj.parentObjectID))
+                    {
+                        if (!childrenMap.ContainsKey(obj.parentObjectID))
+                            childrenMap[obj.parentObjectID] = new List<string>();
+                        childrenMap[obj.parentObjectID].Add(obj.sceneObjectID);
+                    }
+                    // Если родителя нет — объект остаётся корневым (игнорируем parentObjectID)
+                }
             }
 
-            return _groupSaveData;
+            // Находим корни: у кого parentObjectID пуст ИЛИ родитель отсутствует
+            var rootIds = objects
+                .Where(o => string.IsNullOrEmpty(o.parentObjectID) || !allIds.Contains(o.parentObjectID))
+                .Select(o => o.sceneObjectID)
+                .ToList();
+
+            var sorted = new List<GameObjectSaveData>();
+            var visited = new HashSet<string>();
+
+            foreach (var rootId in rootIds)
+            {
+                Visit(rootId, idToData, childrenMap, visited, sorted);
+            }
+
+            // Если что-то не вошло — добавляем в конец (защита от циклов)
+            if (sorted.Count < objects.Count)
+            {
+                var missing = objects.Where(o => !sorted.Contains(o)).ToList();
+                Debug.LogWarning($"TopologicalSort: {missing.Count} объектов не вошли в порядок (возможно, цикл). Добавляем в конец.");
+                sorted.AddRange(missing);
+            }
+
+            return sorted;
         }
-        
-        // === Save Logic ===
-        public GameObjectSaveData SaveGameObject(TrackObjectData trackObject)
+
+        private static void Visit(
+            string id,
+            Dictionary<string, GameObjectSaveData> idToData,
+            Dictionary<string, List<string>> childrenMap,
+            HashSet<string> visited,
+            List<GameObjectSaveData> result)
         {
-            _saveData = new GameObjectSaveData();
-            
-            _saveData = new GameObjectSaveData
+            if (visited.Contains(id)) return;
+            visited.Add(id);
+
+            // 1. Добавляем текущий объект СРАЗУ
+            if (idToData.TryGetValue(id, out var data))
+            {
+                result.Add(data);
+            }
+
+            // 2. Рекурсивно обходим детей
+            if (childrenMap.TryGetValue(id, out var children))
+            {
+                foreach (var childId in children)
+                {
+                    Visit(childId, idToData, childrenMap, visited, result);
+                }
+            }
+        }
+
+        // === Save Logic (без изменений) ===
+
+        private GameObjectSaveData SaveGameObject(TrackObjectData trackObject)
+        {
+            string parentObjectID = string.Empty;
+            if (trackObject.sceneObject.transform.parent != _mainObjects.SceneObjectParent.transform)
+                parentObjectID = trackObjectStorage
+                    .GetTrackObjectData(trackObject.sceneObject.transform.parent.gameObject).sceneObjectID;
+
+            var saveData = new GameObjectSaveData
             {
                 gameObjectName = trackObject.sceneObject.name,
                 startTime = trackObject.trackObject.StartTimeInTicks,
                 duractionTime = trackObject.trackObject.TimeDuractionInTicks,
-                branch = trackObject.branch.ToSaveData()
+                sceneObjectID = trackObject.sceneObjectID,
+                parentObjectID = parentObjectID,
+                branch = trackObject.branch.ToSaveData(),
+                Components = new List<ComponentData>(),
+                tracks = new List<TrackSaveData>()
             };
 
-            // Save all IParameterComponent components
             var parameterComponents = trackObject.sceneObject.GetComponents<IParameterComponent>();
             foreach (var component in parameterComponents)
             {
@@ -139,22 +227,48 @@ namespace TimeLine
                     ComponentType = component.GetComponentTypeName(),
                     Parameters = component.GetParameterData()
                 };
-                _saveData.Components.Add(compData);
+                saveData.Components.Add(compData);
             }
 
-            // Save recursively KeyframeTracks
-            SaveKeyframeTrack(trackObject.branch.Root);
-
-            return _saveData;
+            SaveKeyframeTrack(trackObject.branch.Root, saveData);
+            return saveData;
         }
 
-        private void SaveKeyframeTrack(TreeNode node)
+        private GroupGameObjectSaveData SaveGroup(TrackObjectGroup group)
         {
-            print(node.Path);
+            var baseData = SaveGameObject(group);
+            var groupData = new GroupGameObjectSaveData
+            {
+                gameObjectName = baseData.gameObjectName,
+                startTime = baseData.startTime,
+                duractionTime = baseData.duractionTime,
+                branch = baseData.branch,
+                Components = baseData.Components,
+                tracks = baseData.tracks,
+                children = new List<GameObjectSaveData>()
+            };
+
+            foreach (var child in group.TrackObjectDatas)
+            {
+                if (child is TrackObjectGroup childGroup)
+                {
+                    groupData.children.Add(SaveGroup(childGroup));
+                }
+                else
+                {
+                    groupData.children.Add(SaveGameObject(child));
+                }
+            }
+
+            return groupData;
+        }
+
+        private void SaveKeyframeTrack(TreeNode node, GameObjectSaveData saveData)
+        {
             Track track = keyframeTrackStorage.GetTrack(node);
             if (track != null)
             {
-                _saveData.tracks.Add(new TrackSaveData
+                saveData.tracks.Add(new TrackSaveData
                 {
                     branchPath = $"{node.Path}/{node.Name}",
                     animationColor = track.AnimationColor,
@@ -164,29 +278,8 @@ namespace TimeLine
 
             foreach (var child in node.Children)
             {
-                SaveKeyframeTrack(child);
+                SaveKeyframeTrack(child, saveData);
             }
-        }
-
-        // === Load Logic (stubbed) ===
-        public static void LoadGameObject(GameObject go, string json)
-        {
-            // var saveData = JsonConvert.DeserializeObject<GameObjectSaveData>(json);
-            //
-            // var existingComponents = go.GetComponents<IParameterComponent>()
-            //     .ToDictionary(c => c.GetComponentTypeName(), c => c);
-            //
-            // foreach (var compData in saveData.Components)
-            // {
-            //     if (existingComponents.TryGetValue(compData.ComponentType, out var component))
-            //     {
-            //         component.SetParameterData(compData.Parameters);
-            //     }
-            //     else
-            //     {
-            //         Debug.LogWarning($"Component {compData.ComponentType} not found on {go.name} during load.");
-            //     }
-            // }
         }
     }
 
@@ -195,37 +288,37 @@ namespace TimeLine
     [System.Serializable]
     public class SaveLevelDTO
     {
-        public List<GroupGameObjectSaveData> groupGameObjectSaveData = new List<GroupGameObjectSaveData>();
-        public List<GameObjectSaveData> gameObjectSaveData = new List<GameObjectSaveData>();
+        public List<GroupGameObjectSaveData> groupGameObjectSaveData = new();
+        public List<GameObjectSaveData> gameObjectSaveData = new();
     }
-        
-    [System.Serializable]
-    public class GroupGameObjectSaveData : GameObjectSaveData
-    {
-        public List<GameObjectSaveData> gameObjectSaveData;
-    }
-    
+
     [System.Serializable]
     public class GameObjectSaveData
     {
+        public string sceneObjectID;
+        public string parentObjectID;
         public string gameObjectName;
-        
         public double startTime;
         public double duractionTime;
-        
         public BranchSaveData branch;
-        
         public List<ComponentData> Components = new();
         public List<TrackSaveData> tracks = new();
     }
-    
+
+    [System.Serializable]
+    public class GroupGameObjectSaveData : GameObjectSaveData
+    {
+        // Может содержать как обычные объекты, так и другие группы
+        public List<GameObjectSaveData> children = new();
+    }
+
     [System.Serializable]
     public class ComponentData
     {
         public string ComponentType;
         public Dictionary<string, object> Parameters;
     }
-    
+
     [System.Serializable]
     public class TreeNodeSaveData
     {
@@ -260,7 +353,6 @@ namespace TimeLine
         public Color animationColor;
         public List<KeyframeSaveData> keyframeSaveData = new();
     }
-    
-    #endregion
 
+    #endregion
 }
