@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Installers;
 using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
@@ -20,6 +21,7 @@ namespace TimeLine
         private KeyframeTrackStorage _keyframeTrackStorage;
         
         private DiContainer _container;
+        private MainObjects _mainObjects;
 
         [Inject]
         private void Construct(
@@ -29,7 +31,8 @@ namespace TimeLine
             TrackStorage trackStorage,
             DiContainer container,
             KeyframeTrackStorage keyframeTrackStorage,
-            SelectObjectController selectObjectController)
+            SelectObjectController selectObjectController,
+            MainObjects mainObjects)
         {
             _trackObjectStorage = trackObjectStorage;
             _branchCollection = branchCollection;
@@ -37,6 +40,7 @@ namespace TimeLine
             _container = container;
             _selectObjectController = selectObjectController;    
             _keyframeTrackStorage = keyframeTrackStorage;
+            _mainObjects = mainObjects;
         }
 
         public void Create()
@@ -69,7 +73,7 @@ namespace TimeLine
             {
                 selectObject.trackObject.GroupOffset(minTime);
                 
-                if(selectObject.sceneObject.transform == null)
+                if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
 
                 foreach (var node in selectObject.branch.Nodes)
@@ -116,7 +120,7 @@ namespace TimeLine
             {
                 selectObject.trackObject.GroupOffset(minTime);
                 
-                if(selectObject.sceneObject.transform == null)
+                if(selectObject.sceneObject.transform.parent.transform == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
 
                 foreach (var node in selectObject.branch.Nodes)

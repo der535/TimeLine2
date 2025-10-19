@@ -18,7 +18,6 @@ namespace TimeLine.CustomInspector.UI.Drawers
 
         public bool GetComponent(Component component)
         {
-            Debug.Log(component);
             return component.GetType() == typeof(TransformComponent);
         }
 
@@ -43,6 +42,11 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 
                 _customInspectorDrawer.CreateBoolField(componentComponent.YPositionActive);
 
+                _customInspectorDrawer.AddSpace(30);
+                
+                _customInspectorDrawer.CreateFloatField(componentComponent.XPositionOffset, null);
+                _customInspectorDrawer.CreateFloatField(componentComponent.YPositionOffset, null);
+                
                 _customInspectorDrawer.AddSpace(30);
                 _customInspectorDrawer.CreateFloatField(componentComponent.XRotation,
                     () => _keyframeCreater.CreateKeyframe(new XRotationData(componentComponent.XRotation.Value), target,

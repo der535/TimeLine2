@@ -14,7 +14,10 @@ namespace TimeLine
         public BoolParameter XPositionActive = new("x-p Active", true, Color.gray);
         public FloatParameter YPosition = new("Position-Y", 0, Color.green);
         public BoolParameter YPositionActive = new("y-p Active", true, Color.gray);
-
+        
+        public FloatParameter XPositionOffset = new("Offset-Position-X", 0, Color.black);
+        public FloatParameter YPositionOffset = new("Offset-Position-Y", 0, Color.black);
+        
         public FloatParameter XRotation = new("Rotation-X", 0, new Color(0.8301887f, 0.2310431f, 0.2310431f));
         public BoolParameter XRotationActive = new("x-r Active", true, Color.gray);
         public FloatParameter YRotation = new("Rotation-Y", 0, new Color(0.2584544f, 0.8313726f, 0.2313726f));
@@ -57,8 +60,11 @@ namespace TimeLine
         
         private void Awake()
         {
-            XPosition.OnValueChanged += () => transform.localPosition = new Vector3(XPosition.Value, transform.localPosition.y, transform.localPosition.z);
-            YPosition.OnValueChanged += () => transform.localPosition = new Vector3(transform.localPosition.x, YPosition.Value, transform.localPosition.z);
+            XPosition.OnValueChanged += () => transform.localPosition = new Vector3(XPosition.Value + XPositionOffset.Value, transform.localPosition.y, transform.localPosition.z);
+            YPosition.OnValueChanged += () => transform.localPosition = new Vector3(transform.localPosition.x, YPosition.Value + YPositionOffset.Value, transform.localPosition.z);
+            
+            XPositionOffset.OnValueChanged += () => transform.localPosition = new Vector3(XPosition.Value + XPositionOffset.Value, transform.localPosition.y, transform.localPosition.z);
+            YPositionOffset.OnValueChanged += () => transform.localPosition = new Vector3(transform.localPosition.x, YPosition.Value + YPositionOffset.Value, transform.localPosition.z);
 
             XRotation.OnValueChanged += () => transform.localRotation = Quaternion.Euler(XRotation.Value, transform.rotation.y, transform.rotation.z);
             YRotation.OnValueChanged += () => transform.localRotation = Quaternion.Euler(transform.rotation.x,YRotation.Value, transform.rotation.z);

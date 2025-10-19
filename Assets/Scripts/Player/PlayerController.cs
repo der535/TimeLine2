@@ -35,7 +35,7 @@ namespace TimeLine
             if (inputDirection.magnitude > 0.1f) // Используем небольшой порог, чтобы избежать дребезга
             {
                 // Если нажата, устанавливаем скорость
-                _rb.velocity = inputDirection.normalized * _speed;
+                _rb.linearVelocity = inputDirection.normalized * _speed;
             }
             else
             {
@@ -43,17 +43,17 @@ namespace TimeLine
                 if (_useSmoothStop)
                 {
                     // Плавная остановка: уменьшаем скорость
-                    _rb.velocity = _rb.velocity * (1.0f - _frictionCoefficient);
+                    _rb.linearVelocity = _rb.linearVelocity * (1.0f - _frictionCoefficient);
                     // Дополнительно: можно добавить условие для полной остановки при очень маленькой скорости
-                    if (_rb.velocity.magnitude < 0.01f)
+                    if (_rb.linearVelocity.magnitude < 0.01f)
                     {
-                        _rb.velocity = Vector2.zero;
+                        _rb.linearVelocity = Vector2.zero;
                     }
                 }
                 else
                 {
                     // Мгновенная остановка
-                    _rb.velocity = Vector2.zero;
+                    _rb.linearVelocity = Vector2.zero;
                 }
             }
         }

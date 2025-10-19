@@ -442,7 +442,7 @@ namespace TimeLine
             float mouseDeltaXLocal = currentMouseXLocal - _startMouseXLocal;
             double deltaTicks = AnchorPositionDeltaToTicks(mouseDeltaXLocal);
             _selectObjectController.MultipleMove(this, deltaTicks);
-            StartTimeInTicks = RoundTicksToGrid(_startTrackObjectTicks + deltaTicks);
+            StartTimeInTicks = Math.Max(0, RoundTicksToGrid(_startTrackObjectTicks + deltaTicks));
             _trackObjectStorage.UpdatePositionSelectedTrackObject();
         }
 

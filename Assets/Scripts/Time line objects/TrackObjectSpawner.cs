@@ -87,7 +87,8 @@ namespace TimeLine
             {
                 print(data.parentObjectID);
                 print(_trackObjectStorage.GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform);
-                sceneObject.transform.parent = _trackObjectStorage.GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform;
+                sceneObject.transform.parent = _trackObjectStorage
+                    .GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform;
             }
 
             // Создаем трек-объект
@@ -104,7 +105,8 @@ namespace TimeLine
             }
 
             // Добавляем в хранилище
-            TrackObjectData trackObjectData = _trackObjectStorage.Add(sceneObject.gameObject, trackObject, branch, data.sceneObjectID);
+            TrackObjectData trackObjectData =
+                _trackObjectStorage.Add(sceneObject.gameObject, trackObject, branch, data.sceneObjectID);
 
             print(trackObjectData);
 
@@ -153,7 +155,7 @@ namespace TimeLine
                 GameObject childSceneObject;
                 Branch childBranch;
 
-                if(childData is GroupGameObjectSaveData childGroupData) 
+                if (childData is GroupGameObjectSaveData childGroupData)
                     (childTrackObject, childSceneObject, childBranch) = LoadGroup(childGroupData); //todo Тут надо
                 else
                     (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
@@ -175,7 +177,8 @@ namespace TimeLine
 
             Branch branch = _branchCollection.AddBranch(data.branch.ID, data.branch.Name);
 
-            TrackObjectGroup trackObjectGroup =  _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas);
+            TrackObjectGroup trackObjectGroup =
+                _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas);
             return (trackObjectGroup, sceneTrackObject, branch);
         }
 
@@ -244,7 +247,8 @@ namespace TimeLine
             Branch branch = CopyBranchWithTracks(trackObjectData.branch, id, sceneTrackObject.gameObject, trackObject);
 
             if (addToStorage)
-                return _trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch, Guid.NewGuid().ToString());
+                return _trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch,
+                    Guid.NewGuid().ToString());
             else
                 return new TrackObjectData(sceneTrackObject.gameObject, trackObject, branch, Guid.NewGuid().ToString());
         }
@@ -269,7 +273,6 @@ namespace TimeLine
                 }
             }
 
-            print($"ICopyableComponent {result.Count}");
             return result;
         }
 
@@ -303,21 +306,6 @@ namespace TimeLine
             GameObject sceneTrackObject = _container.InstantiatePrefab(sceneObjectBasePrefab, root);
             return sceneTrackObject;
         }
-
-        /// <summary>
-        /// Создает объект трека
-        /// </summary>
-        // private TrackObject CreateTrackObject(TrackObjectSO trackObjectSO, TrackLine trackLine, double startTime = -1)
-        // {
-        //     TrackObject trackObject = _container
-        //         .InstantiatePrefab(trackPrefab, trackLine.RectTransform)
-        //         .GetComponent<TrackObject>();
-        //
-        //     double actualStartTime = startTime >= 0 ? startTime : _main.TicksCurrentTime();
-        //     trackObject.Setup(trackObjectSO, trackLine, actualStartTime);
-        //
-        //     return trackObject;
-        // }
 
         /// <summary>
         /// Создает объект трека
@@ -358,19 +346,26 @@ namespace TimeLine
             foreach (var node in sourceBranch.Nodes)
             {
                 var track = _keyframeTrackStorage.GetTrack(node);
-                string[] split = node.Path.Split('/');
+                print(node.Name);
+                print(track?.TrackName);
+                print(track?.Keyframes.Count);
 
-                // TreeNode newNode = split.Length > 1
-                //     ? branch.AddNode(split[0], split[1])
-                //     : branch.AddNode("", split[0]);
 
+                string[] split = $"{node.Path}/{node.Name}".Split('/');
 
                 TreeNode newNode = null;
                 if (split.Length > 1)
                     newNode = branch.AddNode(split[0], split[1]);
 
+                print(track != null);
+                print(track);
+                print(newNode != null);
+                print(newNode);
                 if (track != null && newNode != null)
+                {
+                    print("AddTrack");
                     _keyframeTrackStorage.AddTrack(newNode, track.Copy(sceneObject), trackObject);
+                }
             }
 
             return branch;
@@ -405,7 +400,16 @@ namespace TimeLine
             {
                 child.trackObject.GroupOffset(minTime);
                 child.trackObject.Hide();
+                
+                Vector3 childPosition = child.sceneObject.transform.localPosition;
+                Quaternion childRotation = child.sceneObject.transform.localRotation;
+                Vector3 childScale = child.sceneObject.transform.localScale;
+                
                 child.sceneObject.transform.SetParent(parent.sceneObject.transform);
+                
+                child.sceneObject.transform.localPosition = childPosition;
+                child.sceneObject.transform.localRotation = childRotation;
+                child.sceneObject.transform.localScale = childScale;
 
                 // Обновляем родительские связи треков
                 foreach (var node in child.branch.Nodes)
@@ -457,7 +461,8 @@ namespace TimeLine
             // Копируем ветку и треки
             Branch branch = CopyBranchWithTracks(trackObjectData.branch, id, sceneTrackObject.gameObject, trackObject);
 
-            result.Add(_trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch, Guid.NewGuid().ToString()));
+            result.Add(_trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch,
+                Guid.NewGuid().ToString()));
         }
 
         #endregion

@@ -153,8 +153,6 @@ namespace TimeLine
         internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
             List<TrackObjectData> trackObjectDatas)
         {
-            print(trackObjectDatas);
-            print(trackObjectDatas.Count);
             var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
 
             foreach (var trackObjectData in objectsForGroup)
@@ -164,8 +162,6 @@ namespace TimeLine
                 else
                     _trackObjects.Remove(trackObjectData);
 
-                print(trackObjectData);
-                print(trackObjectData.trackObject);
                 trackObjectData.trackObject.Hide();
             }
 
@@ -249,8 +245,6 @@ namespace TimeLine
 
         internal TrackObjectData GetTrackObjectData(GameObject gObject)
         {
-            print(_trackObjects.Count);
-            
             TrackObjectData data = _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
             if (data != null) return data;
 
@@ -268,6 +262,44 @@ namespace TimeLine
             }
 
             //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
+            return null;
+        }
+        
+        /// <summary>
+        /// Возвращает TrackObjectData, соответствующий указанному GameObject.
+        /// Если GameObject принадлежит дочернему объекту внутри группы — возвращается сама группа (TrackObjectGroup).
+        /// Если GameObject — это сама группа — возвращается группа.
+        /// </summary>
+        /// <param name="sceneObject">Искомый GameObject.</param>
+        /// <returns>TrackObjectData (обычный объект или группа), либо null, если не найден.</returns>
+        public TrackObjectData GetTrackObjectDataOrParentGroupBySceneObject(GameObject sceneObject)
+        {
+            if (sceneObject == null)
+                return null;
+
+            // 1. Проверяем, не является ли GameObject самой группой
+            var directGroup = _trackObjectGroups.FirstOrDefault(g => g.sceneObject == sceneObject);
+            if (directGroup != null)
+                return directGroup;
+
+            // 2. Проверяем, не является ли GameObject обычным (не вложенным) объектом
+            var directObject = _trackObjects.FirstOrDefault(o => o.sceneObject == sceneObject);
+            if (directObject != null)
+                return directObject;
+
+            // 3. Проверяем, находится ли GameObject внутри какой-либо группы как дочерний элемент
+            foreach (var group in _trackObjectGroups)
+            {
+                var child = group.TrackObjectDatas.FirstOrDefault(o => o.sceneObject == sceneObject);
+                if (child != null)
+                {
+                    // Возвращаем группу, а не дочерний объект
+                    return group;
+                }
+            }
+
+            // Не найдено
+            // Debug.LogWarning($"[GetTrackObjectDataOrParentGroupBySceneObject] GameObject '{sceneObject.name}' not found in storage or any group.");
             return null;
         }
 

@@ -40,7 +40,7 @@ public class PixelPerfectClick : MonoBehaviour
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             if (IsPixelOpaque(mousePos))
             {
-                _selectObjectController.Select(_trackObjectStorage.GetTrackObjectData(gameObject), UnityEngine.Input.GetKey(KeyCode.LeftShift));
+                _selectObjectController.Select(_trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(gameObject), UnityEngine.Input.GetKey(KeyCode.LeftShift));
                 Debug.Log("Клик по объекту!");
                 // Здесь можно вызвать нужное действие
             }

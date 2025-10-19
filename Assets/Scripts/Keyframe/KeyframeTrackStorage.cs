@@ -78,6 +78,8 @@ namespace TimeLine.Keyframe
 
         public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject)
         {
+            print(track.TrackName);
+            print(treeNode.Name);
             tracks.Add(new TrackData(treeNode, track, trackObject));
             _gameEventBus.Raise(new AddTrackEvent(track));
         }

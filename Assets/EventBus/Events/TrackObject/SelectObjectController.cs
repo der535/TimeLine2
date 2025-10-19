@@ -8,6 +8,7 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public class SelectObjectController : MonoBehaviour
     {
+        [SerializeField] private SelectLock _selectLock;
         private GameEventBus _gameEventBus;
         private List<TrackObjectData> _trackObjects = new List<TrackObjectData>();
         
@@ -28,6 +29,8 @@ namespace TimeLine.EventBus.Events.TrackObject
         }
         public void Select(TrackObjectData trackObject, bool isMultiple)
         {
+            if(_selectLock.IsLocked) return;
+            
             var changed = false;
 
             if (isMultiple)

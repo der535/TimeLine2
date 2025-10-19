@@ -24,8 +24,6 @@ namespace TimeLine
         [Inject]
         private void Construct(SelectSpriteController selectSpriteController, DiContainer container)
         {
-            print("Construct");
-            //
             _selectSpriteController = selectSpriteController;
             _container = container;
             
@@ -90,7 +88,8 @@ namespace TimeLine
 
         public override Component Copy(GameObject targetGameObject)
         {
-            var component = targetGameObject.GetComponent<SpriteRendererComponent>();
+            var component = targetGameObject.AddComponent<SpriteRendererComponent>();
+            _container.Inject(component);
             CopyTo(component);
             return component;
         }
