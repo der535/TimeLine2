@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EventBus;
 using NaughtyAttributes;
+using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
@@ -21,14 +22,16 @@ namespace TimeLine
 
         private GameEventBus _gameEventBus;
         private SelectObjectController _selectObjectController;
+        private SaveComposition _composition;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController)
+        private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController, SaveComposition saveComposition)
         {
             _gameEventBus = gameEventBus;
             _selectObjectController = selectObjectController;
+            _composition = saveComposition;
         }
-        
+
         public List<TrackObjectData> TrackObjects => _trackObjects;
         public List<TrackObjectGroup> TrackObjectGroups => _trackObjectGroups;
 
@@ -151,7 +154,7 @@ namespace TimeLine
         }
 
         internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
-            List<TrackObjectData> trackObjectDatas)
+            List<TrackObjectData> trackObjectDatas, string sceneObjectID, string compositionID)
         {
             var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
 
@@ -165,22 +168,24 @@ namespace TimeLine
                 trackObjectData.trackObject.Hide();
             }
 
-            TrackObjectGroup group = new TrackObjectGroup(sceneObject, trackObject, branch, Guid.NewGuid().ToString(), objectsForGroup);
-            //print(_trackObjectGroups.Count);
+            if(compositionID == "")
+                compositionID = Guid.NewGuid().ToString();
+            TrackObjectGroup group =
+                new TrackObjectGroup(sceneObject, trackObject, branch, sceneObjectID, objectsForGroup, compositionID)
+                {
+                    compositionID = compositionID
+                };
+            print(_composition);
             _trackObjectGroups.Add(group);
-
-            //Debug.Log($"[AddGroup] Group '{trackObject.Name}' created with {objectsForGroup.Count} objects.");
 
             // Подписка на изменение размера
             foreach (var track in trackObjectDatas)
             {
-                trackObject.Rezise += (value) =>
-                {
-                    //Debug.Log($"[Resize] Group '{trackObject.Name}' resized by {value}. Applying offset to child '{track.trackObject.Name}'.");
-                    track.trackObject.GroupOffset(value);
-                };
+                trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
             }
 
+            _composition.AddComposition(group);
+            
             return group;
         }
 
@@ -264,7 +269,7 @@ namespace TimeLine
             //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
             return null;
         }
-        
+
         /// <summary>
         /// Возвращает TrackObjectData, соответствующий указанному GameObject.
         /// Если GameObject принадлежит дочернему объекту внутри группы — возвращается сама группа (TrackObjectGroup).
@@ -362,7 +367,7 @@ namespace TimeLine
             _selectObjectController.Select(targetData, UnityEngine.Input.GetKey(KeyCode.LeftShift));
             SelectColor();
         }
-        
+
         /// <summary>
         /// Ищет TrackObjectData (включая TrackObjectGroup) по уникальному идентификатору sceneObjectID.
         /// Поиск выполняется сначала среди отдельных объектов, затем среди групп и их вложенных объектов.
@@ -418,7 +423,7 @@ namespace TimeLine
         public GameObject sceneObject;
         public TrackObject trackObject;
         public Branch branch;
-        
+
         public string sceneObjectID;
 
         public TrackObjectData(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID)
@@ -433,6 +438,7 @@ namespace TimeLine
     [Serializable]
     public class TrackObjectGroup : TrackObjectData
     {
+        public string compositionID;
         private List<TrackObjectData> _trackObjectDatas;
 
         public List<TrackObjectData> TrackObjectDatas
@@ -442,8 +448,10 @@ namespace TimeLine
         }
 
         public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID,
-            List<TrackObjectData> trackObjectDatas) : base(sceneObject, trackObject, branch, sceneObjectID)
+            List<TrackObjectData> trackObjectDatas, string compositionID) : base(sceneObject, trackObject, branch,
+            sceneObjectID)
         {
+            this.compositionID = compositionID;
             this.sceneObject = sceneObject;
             this.trackObject = trackObject;
             this.branch = branch;

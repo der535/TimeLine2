@@ -48,6 +48,7 @@ namespace TimeLine.Installers
         [SerializeField] private SelectSpriteController selectSpriteController;
         [SerializeField] private SelectColorContoller selectColorContoller;
         [SerializeField] private CollidersPrefab collidersPrefab;
+        [SerializeField] private SaveComposition saveComposition;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -89,6 +90,7 @@ namespace TimeLine.Installers
             Container.Bind<SelectSpriteController>().FromInstance(selectSpriteController).AsSingle();
             Container.Bind<SelectColorContoller>().FromInstance(selectColorContoller).AsSingle();
             Container.Bind<CollidersPrefab>().FromInstance(collidersPrefab).AsSingle();
+            Container.Bind<SaveComposition>().FromInstance(saveComposition).AsSingle();
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();

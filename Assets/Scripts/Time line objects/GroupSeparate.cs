@@ -26,8 +26,10 @@ namespace TimeLine
         {
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
+                print(_selectObjectController.SelectObjects.Count);
                 if (selectObject is TrackObjectGroup group)
                 {
+                    
                     foreach (var trackObject in group.TrackObjectDatas)
                     {
                         trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
@@ -76,6 +78,7 @@ namespace TimeLine
 
                 trackObject.trackObject.CalculatePosition();
             }
+            
 
             _trackObjectStorage.SeparetaGroup(trackObjectGroup);
 

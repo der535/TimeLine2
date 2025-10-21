@@ -75,7 +75,7 @@ namespace TimeLine
             _trackObjectStorage.Add(sceneObject, trackObject, branch, Guid.NewGuid().ToString());
         }
 
-        internal (TrackObjectData, GameObject, Branch) LoadTrackObject(GameObjectSaveData data)
+        internal (TrackObjectData, GameObject, Branch) LoadTrackObject(GameObjectSaveData data, bool addToStorage = true)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
 
@@ -83,7 +83,7 @@ namespace TimeLine
             GameObject sceneObject = CreateBaseSceneTrackObject();
 
 
-            if (data.parentObjectID != string.Empty)
+            if (!string.IsNullOrEmpty(data.parentObjectID))
             {
                 print(data.parentObjectID);
                 print(_trackObjectStorage.GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform);
@@ -104,9 +104,19 @@ namespace TimeLine
                 branch.AddNode(node.Path, node.Name);
             }
 
-            // Добавляем в хранилище
-            TrackObjectData trackObjectData =
-                _trackObjectStorage.Add(sceneObject.gameObject, trackObject, branch, data.sceneObjectID);
+            TrackObjectData trackObjectData;
+            
+            if (addToStorage)
+            {
+                // Добавляем в хранилище
+                trackObjectData =
+                    _trackObjectStorage.Add(sceneObject.gameObject, trackObject, branch, data.sceneObjectID);
+            }
+            else
+            {
+                trackObjectData = new TrackObjectData(sceneObject.gameObject, trackObject, branch, data.sceneObjectID);
+            }
+
 
             print(trackObjectData);
 
@@ -137,9 +147,9 @@ namespace TimeLine
             return (trackObjectData, sceneObject, branch);
         }
 
-        internal (TrackObjectData, GameObject, Branch) LoadGroup(GroupGameObjectSaveData data)
+        internal (TrackObjectData, GameObject, Branch) LoadGroup(GroupGameObjectSaveData data, string compositionID)
         {
-            string id = UniqueIDGenerator.GenerateUniqueID();
+            string sceneObjectID = UniqueIDGenerator.GenerateUniqueID();
 
             TrackObject trackObject = _container
                 .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
@@ -156,7 +166,7 @@ namespace TimeLine
                 Branch childBranch;
 
                 if (childData is GroupGameObjectSaveData childGroupData)
-                    (childTrackObject, childSceneObject, childBranch) = LoadGroup(childGroupData); //todo Тут надо
+                    (childTrackObject, childSceneObject, childBranch) = LoadGroup(childGroupData,""); //todo Тут при загрузке создаётся группа, надо исправить
                 else
                     (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
 
@@ -178,7 +188,7 @@ namespace TimeLine
             Branch branch = _branchCollection.AddBranch(data.branch.ID, data.branch.Name);
 
             TrackObjectGroup trackObjectGroup =
-                _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas);
+                _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas, sceneObjectID, compositionID);
             return (trackObjectGroup, sceneTrackObject, branch);
         }
 
@@ -211,7 +221,7 @@ namespace TimeLine
             {
                 if (trackObjectData is TrackObjectGroup group)
                 {
-                    ProcessGroupCopy(trackObjectData, group, result, baseTime, minTimeOuter, isChildCopy);
+                    ProcessGroupCopy(trackObjectData, group, result, baseTime, minTimeOuter, isChildCopy, group.compositionID);
                 }
                 else
                 {
@@ -379,7 +389,7 @@ namespace TimeLine
         /// Обрабатывает копирование группы объектов
         /// </summary>
         private void ProcessGroupCopy(TrackObjectData trackObjectData, TrackObjectGroup group,
-            List<TrackObjectData> result, double baseTime, double minTimeOuter, bool isChildCopy)
+            List<TrackObjectData> result, double baseTime, double minTimeOuter, bool isChildCopy, string compositionID)
         {
             // Рекурсивно копируем дочерние элементы
             List<TrackObjectData> childs = CopyObject(group.TrackObjectDatas, true);
@@ -424,13 +434,13 @@ namespace TimeLine
             // Добавляем группу в хранилище или создаем новую группу
             if (!isChildCopy)
             {
-                _trackObjectStorage.AddGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch, childs);
+                _trackObjectStorage.AddGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch, childs, UniqueIDGenerator.GenerateUniqueID(), compositionID);
                 result.Add(parent);
             }
             else
             {
                 var groupResult = new TrackObjectGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch,
-                    Guid.NewGuid().ToString(), childs);
+                    Guid.NewGuid().ToString(), childs, group.compositionID);
                 result.Add(groupResult);
             }
         }

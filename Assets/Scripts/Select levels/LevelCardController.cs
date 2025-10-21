@@ -13,7 +13,7 @@ namespace TimeLine
         [SerializeField] private LevelCard levelCardPrefab;
         [Space]
         [SerializeField] private GameObject canvasCreateLevel;
-
+        
         private GameEventBus _gameEventBus;
 
         [Inject]
@@ -46,7 +46,7 @@ namespace TimeLine
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"Ошибка при загрузке уровня");
+                    Debug.LogWarning($"Ошибка при загрузке уровня: {e}");
                 }
             }
         }
@@ -58,7 +58,7 @@ namespace TimeLine
             {
                 _gameEventBus.Raise(new OpenEditorEvent(data));
                 canvasCreateLevel.gameObject.SetActive(false);
-            });
+            }, null, null, null);
         }
     }
 }

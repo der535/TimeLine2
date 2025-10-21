@@ -29,7 +29,7 @@ public class WaveformRenderer : MonoBehaviour
         _gameEventBus = eventBus;
     }
     
-    private void Awake()
+    private void Start()
     {
         _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
         {
