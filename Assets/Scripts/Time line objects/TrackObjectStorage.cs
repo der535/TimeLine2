@@ -6,6 +6,8 @@ using NaughtyAttributes;
 using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Installers;
+using TimeLine.Keyframe;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -48,6 +50,22 @@ namespace TimeLine
                     InternalSelectObject(trackObjectData);
                 }
             });
+        }
+
+        internal  List<TrackObjectData> GetAllActiveTrackData()
+        {
+            List<TrackObjectData> trackObjectData = new List <TrackObjectData>();
+            foreach (var track in _trackObjects)
+            {
+                if(track.trackObject.GetActive()) trackObjectData.Add(track);
+            }
+
+            foreach (var group in _trackObjectGroups)
+            {
+                if(group.trackObject.GetActive()) trackObjectData.Add(group);
+            }
+            
+            return trackObjectData;
         }
 
         [Button]
@@ -154,7 +172,7 @@ namespace TimeLine
         }
 
         internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
-            List<TrackObjectData> trackObjectDatas, string sceneObjectID, string compositionID)
+            List<TrackObjectData> trackObjectDatas, string sceneObjectID, string compositionID, bool addToStorage = true)
         {
             var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
 
@@ -175,8 +193,9 @@ namespace TimeLine
                 {
                     compositionID = compositionID
                 };
-            print(_composition);
-            _trackObjectGroups.Add(group);
+            // print(_composition);
+            if(addToStorage)
+                _trackObjectGroups.Add(group);
 
             // Подписка на изменение размера
             foreach (var track in trackObjectDatas)
@@ -457,6 +476,38 @@ namespace TimeLine
             this.branch = branch;
             this.TrackObjectDatas = trackObjectDatas;
             this.sceneObjectID = sceneObjectID;
+        }
+
+        public void Update(double newDuraction, List<TrackObjectData> trackObjectDatas, TrackObjectRemover remover, MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage)
+        {
+            trackObject.UpdateDuraction(newDuraction);
+            foreach (var data in TrackObjectDatas)
+            {
+                remover.SingleRemoveNoStorage(data);
+            }
+            
+            TrackObjectDatas = trackObjectDatas;
+            
+            foreach (var track in TrackObjectDatas)
+            {
+                trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
+                
+                track.trackObject.Hide();
+            }
+
+            foreach (var selectObject in TrackObjectDatas)
+            {
+                if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                    selectObject.sceneObject.transform.SetParent(sceneObject.transform);
+
+                foreach (var node in selectObject.branch.Nodes)
+                {
+                    foreach (var node2 in node.Children)
+                    {
+                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
+                    }
+                }
+            }
         }
     }
 }

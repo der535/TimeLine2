@@ -39,10 +39,13 @@ namespace TimeLine
                 try
                 {
                     string jsonContent = File.ReadAllText($"{folder}/LevelBaseInfo.json");
+                    // print(jsonContent);
 
                     LevelBaseInfo levelData = JsonUtility.FromJson<LevelBaseInfo>(jsonContent);
+                    // print(levelData);
 
                     CreateLevelCard(levelData);
+                    // print("CreateLevelCard");
                 }
                 catch (Exception e)
                 {
@@ -53,12 +56,16 @@ namespace TimeLine
 
         private void CreateLevelCard(LevelBaseInfo data)
         {
+            print(data);
             LevelCard card = Instantiate(levelCardPrefab, _content);
+            print(card);
             card.Setup(data.levelName, () =>
             {
                 _gameEventBus.Raise(new OpenEditorEvent(data));
                 canvasCreateLevel.gameObject.SetActive(false);
             }, null, null, null);
+            print("Setup");
+
         }
     }
 }

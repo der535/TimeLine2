@@ -85,7 +85,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         
         public void CreateSpriteField(SpriteParameter field)
         {
-            print("CreateSpriteField");
+            // print("CreateSpriteField");
             var parameter = _container.InstantiatePrefab(spriteField, _currentComponent.RootObject).GetComponent<SpriteFieldUI>();
             parameter.Setup(field);
             _currentComponent.AddHeight(parameter.GetFieldHeight());

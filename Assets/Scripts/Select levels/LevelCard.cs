@@ -16,9 +16,9 @@ namespace TimeLine
         internal void Setup(string text, Action createAction, Action editAction, Action renameAction, Action deleteAction)
         {
             compositionButton.onClick.AddListener(createAction.Invoke);
-            compositionButton.onClick.AddListener(editAction.Invoke);
-            compositionButton.onClick.AddListener(renameAction.Invoke);
-            compositionButton.onClick.AddListener(deleteAction.Invoke);
+            if(editAction != null) editButton.onClick.AddListener(editAction.Invoke);
+            if(renameAction != null) renameButton.onClick.AddListener(renameAction.Invoke);
+            if(deleteAction != null) deleteButton.onClick.AddListener(deleteAction.Invoke);
             _text.text = text;
         }
     }

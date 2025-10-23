@@ -29,9 +29,9 @@ namespace TimeLine.EventBus.Events.TrackObject
         }
         public void Select(TrackObjectData trackObject, bool isMultiple)
         {
-            print(trackObject.trackObject.StartTimeInTicks);
+            // print(trackObject.trackObject.StartTimeInTicks);
             if(_selectLock.IsLocked) return;
-            print(trackObject.GetType());
+            // print(trackObject.GetType());
 
             
             var changed = false;

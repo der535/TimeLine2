@@ -1,4 +1,5 @@
-﻿using TimeLine.EventBus.Events.TrackObject;
+﻿using System.Linq;
+using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
@@ -55,6 +56,44 @@ namespace TimeLine
                     _trackObjectRemover.SingleRemove(group);
                 }
             }
+        }
+        
+        public void SeparateAll()
+        {
+            // Создаём копию списка, так как мы можем удалять элементы во время итерации
+            var groupsToSeparate = _selectObjectController.SelectObjects
+                .OfType<TrackObjectGroup>()
+                .ToList();
+
+            foreach (var group in groupsToSeparate)
+            {
+                SeparateSingle(group);
+            }
+        }
+
+        internal void SeparateSingle(TrackObjectGroup group)
+        {
+            foreach (var trackObject in group.TrackObjectDatas)
+            {
+                trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
+
+                if (trackObject.sceneObject.transform.parent == group.sceneObject.transform)
+                    trackObject.sceneObject.transform.SetParent(null);
+
+                foreach (var node in group.branch.Nodes)
+                {
+                    foreach (var node2 in node.Children)
+                    {
+                        _keyframeTrackStorage.GetTrack(node2)?.SetParent();
+                    }
+                }
+
+                trackObject.trackObject.Show();
+                trackObject.trackObject.CalculatePosition();
+            }
+
+            _trackObjectStorage.SeparetaGroup(group);
+            _trackObjectRemover.SingleRemove(group);
         }
 
         public void Separate(TrackObjectGroup trackObjectGroup)

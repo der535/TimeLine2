@@ -21,6 +21,7 @@ namespace TimeLine
             {
                 RenameCompositionPanel.gameObject.SetActive(false);
                 saveComposition.Rename(inputField.text, compositionID);
+                saveComposition.UpdateCompositionCards();
             });
         }
     }

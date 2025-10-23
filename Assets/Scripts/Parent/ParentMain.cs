@@ -64,6 +64,7 @@ public class ParentMain : MonoBehaviour
 
         foreach (TrackObjectData obj in _localtrackObjectDatas)
         {
+            if(obj == null || obj.sceneObject == null) continue;
             options.Add(obj.sceneObject?.name ?? "null");
         }
 

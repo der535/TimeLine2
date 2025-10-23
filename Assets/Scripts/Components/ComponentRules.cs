@@ -72,7 +72,7 @@ namespace TimeLine.Components
                     Debug.LogWarning($"No Zenject container found to inject into {componentType.Name}");
                 }
 
-                Debug.Log($"✅ Added and injected {componentType.Name} to {target.name}");
+                // Debug.Log($"✅ Added and injected {componentType.Name} to {target.name}");
                 return comp;
             }
             else

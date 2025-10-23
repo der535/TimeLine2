@@ -108,6 +108,7 @@ namespace TimeLine
             _gameEventBus.UnsubscribeFrom<PanEvent>(OnScrollPan);
         }
 
+        internal bool GetActive() => rect.gameObject.activeSelf;
         internal void Hide()
         {
             rect.gameObject.SetActive(false);
@@ -120,6 +121,13 @@ namespace TimeLine
         internal void Rename(string name)
         {
             nameText.text = name;
+        }
+
+        internal void UpdateDuraction(double newDuractionInTicks)
+        {
+            var delta = newDuractionInTicks - TimeDuractionInTicks;
+            _reducedRight -= delta;
+            print(_reducedRight);
         }
 
         // 🆕 Перегрузка с флагом

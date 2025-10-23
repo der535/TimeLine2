@@ -90,7 +90,7 @@ namespace TimeLine
             _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, _selectObjectController.SelectObjects, UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID());
         }
         
-        public void Create(List<TrackObjectData> trackObjects)
+        public TrackObjectGroup Create(List<TrackObjectData> trackObjects, string compositionID = null)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
             
@@ -118,7 +118,7 @@ namespace TimeLine
             {
                 selectObject.trackObject.GroupOffset(minTime);
                 
-                if(selectObject.sceneObject.transform.parent.transform == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
 
                 foreach (var node in selectObject.branch.Nodes)
@@ -134,7 +134,10 @@ namespace TimeLine
 
             Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
             
-            _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects, UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID());
+            if(string.IsNullOrEmpty(compositionID))
+                compositionID = UniqueIDGenerator.GenerateUniqueID();
+             
+            return _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects, UniqueIDGenerator.GenerateUniqueID(), compositionID);
         }
         
         public void Create(List<TrackObjectData> trackObjects, TrackObject groupTrackObject)

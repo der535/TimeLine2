@@ -1,4 +1,5 @@
 ﻿using System;
+using TimeLine;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,16 +10,28 @@ public class CompositionCard : MonoBehaviour
     [SerializeField] private Button editButton;
     [SerializeField] private Button renameButton;
     [SerializeField] private Button deleteButton;
+    [SerializeField] private Button duplicateButton;
     [SerializeField] private TextMeshProUGUI cardText;
+    
+    private SaveComposition _saveComposition;
+    private string _id;
+    
+    internal string GetID() => _id;
 
     public void Setup(
+        SaveComposition saveComposition,
         Action spawnAction,
         Action editAction,
         Action renameAction,
         Action deleteAction,
-        string cardName)
+        Action duplicateAction,
+        string compositionID)
     {
-        cardText.text = cardName;
+        _id = compositionID;
+        
+        _saveComposition = saveComposition;
+
+        UpdateText();
         
         spawnButton.onClick.AddListener(spawnAction.Invoke);
         
@@ -29,5 +42,15 @@ public class CompositionCard : MonoBehaviour
         
         if (deleteAction != null) 
             deleteButton.onClick.AddListener(deleteAction.Invoke);
+        
+        if (duplicateAction != null) 
+            duplicateButton.onClick.AddListener(duplicateAction.Invoke);
+    }
+
+    internal void UpdateText()
+    {
+        print(_saveComposition.FindCompositionDataById(_id));
+        print(_saveComposition.FindCompositionDataById(_id).gameObjectName);
+        cardText.text = _saveComposition.FindCompositionDataById(_id).gameObjectName;
     }
 }

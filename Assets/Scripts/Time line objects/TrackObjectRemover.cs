@@ -65,6 +65,18 @@ namespace TimeLine
             _trackObjectStorage.Remove(select);
         }
         
+        internal void SingleRemoveNoStorage(TrackObjectData select)
+        {
+            foreach (var nodes in select.branch.Nodes)
+            {
+                _keyframeTrackStorage.RemoveTrack(nodes);
+            }
+
+            Destroy(select.trackObject.gameObject);
+            Destroy(select.sceneObject);
+        }
+
+        
         internal void SingleRemove(TrackObjectGroup select)
         {
             foreach (var nodes in select.branch.Nodes)
