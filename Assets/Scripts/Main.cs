@@ -34,6 +34,8 @@ namespace TimeLine
     
         private GameEventBus _gameEventBus;
         private TimeLineSettings _timeLineSettings;
+        
+        private bool _isPlaying;
     
         // Conversion properties
         private double SecondsPerTick => SECONDS_IN_MINUTE / (MusicData.bpm * TICKS_PER_BEAT);
@@ -118,9 +120,14 @@ namespace TimeLine
     
         public void Play()
         {
-            audioSource.Play();
-            _exactTimeInTicks = SecondsToTicks(audioSource.time);
-            _smoothTimeInTicks = _exactTimeInTicks;
+            _isPlaying = true;
+            
+            if (_smoothTimeInTicks >= 0)
+            {
+                audioSource.Play();
+                _exactTimeInTicks = SecondsToTicks(audioSource.time);
+                _smoothTimeInTicks = _exactTimeInTicks;
+            }
         }
     
         public void SetTime(float beats)
@@ -132,8 +139,8 @@ namespace TimeLine
         internal void SetTimeInTicks(double ticks)
         {
             double timeInSeconds = TicksToSeconds(ticks);
-            if (timeInSeconds < 0) timeInSeconds = 0;
-            audioSource.time = (float)timeInSeconds;
+            // if (timeInSeconds < 0) timeInSeconds = 0;
+            audioSource.time = timeInSeconds < 0 ? 0 : (float)timeInSeconds;
             _smoothTimeInTicks = ticks;
             _exactTimeInTicks = ticks;
             
@@ -143,6 +150,8 @@ namespace TimeLine
 
         public void Pause()
         {
+            _isPlaying = false;
+            
             audioSource.Pause();
             _exactTimeInTicks = SecondsToTicks(audioSource.time);
             _smoothTimeInTicks = _exactTimeInTicks;
@@ -150,28 +159,47 @@ namespace TimeLine
 
         private void Update()
         {
-            if (!audioSource.isPlaying) return;
+            if (!_isPlaying) return;
 
-            // Update exact time from audio source
-            _exactTimeInTicks = SecondsToTicks(audioSource.time);
-            
-            // Update smooth time using Time.deltaTime
-            _smoothTimeInTicks += SecondsToTicks(Time.deltaTime);
-            
-            // Apply offset to get the visual position
-            double visualOffsetTicks = SecondsToTicks(offset);
-            double exactVisualTimeInTicks = _exactTimeInTicks - visualOffsetTicks;
-            double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
-            
-            // Raise events
-            _gameEventBus.Raise(new TickSmoothTimeEvent(smoothVisualTimeInTicks));
-            _gameEventBus.Raise(new TickExactTimeEvent(exactVisualTimeInTicks));
-            
-            // Reset if too far off (using tick-based comparison)
-            double resetThresholdTicks = SecondsToTicks(minResetOffset);
-            if (Math.Abs(_smoothTimeInTicks - _exactTimeInTicks) > resetThresholdTicks)
+            if (_smoothTimeInTicks >= 0)
             {
-                _smoothTimeInTicks = _exactTimeInTicks;
+                if(!audioSource.isPlaying) audioSource.Play();
+                // Update exact time from audio source
+                _exactTimeInTicks = SecondsToTicks(audioSource.time);
+            
+                // Update smooth time using Time.deltaTime
+                _smoothTimeInTicks += SecondsToTicks(Time.deltaTime);
+            
+                // Apply offset to get the visual position
+                double visualOffsetTicks = SecondsToTicks(offset);
+                double exactVisualTimeInTicks = _exactTimeInTicks - visualOffsetTicks;
+                double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
+            
+                // Raise events
+                _gameEventBus.Raise(new TickSmoothTimeEvent(smoothVisualTimeInTicks));
+                _gameEventBus.Raise(new TickExactTimeEvent(exactVisualTimeInTicks));
+            
+                // Reset if too far off (using tick-based comparison)
+                double resetThresholdTicks = SecondsToTicks(minResetOffset);
+                if (Math.Abs(_smoothTimeInTicks - _exactTimeInTicks) > resetThresholdTicks)
+                {
+                    _smoothTimeInTicks = _exactTimeInTicks;
+                }
+            }
+            else
+            {
+                // Update smooth time using Time.deltaTime
+                _smoothTimeInTicks += SecondsToTicks(Time.deltaTime);
+                _exactTimeInTicks = _smoothTimeInTicks;
+                
+                // Apply offset to get the visual position
+                double visualOffsetTicks = SecondsToTicks(offset);
+                double exactVisualTimeInTicks = _exactTimeInTicks - visualOffsetTicks;
+                double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
+            
+                // Raise events
+                _gameEventBus.Raise(new TickSmoothTimeEvent(smoothVisualTimeInTicks));
+                _gameEventBus.Raise(new TickExactTimeEvent(exactVisualTimeInTicks));
             }
         }
     }

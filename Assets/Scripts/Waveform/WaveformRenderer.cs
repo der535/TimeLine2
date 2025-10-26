@@ -27,15 +27,12 @@ public class WaveformRenderer : MonoBehaviour
     private void Construct(GameEventBus eventBus)
     {
         _gameEventBus = eventBus;
-    }
-    
-    private void Start()
-    {
-        _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
+        eventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
         {
             Init();
         }));
     }
+
 
     [Button]
     void Init()
@@ -43,7 +40,6 @@ public class WaveformRenderer : MonoBehaviour
         InitializeSegments();
         CacheFullAudioData();
         GenerateWaveform();
-        print("InitializeSegments");
         _lastColor = waveColor; // Инициализируем последний цвет
     }
 
@@ -128,6 +124,7 @@ public class WaveformRenderer : MonoBehaviour
 
     public void GenerateWaveform()
     {
+        print(_cachedSamples);
         if (source.clip == null || 
             _cachedSamples == null || 
             _dataTextures == null || 

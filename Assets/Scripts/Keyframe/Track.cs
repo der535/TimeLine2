@@ -69,7 +69,7 @@ namespace TimeLine.Keyframe
                 offset = 0;
             else
             {
-                offset = groupObject.StartTimeInTicks;
+                offset = groupObject.GetKeyframeTrackOffset();
             }
             
             // Debug.Log(groupObject);

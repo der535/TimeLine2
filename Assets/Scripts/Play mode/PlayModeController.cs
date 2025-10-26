@@ -9,6 +9,7 @@ namespace TimeLine
         [SerializeField] private PlayerController player;
         [Space]
         [SerializeField] private float startDelay;
+        [SerializeField] private TrackObjectStorage trackObjectStorage;
 
         [Space] 
         [SerializeField] private Camera editCamera;
@@ -50,7 +51,7 @@ namespace TimeLine
         {
             if(!_isPlaying) return;
             
-            _main.SetTime(0);
+            _main.SetTimeInTicks((float)trackObjectStorage.GetMinTime());
             _main.Play();
         }
     }

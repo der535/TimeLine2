@@ -85,13 +85,14 @@ namespace TimeLine
             GameObject sceneObject = CreateBaseSceneTrackObject();
 
 
-            if (!string.IsNullOrEmpty(data.parentObjectID))
-            {
-                print(data.parentObjectID);
-                print(_trackObjectStorage.GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform);
-                sceneObject.transform.parent = _trackObjectStorage
-                    .GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform;
-            }
+            // todo Исправить в будущем
+            // if (!string.IsNullOrEmpty(data.parentObjectID))
+            // {
+            //     print(data.parentObjectID);
+            //     print(_trackObjectStorage.GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform);
+            //     sceneObject.transform.parent = _trackObjectStorage
+            //         .GetTrackObjectDataBySceneObjectID(data.parentObjectID).sceneObject.transform;
+            // }
 
             // Создаем трек-объект
             TrackObject trackObject = CreateTrackObject(data.duractionTime, data.gameObjectName,
@@ -161,13 +162,14 @@ namespace TimeLine
                 _container.InstantiatePrefab(scenePrefab, root);
 
             List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
-
-            // print(compositionData);
+            
             List<GameObjectSaveData> children;
             if (compositionData == null)
                 children = data.children;
             else
+            {
                 children = compositionData.children;
+            }
 
             foreach (var childData in children.ToList())
             {
@@ -213,7 +215,6 @@ namespace TimeLine
   
             }
 
-            // print(compositionData);
             if (compositionData == null)
             {
                 trackObject.Setup((float)data.duractionTime, data.gameObjectName, _trackStorage.TrackLines[0],
@@ -225,14 +226,8 @@ namespace TimeLine
                     data.startTime, true);
                 trackObject.UpdateDuraction(compositionData.duractionTime);
             }
-                
-//
+            
             Branch branch;
-//            
-            // print(compositionData);
-            // print(_branchCollection);
-            // print(data.branch.ID);
-            // print(data.branch.Name);
             
             if(compositionData == null)
                 branch = _branchCollection.AddBranch(data.branch.ID, data.branch.Name);
@@ -243,6 +238,86 @@ namespace TimeLine
                 _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas,
                     sceneObjectID, compositionID, addToStorage); // todo тут убрать добовлении композиции
             return (trackObjectGroup, sceneTrackObject, branch);
+        }
+        
+        
+        internal (TrackObjectData, GameObject, Branch) LoadGroupNew(GroupGameObjectSaveData data, string compositionID,
+            GroupGameObjectSaveData compositionData = null, bool addToStorage = true)
+        {
+            print("LoadGroupNew");
+            
+            string sceneObjectID = UniqueIDGenerator.GenerateUniqueID();
+            
+            var (groupTrackObject, groupGameObject, groupBranch) = LoadTrackObject(data, false);
+
+            List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
+            
+            List<GameObjectSaveData> children;
+            if (compositionData == null)
+                children = data.children;
+            else
+            {
+                children = compositionData.children;
+            }
+
+            foreach (var childData in children.ToList())
+            {
+                TrackObjectData childTrackObject = null;
+                GameObject childSceneObject = null;
+                Branch childBranch = null;
+
+                if (childData is GroupGameObjectSaveData childGroupData)
+                {
+                    GroupGameObjectSaveData groupChildData =  saveComposition.FindCompositionDataById(childGroupData
+                        .compositionID);
+
+                    if (groupChildData != null)
+                    {
+                        (childTrackObject, childSceneObject, childBranch) = LoadGroupNew(childGroupData,
+                            childGroupData.compositionID,
+                            groupChildData);
+                    }
+                }
+                else
+                {
+                    (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
+                    print(childSceneObject.transform.position);
+                }
+
+                if (childTrackObject != null)
+                {
+                    trackObjectDatas.Add(childTrackObject);
+                    
+                    Vector3 pos = childSceneObject.transform.localPosition;
+                    childSceneObject.transform.SetParent(groupGameObject.gameObject.transform);
+                    childSceneObject.transform.localPosition = pos;
+
+                    foreach (var node in childBranch.Nodes)
+                    {
+                        foreach (var node2 in node.Children)
+                        {
+                            _keyframeTrackStorage.GetTrack(node2)?.SetParent(groupTrackObject.trackObject);
+                        }
+                    }
+                }
+            }
+
+            if (compositionData == null)
+            {
+                groupTrackObject.trackObject.Setup((float)data.duractionTime, data.gameObjectName, _trackStorage.TrackLines[0],
+                    data.startTime, true);
+            }
+            else
+            {
+                groupTrackObject.trackObject.Setup((float)data.duractionTime, compositionData.gameObjectName, _trackStorage.TrackLines[0],
+                    data.startTime, true);
+                groupTrackObject.trackObject.UpdateDuraction(compositionData.duractionTime);
+            }
+            
+            TrackObjectGroup trackObjectGroup =
+                _trackObjectStorage.AddGroup(groupGameObject.gameObject, groupTrackObject.trackObject, groupTrackObject.branch, trackObjectDatas,
+                    sceneObjectID, compositionID, addToStorage); // todo тут убрать добовлении композиции
+            return (trackObjectGroup, groupGameObject, groupTrackObject.branch);
         }
 
         #endregion
@@ -463,6 +538,8 @@ namespace TimeLine
             foreach (var child in childs)
             {
                 child.trackObject.GroupOffset(minTime);
+                child.trackObject.GroupOffsetTrack(parent.trackObject);
+
                 child.trackObject.Hide();
 
                 Vector3 childPosition = child.sceneObject.transform.localPosition;

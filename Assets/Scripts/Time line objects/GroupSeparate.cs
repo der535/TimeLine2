@@ -30,10 +30,10 @@ namespace TimeLine
                 print(_selectObjectController.SelectObjects.Count);
                 if (selectObject is TrackObjectGroup group)
                 {
-                    
                     foreach (var trackObject in group.TrackObjectDatas)
                     {
                         trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
+                        selectObject.trackObject.GroupOffsetTrack(null);
                         
                         if(trackObject.sceneObject.transform.parent == group.sceneObject.transform)
                             trackObject.sceneObject.transform.SetParent(null);
@@ -76,6 +76,7 @@ namespace TimeLine
             foreach (var trackObject in group.TrackObjectDatas)
             {
                 trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
+                trackObject.trackObject.GroupOffsetTrack(null);
 
                 if (trackObject.sceneObject.transform.parent == group.sceneObject.transform)
                     trackObject.sceneObject.transform.SetParent(null);
@@ -101,6 +102,8 @@ namespace TimeLine
             foreach (var trackObject in trackObjectGroup.TrackObjectDatas)
             {
                 trackObject.trackObject.GroupOffset(-trackObjectGroup.trackObject.StartTimeInTicks);
+                trackObject.trackObject.GroupOffsetTrack(null);
+
                 
                 if(trackObject.sceneObject.transform.parent == trackObject.sceneObject.transform)
                     trackObject.sceneObject.transform.SetParent(null);

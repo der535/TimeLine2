@@ -78,7 +78,7 @@ namespace TimeLine.Input
             double roundedTicks = Math.Round(rawTicks / gridSizeInTicks) * gridSizeInTicks;
 
             // Устанавливаем время
-            _main.SetTimeInTicks(Math.Max(0, roundedTicks));
+            _main.SetTimeInTicks(roundedTicks);
         }
     }
 }

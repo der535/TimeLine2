@@ -26,6 +26,12 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
         private SaveComposition _composition;
 
+        [Button]
+        private void CheckCount()
+        {
+            print($"Simple: {_trackObjects.Count}, Group: {_trackObjectGroups.Count}");
+        }
+
         [Inject]
         private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController, SaveComposition saveComposition)
         {
@@ -52,6 +58,14 @@ namespace TimeLine
             });
         }
 
+        internal double GetMinTime()
+        {
+            var minFromObjects = _trackObjects.Select(f => f.trackObject.StartTimeInTicks);
+            var minFromGroups = _trackObjectGroups.Select(f => f.trackObject.StartTimeInTicks);
+            var allTimes = minFromObjects.Concat(minFromGroups);
+
+            return allTimes.DefaultIfEmpty(double.PositiveInfinity).Min();
+        }
         internal  List<TrackObjectData> GetAllActiveTrackData()
         {
             List<TrackObjectData> trackObjectData = new List <TrackObjectData>();
@@ -200,6 +214,7 @@ namespace TimeLine
             // Подписка на изменение размера
             foreach (var track in trackObjectDatas)
             {
+                track.trackObject.GroupOffsetTrack(trackObject);
                 trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
             }
 
@@ -490,6 +505,8 @@ namespace TimeLine
             
             foreach (var track in TrackObjectDatas)
             {
+                track.trackObject.GroupOffsetTrack(trackObject);
+
                 trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
                 
                 track.trackObject.Hide();
@@ -497,8 +514,13 @@ namespace TimeLine
 
             foreach (var selectObject in TrackObjectDatas)
             {
-                if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                if (selectObject.sceneObject.transform.parent == null ||
+                    selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                {
+                    Vector3 pos = selectObject.sceneObject.transform.position;
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
+                    selectObject.sceneObject.transform.position = pos;
+                }
 
                 foreach (var node in selectObject.branch.Nodes)
                 {

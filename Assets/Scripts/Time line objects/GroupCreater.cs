@@ -42,34 +42,61 @@ namespace TimeLine
             _keyframeTrackStorage = keyframeTrackStorage;
             _mainObjects = mainObjects;
         }
+        
+        public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<TrackObjectData> trackObjectData)
+        {
+            double minTime = double.MaxValue;
+            double maxTime = double.MinValue;
+
+            foreach (var selectObject in trackObjectData)
+            {
+                double startTime = selectObject.trackObject.StartTimeInTicks;
+                double endTime = startTime + selectObject.trackObject.TimeDuractionInTicks;
+
+                if (startTime < minTime)
+                    minTime = startTime;
+
+                if (endTime > maxTime)
+                    maxTime = endTime;
+            }
+            
+            return (minTime, maxTime);
+        }
+        
+        public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<GameObjectSaveData> trackObjectData)
+        {
+            double minTime = double.MaxValue;
+            double maxTime = double.MinValue;
+
+            foreach (var selectObject in trackObjectData)
+            {
+                double startTime = selectObject.startTime;
+                double endTime = startTime + selectObject.duractionTime;
+
+                if (startTime < minTime)
+                    minTime = startTime;
+
+                if (endTime > maxTime)
+                    maxTime = endTime;
+            }
+            
+            return (minTime, maxTime);
+        }
 
         public void Create()
         {
             if(_selectObjectController.SelectObjects.Count <= 0) return;
             
             TrackObject trackObject = _container.InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
-            
-            double minTime = float.MaxValue;
-            double maxTime = -1;
-            
-            double maxTimeTemp = -1;
-            foreach (var selectObject in _selectObjectController.SelectObjects)
-            {
-                if(selectObject.trackObject.StartTimeInTicks < minTime)
-                    minTime = selectObject.trackObject.StartTimeInTicks;
 
-                if (selectObject.trackObject.StartTimeInTicks > maxTimeTemp)
-                {
-                    maxTimeTemp = selectObject.trackObject.StartTimeInTicks;
-                    maxTime = selectObject.trackObject.StartTimeInTicks + selectObject.trackObject.TimeDuractionInTicks;
-                }
-            }
+            var (minTime, maxTime) = CalculateMinAndMaxTime(_selectObjectController.SelectObjects);
 
             GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
             
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
+                selectObject.trackObject.GroupOffsetTrack(trackObject);
                 
                 if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
@@ -96,27 +123,14 @@ namespace TimeLine
             
             TrackObject trackObject = _container.InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
             
-            double minTime = float.MaxValue;
-            double maxTime = -1;
-            
-            double maxTimeTemp = -1;
-            foreach (var selectObject in trackObjects)
-            {
-                if(selectObject.trackObject.StartTimeInTicks < minTime)
-                    minTime = selectObject.trackObject.StartTimeInTicks;
-
-                if (selectObject.trackObject.StartTimeInTicks > maxTimeTemp)
-                {
-                    maxTimeTemp = selectObject.trackObject.StartTimeInTicks;
-                    maxTime = selectObject.trackObject.StartTimeInTicks + selectObject.trackObject.TimeDuractionInTicks;
-                }
-            }
+            var (minTime, maxTime)  = CalculateMinAndMaxTime(trackObjects);
             
             var sceneObject = _container.InstantiatePrefab(scenePrefab, root);
             
             foreach (var selectObject in trackObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
+                selectObject.trackObject.GroupOffsetTrack(trackObject);
                 
                 if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
@@ -144,27 +158,14 @@ namespace TimeLine
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
             
-            double minTime = float.MaxValue;
-            double maxTime = -1;
-            
-            double maxTimeTemp = -1;
-            foreach (var selectObject in trackObjects)
-            {
-                if(selectObject.trackObject.StartTimeInTicks < minTime)
-                    minTime = selectObject.trackObject.StartTimeInTicks;
-
-                if (selectObject.trackObject.StartTimeInTicks > maxTimeTemp)
-                {
-                    maxTimeTemp = selectObject.trackObject.StartTimeInTicks;
-                    maxTime = selectObject.trackObject.StartTimeInTicks + selectObject.trackObject.TimeDuractionInTicks;
-                }
-            }
+            var (minTime, _) = CalculateMinAndMaxTime(trackObjects);
             
             GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
             
             foreach (var selectObject in trackObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
+                selectObject.trackObject.GroupOffsetTrack(groupTrackObject);
                 
                 if(selectObject.sceneObject.transform.parent.transform == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);

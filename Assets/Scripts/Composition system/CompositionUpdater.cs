@@ -40,7 +40,7 @@ namespace TimeLine
                             composition.FindCompositionDataById(groupChild.compositionID);
                         if (groupChildData != null)
                         {
-                            var (trackData, _, _) = trackObjectSpawner.LoadGroup(groupChild, groupChild.compositionID,
+                            var (trackData, _, _) = trackObjectSpawner.LoadGroupNew(groupChild, groupChild.compositionID,
                                 groupChildData, false);
                             trackObjectDatas.Add(trackData);
                         }

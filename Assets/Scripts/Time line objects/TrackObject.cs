@@ -51,6 +51,8 @@ namespace TimeLine
         private double deltaticksRight;
         private double deltaticksLeft;
 
+        public TrackObject offsetObject;
+
         #endregion
 
         internal double StartTimeInTicks { get; private set; }
@@ -175,6 +177,35 @@ namespace TimeLine
         {
             StartTimeInTicks -= tickOffset;
         }
+        
+        internal void GroupOffsetTrack(TrackObject track)
+        {
+            if(track != null)
+                 print($"SetOffsetTrack {track} {track.StartTimeInTicks}");
+            else
+                print("SetOffsetTrack null");
+            
+            offsetObject = track;
+        }
+
+        internal double GetKeyframeTrackOffset()
+        {
+            var current = offsetObject;
+            int depth = 0;
+            const int maxDepth = 50; // защита от зависания
+
+            while (current != null && depth < maxDepth)
+            {
+                print($"offsetObject[{depth}] = {current}");
+                current = current.offsetObject;
+                depth++;
+            }
+
+            if (depth == maxDepth)
+                print("Предупреждение: достигнут лимит глубины — возможна циклическая ссылка.");
+
+            return StartTimeInTicks + (offsetObject != null ? offsetObject.GetKeyframeTrackOffset() : 0);
+        }//
 
         private Vector2 GetMousePosition()
         {
@@ -285,6 +316,7 @@ namespace TimeLine
         private void Update()
         {
             Drag();
+            
             if (_isResizing)
             {
                 float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
@@ -450,7 +482,7 @@ namespace TimeLine
             float mouseDeltaXLocal = currentMouseXLocal - _startMouseXLocal;
             double deltaTicks = AnchorPositionDeltaToTicks(mouseDeltaXLocal);
             _selectObjectController.MultipleMove(this, deltaTicks);
-            StartTimeInTicks = Math.Max(0, RoundTicksToGrid(_startTrackObjectTicks + deltaTicks));
+            StartTimeInTicks = RoundTicksToGrid(_startTrackObjectTicks + deltaTicks);
             _trackObjectStorage.UpdatePositionSelectedTrackObject();
         }
 

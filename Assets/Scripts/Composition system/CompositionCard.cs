@@ -47,10 +47,34 @@ public class CompositionCard : MonoBehaviour
             duplicateButton.onClick.AddListener(duplicateAction.Invoke);
     }
 
+    internal void LockSpawn()
+    {
+        spawnButton.interactable = false;
+    }
+
+    internal void UnlockSpawn()
+    {
+        spawnButton.interactable = true;
+    }
+
+    internal void LockEditButton()
+    {
+        editButton.interactable = false;
+        renameButton.interactable = false;
+        deleteButton.interactable = false;
+        duplicateButton.interactable = false;
+    }
+
+    internal void UnlockEditButton()
+    {
+        editButton.interactable = true;
+        renameButton.interactable = true;
+        deleteButton.interactable = true;
+        duplicateButton.interactable = true;
+    }
+
     internal void UpdateText()
     {
-        print(_saveComposition.FindCompositionDataById(_id));
-        print(_saveComposition.FindCompositionDataById(_id).gameObjectName);
         cardText.text = _saveComposition.FindCompositionDataById(_id).gameObjectName;
     }
 }

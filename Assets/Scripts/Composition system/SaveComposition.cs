@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using EventBus;
+using Zenject;
 
 namespace TimeLine
 {
@@ -20,38 +22,121 @@ namespace TimeLine
         [Space] 
         [SerializeField] private CompositionCard compositionCard;
         [SerializeField] private RectTransform cardContainer;
-        [Space]
+        [Space] 
         [SerializeField] private RenameComposition renameComposition;
 
         private List<GroupGameObjectSaveData> _compositionData = new();
         private readonly List<CompositionCard> _cards = new();
 
+        private GameEventBus _gameEventBus;
+        
+        [Inject]
+        private void Construct(GameEventBus gameEventBus)
+        {
+            _gameEventBus = gameEventBus;
+        }
+
         [Button]
         public void Save()
         {
-            string path = $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
+            string path =
+                $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
             string json = JsonConvert.SerializeObject(_compositionData, Formatting.Indented);
             File.WriteAllText(path, json);
             print(json);
         }
-        [Button]
 
+        [Button]
         public void Load()
         {
             string path = $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
+
+            if (!File.Exists(path))
+                return;
+
             string json = File.ReadAllText(path);
-            _compositionData = JsonConvert.DeserializeObject<List<GroupGameObjectSaveData>>(json);
+            if (string.IsNullOrEmpty(json))
+                return;
+
+            var deserialized = JsonConvert.DeserializeObject<List<GroupGameObjectSaveData>>(json);
+            if (deserialized == null)
+                return;
+
+            _compositionData = deserialized;
             foreach (var data in _compositionData)
             {
-                CreateCard(data);
+                if (data != null)
+                    CreateCard(data);
             }
-            print(_compositionData.Count);
         }
+
+        private void Start()
+        {
+            _gameEventBus.SubscribeTo((ref StartCompositionEdit _) =>
+            {
+                CheckCards(_.Group);
+                LockCompositionCard();
+            });
+            _gameEventBus.SubscribeTo((ref EndCompositionEdit _) =>
+            {
+                UnlockCompositionCard();
+            });
+        }
+
+        private void CheckCards(GroupGameObjectSaveData group)
+        {
+            foreach (var card in _cards)
+            {
+                GroupGameObjectSaveData cardData = FindCompositionDataById(card.GetID());
+                if (cardData.compositionID == group.compositionID || CheckGroup(cardData.children, group.compositionID))
+                {
+                    card.LockSpawn();
+                }
+            }
+        }
+
+        private bool CheckGroup(List<GameObjectSaveData> gameObjectSaveData, string id)
+        {
+            foreach (var obj in gameObjectSaveData)
+            {
+                if (obj is GroupGameObjectSaveData group)
+                {
+                    if (id == group.compositionID)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return CheckGroup(group.children, id);   
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void LockCompositionCard()
+        {
+            foreach (var card in _cards)
+            {
+                card.LockEditButton();
+            }
+        }
+
+        public void UnlockCompositionCard()
+        {
+            foreach (var card in _cards)
+            {
+                card.UnlockEditButton();
+                card.UnlockSpawn();
+            }
+        }
+
         public void AddComposition(TrackObjectGroup group)
         {
-            if(HasCompositionWithId(group.compositionID)) return;
-            
+            if (HasCompositionWithId(group.compositionID)) return;
+
             var data = saveLevel.SaveGroup(group);
+            print(JsonConvert.SerializeObject(data, Formatting.Indented));
             data.compositionID = group.compositionID;
             _compositionData.Add(data);
 
@@ -62,25 +147,15 @@ namespace TimeLine
         {
             CompositionCard card = Instantiate(compositionCard, cardContainer);
 
-            card.Setup(this,() =>
-                {
-                    spawner.LoadGroup(FindCompositionDataById(data.compositionID), data.compositionID);
-                }, ()=>
-                {
-                    compositionEdit.Edit(FindCompositionDataById(data.compositionID));
-                }, () =>
+            card.Setup(this,
+                () => { spawner.LoadGroupNew(FindCompositionDataById(data.compositionID), data.compositionID); },
+                () => { compositionEdit.Edit(FindCompositionDataById(data.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
                     renameComposition.Setup(data.compositionID);
-                }, () =>
-                {
-                    DeleteComposition(FindCompositionDataById(data.compositionID));
-                }, 
-                () =>
-                {
-                    DuplicateComposition(FindCompositionDataById(data.compositionID));
-                },data.compositionID);
-            
+                }, () => { DeleteComposition(FindCompositionDataById(data.compositionID)); },
+                () => { DuplicateComposition(FindCompositionDataById(data.compositionID)); }, data.compositionID);
+
             _cards.Add(card);
         }
 
@@ -104,33 +179,26 @@ namespace TimeLine
                     remover.SingleRemove(trackObjectGroups);
                 }
             }
-            
+
             compositionUpdater.UpdateCompositions();
         }
-        
+
         public void AddComposition(GroupGameObjectSaveData group)
         {
-            if(HasCompositionWithId(group.compositionID)) return;
-            
+            if (HasCompositionWithId(group.compositionID)) return;
+
             _compositionData.Add(group);
             CompositionCard card = Instantiate(compositionCard, cardContainer);
-            
-            card.Setup(this,() =>
-                {
-                    spawner.LoadGroup(FindCompositionDataById(group.compositionID), group.compositionID);
-                }, ()=>
-                {
-                    compositionEdit.Edit(FindCompositionDataById(group.compositionID));
-                }, () =>
+
+            card.Setup(this,
+                () => { spawner.LoadGroupNew(FindCompositionDataById(group.compositionID), group.compositionID); },
+                () => { compositionEdit.Edit(FindCompositionDataById(group.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
                     renameComposition.Setup(group.compositionID);
-                }, null, 
-                () =>
-                {
-                    DuplicateComposition(FindCompositionDataById(group.compositionID));
-                },group.compositionID);
-            
+                }, () => { DeleteComposition(FindCompositionDataById(group.compositionID)); },
+                () => { DuplicateComposition(FindCompositionDataById(group.compositionID)); }, group.compositionID);
+
             _cards.Add(card);
         }
 
@@ -168,8 +236,8 @@ namespace TimeLine
             // Опционально: если композиция не найдена, можно добавить логирование или выбросить исключение
             Debug.LogWarning($"Composition with ID '{compositionID}' not found for editing.");
         }
-        
-        
+
+
         public bool HasCompositionWithId(string id)
         {
             return !string.IsNullOrEmpty(id) && _compositionData.Any(data => data.compositionID == id);
@@ -182,16 +250,9 @@ namespace TimeLine
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }
-        
+
         public GroupGameObjectSaveData FindCompositionDataById(string id)
         {
-            print($"Search: {id}");
-
-            foreach (var data in _compositionData)
-            {
-                print(data.compositionID);
-            }
-            
             if (string.IsNullOrEmpty(id))
                 return null;
 

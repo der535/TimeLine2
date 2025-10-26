@@ -15,6 +15,7 @@ namespace TimeLine.Components
             { typeof(NameComponent), new Rule(typeof(NameComponent), maxInstances: 1) },
             { typeof(TransformComponent), new Rule(typeof(TransformComponent), maxInstances: 1) },
             { typeof(BoxCollider2DComponent), new Rule(typeof(BoxCollider2DComponent), maxInstances: 1) },
+            { typeof(CompositionOffset), new Rule(typeof(CompositionOffset), maxInstances: 1) }
         };
 
         public static Dictionary<string, Type> GetAllComponents(GameObject gameObject)
@@ -62,7 +63,7 @@ namespace TimeLine.Components
             if (CanAdd(componentType, target))
             {
                 var comp = target.AddComponent(componentType);
-            
+
                 if (container != null)
                 {
                     container.Inject(comp); // 👈 внедряем зависимости
@@ -100,7 +101,7 @@ namespace TimeLine.Components
                 return null;
             }
         }
-        
+
         public static Component GetOrAddComponentSafely(Type componentType, GameObject target, DiContainer container)
         {
             if (componentType == null || target == null)
