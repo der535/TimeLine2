@@ -1,4 +1,3 @@
-using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
@@ -16,6 +15,7 @@ namespace TimeLine
         
         private float _pan = 70;
         private float _oldPan = 0;
+        private ActionMap _actionMap;
         
         public float Pan => _pan;
         public float OldPan => _oldPan;
@@ -24,14 +24,18 @@ namespace TimeLine
         
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap)
         {
             _eventBus = gameEventBus;
+            _actionMap = actionMap;
         }
 
         private void Start()
         {
-            _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
+            _actionMap.Editor.MouseScroll.started += context =>
+            {
+                Calculate((int)context.ReadValue<float>());
+            };
         }
 
         internal void SetPan(float newPan)
@@ -41,17 +45,17 @@ namespace TimeLine
             _eventBus.Raise(new PanBezier(Pan, OldPan));
         }
 
-        private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
+        private void Calculate(int delta)
         {
             if (RectTransformUtility.RectangleContainsScreenPoint(
                     _rightPanel, 
                     UnityEngine.Input.mousePosition, 
                     _mainCamera))
             {
-                if (UnityEngine.Input.GetKey(KeyCode.LeftShift))
+                if (_actionMap.Editor.LeftShift.IsPressed())
                 {
                     _oldPan = _pan;
-                    _pan += mouseScrollDeltaY.Y * PanMultiplier;
+                    _pan += delta * PanMultiplier;
                     _eventBus.Raise(new PanBezier(Pan, OldPan));
                 }
             }

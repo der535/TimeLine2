@@ -212,8 +212,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rectTransform: {fileID: 2960653962264612017}
-  button: {fileID: 5481352234176687026}
-  colorImage: {fileID: 5602877002519626635}
+  _button: {fileID: 5481352234176687026}
+  _colorImage: {fileID: 5602877002519626635}
 --- !u!1 &3659537781400877195
 GameObject:
   m_ObjectHideFlags: 0
@@ -248,7 +248,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 2.100006, y: 0}
+  m_AnchoredPosition: {x: 2.0999756, y: 0}
   m_SizeDelta: {x: 260.27448, y: 24}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1833595412871913365

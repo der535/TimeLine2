@@ -49,6 +49,8 @@ namespace TimeLine.Components
 
         public static bool CanAdd(Type componentType, GameObject target)
         {
+            // Debug.Log(componentType.Name);
+            
             if (!_rules.TryGetValue(componentType, out var rule))
             {
                 Debug.LogWarning($"No rule defined for component: {componentType.Name}");

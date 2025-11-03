@@ -49,6 +49,7 @@ namespace TimeLine.Installers
         [SerializeField] private SelectColorContoller selectColorContoller;
         [SerializeField] private CollidersPrefab collidersPrefab;
         [SerializeField] private SaveComposition saveComposition;
+        [SerializeField] private KeyfeameVizualizer keyfeameVizualizer;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -91,6 +92,12 @@ namespace TimeLine.Installers
             Container.Bind<SelectColorContoller>().FromInstance(selectColorContoller).AsSingle();
             Container.Bind<CollidersPrefab>().FromInstance(collidersPrefab).AsSingle();
             Container.Bind<SaveComposition>().FromInstance(saveComposition).AsSingle();
+            Container.Bind<KeyfeameVizualizer>().FromInstance(keyfeameVizualizer).AsSingle();
+            
+            
+            
+            Container.Bind<ActionMap>().FromInstance(new ActionMap()).AsSingle();
+            
             
             // Сначала создаем и привязываем EventBus
             _gameEventBus = new GameEventBus();

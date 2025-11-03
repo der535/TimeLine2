@@ -14,6 +14,7 @@ namespace TimeLine.Keyframe
         private TimeLineConverter _timeLineConverter;
         private GridUI _gridUI;
         private TimeLineKeyframeScroll _timeLineKeyframeScroll;
+        private KeyfeameVizualizer _keyframeVizualizer;
 
         private Vector2 _startMousePosition;
         private Vector2 _startObjectPosition;
@@ -29,12 +30,14 @@ namespace TimeLine.Keyframe
             MainObjects mainObject, 
             TimeLineConverter timeLineConverter, 
             GridUI gridUI,
-            TimeLineKeyframeScroll timeLineKeyframeScroll)
+            TimeLineKeyframeScroll timeLineKeyframeScroll,
+            KeyfeameVizualizer keyframeVizualizer)
         {
             _gridUI = gridUI;
             _mainObjects = mainObject;
             _timeLineConverter = timeLineConverter;
             _timeLineKeyframeScroll = timeLineKeyframeScroll;
+            _keyframeVizualizer = keyframeVizualizer;
         }
 
         private void Awake()
@@ -84,8 +87,10 @@ namespace TimeLine.Keyframe
                 _rectTransform.anchoredPosition = new Vector2(finalPositionX, _rectTransform.anchoredPosition.y);
 
                 // Вычисляем тики на основе относительной позиции
+                var startTick = _keyframe.Ticks;
                 _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
                     _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan)));
+                _keyframeVizualizer.MultipleDrag(_keyframe.Ticks - startTick, this);
                     
                 _sortKeyframes.Invoke();
             }

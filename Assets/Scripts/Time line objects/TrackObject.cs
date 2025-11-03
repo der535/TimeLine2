@@ -1,6 +1,7 @@
 using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
@@ -67,6 +68,7 @@ namespace TimeLine
         private bool _lockSize;
         private double _reducedLeft;
         private double _reducedRight;
+        private ActionMap _actionMap;
 
         // 🔑 Новый флаг: включать/выключать ограничения ресайза
         private bool _enableResizeLimits = true;
@@ -83,7 +85,8 @@ namespace TimeLine
             GridUI gridUI,
             Main main,
             KeyframeTrackStorage keyframeTrackStorage,
-            SelectObjectController selectObjectController)
+            SelectObjectController selectObjectController,
+            ActionMap actionMap)
         {
             _gridUI = gridUI;
             _timeLineSettings = timeLineSettings;
@@ -102,6 +105,7 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo<ScrollTimeLineEvent>(OnScroll);
             _gameEventBus.SubscribeTo<PanEvent>(OnScrollPan);
+            _gameEventBus.SubscribeTo((ref OpenEditorEvent _) => UpdateVisuals());
         }
 
         private void OnDestroy()
@@ -129,7 +133,7 @@ namespace TimeLine
         {
             var delta = newDuractionInTicks - TimeDuractionInTicks;
             _reducedRight -= delta;
-            print(_reducedRight);
+            // print(_reducedRight);
         }
 
         // 🆕 Перегрузка с флагом
@@ -172,6 +176,7 @@ namespace TimeLine
 
         // internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks)
         //     => Setup(ticksLifeTime, name, trackLine, startTimeInTicks, false);
+        
 
         internal void GroupOffset(double tickOffset)
         {
@@ -180,10 +185,10 @@ namespace TimeLine
         
         internal void GroupOffsetTrack(TrackObject track)
         {
-            if(track != null)
-                 print($"SetOffsetTrack {track} {track.StartTimeInTicks}");
-            else
-                print("SetOffsetTrack null");
+            // if(track != null)
+            //      print($"SetOffsetTrack {track} {track.StartTimeInTicks}");
+            // else
+            //     print("SetOffsetTrack null");
             
             offsetObject = track;
         }

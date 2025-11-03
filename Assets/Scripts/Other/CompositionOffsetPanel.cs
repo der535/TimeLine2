@@ -8,6 +8,8 @@ namespace TimeLine
 {
     public class CompositionOffsetPanel : MonoBehaviour
     {
+        [SerializeField] private GameObject panel;
+        [Space]
         [SerializeField] private TMP_InputField xOffset;
         [SerializeField] private TMP_InputField yOffset;
         
@@ -25,19 +27,31 @@ private DiContainer _container;
         
         private void Awake()
         {
+            panel.SetActive(false);
+            
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent eventData) =>
+            {
+                panel.SetActive(false);
+            });
+            
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) =>
             {
                 xOffset.onEndEdit.RemoveAllListeners();
+                xOffset.onValueChanged.RemoveAllListeners();
                 yOffset.onEndEdit.RemoveAllListeners();
+                yOffset.onValueChanged.RemoveAllListeners();
                 
                 if (_trackObjectStorage.GetTrackObjectData(data.Tracks[^1].trackObject) is TrackObjectGroup
                     trackObjectGroup)
                 {
+                    panel.SetActive(true);
+                    
                     if (trackObjectGroup.sceneObject.TryGetComponent(out CompositionOffset compositionOffset))
                     {
-                        Vector2 offset = compositionOffset.Setup(xOffset, yOffset, trackObjectGroup);
-                        xOffset.text = offset.x.ToString();
-                        yOffset.text = offset.y.ToString();
+                        print(compositionOffset.XOffset.Value);
+                        xOffset.text = compositionOffset.XOffset.Value.ToString();
+                        yOffset.text = compositionOffset.YOffset.Value.ToString();
+                        compositionOffset.Setup(xOffset, yOffset, trackObjectGroup);
                     }
                     else
                     {

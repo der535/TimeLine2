@@ -1,7 +1,6 @@
-using System;
+
 using System.Collections.Generic;
 using EventBus;
-using JetBrains.Annotations;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
@@ -11,6 +10,7 @@ namespace TimeLine
 {
     public class OutlineController : MonoBehaviour
     {
+        [SerializeField] private TrackObjectStorage trackObjectStorage;
         [SerializeField] private GameObject outlinePrefab;
         [SerializeField] private float stroke;
         [SerializeField] private Material outlineMaterial;
@@ -41,14 +41,39 @@ namespace TimeLine
         }
 
         [Button]
-        private void DrawOutline(GameObject gameObject)
+        private void DrawOutline(GameObject selectedObject)
         {
-            if (gameObject.TryGetComponent(out SpriteRenderer spriteRenderer))
+            if (trackObjectStorage.GetTrackObjectData(selectedObject) is TrackObjectGroup trackObjectGroup)
+            {
+                CheckGroup(trackObjectGroup);
+            }
+
+            CheckSpriteRenderer(selectedObject);
+        }
+
+        private void CheckGroup(TrackObjectGroup trackObjectGroup)
+        {
+            foreach (var trackObject in trackObjectGroup.TrackObjectDatas)
+            {
+                if (trackObject is TrackObjectGroup trackObjectGroup2)
+                {
+                    CheckGroup(trackObjectGroup2);
+                }
+                else
+                {
+                    CheckSpriteRenderer(trackObject.sceneObject);
+                }
+            }
+        }
+
+        void CheckSpriteRenderer(GameObject selectedObject)
+        {
+            if (selectedObject.TryGetComponent(out SpriteRenderer spriteRenderer))
             {
                 var outlines = new List<SpriteRenderer>();
                 
                 SpriteRenderer outlinePart =
-                    Instantiate(outlinePrefab, gameObject.transform).GetComponent<SpriteRenderer>();
+                    Instantiate(outlinePrefab, selectedObject.transform).GetComponent<SpriteRenderer>();
                 outlinePart.sprite = spriteRenderer.sprite;
                 outlinePart.material = outlineMaterial;
                 outlinePart.color = outlineColor;

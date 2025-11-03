@@ -7,21 +7,21 @@ namespace TimeLine
 {
     public class ObjectSettings : MonoBehaviour
     {
-        private GameEventBus _gameEventBus;
         private TrackObjectStorage _trackObjectStorage;
         private SelectObjectController _selectObjectController;
+        private ActionMap _actionMap;
 
         [Inject]
-        public void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController)
+        public void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController, ActionMap actionMap)
         {
-            _gameEventBus = gameEventBus;
             _trackObjectStorage = trackObjectStorage;
             _selectObjectController = selectObjectController;
+            _actionMap = actionMap;
         }
 
         private void OnMouseDown()
         {
-            _selectObjectController.Select(_trackObjectStorage.GetTrackObjectData(gameObject), UnityEngine.Input.GetKey(KeyCode.LeftShift));
+            _selectObjectController.Select(_trackObjectStorage.GetTrackObjectData(gameObject), _actionMap.Editor.LeftShift.IsPressed());
         }
     }
 }

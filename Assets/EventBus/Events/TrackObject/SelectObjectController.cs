@@ -32,7 +32,6 @@ namespace TimeLine.EventBus.Events.TrackObject
             // print(trackObject.trackObject.StartTimeInTicks);
             if(_selectLock.IsLocked) return;
             // print(trackObject.GetType());
-
             
             var changed = false;
 

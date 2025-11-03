@@ -10,16 +10,16 @@ namespace TimeLine
     public class GroupCreater : MonoBehaviour
     {
         [SerializeField] private Transform root;
-        [Space] 
-        [SerializeField] private GameObject scenePrefab;
+        [Space] [SerializeField] private GameObject scenePrefab;
         [SerializeField] private GameObject trackPrefab;
-        
+
         private SelectObjectController _selectObjectController;
         private TrackObjectStorage _trackObjectStorage;
         private BranchCollection _branchCollection;
         private TrackStorage _trackStorage;
         private KeyframeTrackStorage _keyframeTrackStorage;
-        
+        private Main _main;
+
         private DiContainer _container;
         private MainObjects _mainObjects;
 
@@ -38,11 +38,12 @@ namespace TimeLine
             _branchCollection = branchCollection;
             _trackStorage = trackStorage;
             _container = container;
-            _selectObjectController = selectObjectController;    
+            _selectObjectController = selectObjectController;
             _keyframeTrackStorage = keyframeTrackStorage;
             _mainObjects = mainObjects;
+            _main = main;
         }
-        
+
         public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<TrackObjectData> trackObjectData)
         {
             double minTime = double.MaxValue;
@@ -59,10 +60,10 @@ namespace TimeLine
                 if (endTime > maxTime)
                     maxTime = endTime;
             }
-            
+
             return (minTime, maxTime);
         }
-        
+
         public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<GameObjectSaveData> trackObjectData)
         {
             double minTime = double.MaxValue;
@@ -79,27 +80,45 @@ namespace TimeLine
                 if (endTime > maxTime)
                     maxTime = endTime;
             }
-            
+
             return (minTime, maxTime);
         }
 
         public void Create()
         {
-            if(_selectObjectController.SelectObjects.Count <= 0) return;
-            
-            TrackObject trackObject = _container.InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
+            if (_selectObjectController.SelectObjects.Count <= 0) return;
+
+            TrackObject trackObject = _container
+                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
 
             var (minTime, maxTime) = CalculateMinAndMaxTime(_selectObjectController.SelectObjects);
 
-            GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
+
             
+            var currentTime = _main.TicksCurrentTime();
+            _main.SetTimeInTicks(minTime);
+
+            
+            GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
+
+            sceneObject.GetComponent<NameComponent>().Name.Value = "Group";
+
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
                 selectObject.trackObject.GroupOffsetTrack(trackObject);
-                
-                if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+
+                if (selectObject.sceneObject.transform.parent == null ||
+                    selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                {
+                    var position = selectObject.sceneObject.transform.localPosition;
+                    var rotation = selectObject.sceneObject.transform.rotation;
+                    var scale = selectObject.sceneObject.transform.localScale;
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
+                    selectObject.sceneObject.transform.localPosition = position;
+                    selectObject.sceneObject.transform.localRotation = rotation;
+                    selectObject.sceneObject.transform.localScale = scale;
+                }
 
                 foreach (var node in selectObject.branch.Nodes)
                 {
@@ -109,31 +128,47 @@ namespace TimeLine
                     }
                 }
             }
-            
-            trackObject.Setup(maxTime-minTime, "Group 1", _trackStorage.TrackLines[0], minTime, true);
 
-            Branch branch = _branchCollection.AddBranch(UniqueIDGenerator.GenerateUniqueID(), scenePrefab.name);
+            trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], minTime, true);
+
+            Branch branch = _branchCollection.AddBranch(UniqueIDGenerator.GenerateUniqueID(), "Group");
+
+            _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, _selectObjectController.SelectObjects,
+                UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID());
             
-            _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, _selectObjectController.SelectObjects, UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID());
+            
+            _main.SetTimeInTicks(currentTime);
         }
-        
+
         public TrackObjectGroup Create(List<TrackObjectData> trackObjects, string compositionID = null)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
+
+            TrackObject trackObject = _container
+                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
+
+            var (minTime, maxTime) = CalculateMinAndMaxTime(trackObjects);
             
-            TrackObject trackObject = _container.InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
-            
-            var (minTime, maxTime)  = CalculateMinAndMaxTime(trackObjects);
-            
+            _main.SetTimeInTicks(minTime);
+
             var sceneObject = _container.InstantiatePrefab(scenePrefab, root);
-            
+
             foreach (var selectObject in trackObjects)
             {
                 selectObject.trackObject.GroupOffset(minTime);
                 selectObject.trackObject.GroupOffsetTrack(trackObject);
-                
-                if(selectObject.sceneObject.transform.parent == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+
+                if (selectObject.sceneObject.transform.parent == null ||
+                    selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                {
+                    var position = selectObject.sceneObject.transform.localPosition;
+                    var rotation = selectObject.sceneObject.transform.rotation;
+                    var scale = selectObject.sceneObject.transform.localScale;
                     selectObject.sceneObject.transform.SetParent(sceneObject.transform);
+                    selectObject.sceneObject.transform.localPosition = position;
+                    selectObject.sceneObject.transform.localRotation = rotation;
+                    selectObject.sceneObject.transform.localScale = scale;
+                }
 
                 foreach (var node in selectObject.branch.Nodes)
                 {
@@ -143,45 +178,58 @@ namespace TimeLine
                     }
                 }
             }
-            
-            trackObject.Setup(maxTime-minTime, "Group 1", _trackStorage.TrackLines[0], minTime, true);
+
+            trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], minTime, true);
 
             Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
-            
-            if(string.IsNullOrEmpty(compositionID))
+
+            if (string.IsNullOrEmpty(compositionID))
                 compositionID = UniqueIDGenerator.GenerateUniqueID();
-             
-            return _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects, UniqueIDGenerator.GenerateUniqueID(), compositionID);
-        }
-        
-        public void Create(List<TrackObjectData> trackObjects, TrackObject groupTrackObject)
-        {
-            string id = UniqueIDGenerator.GenerateUniqueID();
-            
-            var (minTime, _) = CalculateMinAndMaxTime(trackObjects);
-            
-            GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
-            
-            foreach (var selectObject in trackObjects)
-            {
-                selectObject.trackObject.GroupOffset(minTime);
-                selectObject.trackObject.GroupOffsetTrack(groupTrackObject);
-                
-                if(selectObject.sceneObject.transform.parent.transform == null || selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
-                    selectObject.sceneObject.transform.SetParent(sceneObject.transform);
 
-                foreach (var node in selectObject.branch.Nodes)
-                {
-                    foreach (var node2 in node.Children)
-                    {
-                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(groupTrackObject);
-                    }
-                }
-            }
-            
-            Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
-            
-            _trackObjectStorage.AddGroup(sceneObject, groupTrackObject, branch, trackObjects, UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID());
+            return _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects,
+                UniqueIDGenerator.GenerateUniqueID(), compositionID);
         }
+
+        // public void Create(List<TrackObjectData> trackObjects, TrackObject groupTrackObject)
+        // {
+        //     string id = UniqueIDGenerator.GenerateUniqueID();
+        //
+        //     var (minTime, _) = CalculateMinAndMaxTime(trackObjects);
+        //     
+        //     _main.SetTimeInTicks(minTime);
+        //
+        //     GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
+        //
+        //     foreach (var selectObject in trackObjects)
+        //     {
+        //         selectObject.trackObject.GroupOffset(minTime);
+        //         selectObject.trackObject.GroupOffsetTrack(groupTrackObject);
+        //
+        //         if (selectObject.sceneObject.transform.parent.transform == null ||
+        //             selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+        //         {
+        //             var position = selectObject.sceneObject.transform.localPosition;
+        //             var rotation = selectObject.sceneObject.transform.rotation;
+        //             var scale = selectObject.sceneObject.transform.localScale;
+        //             selectObject.sceneObject.transform.SetParent(sceneObject.transform);
+        //             selectObject.sceneObject.transform.localPosition = position;
+        //             selectObject.sceneObject.transform.localRotation = rotation;
+        //             selectObject.sceneObject.transform.localScale = scale;
+        //         }
+        //
+        //         foreach (var node in selectObject.branch.Nodes)
+        //         {
+        //             foreach (var node2 in node.Children)
+        //             {
+        //                 _keyframeTrackStorage.GetTrack(node2)?.SetParent(groupTrackObject);
+        //             }
+        //         }
+        //     }
+        //
+        //     Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
+        //
+        //     _trackObjectStorage.AddGroup(sceneObject, groupTrackObject, branch, trackObjects,
+        //         UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID());
+        // }
     }
 }

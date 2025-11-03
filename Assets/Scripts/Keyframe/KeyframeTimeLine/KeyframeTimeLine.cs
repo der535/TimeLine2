@@ -37,7 +37,10 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
             _gameEventBus.SubscribeTo(
                 (ref EventBus.Events.KeyframeTimeLine.PanEvent data) =>
-                    UpdatePosition(_main.TicksCurrentTime(), _trackObjectData));
+                {
+                    if(_trackObjectData != null)
+                        UpdatePosition(_main.TicksCurrentTime(), _trackObjectData);
+                });
         }
 
         public void OnTimeChangedSmoothTicks(ref TickSmoothTimeEvent tickEvent)

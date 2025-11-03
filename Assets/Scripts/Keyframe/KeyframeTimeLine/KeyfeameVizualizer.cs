@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
@@ -16,18 +17,20 @@ namespace TimeLine
     {
         [SerializeField] private KeyframeObjectData keyFrame;
         [SerializeField] private TimeLineSettings timeLineSettings;
-        [Space]
-        [SerializeField] private TreeViewUI treeViewUI;
+        [Space] [SerializeField] private TreeViewUI treeViewUI;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
-        [Space] 
-        [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
+        [Space] [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
         [SerializeField] private RectTransform _content;
+
         [FormerlySerializedAs("keframeScrollView")]
         [FormerlySerializedAs("keframeScrollV")]
         [FormerlySerializedAs("fieldPanel")]
         [Header("Keyframe offset")]
-        [SerializeField] private RectTransform keyframeScrollView;
-        [FormerlySerializedAs("verticalLayoutGroup")] [SerializeField] private VerticalLayoutGroup keyframeVerticalLayoutGroup;
+        [SerializeField]
+        private RectTransform keyframeScrollView;
+
+        [FormerlySerializedAs("verticalLayoutGroup")] [SerializeField]
+        private VerticalLayoutGroup keyframeVerticalLayoutGroup;
 
         private DiContainer _container;
         private List<KeyframeObjectData> _keyframes = new();
@@ -36,27 +39,46 @@ namespace TimeLine
         private KeyframeSelect _keyframeObjectSelect;
         private Keyframe.Keyframe _keyframeSelect;
         private TimeLineConverter _timeLineConverter;
+        private ActionMap _animationMap;
 
         private bool _active;
-        public KeyframeObjectData SelectedKeyframe { get; private set; }
+        public List<KeyframeObjectData> SelectedKeyframe { get; private set; }
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, DiContainer container,
-            TimeLineConverter timeLineConverter)
+            TimeLineConverter timeLineConverter, ActionMap actionMap)
         {
             _container = container;
             _gameEventBus = gameEventBus;
             _timeLineConverter = timeLineConverter;
+            _animationMap = actionMap;
+        }
+
+        public double GetMinTimeSelectedKeyframe()
+        {
+            if (!SelectedKeyframe.Any()) 
+                throw new InvalidOperationException("No keyframes selected.");
+            return SelectedKeyframe.Min(k => (double)k.Keyframe.Ticks);
+        }
+
+        public double GetMaxTimeSelectedKeyframe()
+        {
+            if (!SelectedKeyframe.Any()) 
+                throw new InvalidOperationException("No keyframes selected.");
+            return SelectedKeyframe.Max(k => (double)k.Keyframe.Ticks);
         }
 
         void Awake()
         {
+            SelectedKeyframe = new List<KeyframeObjectData>();
+            _animationMap.Editor.I.started += context => InverKeyframes();
+            
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.ScrollTimeLineKeyframeEvent _) => Build());
-            
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => PoseKeyframes());
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.ScrollTimeLineKeyframeEvent _) => PoseKeyframes());
+
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
 
             _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
@@ -74,58 +96,152 @@ namespace TimeLine
 
         private void SelectKeyframe(ref SelectKeyframeEvent selectKeyframeEvent)
         {
-            SelectedKeyframe = selectKeyframeEvent.Keyframe;
+            if (_animationMap.Editor.LeftShift.IsPressed())
+            {
+                if (SelectedKeyframe.Contains(selectKeyframeEvent.Keyframe))
+                {
+                    SelectedKeyframe.Remove(selectKeyframeEvent.Keyframe);
+                }
+                else
+                {
+                    SelectedKeyframe.Add(selectKeyframeEvent.Keyframe);
+                }
+            }
+            else
+            {
+                if (!SelectedKeyframe.Contains(selectKeyframeEvent.Keyframe))
+                {
+                    SelectedKeyframe.Clear();
+                    SelectedKeyframe.Add(selectKeyframeEvent.Keyframe);
+                }
+            }
+
+
+
+
+            print(SelectedKeyframe.Count);
+
             foreach (var keyframe in _keyframes)
             {
                 keyframe.KeyframeSelect.SelectColor(false);
             }
-            selectKeyframeEvent.Keyframe.KeyframeSelect.SelectColor(true);
+
+            foreach (var sData in SelectedKeyframe)
+            {
+                sData.KeyframeSelect.SelectColor(true);
+            }
+        }
+
+        public void MultipleDrag(double offset, KeyframeDrag drag)
+        {
+            if(offset == 0) return;
+            
+            print(offset);
+            
+            foreach (var keyframe in SelectedKeyframe)
+            {
+                if(drag == keyframe.KeyframeDrag) continue;
+                
+                float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x -
+                                keyframeVerticalLayoutGroup.padding.left / 2f;
+
+                float positionX =
+                    _timeLineConverter.TicksToPositionX(keyframe.Keyframe.Ticks+=offset, _timeLineKeyframeScroll.Pan) +
+                    xOffset;
+                keyframe.RectTransform.anchoredPosition = new Vector2(
+                    positionX,
+                    keyframe.RectTransform.anchoredPosition.y);
+            }
+        }
+
+        public void DeselectAllKeyframes()
+        {
+            foreach (var keyframe in SelectedKeyframe)
+            {
+                keyframe.KeyframeSelect.SelectColor(false);
+            }
+            SelectedKeyframe.Clear();
         }
 
         [Button]
         private void Build()
         {
-            if(!_active) return;
-            
-            // print("Build");
-            
+            if (!_active) return;
+
             foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
-            
+
             _keyframes = new List<KeyframeObjectData>();
-            
-            // print(treeViewUI.AnimationLineController.Lines.Count);
 
             foreach (var tree in treeViewUI.AnimationLineController.Lines)
             {
                 Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
-                
-                // print(track);
-                
+
                 if (track == null) continue;
-                
-                // print(track.Keyframes.Count);
-                
+
                 foreach (var keyframe in track.Keyframes)
                 {
                     KeyframeObjectData keyframeObjectData = _container.InstantiatePrefab(keyFrame, tree.KeyframeLine)
                         .GetComponent<KeyframeObjectData>();
-                    
-                    _keyframes.Add(keyframeObjectData.GetComponent<KeyframeObjectData>());
-                    KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
 
-                    // Конвертируем тики в позицию на таймлайне
-                    float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x - keyframeVerticalLayoutGroup.padding.left / 2f;
-                    
-                    float positionX = _timeLineConverter.TicksToPositionX(keyframe.Ticks, _timeLineKeyframeScroll.Pan) + xOffset;
-                    keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
-                        positionX,
-                        keyframeObjectData.RectTransform.anchoredPosition.y);
+                    KeyframeDrag keyframeDrag = keyframeObjectData.GetComponent<KeyframeDrag>();
 
                     keyframeDrag.Setup(keyframe, track.SortKeyframes);
                     keyframeObjectData.Keyframe = keyframe;
                     keyframeObjectData.Track = track;
+                    
+                    _keyframes.Add(keyframeObjectData);
+                    // // Конвертируем тики в позицию на таймлайне
+                    // float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x -
+                    //                 keyframeVerticalLayoutGroup.padding.left / 2f;
+                    //
+                    // float positionX = _timeLineConverter.TicksToPositionX(keyframe.Ticks, _timeLineKeyframeScroll.Pan) +
+                    //                   xOffset;
+                    // keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
+                    //     positionX,
+                    //     keyframeObjectData.RectTransform.anchoredPosition.y);
+
+
                 }
+            }
+
+            PoseKeyframes();
+        }
+
+        private void InverKeyframes()
+        {
+            var min = GetMinTimeSelectedKeyframe();
+            var max = GetMaxTimeSelectedKeyframe();
+            // x' = min + (max - x)
+            foreach (var keyframe in _keyframes)
+            {
+                keyframe.Keyframe.Ticks = min + (max - keyframe.Keyframe.Ticks);
+            }
+
+            foreach (var tree in treeViewUI.AnimationLineController.Lines)
+            {
+                Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
+                if(track == null) continue;
+                track.SortKeyframes();
+            }
+
+            PoseKeyframes();
+        }
+
+        private void PoseKeyframes()
+        {
+            foreach (var keyframe in _keyframes)
+            {
+                // Конвертируем тики в позицию на таймлайне
+                float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x -
+                                keyframeVerticalLayoutGroup.padding.left / 2f;
+
+                float positionX =
+                    _timeLineConverter.TicksToPositionX(keyframe.Keyframe.Ticks, _timeLineKeyframeScroll.Pan) +
+                    xOffset;
+                keyframe.RectTransform.anchoredPosition = new Vector2(
+                    positionX,
+                    keyframe.RectTransform.anchoredPosition.y);
             }
         }
 
@@ -134,7 +250,7 @@ namespace TimeLine
             foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
         }
-        
+
         private void OnDestroy()
         {
             _gameEventBus.UnsubscribeFrom((ref AddKeyframeEvent _) => Build());

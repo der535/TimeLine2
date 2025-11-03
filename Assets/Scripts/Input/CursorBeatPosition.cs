@@ -17,13 +17,15 @@ namespace TimeLine.Input
         private Main _main;
         private MainObjects _mainObjects;
         private TimeLineScroll _timeLineScroll;
+        private ActionMap _actionMap;
 
         [Inject]
-        private void Construct(Main main, MainObjects mainObjects, TimeLineScroll timeLineScroll)
+        private void Construct(Main main, MainObjects mainObjects, TimeLineScroll timeLineScroll, ActionMap actionMap)
         {
             _main = main;
             _timeLineScroll = timeLineScroll;
             _mainObjects = mainObjects;
+            _actionMap = actionMap;
         }
 
         public void SetActive(bool isActive) => _isActive = isActive;
@@ -37,7 +39,7 @@ namespace TimeLine.Input
 
         private void Update()
         {
-            bool isMouseHeld = UnityEngine.Input.GetKey(KeyCode.Mouse0);
+            bool isMouseHeld = _actionMap.Editor.MouseLeft.IsPressed();
 
             if (!_dragStarted)
             {

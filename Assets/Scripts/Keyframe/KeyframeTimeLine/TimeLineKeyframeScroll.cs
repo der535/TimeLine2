@@ -23,19 +23,39 @@ namespace TimeLine
 
         private GameEventBus _eventBus;
         private MainObjects _mainObjects;
+        private ActionMap _actionMap;
 
         public float Pan { get; private set; }
         
         [Inject]
-        private void Construct(GameEventBus eventBus, MainObjects mainObjects)
+        private void Construct(GameEventBus eventBus, MainObjects mainObjects, ActionMap actionMap)
         {
             _eventBus = eventBus;
             _mainObjects = mainObjects;
+            _actionMap = actionMap;
         }
 
         private void Awake()
         {
             _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
+            
+
+            _actionMap.Editor.MouseScroll.started += _ =>
+            {
+                if (!RectTransformUtility.RectangleContainsScreenPoint(
+                        targetObject,
+                        UnityEngine.Input.mousePosition,
+                        targetCamera)) return;
+                
+                if(!_actionMap.Editor.LeftCtrl.IsPressed()) return;
+                
+                var mouseScroll = _actionMap.Editor.MouseScroll.ReadValue<float>();
+                
+                _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Pan));
+                Pan += mouseScroll * panMultiplier;
+                Pan = Mathf.Max(panMin, Pan);
+                _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Pan));
+            };
         }
 
         internal void SetPan(float value)
@@ -53,27 +73,9 @@ namespace TimeLine
                     UnityEngine.Input.mousePosition, 
                     targetCamera))
             {
-                if (!UnityEngine.Input.GetKey(KeyCode.LeftControl) && !UnityEngine.Input.GetKey(KeyCode.LeftAlt) && !UnityEngine.Input.GetKey(KeyCode.LeftShift))
+                if(!_actionMap.Editor.LeftCtrl.IsPressed() && !_actionMap.Editor.LeftAlt.IsPressed() && !_actionMap.Editor.LeftShift.IsPressed())
                 {
                     _eventBus.Raise(new ScrollTimeLineKeyframeEvent(UnityEngine.Input.mouseScrollDelta.y * scrollMultiplier));
-                }
-
-            }
-        }
-
-        private void Update()
-        {
-            if (RectTransformUtility.RectangleContainsScreenPoint(
-                    targetObject,
-                    UnityEngine.Input.mousePosition,
-                    targetCamera))
-            {
-                if(UnityEngine.Input.GetKey(KeyCode.LeftControl) && UnityEngine.Input.mouseScrollDelta.y != 0)
-                {
-                    _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Pan));
-                    Pan += UnityEngine.Input.mouseScrollDelta.y * panMultiplier;
-                    Pan = Mathf.Max(panMin, Pan);
-                    _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Pan));
                 }
             }
         }

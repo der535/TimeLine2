@@ -19,6 +19,7 @@ namespace TimeLine
         [SerializeField] private GameObject sceneObjectBasePrefab;
         [SerializeField] private GameObject trackPrefab;
         [SerializeField] private SaveComposition saveComposition;
+        [SerializeField] private SaveLevel _saveLevel;
 
         #endregion
 
@@ -31,6 +32,7 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
         private Main _main;
         private DiContainer _container;
+        private ActionMap _actionMap;
 
         #endregion
 
@@ -44,7 +46,8 @@ namespace TimeLine
             TrackStorage trackStorage,
             DiContainer container,
             KeyframeTrackStorage keyframeTrackStorage,
-            SelectObjectController selectObjectController)
+            SelectObjectController selectObjectController,
+            ActionMap actionMap)
         {
             _trackObjectStorage = trackObjectStorage;
             _branchCollection = branchCollection;
@@ -53,9 +56,15 @@ namespace TimeLine
             _container = container;
             _keyframeTrackStorage = keyframeTrackStorage;
             _selectObjectController = selectObjectController;
+            _actionMap = actionMap;
         }
 
         #endregion
+
+        private void Start()
+        {
+            _actionMap.Editor.Space.started += _ => CopyObjectNew(_selectObjectController.SelectObjects);
+        }
 
         #region Public Methods
 
@@ -66,17 +75,21 @@ namespace TimeLine
             // Создаем сценный объект
             GameObject sceneObject = CreateSceneTrackObject(sprite);
 
+            sceneObject.name = sprite.name;
+
             // Создаем трек-объект
-            TrackObject trackObject = CreateTrackObject(100, "Object", _trackStorage.TrackLines[0]);
+            TrackObject trackObject = CreateTrackObject(100, sprite.name, _trackStorage.GetTrackLineByIndex(0));
 
             // Создаем ветку
-            Branch branch = _branchCollection.AddBranch(id, sceneObject.name);
+            Branch branch = _branchCollection.AddBranch(id, sprite.name);
 
             // Добавляем в хранилище
             _trackObjectStorage.Add(sceneObject, trackObject, branch, Guid.NewGuid().ToString());
+
+            sceneObject.GetComponent<NameComponent>().Name.Value = sprite.name;
         }
 
-        internal (TrackObjectData, GameObject, Branch) LoadTrackObject(GameObjectSaveData data,
+        public (TrackObjectData, GameObject, Branch) LoadTrackObject(GameObjectSaveData data,
             bool addToStorage = true)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
@@ -95,15 +108,18 @@ namespace TimeLine
             // }
 
             // Создаем трек-объект
-            TrackObject trackObject = CreateTrackObject(data.duractionTime, data.gameObjectName,
-                _trackStorage.TrackLines[0], data.startTime);
+
+            TrackObject trackObject;
+            trackObject = CreateTrackObject(data.duractionTime, data.gameObjectName,
+                _trackStorage.GetTrackLineByIndex(data.lineIndex), data.startTime);
+
 
             // Создаем ветку
             Branch branch = _branchCollection.AddBranch(id, data.gameObjectName);
 
             foreach (var node in data.branch.Nodes)
             {
-                print($"Path:{node.Path} Name:{node.Name}");
+                // print($"Path:{node.Path} Name:{node.Name}");
                 branch.AddNode(node.Path, node.Name);
             }
 
@@ -150,108 +166,116 @@ namespace TimeLine
             return (trackObjectData, sceneObject, branch);
         }
 
-        internal (TrackObjectData, GameObject, Branch) LoadGroup(GroupGameObjectSaveData data, string compositionID,
-            GroupGameObjectSaveData compositionData = null, bool addToStorage = true)
-        {
-            string sceneObjectID = UniqueIDGenerator.GenerateUniqueID();
+        // internal (TrackObjectData, GameObject, Branch) LoadGroup(GroupGameObjectSaveData data, string compositionID,
+        //     GroupGameObjectSaveData compositionData = null, bool addToStorage = true)
+        // {
+        //     string sceneObjectID = UniqueIDGenerator.GenerateUniqueID();
+        //
+        //     TrackObject trackObject = _container
+        //         .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
+        //
+        //     GameObject sceneTrackObject =
+        //         _container.InstantiatePrefab(scenePrefab, root);
+        //
+        //     List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
+        //     
+        //     List<GameObjectSaveData> children;
+        //     if (compositionData == null)
+        //         children = data.children;
+        //     else
+        //     {
+        //         children = compositionData.children;
+        //     }
+        //
+        //     foreach (var childData in children.ToList())
+        //     {
+        //         TrackObjectData childTrackObject = null;
+        //         GameObject childSceneObject = null;
+        //         Branch childBranch = null;
+        //
+        //         if (childData is GroupGameObjectSaveData childGroupData)
+        //         {
+        //             GroupGameObjectSaveData groupChildData =  saveComposition.FindCompositionDataById(childGroupData
+        //                 .compositionID);
+        //
+        //             if (groupChildData != null)
+        //             {
+        //                 (childTrackObject, childSceneObject, childBranch) = LoadGroup(childGroupData,
+        //                     childGroupData.compositionID,
+        //                     groupChildData);
+        //             }
+        //             
+        //             
+        //         }
+        //         else
+        //         {
+        //             (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
+        //
+        //         }
+        //
+        //         if (childTrackObject != null)
+        //         {
+        //             trackObjectDatas.Add(childTrackObject);
+        //
+        //             Vector2 savedPosition = childSceneObject.transform.localPosition;
+        //             childSceneObject.transform.SetParent(sceneTrackObject.gameObject.transform);
+        //             childSceneObject.transform.localPosition = savedPosition;
+        //
+        //             foreach (var node in childBranch.Nodes)
+        //             {
+        //                 foreach (var node2 in node.Children)
+        //                 {
+        //                     _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
+        //                 }
+        //             }
+        //         }
+        //
+        //
+        //     }
+        //
+        //     if (compositionData == null)
+        //     {
+        //         trackObject.Setup((float)data.duractionTime, data.gameObjectName, _trackStorage.TrackLines[0],
+        //             data.startTime, true);
+        //     }
+        //     else
+        //     {
+        //         trackObject.Setup((float)data.duractionTime, compositionData.gameObjectName, _trackStorage.TrackLines[0],
+        //             data.startTime, true);
+        //         trackObject.UpdateDuraction(compositionData.duractionTime);
+        //     }
+        //     
+        //     Branch branch;
+        //     
+        //     if(compositionData == null)
+        //         branch = _branchCollection.AddBranch(data.branch.ID, data.branch.Name);
+        //     else
+        //         branch = _branchCollection.AddBranch(compositionData.branch.ID, compositionData.branch.Name);
+        //
+        //     TrackObjectGroup trackObjectGroup =
+        //         _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas,
+        //             sceneObjectID, compositionID, addToStorage); // todo тут убрать добовлении композиции
+        //     
+        //     
+        //     
+        //     return (trackObjectGroup, sceneTrackObject, branch);
+        // }
 
-            TrackObject trackObject = _container
-                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
 
-            GameObject sceneTrackObject =
-                _container.InstantiatePrefab(scenePrefab, root);
-
-            List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
-            
-            List<GameObjectSaveData> children;
-            if (compositionData == null)
-                children = data.children;
-            else
-            {
-                children = compositionData.children;
-            }
-
-            foreach (var childData in children.ToList())
-            {
-                TrackObjectData childTrackObject = null;
-                GameObject childSceneObject = null;
-                Branch childBranch = null;
-
-                if (childData is GroupGameObjectSaveData childGroupData)
-                {
-                    GroupGameObjectSaveData groupChildData =  saveComposition.FindCompositionDataById(childGroupData
-                        .compositionID);
-
-                    if (groupChildData != null)
-                    {
-                        (childTrackObject, childSceneObject, childBranch) = LoadGroup(childGroupData,
-                            childGroupData.compositionID,
-                            groupChildData);
-                    }
-                    
-                    
-                }
-                else
-                {
-                    (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
-
-                }
-
-                if (childTrackObject != null)
-                {
-                    trackObjectDatas.Add(childTrackObject);
-
-                    childSceneObject.transform.SetParent(sceneTrackObject.gameObject.transform);
-
-                    foreach (var node in childBranch.Nodes)
-                    {
-                        foreach (var node2 in node.Children)
-                        {
-                            _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
-                        }
-                    }
-                }
-
-  
-            }
-
-            if (compositionData == null)
-            {
-                trackObject.Setup((float)data.duractionTime, data.gameObjectName, _trackStorage.TrackLines[0],
-                    data.startTime, true);
-            }
-            else
-            {
-                trackObject.Setup((float)data.duractionTime, compositionData.gameObjectName, _trackStorage.TrackLines[0],
-                    data.startTime, true);
-                trackObject.UpdateDuraction(compositionData.duractionTime);
-            }
-            
-            Branch branch;
-            
-            if(compositionData == null)
-                branch = _branchCollection.AddBranch(data.branch.ID, data.branch.Name);
-            else
-                branch = _branchCollection.AddBranch(compositionData.branch.ID, compositionData.branch.Name);
-
-            TrackObjectGroup trackObjectGroup =
-                _trackObjectStorage.AddGroup(sceneTrackObject.gameObject, trackObject, branch, trackObjectDatas,
-                    sceneObjectID, compositionID, addToStorage); // todo тут убрать добовлении композиции
-            return (trackObjectGroup, sceneTrackObject, branch);
-        }
-        
-        
         internal (TrackObjectData, GameObject, Branch) LoadGroupNew(GroupGameObjectSaveData data, string compositionID,
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true)
         {
-            print("LoadGroupNew");
-            
             string sceneObjectID = UniqueIDGenerator.GenerateUniqueID();
-            
+
             var (groupTrackObject, groupGameObject, groupBranch) = LoadTrackObject(data, false);
 
+
+            var currentTime = _main.TicksCurrentTime();
+            _main.SetTimeInTicks(groupTrackObject.trackObject.StartTimeInTicks);
+
+
             List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
-            
+
             List<GameObjectSaveData> children;
             if (compositionData == null)
                 children = data.children;
@@ -268,7 +292,7 @@ namespace TimeLine
 
                 if (childData is GroupGameObjectSaveData childGroupData)
                 {
-                    GroupGameObjectSaveData groupChildData =  saveComposition.FindCompositionDataById(childGroupData
+                    GroupGameObjectSaveData groupChildData = saveComposition.FindCompositionDataById(childGroupData
                         .compositionID);
 
                     if (groupChildData != null)
@@ -281,16 +305,19 @@ namespace TimeLine
                 else
                 {
                     (childTrackObject, childSceneObject, childBranch) = LoadTrackObject(childData);
-                    print(childSceneObject.transform.position);
                 }
 
                 if (childTrackObject != null)
                 {
                     trackObjectDatas.Add(childTrackObject);
-                    
+
                     Vector3 pos = childSceneObject.transform.localPosition;
+                    Quaternion rot = childSceneObject.transform.localRotation;
+                    Vector3 sca = childSceneObject.transform.localScale;
                     childSceneObject.transform.SetParent(groupGameObject.gameObject.transform);
                     childSceneObject.transform.localPosition = pos;
+                    childSceneObject.transform.localRotation = rot;
+                    childSceneObject.transform.localScale = sca;
 
                     foreach (var node in childBranch.Nodes)
                     {
@@ -304,19 +331,27 @@ namespace TimeLine
 
             if (compositionData == null)
             {
-                groupTrackObject.trackObject.Setup((float)data.duractionTime, data.gameObjectName, _trackStorage.TrackLines[0],
+                groupTrackObject.trackObject.Setup((float)data.duractionTime, data.gameObjectName,
+                    _trackStorage.GetTrackLineByIndex(data.lineIndex),
                     data.startTime, true);
             }
             else
             {
-                groupTrackObject.trackObject.Setup((float)data.duractionTime, compositionData.gameObjectName, _trackStorage.TrackLines[0],
+                groupTrackObject.trackObject.Setup((float)data.duractionTime, compositionData.gameObjectName,
+                    _trackStorage.GetTrackLineByIndex(data.lineIndex),
                     data.startTime, true);
                 groupTrackObject.trackObject.UpdateDuraction(compositionData.duractionTime);
             }
-            
+
             TrackObjectGroup trackObjectGroup =
-                _trackObjectStorage.AddGroup(groupGameObject.gameObject, groupTrackObject.trackObject, groupTrackObject.branch, trackObjectDatas,
+                _trackObjectStorage.AddGroup(groupGameObject.gameObject, groupTrackObject.trackObject,
+                    groupTrackObject.branch, trackObjectDatas,
                     sceneObjectID, compositionID, addToStorage); // todo тут убрать добовлении композиции
+
+
+            _main.SetTimeInTicks(currentTime);
+
+
             return (trackObjectGroup, groupGameObject, groupTrackObject.branch);
         }
 
@@ -324,41 +359,59 @@ namespace TimeLine
 
         #region Copy Methods
 
-        private void Update()
-        {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Space))
-            {
-                CopyObject(_selectObjectController.SelectObjects);
-            }
-        }
-
         /// <summary>
         /// Копирует список объектов трека
         /// </summary>
-        internal List<TrackObjectData> CopyObject(List<TrackObjectData> list, bool isChildCopy = false)
+        // internal List<TrackObjectData> CopyObject(List<TrackObjectData> list, bool isChildCopy = false)
+        // {
+        //     List<TrackObjectData> result = new List<TrackObjectData>();
+        //     var sortedList = list.OrderBy(x => x.trackObject.StartTimeInTicks).ToList();
+        //
+        //     if (sortedList.Count == 0) return result;
+        //
+        //     double minTimeOuter = sortedList[0].trackObject.StartTimeInTicks;
+        //     double baseTime = _main.TicksCurrentTime();
+        //
+        //     foreach (var trackObjectData in sortedList)
+        //     {
+        //         if (trackObjectData is TrackObjectGroup group)
+        //         {
+        //             ProcessGroupCopy(trackObjectData, group, result, baseTime, minTimeOuter, isChildCopy,
+        //                 group.compositionID);
+        //         }
+        //         else
+        //         {
+        //             ProcessSingleObjectCopy(trackObjectData, result, baseTime, minTimeOuter);
+        //         }
+        //     }
+        //
+        //     return result;
+        // }
+        internal void CopyObjectNew(List<TrackObjectData> list)
         {
-            List<TrackObjectData> result = new List<TrackObjectData>();
             var sortedList = list.OrderBy(x => x.trackObject.StartTimeInTicks).ToList();
-
-            if (sortedList.Count == 0) return result;
 
             double minTimeOuter = sortedList[0].trackObject.StartTimeInTicks;
             double baseTime = _main.TicksCurrentTime();
 
+            if (sortedList.Count == 0) return;
             foreach (var trackObjectData in sortedList)
             {
                 if (trackObjectData is TrackObjectGroup group)
                 {
-                    ProcessGroupCopy(trackObjectData, group, result, baseTime, minTimeOuter, isChildCopy,
-                        group.compositionID);
+                    var data = _saveLevel.SaveGroup(group, true);
+                    var difference = data.startTime - minTimeOuter;
+                    data.startTime = baseTime + difference;
+                    LoadGroupNew(data, data.compositionID, saveComposition.FindCompositionDataById(data.compositionID));
                 }
                 else
                 {
-                    ProcessSingleObjectCopy(trackObjectData, result, baseTime, minTimeOuter);
+                    var data = _saveLevel.SaveGameObject(trackObjectData, "");
+                    var difference = data.startTime - minTimeOuter;
+                    data.startTime = baseTime + difference;
+                    LoadTrackObject(data);
                 }
             }
-
-            return result;
         }
 
         /// <summary>
@@ -372,18 +425,20 @@ namespace TimeLine
             // Создаем копии объектов
             GameObject sceneTrackObject = CreateSceneTrackObject();
 
-            // Копируем компоненты
-            CopyComponents(trackObjectData.sceneObject, sceneTrackObject.gameObject);
-
             // Создаем трек-объект
             TrackObject trackObject = CreateTrackObject(trackObjectData.trackObject.TimeDuractionInTicks,
                 trackObjectData.sceneObject.name,
-                _trackStorage.TrackLines[0],
+                trackObjectData.trackObject.TrackLine,
                 baseTime
             );
 
             // Копируем ветку и треки
             Branch branch = CopyBranchWithTracks(trackObjectData.branch, id, sceneTrackObject.gameObject, trackObject);
+
+
+            // Копируем компоненты
+            CopyComponents(trackObjectData.sceneObject, sceneTrackObject.gameObject);
+
 
             if (addToStorage)
                 return _trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch,
@@ -517,95 +572,94 @@ namespace TimeLine
         /// <summary>
         /// Обрабатывает копирование группы объектов
         /// </summary>
-        private void ProcessGroupCopy(TrackObjectData trackObjectData, TrackObjectGroup group,
-            List<TrackObjectData> result, double baseTime, double minTimeOuter, bool isChildCopy, string compositionID)
-        {
-            // Рекурсивно копируем дочерние элементы
-            List<TrackObjectData> childs = CopyObject(group.TrackObjectDatas, true);
-
-            // Копируем родительский объект
-            TrackObjectData parent = CopyObject(trackObjectData, false);
-
-            // Вычисляем временные границы дочерних элементов
-            double minTime = childs.Min(x => x.trackObject.StartTimeInTicks);
-            double maxTime = childs.Max(x => x.trackObject.StartTimeInTicks + x.trackObject.TimeDuractionInTicks);
-            double position = baseTime + (trackObjectData.trackObject.StartTimeInTicks - minTimeOuter);
-
-            // Настраиваем группу
-            parent.trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], position, true);
-
-            // Обновляем позиции дочерних элементов
-            foreach (var child in childs)
-            {
-                child.trackObject.GroupOffset(minTime);
-                child.trackObject.GroupOffsetTrack(parent.trackObject);
-
-                child.trackObject.Hide();
-
-                Vector3 childPosition = child.sceneObject.transform.localPosition;
-                Quaternion childRotation = child.sceneObject.transform.localRotation;
-                Vector3 childScale = child.sceneObject.transform.localScale;
-
-                child.sceneObject.transform.SetParent(parent.sceneObject.transform);
-
-                child.sceneObject.transform.localPosition = childPosition;
-                child.sceneObject.transform.localRotation = childRotation;
-                child.sceneObject.transform.localScale = childScale;
-
-                // Обновляем родительские связи треков
-                foreach (var node in child.branch.Nodes)
-                {
-                    foreach (var childNode in node.Children)
-                    {
-                        _keyframeTrackStorage.GetTrack(childNode)?.SetParent(parent.trackObject);
-                    }
-                }
-            }
-
-            // Добавляем группу в хранилище или создаем новую группу
-            if (!isChildCopy)
-            {
-                _trackObjectStorage.AddGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch, childs,
-                    UniqueIDGenerator.GenerateUniqueID(), compositionID);
-                result.Add(parent);
-            }
-            else
-            {
-                var groupResult = new TrackObjectGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch,
-                    Guid.NewGuid().ToString(), childs, group.compositionID);
-                result.Add(groupResult);
-            }
-        }
+        // private void ProcessGroupCopy(TrackObjectData trackObjectData, TrackObjectGroup group,
+        //     List<TrackObjectData> result, double baseTime, double minTimeOuter, bool isChildCopy, string compositionID)
+        // {
+        //     // Рекурсивно копируем дочерние элементы
+        //     List<TrackObjectData> childs = CopyObject(group.TrackObjectDatas, true);
+        //
+        //     // Копируем родительский объект
+        //     TrackObjectData parent = CopyObject(trackObjectData, false);
+        //
+        //     // Вычисляем временные границы дочерних элементов
+        //     double minTime = childs.Min(x => x.trackObject.StartTimeInTicks);
+        //     double maxTime = childs.Max(x => x.trackObject.StartTimeInTicks + x.trackObject.TimeDuractionInTicks);
+        //     double position = baseTime + (trackObjectData.trackObject.StartTimeInTicks - minTimeOuter);
+        //
+        //     // Настраиваем группу
+        //     parent.trackObject.Setup(maxTime - minTime, "Group", _trackStorage.GetTrackLineByIndex(trackObjectData.lineIndex), position, true);
+        //
+        //     // Обновляем позиции дочерних элементов
+        //     foreach (var child in childs)
+        //     {
+        //         child.trackObject.GroupOffset(minTime);
+        //         child.trackObject.GroupOffsetTrack(parent.trackObject);
+        //
+        //         child.trackObject.Hide();
+        //
+        //         Vector3 childPosition = child.sceneObject.transform.localPosition;
+        //         Quaternion childRotation = child.sceneObject.transform.localRotation;
+        //         Vector3 childScale = child.sceneObject.transform.localScale;
+        //
+        //         child.sceneObject.transform.SetParent(parent.sceneObject.transform);
+        //
+        //         child.sceneObject.transform.localPosition = childPosition;
+        //         child.sceneObject.transform.localRotation = childRotation;
+        //         child.sceneObject.transform.localScale = childScale;
+        //
+        //         // Обновляем родительские связи треков
+        //         foreach (var node in child.branch.Nodes)
+        //         {
+        //             foreach (var childNode in node.Children)
+        //             {
+        //                 _keyframeTrackStorage.GetTrack(childNode)?.SetParent(parent.trackObject);
+        //             }
+        //         }
+        //     }
+        //
+        //     // Добавляем группу в хранилище или создаем новую группу
+        //     if (!isChildCopy)
+        //     {
+        //         _trackObjectStorage.AddGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch, childs,
+        //             UniqueIDGenerator.GenerateUniqueID(), compositionID);
+        //         result.Add(parent);
+        //     }
+        //     else
+        //     {
+        //         var groupResult = new TrackObjectGroup(parent.sceneObject.gameObject, parent.trackObject, parent.branch,
+        //             Guid.NewGuid().ToString(), childs, group.compositionID);
+        //         result.Add(groupResult);
+        //     }
+        // }
 
         /// <summary>
         /// Обрабатывает копирование одиночного объекта
         /// </summary>
-        private void ProcessSingleObjectCopy(TrackObjectData trackObjectData, List<TrackObjectData> result,
-            double baseTime, double minTimeOuter)
-        {
-            string id = UniqueIDGenerator.GenerateUniqueID();
-
-            // Копируем данные сцены
-            // TrackObjectSO trackObjectSo = trackObjectData.sceneObject.GetComponent<SceneTrackObject>().Copy();
-            GameObject sceneTrackObject = CreateSceneTrackObject();
-
-            // Копируем компоненты
-            CopyComponents(trackObjectData.sceneObject, sceneTrackObject.gameObject);
-
-            // Создаем трек-объект с позицией относительно базового времени
-            double position = baseTime + (trackObjectData.trackObject.StartTimeInTicks - minTimeOuter);
-            TrackObject trackObject = CreateTrackObject(trackObjectData.trackObject.TimeDuractionInTicks,
-                trackObjectData.trackObject.Name,
-                _trackStorage.TrackLines[0],
-                position
-            );
-
-            // Копируем ветку и треки
-            Branch branch = CopyBranchWithTracks(trackObjectData.branch, id, sceneTrackObject.gameObject, trackObject);
-
-            result.Add(_trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch,
-                Guid.NewGuid().ToString()));
-        }
+        // private void ProcessSingleObjectCopy(TrackObjectData trackObjectData, List<TrackObjectData> result,
+        //     double baseTime, double minTimeOuter)
+        // {
+        //     string id = UniqueIDGenerator.GenerateUniqueID();
+        //
+        //     // Копируем данные сцены
+        //     GameObject sceneTrackObject = CreateSceneTrackObject();
+        //
+        //     // Копируем компоненты
+        //     CopyComponents(trackObjectData.sceneObject, sceneTrackObject.gameObject);
+        //
+        //     // Создаем трек-объект с позицией относительно базового времени
+        //     double position = baseTime + (trackObjectData.trackObject.StartTimeInTicks - minTimeOuter);
+        //     TrackObject trackObject = CreateTrackObject(trackObjectData.trackObject.TimeDuractionInTicks,
+        //         trackObjectData.trackObject.Name,
+        //         _trackStorage.TrackLines[0],
+        //         position
+        //     );
+        //
+        //     // Копируем ветку и треки
+        //     Branch branch = CopyBranchWithTracks(trackObjectData.branch, id, sceneTrackObject.gameObject, trackObject);
+        //
+        //     result.Add(_trackObjectStorage.Add(sceneTrackObject.gameObject, trackObject, branch,
+        //         Guid.NewGuid().ToString()));
+        // }
 
         #endregion
     }

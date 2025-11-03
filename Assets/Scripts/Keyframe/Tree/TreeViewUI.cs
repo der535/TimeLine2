@@ -11,12 +11,10 @@ public class TreeViewUI : MonoBehaviour
     [SerializeField] private AnimationLineController animationLineController;
     [SerializeField] private RectTransform root;
     [SerializeField] private RectTransform rightPanel;
-    // [FormerlySerializedAs("nodePrefab")] [SerializeField] private GameObject linePrefab;
     [SerializeField] private int horizontalOffset = 30;
     [SerializeField] private Color[] levelColors;
     [SerializeField] private bool autoRefresh = true;
     
-    // public List<AnimationLineData> NodeObjects { get; private set; }
 
     public AnimationLineController AnimationLineController => animationLineController;
     
@@ -33,7 +31,7 @@ public class TreeViewUI : MonoBehaviour
     {
         animationLineController.Clear();
         _gameEventBus.SubscribeTo<AddTrackEvent>(RebuildBranch, 1);
-        // _gameEventBus.SubscribeTo((ref SelectTrackObjectEvent data) => BuildBranch(data.Track.branch), 1);
+
         _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => BuildBranch(data.Tracks[^1].branch), 1);
         
         _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => ClearContent());
@@ -42,8 +40,6 @@ public class TreeViewUI : MonoBehaviour
 
     public void BuildBranch(Branch branch)
     {
-        // if(CurrentBranch == branch) return;
-        
         CurrentBranch = branch;
         ClearContent();
         
@@ -51,7 +47,7 @@ public class TreeViewUI : MonoBehaviour
         
         if(CurrentBranch == null) return;
         
-        BuildNodeRecursive(branch.Root, root, 0, branch.Name);
+        BuildNodeRecursive(branch.Root, root, 0, CurrentBranch.Name);
     }
 
     private void RebuildBranch(ref AddTrackEvent addTrackEvent)
@@ -67,7 +63,7 @@ public class TreeViewUI : MonoBehaviour
 
     private void BuildNodeRecursive(TreeNode node, Transform parent, int level, string customName = null)
     {
-        animationLineController.AddLine(node.Name, node, level);
+        animationLineController.AddLine(customName ?? node.Name, node, level);
 
         // Рекурсивное создание дочерних узлов
         foreach (TreeNode child in node.Children)

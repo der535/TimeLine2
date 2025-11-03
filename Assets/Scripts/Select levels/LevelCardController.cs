@@ -56,16 +56,12 @@ namespace TimeLine
 
         private void CreateLevelCard(LevelBaseInfo data)
         {
-            print(data);
             LevelCard card = Instantiate(levelCardPrefab, _content);
-            print(card);
             card.Setup(data.levelName, () =>
             {
                 _gameEventBus.Raise(new OpenEditorEvent(data));
                 canvasCreateLevel.gameObject.SetActive(false);
             }, null, null, null);
-            print("Setup");
-
         }
     }
 }

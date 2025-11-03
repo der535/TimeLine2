@@ -37,6 +37,7 @@ namespace TimeLine
         [SerializeField] private string logFilePath = ""; // Укажите путь вручную, например: "C:/Temp/BezierController.log"
         [SerializeField] private SelectFieldLineController selectFieldLineController;
         [SerializeField] private BezierSelectPointsController selectPointsController;
+        [SerializeField] private SelectObjectController selectObjectController;
 
         private TimeLineSettings _timeLineSettings;
         private TimeLineConverter _timeLineConverter;
@@ -45,26 +46,18 @@ namespace TimeLine
 
         private DiContainer _container;
         private GameEventBus _gameEventBus;
+        private ActionMap _actionMap;
 
         private string LogFile => string.IsNullOrEmpty(logFilePath) ? Path.Combine(Application.persistentDataPath, "BezierController.log") : logFilePath;
 
         [Inject]
-        void Construct(DiContainer container, GameEventBus gameEventBus, TimeLineConverter timeLineConverter, TimeLineSettings timeLineSettings)
+        void Construct(DiContainer container, GameEventBus gameEventBus, TimeLineConverter timeLineConverter, TimeLineSettings timeLineSettings, ActionMap actionMap)
         {
             _container = container;
             _gameEventBus = gameEventBus;
             _timeLineConverter = timeLineConverter;
             _timeLineSettings = timeLineSettings;
-        }
-
-        private Track tracksaved;
-
-        private void Update()
-        {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F))
-            {
-                Focus();
-            }
+            _actionMap = actionMap;
         }
         
         private void Focus()
@@ -143,15 +136,12 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectFieldLineEvent _) => Build(), -1);
-            _gameEventBus.SubscribeTo((ref DeselectFieldLineEvent _) =>
-            {
-                print("deselected field line");
-                Build();
-            });
+            _gameEventBus.SubscribeTo((ref DeselectFieldLineEvent _) => Build());
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollBezier _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref PanBezier _) => UpdatePositions());
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Clear());
 
             // Обработка скролла — смещаем root по Y
             _gameEventBus.SubscribeTo((ref ScrollBezier scrollEvent) =>
@@ -189,6 +179,8 @@ namespace TimeLine
                 SetPosition(newPositionY);
                 bezierLineDrawer?.UpdateBezierCurve();
             });
+            
+            _actionMap.Editor.F.started += _ => Focus();
         }
 
         internal void SortPoints()
@@ -217,11 +209,17 @@ namespace TimeLine
 
         public void ActiveKeyframes(bool active)
         {
+            if(selectObjectController.SelectObjects.Count <= 0) return;
             _active = active;
+            if (_active == false)
+            {
+                lineDrawer.ClearLines();
+            }
             bezierLineDrawer?.SetActive(active);
             Build();
             foreach (var group in groups)
             {
+                
                 foreach (var keyframe in group._keyframes)
                     if (keyframe != null)
                         keyframe.gameObject.SetActive(active);
@@ -340,7 +338,6 @@ namespace TimeLine
                 }
 
                 
-                tracksaved = track;
                 if (track == null) continue;
 
                 List<BezierPoint> points = new List<BezierPoint>();
@@ -391,6 +388,23 @@ namespace TimeLine
             bezierLineDrawer?.UpdateBezierCurve();
 
             LogMessage($"[Build] Completed. Total points: {groups.Count}");
+        }
+
+        private void Clear()
+        {
+            foreach (var group in groups)
+            {
+                foreach (var keyframe in group._keyframes)
+                {
+                    if (keyframe != null)
+                        Destroy(keyframe.gameObject);
+                }
+            }
+            
+            groups.Clear();
+
+            bezierLineDrawer?.ClearLines();
+            lineDrawer.ClearBeziers();
         }
         
         public void UpdatePositions()

@@ -12,6 +12,9 @@ namespace TimeLine
         [SerializeField] private TMP_Dropdown dropdown;
         [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
 
+        internal int GetGridSize() => dropdown.value;
+        internal void SetGridSize(int gridSize) => dropdown.value = gridSize;
+        
         private void Start()
         {
             dropdown.ClearOptions();

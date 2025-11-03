@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using UnityEngine;
@@ -8,37 +10,39 @@ namespace TimeLine
 {
     public class TrackObjectRemover : MonoBehaviour
     {
+        [SerializeField] private WindowsFocus windowsFocus;
+        
         private TrackObjectStorage _trackObjectStorage;
         private KeyframeTrackStorage _keyframeTrackStorage;
         private SelectObjectController _selectObjectController;
+        private ActionMap _actionMap;
+        private GameEventBus _gameEventBus;
 
         [Inject]
         private void Construct(
             TrackObjectStorage trackObjectStorage,
             KeyframeTrackStorage keyframeTrackStorage,
-            SelectObjectController selectObjectController)
+            SelectObjectController selectObjectController,
+            ActionMap actionMap,
+            GameEventBus gameEventBus)
         {
             _trackObjectStorage = trackObjectStorage;
             _keyframeTrackStorage = keyframeTrackStorage;
             _selectObjectController = selectObjectController;
+            _actionMap = actionMap;
+            _gameEventBus = gameEventBus;
         }
 
-        private void Update()
+        private void Start()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.X))
-            {
-                Remove();
-            }
+            _actionMap.Editor.X.started += _ => Remove();
         }
 
 
         internal void Remove()
         {
-            //[x] Уделить все кейфрем треки 
-            //[x] Удалить трек обжект 
-            //[x] Удалить объект на сцене
-            //[x] Удалить ветку 
-
+            if(!windowsFocus.IsFocused) return;
+            
             foreach (var select in _selectObjectController.SelectObjects)
             {
                 if (select is TrackObjectGroup group)
@@ -50,6 +54,8 @@ namespace TimeLine
                     SingleRemove(select);
                 }
             }
+
+            _gameEventBus.Raise(new DeselectObjectEvent());
         }
 
         internal void SingleRemove(TrackObjectData select)

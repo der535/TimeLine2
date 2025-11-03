@@ -25,12 +25,13 @@ namespace TimeLine
 
             Name.OnValueChanged += () =>
             {
-                print("Изменил");
                 gameObject.name = Name.Value;
                 TrackObjectData data = _storage.GetTrackObjectData(gameObject);
-                print(data);
-                data.branch.Rename(Name.Value);
-                data.trackObject.Rename(Name.Value);
+                if (data != null)
+                {
+                    data.branch.Rename(Name.Value);
+                    data.trackObject.Rename(Name.Value);
+                }
             };
         }
 

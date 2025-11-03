@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Zenject;
 
 namespace TimeLine
 {
@@ -15,11 +17,20 @@ namespace TimeLine
         public float startRotation = 0f;
         
         public Action<float> onRotate;
+        
+        private ActionMap _actionMap;
+
+        [Inject]
+        private void Construct(ActionMap actionMap)
+        {
+            _actionMap = actionMap;
+        }
 
 
         private void Start()
         {
             currentRotation = transform.eulerAngles.z;
+            
         }
 
         void Update()
@@ -28,7 +39,7 @@ namespace TimeLine
             {
                 ProcessRotation();
             
-                if (UnityEngine.Input.GetMouseButtonUp(0))
+                if (_actionMap.Editor.MouseLeft.phase == InputActionPhase.Canceled)
                 {
                     StopRotation();
                 }

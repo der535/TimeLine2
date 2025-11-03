@@ -1,10 +1,8 @@
 
-using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.Installers;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
@@ -18,20 +16,24 @@ namespace TimeLine
         [SerializeField] private float horizontalScroll;
         [Space]
         [SerializeField] private float panMin;
+        [SerializeField] private float panMax;
         [SerializeField] private float panFactor;
         [Space]
         [SerializeField] private RectTransform targetObject;
+        [SerializeField] private TimeLineSettings timeLineSettings;
 
         private GameEventBus _eventBus;
         private MainObjects _mainObjects;
+        private ActionMap _actionMap;
 
         public float Pan { get; private set; }
         
         [Inject]
-        private void Construct(GameEventBus eventBus, MainObjects mainObjects)
+        private void Construct(GameEventBus eventBus, MainObjects mainObjects, ActionMap actionMap)
         {
             _eventBus = eventBus;
             _mainObjects = mainObjects;
+            _actionMap = actionMap;
         }
         
         private bool GetCursorPosition()
@@ -43,25 +45,38 @@ namespace TimeLine
         private void Awake()
         {
             _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
+            Pan = 1;
         }
-
+        
+        
         private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
         {
-            // print(GetCursorPosition());
-            if(GetCursorPosition() == false) return;
-            if(UnityEngine.Input.mousePosition.y > targetObject.sizeDelta.y) return;
+            if (!GetCursorPosition()) return;
+
+            var mouseScrollDelta = _actionMap.Editor.MouseScroll.ReadValue<float>();
             
-            if (!UnityEngine.Input.GetKey(KeyCode.LeftControl))
+            if (mouseScrollDelta > targetObject.sizeDelta.y) return;
+
+            float scroll = mouseScrollDelta;
+
+            if (!_actionMap.Editor.LeftAlt.IsPressed())
             {
-                _eventBus.Raise(new ScrollTimeLineEvent(UnityEngine.Input.mouseScrollDelta.y * scrollMultiplier));
+                if(!_actionMap.Editor.LeftCtrl.IsPressed())
+                    _eventBus.Raise(new ScrollTimeLineEvent(scroll * scrollMultiplier));
             }
-            else if(UnityEngine.Input.GetKey(KeyCode.LeftControl))
+            else
             {
                 _eventBus.Raise(new OldPanEvent(Pan));
-                Pan += UnityEngine.Input.mouseScrollDelta.y * panMultiplier;
-                Pan = Mathf.Max(panMin, Pan);
+
+                float currentSpacing = timeLineSettings.DistanceBetweenBeatLines + Pan;
+                // Используем panFactor как базу экспоненты
+                float factor = Mathf.Pow(panFactor, scroll);
+                float newSpacing = currentSpacing * factor;
+
+                newSpacing = Mathf.Clamp(newSpacing, panMin, panMax);
+                Pan = newSpacing - timeLineSettings.DistanceBetweenBeatLines;
+
                 _eventBus.Raise(new PanEvent(Pan));
-                print(Pan);
             }
         }
     }

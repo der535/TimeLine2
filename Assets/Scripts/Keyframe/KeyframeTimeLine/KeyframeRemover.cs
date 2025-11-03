@@ -10,20 +10,29 @@ namespace TimeLine
     public class KeyframeRemover : MonoBehaviour
     {
         [SerializeField] private KeyfeameVizualizer keyframeVizualizer;
+        [SerializeField] private WindowsFocus windowsFocus;
         private GameEventBus _gameEventBus;
+        private ActionMap _actionMap;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap)
         {
             _gameEventBus = gameEventBus;
+            _actionMap = actionMap;
         }
 
-        private void Update()
+        private void Start()
         {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.L))
+            _actionMap.Editor.X.started += (_) =>
             {
-                Remove(keyframeVizualizer.SelectedKeyframe.Track, keyframeVizualizer.SelectedKeyframe.Keyframe);
-            }
+                if(!windowsFocus.IsFocused || keyframeVizualizer.SelectedKeyframe == null) return;
+
+                foreach (var keyframe in keyframeVizualizer.SelectedKeyframe)
+                {
+                    Remove(keyframe.Track, keyframe.Keyframe);
+                }
+               
+            }; 
         }
 
         void Remove(Track track, Keyframe.Keyframe keyframe)

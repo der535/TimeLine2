@@ -20,7 +20,8 @@ namespace TimeLine
         private float _positionStepSize = 1f;
 
         [SerializeField] private float _rotateStep = 90f;
-        [Space] [SerializeField] private TMP_InputField gridSizeInputField;
+        [Space] 
+        [SerializeField] private TMP_InputField gridSizeInputField;
         [SerializeField] private TMP_InputField gridRotateSizeInputField;
 
         [Space]
@@ -49,6 +50,19 @@ namespace TimeLine
         public float PositionStepSize => _positionStepSize;
         public Vector2 GridOffset => _gridOffset; // Только для чтения
 
+        internal (float, float) GetGridSize()
+        {
+            return (float.Parse(gridSizeInputField.text, CultureInfo.InvariantCulture), float.Parse(gridRotateSizeInputField.text, CultureInfo.InvariantCulture));
+        }
+
+        internal void SetGridSize(float gridSize, float rotateGridSize)
+        {
+            gridSizeInputField.text = gridSize.ToString(CultureInfo.InvariantCulture);
+            gridRotateSizeInputField.text = rotateGridSize.ToString(CultureInfo.InvariantCulture);
+            gridSizeInputField.onValueChanged.Invoke(gridSizeInputField.text);
+            gridRotateSizeInputField.onValueChanged.Invoke(gridRotateSizeInputField.text);
+        }
+
         private void Start()
         {
             // ⭐ Опционально: обернуть инициализацию логгера
@@ -66,28 +80,39 @@ namespace TimeLine
 
             gridSizeInputField.onEndEdit.AddListener(arg0 =>
             {
-                if (float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result) &&
-                    result > 0)
+                if (string.IsNullOrWhiteSpace(arg0) || !float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result) || result <= 0)
                 {
-                    LogMessage($"Grid size input changed to: {result:F4}");
-                    SetPositionStepSize(result);
+                    // Восстанавливаем предыдущее валидное значение или значение по умолчанию
+                    float fallback = _positionStepSize > 0 ? _positionStepSize : 1f;
+                    LogMessage($"Invalid or empty grid size input: '{arg0}'. Resetting to {fallback:F4}");
+                    gridSizeInputField.text = fallback.ToString(CultureInfo.InvariantCulture);
+                    // Не вызываем SetPositionStepSize, если значение не изменилось
+                    if (!Mathf.Approximately(fallback, _positionStepSize))
+                    {
+                        SetPositionStepSize(fallback);
+                    }
                 }
                 else
                 {
-                    LogMessage($"Invalid grid size input: {arg0}");
+                    LogMessage($"Grid size input changed to: {result:F4}");
+                    SetPositionStepSize(result);
                 }
             });
 
             gridRotateSizeInputField.onEndEdit.AddListener(arg0 =>
             {
-                if (float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
+                if (string.IsNullOrWhiteSpace(arg0) || !float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
                 {
-                    LogMessage($"Rotate step input changed to: {result:F4}");
-                    _rotateStep = result;
+                    // Для угла допустимы любые числа, включая 0 и отрицательные, но пустое → ставим по умолчанию
+                    float fallback = _rotateStep;
+                    LogMessage($"Invalid or empty rotate step input: '{arg0}'. Resetting to {fallback:F4}");
+                    gridRotateSizeInputField.text = fallback.ToString(CultureInfo.InvariantCulture);
+                    _rotateStep = fallback;
                 }
                 else
                 {
-                    LogMessage($"Invalid rotate step input: {arg0}");
+                    LogMessage($"Rotate step input changed to: {result:F4}");
+                    _rotateStep = result;
                 }
             });
         }

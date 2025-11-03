@@ -6,6 +6,7 @@ using SFB;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
@@ -14,8 +15,11 @@ namespace TimeLine
     {
         [SerializeField] private TMP_InputField _name;
         [SerializeField] private TMP_InputField _bpm;
+        [FormerlySerializedAs("createScreen")]
         [Space] 
-        [SerializeField] private GameObject createScreen;
+        [SerializeField] private GameObject levels;
+        [SerializeField] private GameObject selectLevelScreen;
+        [SerializeField] private GameObject createLevelScreen;
         
         private LevelBaseInfo levelInfo;
         private string songName;
@@ -61,7 +65,14 @@ namespace TimeLine
             string info = JsonUtility.ToJson(levelInfo, true);
             File.WriteAllText($"{Application.persistentDataPath}/Levels/{_name.text}/LevelBaseInfo.json", info);
             _gameEventBus.Raise(new OpenEditorEvent(levelInfo));
-            createScreen.gameObject.SetActive(false);
+            levels.gameObject.SetActive(false);
+        }
+
+        public void Cancel()
+        {
+            Directory.Delete($"{Application.persistentDataPath}/Levels/{tempFolderPath}");
+            createLevelScreen.gameObject.SetActive(false);
+            selectLevelScreen.gameObject.SetActive(true);
         }
     }
 }
