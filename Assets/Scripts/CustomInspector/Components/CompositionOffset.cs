@@ -41,14 +41,44 @@ namespace TimeLine
 
         private void Start()
         {
-            print(_trackObjectStorage);
-             if(_trackObjectStorage == null) return;
-            TrackObjectGroup trackObjectGroup = (TrackObjectGroup)_trackObjectStorage.GetTrackObjectData(gameObject);
-            print(trackObjectGroup);
-            if (trackObjectGroup != null)
+            List<TransformComponent> components = new();
+
+            for (int i = 0; i < transform.childCount; i++)
             {
-                Find(trackObjectGroup);
+                Transform child = transform.GetChild(i);
+                if (child.TryGetComponent<TransformComponent>(out var comp))
+                {
+                    components.Add(comp);
+                }
             }
+
+            var save = gameObject.GetComponent<TransformComponent>();
+            var values = (save.XPositionOffset.Value, save.YPositionOffset.Value);
+
+            foreach (var comp in components)
+            {
+                comp.XPositionOffset.Value = XOffset.Value;
+                comp.YPositionOffset.Value = YOffset.Value;
+            }
+
+            save.XPositionOffset.Value = values.Item1;
+            save.YPositionOffset.Value = values.Item2;
+            
+            print("#### SAVE ###");
+
+            // print($"{_trackObjectStorage} ************");
+            // if(_trackObjectStorage == null) return;
+            // TrackObjectGroup trackObjectGroup = (TrackObjectGroup)_trackObjectStorage.GetTrackObjectData(gameObject); //ТУТ
+            // if (trackObjectGroup == null)
+            // {
+            //     trackObjectGroup = _trackObjectStorage.DeepSearchGroup(gameObject);
+            //     print(_trackObjectStorage.DeepSearchGroup(gameObject));
+            // }
+            // print(trackObjectGroup);
+            // if (trackObjectGroup != null)
+            // {
+            //     Find(trackObjectGroup);
+            // }
         }
 
 

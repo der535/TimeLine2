@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
+using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
 using Zenject;
@@ -28,7 +29,12 @@ namespace TimeLine
             });
             _gameEventBus.SubscribeTo((ref AddComponentEvent data) =>
             {
-                Add(data.InitializedComponent, data.TrackObjectData.trackObject);
+                if(data.component is IInitializedComponent initializedComponent)
+                    Add(initializedComponent, data.TrackObjectData.trackObject);
+            });
+            _gameEventBus.SubscribeTo((ref TickExactTimeEvent data) =>
+            {
+                CheckInitialized(data.Time);
             });
         }
 
@@ -48,19 +54,18 @@ namespace TimeLine
             }
         }
 
-        private void Update()
+        private void CheckInitialized(double time)
         {
-            // print(_components.Count);
-            foreach (var VARIABLE in _initializedComponentData)
+            foreach (var componentData in _initializedComponentData)
             {
-                if (_main.TicksCurrentTime() <= VARIABLE.TrackObject.StartTimeInTicks && VARIABLE.Initialized == false)
+                if (time < componentData.TrackObject.StartTimeInTicks && componentData.Initialized == false)
                 {
-                    VARIABLE.IInitializedComponent?.Initialized();
-                    VARIABLE.Initialized = true;
+                    componentData.IInitializedComponent?.Initialized();
+                    componentData.Initialized = true;
                 }
-                else if(_main.TicksCurrentTime() > VARIABLE.TrackObject.StartTimeInTicks)
+                else if(time > componentData.TrackObject.StartTimeInTicks)
                 {
-                    VARIABLE.Initialized = false;
+                    componentData.Initialized = false;
                 }
             }
         }

@@ -21,15 +21,19 @@ public class BoxCollider2DOutline : MonoBehaviour
         mainCamera = mainObjects.MainCamera;
     }
 
-    private void Update()
+    // private void Update()
+    // {
+    //     UpdateOutline();
+    // }
+    internal void SetActiveLineRenderer(bool active)
     {
-        UpdateOutline();
+        lineRenderer.enabled = active;
     }
 
     [Button]
     internal void UpdateOutline()
     {
-        if (mainCamera == null || boxCollider == null || lineRenderer == null)
+        if (mainCamera == null || boxCollider == null || lineRenderer == null || lineRenderer.enabled == false)
             return;
 
         // Получаем размеры и смещение коллайдера в локальном пространстве объекта

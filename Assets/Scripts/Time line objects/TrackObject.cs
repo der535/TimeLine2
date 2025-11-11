@@ -56,8 +56,20 @@ namespace TimeLine
 
         #endregion
 
-        internal double StartTimeInTicks { get; private set; }
-        internal double TimeDuractionInTicks { get; private set; }
+        private double _startTimeInTicks;
+        private double _timeDurationInTicks;
+
+        internal double StartTimeInTicks
+        {
+            get => Math.Round(_startTimeInTicks);
+            private set => _startTimeInTicks = Math.Round(value);
+        }
+
+        internal double TimeDuractionInTicks
+        {
+            get => Math.Round(_timeDurationInTicks);
+            private set => _timeDurationInTicks = Math.Round(value);
+        }
         internal TrackLine TrackLine { get; private set; }
         internal string Name { get; private set; }
 
@@ -201,7 +213,7 @@ namespace TimeLine
 
             while (current != null && depth < maxDepth)
             {
-                print($"offsetObject[{depth}] = {current}");
+                // print($"offsetObject[{depth}] = {current}");
                 current = current.offsetObject;
                 depth++;
             }

@@ -50,6 +50,7 @@ namespace TimeLine.Installers
         [SerializeField] private CollidersPrefab collidersPrefab;
         [SerializeField] private SaveComposition saveComposition;
         [SerializeField] private KeyfeameVizualizer keyfeameVizualizer;
+        [SerializeField] private BezierSelectPointsController bezierSelectPointsController;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -93,6 +94,7 @@ namespace TimeLine.Installers
             Container.Bind<CollidersPrefab>().FromInstance(collidersPrefab).AsSingle();
             Container.Bind<SaveComposition>().FromInstance(saveComposition).AsSingle();
             Container.Bind<KeyfeameVizualizer>().FromInstance(keyfeameVizualizer).AsSingle();
+            Container.Bind<BezierSelectPointsController>().FromInstance(bezierSelectPointsController);
             
             
             

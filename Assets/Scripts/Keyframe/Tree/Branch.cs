@@ -151,7 +151,7 @@ public class Branch
             }
         }
         
-        Debug.Log($"{path}/{nodeName}");
+        // Debug.Log($"{path}/{nodeName}");
         // Добавление конечного узла
         var finalNode = currentNode.AddChild(nodeName, $"{path}");
         Nodes.Add(finalNode);

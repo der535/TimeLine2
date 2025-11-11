@@ -1,4 +1,5 @@
 using EventBus;
+using UnityEngine;
 
 namespace TimeLine.EventBus.Events.KeyframeTimeLine
 {
@@ -8,6 +9,7 @@ namespace TimeLine.EventBus.Events.KeyframeTimeLine
 
         public OpenEditorEvent(LevelBaseInfo levelBaseInfo)
         {
+            Debug.LogError("Double raise OpenEditorEvent");
             LevelInfo = levelBaseInfo;
         }
     }

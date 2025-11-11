@@ -1,4 +1,5 @@
 using System;
+using EventBus;
 using UnityEngine;
 using Zenject;
 
@@ -17,11 +18,14 @@ namespace TimeLine
         
         private Main _main;
         private bool _isPlaying;
+
+        private GameEventBus _gameEventBus;
         
         [Inject]
-        private void Construct(Main main)
+        private void Construct(Main main, GameEventBus gameEventBus)
         {
             _main = main;
+            _gameEventBus = gameEventBus;
         }
 
         private void Update()
@@ -35,15 +39,16 @@ namespace TimeLine
             _isPlaying = true;
             editCamera.gameObject.SetActive(false);
             playCamera.gameObject.SetActive(true);
+            _gameEventBus.Raise(new TurnToPlayModeEvent());
             Invoke(nameof(Play), startDelay);
         }
 
         public void ExitPlayMode()
         {
-            print("ExitPlayMode");
             _isPlaying = false;
             editCamera.gameObject.SetActive(true);
             playCamera.gameObject.SetActive(false);
+            _gameEventBus.Raise(new ExitPlayEvent());
             _main.Pause();
         }
 

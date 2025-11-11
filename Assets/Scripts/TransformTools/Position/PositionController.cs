@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using EventBus;
 using TimeLine.EventBus.Events.Grid; // ⭐ Добавлен импорт
@@ -39,6 +41,8 @@ namespace TimeLine
         [SerializeField] private string _logPath = "C:/Temp/PositionController_Log.txt";
         [SerializeField] private bool _enableLogging = true; // ⭐ Галочка для включения/выключения логов
         private StreamWriter _logWriter;
+        private List<TransformComponent> _otherObjects;
+        private List<TransformComponent> _allObjects;
 
         [Inject]
         private void Construct(GameEventBus eventBus, MainObjects mainObjects)
@@ -105,7 +109,7 @@ namespace TimeLine
         private void Start()
         {
             Log("Subscribing to SelectObjectEvent...");
-            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Tracks[^1].sceneObject)));
+            _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Tracks)));
 
             // ⭐ Подписка на GridPositionEvent
             Log("Subscribing to GridPositionEvent...");
@@ -178,11 +182,22 @@ namespace TimeLine
         }
 
 
-        private void SelectObject(GameObject data)
+        private void SelectObject(List<TrackObjectData> data)
         {
-            Log($"--- SelectObject START for: {data?.name ?? "NULL"} ---");
+            Log($"--- SelectObject START for: {data} ---");
 
-            _transformComponent = data?.GetComponent<TransformComponent>();
+            //Собираем все остальные объекты
+            _otherObjects = data
+                .Select(i => i.sceneObject.GetComponent<TransformComponent>())
+                .Where(comp => comp != null)
+                .ToList();
+
+            _allObjects = new List<TransformComponent>(_otherObjects);
+            
+            //Получаем последний выбранный и удаляем из списка прочих
+            _transformComponent = _otherObjects[^1];
+            _otherObjects.Remove(_transformComponent);
+            
             if (_transformComponent == null)
             {
                 Log("WARNING: Selected object has no TransformComponent!");
@@ -200,6 +215,10 @@ namespace TimeLine
                 _transformComponent.transform.position.y);
             Log($"[SelectObject] World position for UI Tool: {worldPositionForUI:F4}");
 
+            print(worldPositionForUI);
+            worldPositionForUI = GetCenter.GetSelectionCenter(_allObjects.Select(i => i.transform).ToList()); //todo test
+            print(worldPositionForUI);
+
             // Сообщаем GridScene текущую локальную позицию объекта (для расчета оффсета)
             Log($"[SelectObject] Calling gridScene.SetCurrentObjectPosition({localPositionForGrid:F4})");
             gridScene.SetCurrentObjectPosition(localPositionForGrid);
@@ -209,8 +228,8 @@ namespace TimeLine
             Log($"[SelectObject] Cached _lastSnappedPosition (local): {_lastSnappedPosition:F4}");
 
             // Назначаем локальную позицию обратно в компонент (без снапа, как и требовалось)
-            _transformComponent.XPosition.Value = localPositionForGrid.x;
-            _transformComponent.YPosition.Value = localPositionForGrid.y;
+            // _transformComponent.XPosition.Value = localPositionForGrid.x;
+            // _transformComponent.YPosition.Value = localPositionForGrid.y;
             Log(
                 $"[SelectObject] Assigned local position to TransformComponent: X={localPositionForGrid.x:F4}, Y={localPositionForGrid.y:F4}");
 
@@ -262,28 +281,42 @@ namespace TimeLine
             // 3. Снапаем с оффсетом — GridScene сам всё учтёт!
             Log(
                 $"[UpdateObjectFromTool] Calling gridScene.PositionFloatSnapToGrid({smoothWorldPosition:F4}, {inverseRotation.eulerAngles:F2})");
+            
+            var oldPosition = GetCenter.GetSelectionCenter(_allObjects.Select(i => i.transform).ToList()); //Сохраняем старую позицию
+            
             Vector2 candidateSnappedPosition = gridScene.PositionFloatSnapToGrid(smoothWorldPosition, inverseRotation);
+            
+            var differentPosition = candidateSnappedPosition - oldPosition; //Высчитываем разницу позиций
+            
             Log($"[UpdateObjectFromTool] Candidate snapped position FROM GRIDSCENE: {candidateSnappedPosition:F4}");
 
-            // 4. Гистерезис
-            float distanceToLastSnap = Vector2.Distance(candidateSnappedPosition, _lastSnappedPosition);
-            Log(
-                $"[UpdateObjectFromTool] Distance to last snap: {distanceToLastSnap:F4}, Hysteresis threshold: {_snapHysteresis:F4}");
+            
+            //Добавляем позицию ко всем объектам
+            foreach (var otherObject in _allObjects)
+            {
+                otherObject.XPosition.Value += differentPosition.x;
+                otherObject.YPosition.Value += differentPosition.y;
+            }
 
-            if (distanceToLastSnap > _snapHysteresis)
-            {
-                _lastSnappedPosition = candidateSnappedPosition;
-                Log($"[UpdateObjectFromTool] ✅ Accepted new snap position: {_lastSnappedPosition:F4}");
-            }
-            else
-            {
-                candidateSnappedPosition = _lastSnappedPosition;
-                Log($"[UpdateObjectFromTool] 🚫 Ignored candidate, keeping last snap: {_lastSnappedPosition:F4}");
-            }
+            // 4. Гистерезис
+            // float distanceToLastSnap = Vector2.Distance(candidateSnappedPosition, _lastSnappedPosition);
+            // Log(
+            //     $"[UpdateObjectFromTool] Distance to last snap: {distanceToLastSnap:F4}, Hysteresis threshold: {_snapHysteresis:F4}");
+            //
+            // if (distanceToLastSnap > _snapHysteresis)
+            // {
+            //     _lastSnappedPosition = candidateSnappedPosition;
+            //     Log($"[UpdateObjectFromTool] ✅ Accepted new snap position: {_lastSnappedPosition:F4}");
+            // }
+            // else
+            // {
+            //     candidateSnappedPosition = _lastSnappedPosition;
+            //     Log($"[UpdateObjectFromTool] 🚫 Ignored candidate, keeping last snap: {_lastSnappedPosition:F4}");
+            // }
 
             // 5. Применяем позицию
-            _transformComponent.XPosition.Value = candidateSnappedPosition.x;
-            _transformComponent.YPosition.Value = candidateSnappedPosition.y;
+            // _transformComponent.XPosition.Value = candidateSnappedPosition.x;
+            // _transformComponent.YPosition.Value = candidateSnappedPosition.y;
             Log(
                 $"[UpdateObjectFromTool] Assigned final position to TransformComponent: X={candidateSnappedPosition.x:F4}, Y={candidateSnappedPosition.y:F4}");
 
@@ -309,15 +342,6 @@ namespace TimeLine
         // ⭐ В метод OnDestroy, добавить отписку (хороший тон):
         private void OnDestroy()
         {
-            // if (_isSubscribedToGridEvents && _gameEventBus != null)
-            // {
-            //     Log("Unsubscribing from GridPositionEvent...");
-            //     // Note: EventBus usually handles unsubscribe automatically on object destruction
-            //     // or you might need to call a specific unsubscribe method if available.
-            //     // _gameEventBus.Unsubscribe<GridPositionEvent>(OnGridPositionChanged); 
-            //     // If such a method exists.
-            // }
-
             Log("=== PositionController Session Ended ===");
             _logWriter?.Close();
             _logWriter?.Dispose();

@@ -204,7 +204,7 @@ namespace TimeLine
         }
 
         internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
-            List<TrackObjectData> trackObjectDatas, string sceneObjectID, string compositionID,
+            List<TrackObjectData> trackObjectDatas, string sceneObjectID, string compositionID, string lastEditID,
             bool addToStorage = true)
         {
             var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
@@ -222,7 +222,7 @@ namespace TimeLine
             if (compositionID == "")
                 compositionID = Guid.NewGuid().ToString();
             TrackObjectGroup group =
-                new TrackObjectGroup(sceneObject, trackObject, branch, sceneObjectID, objectsForGroup, compositionID)
+                new TrackObjectGroup(sceneObject, trackObject, branch, sceneObjectID, objectsForGroup, compositionID, lastEditID)
                 {
                     compositionID = compositionID
                 };
@@ -320,6 +320,30 @@ namespace TimeLine
             }
 
             //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
+            return null;
+        }
+        
+        internal TrackObjectGroup DeepSearchGroup(GameObject gObject)
+        {
+            foreach (var group in _trackObjectGroups)
+            {
+                return DeepSearchGroup(group, gObject);
+            }
+
+            return null;
+        }
+
+        private TrackObjectGroup DeepSearchGroup(TrackObjectGroup group, GameObject gObject)
+        {
+            foreach (var child in group.TrackObjectDatas)
+            {
+                if (child is TrackObjectGroup childGroup)
+                {
+                    if(child.sceneObject == gObject) return childGroup;
+                    DeepSearchGroup(childGroup, gObject);
+                }
+            }
+            
             return null;
         }
 
@@ -492,6 +516,7 @@ namespace TimeLine
     public class TrackObjectGroup : TrackObjectData
     {
         public string compositionID;
+        public string lastEditID;
         private List<TrackObjectData> _trackObjectDatas;
 
         public List<TrackObjectData> TrackObjectDatas
@@ -501,10 +526,11 @@ namespace TimeLine
         }
 
         public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID,
-            List<TrackObjectData> trackObjectDatas, string compositionID) : base(sceneObject, trackObject, branch,
+            List<TrackObjectData> trackObjectDatas, string compositionID, string lastEditID) : base(sceneObject, trackObject, branch,
             sceneObjectID)
         {
             this.compositionID = compositionID;
+            this.lastEditID = lastEditID;
             this.sceneObject = sceneObject;
             this.trackObject = trackObject;
             this.branch = branch;
@@ -513,8 +539,10 @@ namespace TimeLine
         }
 
         public void Update(double newDuraction, List<TrackObjectData> trackObjectDatas, TrackObjectRemover remover,
-            MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage)
+            MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID)
         {
+            this.lastEditID = lastEditID;
+            
             trackObject.UpdateDuraction(newDuraction);
             foreach (var data in TrackObjectDatas)
             {

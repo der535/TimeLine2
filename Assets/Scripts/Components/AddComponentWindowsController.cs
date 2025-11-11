@@ -52,8 +52,7 @@ namespace TimeLine.Components
                 {
                     componentWindow.gameObject.SetActive(false);
                     Component comp = ComponentRules.AddComponentSafely(component.Value, _target, _container);
-                    if(comp is IInitializedComponent initializedComponent)
-                        _gameEventBus.Raise(new AddComponentEvent(_trackObjectStorage.GetTrackObjectData(_target), initializedComponent));
+                    _gameEventBus.Raise(new AddComponentEvent(_trackObjectStorage.GetTrackObjectData(_target), comp));
                     UpdateComponents(_selected);
                 });
             }

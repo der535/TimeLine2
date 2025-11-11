@@ -1,3 +1,5 @@
+using System;
+using NaughtyAttributes;
 using TimeLine.Installers;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,9 +13,9 @@ namespace TimeLine.TimeLine
         private Main _main;
         private TimeLineScroll _timeLineScroll;
         private TimeLineSettings _timeLineSettings;
-        
+
         public static TimeLineConverter Instance { get; private set; }
-        
+
         void Awake()
         {
             if (Instance != null && Instance != this)
@@ -24,6 +26,16 @@ namespace TimeLine.TimeLine
             {
                 Instance = this;
             }
+
+
+            _curve = new AnimationCurve();
+
+            // Создаем ключевые кадры один раз
+            var key1 = new UnityEngine.Keyframe(0f, 0f) { weightedMode = WeightedMode.Both };
+            var key2 = new UnityEngine.Keyframe(1f, 0f) { weightedMode = WeightedMode.Both };
+
+            _curve.AddKey(key1);
+            _curve.AddKey(key2);
         }
 
         [Inject]
@@ -96,7 +108,8 @@ namespace TimeLine.TimeLine
             return worldPosition;
         }
 
-        public double GetCursorBeatPosition(float pan, double offset = 0, RectTransform canvasOffset = null, RectTransform canvasCursor = null)
+        public double GetCursorBeatPosition(float pan, double offset = 0, RectTransform canvasOffset = null,
+            RectTransform canvasCursor = null)
         {
             return (CursorPosition(canvasCursor).x - offset - (canvasOffset != null
                        ? canvasOffset.offsetMin.x
@@ -143,53 +156,144 @@ namespace TimeLine.TimeLine
 
         public float GetAnchorPositionFromBeatPosition(float time)
         {
-            return GetAnchorPosition(time,  _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
+            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
         }
-        
+
         public float GetAnchorPositionFromBeatPosition(float time, float pan)
         {
-            return GetAnchorPosition(time,  _timeLineSettings.DistanceBetweenBeatLines, pan);
+            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, pan);
         }
-        
+
+        // public float Interpolate(
+        //     float start, 
+        //     float end, 
+        //     Keyframe.Keyframe current, 
+        //     Keyframe.Keyframe next, 
+        //     float t)
+        // {
+        //     // Создаем AnimationCurve с двумя ключевыми кадрами
+        //     AnimationCurve curve = new AnimationCurve();
+        //
+        //     // Устанавливаем ключевые кадры с их тангенсами и весами
+        //     UnityEngine.Keyframe startKeyframe = new  UnityEngine.Keyframe(0f, start, (float)current.OutTangent, (float)current.OutTangent, (float)current.OutWeight, (float)current.OutWeight);
+        //     UnityEngine.Keyframe endKeyframe = new  UnityEngine.Keyframe(1f, end, (float)next.InTangent, (float)next.InTangent, (float)next.InWeight, (float)next.InWeight);
+        //
+        //     // Добавляем ключевые кадры в кривую
+        //     curve.AddKey(startKeyframe);
+        //     curve.AddKey(endKeyframe);
+        //
+        //     // Устанавливаем режимы тангенсов
+        //     curve.keys[0].weightedMode = WeightedMode.Both;
+        //     curve.keys[1].weightedMode = WeightedMode.Both;
+        //
+        //     // Вычисляем значение на кривой
+        //     return curve.Evaluate(Mathf.Clamp01(t));
+        // }
+
+        //----------------------------------------------
+        [SerializeField] private AnimationCurve _curve;
+
         public float Interpolate(
-            float start, 
-            float end, 
-            Keyframe.Keyframe current, 
-            Keyframe.Keyframe next, 
+            float start,
+            float end,
+            Keyframe.Keyframe current,
+            Keyframe.Keyframe next,
             float t)
         {
-            // Нормализуем t, предполагая, что он от 0 до 1 (как в оригинальном коде)
-            float u = Mathf.Clamp01(t);
-    
-            // Получаем значения
-            float v0 = start;
-            float v1 = end;
-    
-            // Тангенсы
-            float m0 = (float)current.OutTangent; // OutTangent для первого ключа
-            float m1 = (float)next.InTangent;     // InTangent для второго ключа
-    
-            // Весы
-            float w0 = (float)current.OutWeight; // OutWeight для первого ключа
-            float w1 = (float)next.InWeight;     // InWeight для второго ключа
-    
-            // Время между кадрами (в оригинале 1 - 0 = 1)
-            float dt = 1.0f;
-    
-            // Эффективные тангенсы с учётом весов
-            float m0_eff = m0 * dt * w0;
-            float m1_eff = m1 * dt * w1;
-    
-            // Кубическая эрмитова интерполяция
-            float u2 = u * u;
-            float u3 = u2 * u;
-    
-            float h00 = 2 * u3 - 3 * u2 + 1;      // (2u^3 - 3u^2 + 1)
-            float h10 = u3 - 2 * u2 + u;          // (u^3 - 2u^2 + u)
-            float h01 = -2 * u3 + 3 * u2;         // (-2u^3 + 3u^2)
-            float h11 = u3 - u2;                  // (u^3 - u^2)
-    
-            return h00 * v0 + h10 * m0_eff + h01 * v1 + h11 * m1_eff;
+            // Создаём временную кривую — локальную для этого вызова
+            var curve = new AnimationCurve();
+
+            float time1 = (float)TicksToSeconds(current.Ticks);
+            float time2 = (float)TicksToSeconds(next.Ticks);
+            float deltaTime = time2 - time1;
+            float evalTime = time1 + t * deltaTime;
+
+            var key1 = new UnityEngine.Keyframe(
+                time: time1,
+                value: start,
+                inTangent: 0f,
+                outTangent: (float)current.OutTangent,
+                inWeight: 0f,
+                outWeight: (float)current.OutWeight
+            ) { weightedMode = WeightedMode.Out };
+
+            var key2 = new UnityEngine.Keyframe(
+                time: time2,
+                value: end,
+                inTangent: (float)next.InTangent,
+                outTangent: 0f,
+                inWeight: (float)next.InWeight,
+                outWeight: 0f
+            ) { weightedMode = WeightedMode.In };
+
+            curve.AddKey(key1);
+            curve.AddKey(key2);
+
+            return curve.Evaluate(evalTime);
+        }
+
+        private void SafeInitializeCurve(float startValue = 0f, float endValue = 0f)
+        {
+            // 1. Полная переинициализация при повреждении
+            if (_curve == null || _curve.length < 2)
+            {
+                _curve = new AnimationCurve();
+                _curve.AddKey(new UnityEngine.Keyframe(0f, startValue) { weightedMode = WeightedMode.Both });
+                _curve.AddKey(new UnityEngine.Keyframe(1f, endValue) { weightedMode = WeightedMode.Both });
+                return;
+            }
+
+            // 2. Восстановление при некорректном количестве ключей
+            var keys = _curve.keys;
+            if (keys.Length != 2)
+            {
+                _curve.keys = new[]
+                {
+                    new UnityEngine.Keyframe(0f, startValue) { weightedMode = WeightedMode.Both },
+                    new UnityEngine.Keyframe(1f, endValue) { weightedMode = WeightedMode.Both }
+                };
+                return;
+            }
+
+            // 3. Проверка валидности индексов
+            try
+            {
+                _ = _curve[0]; // Принудительная проверка доступа
+                _ = _curve[1];
+            }
+            catch
+            {
+                _curve.keys = new[]
+                {
+                    new UnityEngine.Keyframe(0f, startValue) { weightedMode = WeightedMode.Both },
+                    new UnityEngine.Keyframe(1f, endValue) { weightedMode = WeightedMode.Both }
+                };
+            }
+        }
+
+        private void UpdateKeyframeDirect(int index, float time, float value, double tangent, double weight)
+        {
+            // Получаем ссылку на ключевой кадр и обновляем его
+            UnityEngine.Keyframe key = _curve.keys[index];
+            key.time = time;
+            key.value = value;
+            key.inTangent = (float)tangent;
+            key.outTangent = (float)tangent;
+            key.inWeight = (float)weight;
+            key.outWeight = (float)weight;
+            _curve.MoveKey(index, key);
+        }
+        //----------------------------------------------
+
+// Вспомогательный метод для получения интервала
+        private double GetTimeInterval(Keyframe.Keyframe current, Keyframe.Keyframe next)
+        {
+            // Если у ключей есть временные метки:
+            // return next.Time - current.Time;
+            double dt = next.Ticks - current.Ticks; // Если есть временные метки
+            // Если временных меток нет, используйте дефолтное значение,
+            // но лучше добавить временные метки для корректной работы весов
+            return dt; // временное решение
         }
 
 
@@ -201,7 +305,7 @@ namespace TimeLine.TimeLine
         {
             return ticks * SecondsPerTick;
         }
-        
+
 
         public float GetAnchorPosition(float time, float distanceBetweenBeats, float pan)
         {

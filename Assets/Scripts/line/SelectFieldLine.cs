@@ -26,7 +26,7 @@ namespace TimeLine
         public void Select()
         {
             image.color = selectedColor;
-            _eventBus.Raise(new SelectFieldLineEvent(animationField.FieldLineData, UnityEngine.Input.GetKey(KeyCode.LeftShift)));
+            _eventBus.Raise(new SelectFieldLineEvent(animationField.FieldLineData));
         }
 
         public void Deselect()

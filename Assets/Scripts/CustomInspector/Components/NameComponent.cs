@@ -21,8 +21,6 @@ namespace TimeLine
         
         private void Awake()
         {
-            Name.Value = gameObject.name;
-
             Name.OnValueChanged += () =>
             {
                 gameObject.name = Name.Value;
@@ -37,7 +35,7 @@ namespace TimeLine
 
         protected override IEnumerable<InspectableParameter> GetParameters()
         {
-            yield return Name;
+            yield return new StringParameter("NameComponent", "empty");
         }
 
         public override void CopyTo(Component targetComponent)

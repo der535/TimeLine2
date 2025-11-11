@@ -11,6 +11,7 @@ namespace TimeLine
     {
         [SerializeField] private RectTransform _content;
         [SerializeField] private LevelCard levelCardPrefab;
+        [SerializeField] private SaveLevel _saveLevel;
         [Space]
         [SerializeField] private GameObject canvasCreateLevel;
         
@@ -60,6 +61,7 @@ namespace TimeLine
             card.Setup(data.levelName, () =>
             {
                 _gameEventBus.Raise(new OpenEditorEvent(data));
+                _saveLevel.Load(data);
                 canvasCreateLevel.gameObject.SetActive(false);
             }, null, null, null);
         }

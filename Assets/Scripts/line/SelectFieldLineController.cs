@@ -12,11 +12,13 @@ namespace TimeLine
         private List<FieldLineData> _fieldLines = new();
         
         private GameEventBus _eventBus;
+        private ActionMap _actionMap;
 
         [Inject]
-        private void Construct(GameEventBus eventBus)
+        private void Construct(GameEventBus eventBus, ActionMap actionMap)
         {
             _eventBus = eventBus;
+            _actionMap = actionMap;
         }
 
         internal bool CheckActive(TreeNode node)
@@ -90,7 +92,7 @@ namespace TimeLine
         {
             _eventBus.SubscribeTo((ref SelectFieldLineEvent selectFieldLineEvent) =>
             {
-                if (selectFieldLineEvent.Multiple)
+                if (_actionMap.Editor.LeftShift.IsPressed())
                 {
                     if (!_fieldLines.Contains(selectFieldLineEvent.Data))
                         _fieldLines.Add(selectFieldLineEvent.Data);

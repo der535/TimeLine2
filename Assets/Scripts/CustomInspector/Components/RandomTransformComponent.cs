@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 namespace TimeLine
 {
-    public class RandomTransformComponent : BaseParameterComponent
+    public class RandomTransformComponent : BaseParameterComponent, IInitializedComponent
     {
         public BoolParameter ComponentActive = new("Enabled", true, Color.gray);
         

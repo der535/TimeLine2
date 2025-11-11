@@ -30,12 +30,14 @@ namespace TimeLine.Bezier_curve
 
         public void Select()
         {
+            bezierPoint.Select(true);
             pointImage.color = selectedColor;
             _gameEventBus.Raise(new BezierSelectPointEvent(bezierPoint));
         }
 
         internal void Deselect()
         {
+            bezierPoint.Select(false);
             pointImage.color = deselectedColor;
             leftTangle.gameObject.SetActive(false);
             leftLineTangle.gameObject.SetActive(false);

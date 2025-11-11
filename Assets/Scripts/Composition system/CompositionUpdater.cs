@@ -53,7 +53,7 @@ namespace TimeLine
                 }
 
                 group.Update(data.duractionTime, trackObjectDatas, trackObjectRemover, _mainObjects,
-                    keyframeTrackStorage);
+                    keyframeTrackStorage, data.lastEditID);
             }
         }
     }

@@ -33,8 +33,16 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].sceneObject));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
-            _gameEventBus.SubscribeTo((ref AddComponentEvent data) => StartCoroutine(Redraw()), -1);
-            _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) => StartCoroutine(Redraw()), -1);
+            _gameEventBus.SubscribeTo((ref AddComponentEvent data) =>
+            {
+                print("REDRAW");
+                StartCoroutine(Redraw());
+            }, -1);
+            _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) =>
+            {
+                print("REDRAW");
+                StartCoroutine(Redraw());
+            }, -1);
             
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new RandomTransformComponentDrawer());
@@ -47,6 +55,7 @@ namespace TimeLine
         internal IEnumerator Redraw()
         {
             yield return new WaitForEndOfFrame();
+            print("Redraw".ToUpper());
             if(_selectedObject != null)
                 Draw(_selectedObject);
         }

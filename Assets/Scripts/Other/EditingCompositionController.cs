@@ -1,3 +1,4 @@
+using System;
 using EventBus;
 using TMPro;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace TimeLine
         [SerializeField] private GameObject endEditComposition;
 
         private GameEventBus _gameEventBus;
+        public string EditionCompositionID;
         
         [Inject]
         private void Construct(GameEventBus eventBus)
@@ -30,6 +32,7 @@ namespace TimeLine
 
         private void StartEdit(GroupGameObjectSaveData compositionEdit)
         {
+            EditionCompositionID = compositionEdit.compositionID;
             buttonPlayMode.gameObject.SetActive(false);
             saveButton.gameObject.SetActive(false);
             
@@ -40,6 +43,7 @@ namespace TimeLine
 
         private void EndEdit()
         {
+            EditionCompositionID = String.Empty;
             buttonPlayMode.gameObject.SetActive(true);
             saveButton.gameObject.SetActive(true);
             

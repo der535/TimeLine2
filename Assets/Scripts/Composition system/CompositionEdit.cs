@@ -18,6 +18,7 @@ namespace TimeLine
         
         private GameEventBus _gameEventBus;
         private string _compositionID;
+        private string _savedName;
 
         [Inject]
         void Construct(GameEventBus gameEventBus)
@@ -30,6 +31,7 @@ namespace TimeLine
             _gameEventBus.Raise(new StartCompositionEdit(compositionData));
             
             _compositionID = compositionData.compositionID;
+            _savedName = compositionData.gameObjectName;
             trackObjectStorage.HideAll();
             var (trackObjectGroup, game, _) =
                 trackObjectSpawner.LoadGroupNew(compositionData, compositionData.compositionID);
@@ -39,6 +41,7 @@ namespace TimeLine
         public void EndEdit()
         {
             TrackObjectGroup trackObjectGroup = groupCreater.Create(trackObjectStorage.GetAllActiveTrackData(), _compositionID);
+            trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
             trackObjectStorage.ShowAll();
             composition.EditComposition(saveLevel.SaveGroup(trackObjectGroup), trackObjectGroup.compositionID);
             trackObjectRemover.SingleRemove(trackObjectGroup);

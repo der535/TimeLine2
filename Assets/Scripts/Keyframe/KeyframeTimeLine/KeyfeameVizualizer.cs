@@ -54,11 +54,11 @@ namespace TimeLine
             _animationMap = actionMap;
         }
 
-        public double GetMinTimeSelectedKeyframe()
+        public double GetMinTimeSelectedKeyframe(List<KeyframeObjectData> keyframe)
         {
-            if (!SelectedKeyframe.Any()) 
+            if (!keyframe.Any()) 
                 throw new InvalidOperationException("No keyframes selected.");
-            return SelectedKeyframe.Min(k => (double)k.Keyframe.Ticks);
+            return keyframe.Min(k => (double)k.Keyframe.Ticks);
         }
 
         public double GetMaxTimeSelectedKeyframe()
@@ -94,6 +94,11 @@ namespace TimeLine
             }
         }
 
+        public List<KeyframeObjectData> GetKeyframesData(List<BezierPoint> bezierPoints)
+        {
+            return _keyframes.Where(k => bezierPoints.Any(b => k.Keyframe == b.BezierDragPoint._keyframe)).ToList();
+        }
+
         private void SelectKeyframe(ref SelectKeyframeEvent selectKeyframeEvent)
         {
             if (_animationMap.Editor.LeftShift.IsPressed())
@@ -115,10 +120,7 @@ namespace TimeLine
                     SelectedKeyframe.Add(selectKeyframeEvent.Keyframe);
                 }
             }
-
-
-
-
+            
             print(SelectedKeyframe.Count);
 
             foreach (var keyframe in _keyframes)
@@ -136,7 +138,7 @@ namespace TimeLine
         {
             if(offset == 0) return;
             
-            print(offset);
+            // print(offset);
             
             foreach (var keyframe in SelectedKeyframe)
             {
@@ -158,9 +160,29 @@ namespace TimeLine
         {
             foreach (var keyframe in SelectedKeyframe)
             {
-                keyframe.KeyframeSelect.SelectColor(false);
+                if(keyframe != null) keyframe.KeyframeSelect.SelectColor(false);
             }
             SelectedKeyframe.Clear();
+        }
+
+        internal List<(Track, Keyframe.Keyframe)> GetAllKeyframes()
+        {
+            var result = new List<(Track, Keyframe.Keyframe)>();
+            
+            _keyframes = new List<KeyframeObjectData>();
+
+            foreach (var tree in treeViewUI.AnimationLineController.Lines)
+            {
+                Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
+
+                if (track == null) continue;
+
+                foreach (var keyframe in track.Keyframes)
+                {
+                    result.Add((track, keyframe));
+                }
+            }
+            return result;
         }
 
         [Button]
@@ -191,17 +213,6 @@ namespace TimeLine
                     keyframeObjectData.Track = track;
                     
                     _keyframes.Add(keyframeObjectData);
-                    // // Конвертируем тики в позицию на таймлайне
-                    // float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x -
-                    //                 keyframeVerticalLayoutGroup.padding.left / 2f;
-                    //
-                    // float positionX = _timeLineConverter.TicksToPositionX(keyframe.Ticks, _timeLineKeyframeScroll.Pan) +
-                    //                   xOffset;
-                    // keyframeObjectData.RectTransform.anchoredPosition = new Vector2(
-                    //     positionX,
-                    //     keyframeObjectData.RectTransform.anchoredPosition.y);
-
-
                 }
             }
 
@@ -210,7 +221,7 @@ namespace TimeLine
 
         private void InverKeyframes()
         {
-            var min = GetMinTimeSelectedKeyframe();
+            var min = GetMinTimeSelectedKeyframe(SelectedKeyframe);
             var max = GetMaxTimeSelectedKeyframe();
             // x' = min + (max - x)
             foreach (var keyframe in _keyframes)

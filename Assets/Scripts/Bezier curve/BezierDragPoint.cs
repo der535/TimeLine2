@@ -12,11 +12,10 @@ namespace TimeLine
     {
         [SerializeField] private BezierPoint bezierPoint;
         [SerializeField] private BezierPointTangleLineDrawer bezierPointTangleLineDrawer;
-        [Space]
-        [SerializeField] private RectTransform rectTransform;
+        [Space] [SerializeField] private RectTransform rectTransform;
         [SerializeField] private RectTransform tangentLeft;
         [SerializeField] private RectTransform tangentRight;
-        
+
         private TimeLineKeyframeScroll _timeLineKeyframeScroll;
         private VerticalBezierPan _verticalBezierPan;
         private TimeLineConverter _timeLineConverter;
@@ -24,30 +23,32 @@ namespace TimeLine
         private MainObjects _mainObjects;
         private BezierController _bezierController;
         private TimeLineSettings _timeLineSettings;
+        private BezierSelectPointsController _bezierSelectPointsController;
         private Main _main;
-        
+
         private Vector2 _startMousePosition;
         private Vector2 _startObjectPosition;
         private Action _sortKeyframes;
-        
+
         private GridUI _gridUI;
         private bool _isDragging;
         private bool _isDraggingTangleLeft;
         private bool _isDraggingTangleRight;
 
         public Keyframe.Keyframe _keyframe { get; private set; }
-        
+
         [Inject]
         private void Construct(
-            MainObjects mainObject, 
-            TimeLineConverter timeLineConverter, 
+            MainObjects mainObject,
+            TimeLineConverter timeLineConverter,
             GridUI gridUI,
             TimeLineKeyframeScroll timeLineKeyframeScroll,
             VerticalBezierPan verticalBezierPan,
             BezierLineDrawer bezierLineDrawer,
             BezierController bezierController,
             TimeLineSettings timeLineSettings,
-            Main main)
+            Main main,
+            BezierSelectPointsController bezierSelectPointsController)
         {
             _gridUI = gridUI;
             _mainObjects = mainObject;
@@ -58,8 +59,9 @@ namespace TimeLine
             _bezierController = bezierController;
             _timeLineSettings = timeLineSettings;
             _main = main;
+            _bezierSelectPointsController = bezierSelectPointsController;
         }
-        
+
         public void Setup(Keyframe.Keyframe keyframe, Action sortKeyframes)
         {
             _keyframe = keyframe;
@@ -73,7 +75,7 @@ namespace TimeLine
                 out var localPoint);
             return localPoint;
         }
-        
+
         private Vector2 GetMousePosition(RectTransform root)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle
@@ -90,7 +92,7 @@ namespace TimeLine
             _startMousePosition = GetMousePosition();
             _startObjectPosition = rectTransform.anchoredPosition;
         }
-        
+
         public void DragTangentLeftPoint(bool drag)
         {
             _isDraggingTangleLeft = drag;
@@ -107,40 +109,55 @@ namespace TimeLine
             {
                 #region Horizontal
 
-                    // Вычисляем новую позицию без учета смещения корня
-                    float newPositionX = _startObjectPosition.x - (_startMousePosition.x - GetMousePosition().x);
-                    
-                    // Применяем округление к позиции относительно корня
-                    
-                    float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x - _mainObjects.KeyframeScrollView.offsetMin.x - _mainObjects.KeyframeVerticalLayoutGroup.padding.left / 2f;
-                    
-                    // float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x;
-                    float relativePosition = newPositionX - rootOffset;
-                    float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Pan);
-                    float finalPositionX = roundedRelativePosition + rootOffset;
+                // Вычисляем новую позицию без учета смещения корня
+                float newPositionX = _startObjectPosition.x - (_startMousePosition.x - GetMousePosition().x);
 
-                    // print(rectTransform);
-                    
-                    rectTransform.anchoredPosition = new Vector2(finalPositionX, rectTransform.anchoredPosition.y);
+                // Применяем округление к позиции относительно корня
+                float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x -
+                                   _mainObjects.KeyframeScrollView.offsetMin.x -
+                                   _mainObjects.KeyframeVerticalLayoutGroup.padding.left / 2f;
 
-                    // Вычисляем тики на основе относительной позиции
-                    _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
-                        _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan)));
-                        
-                    _sortKeyframes?.Invoke();
+                float relativePosition = newPositionX - rootOffset;
+                float roundedRelativePosition =
+                    _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Pan);
+                float finalPositionX = roundedRelativePosition + rootOffset;
+
+                // Подробный принт X-позиции
+                // Debug.Log($"[Drag X] StartObjX: {_startObjectPosition.x:F2}, StartMouseX: {_startMousePosition.x:F2}, MouseX: {GetMousePosition().x:F2} → " +
+                //           $"NewX: {newPositionX:F2}, RootOffset: {rootOffset:F2}, RelPos: {relativePosition:F2}, RoundedRelPos: {roundedRelativePosition:F2}, FinalX: {finalPositionX:F2}");
+
+                rectTransform.anchoredPosition = new Vector2(finalPositionX, rectTransform.anchoredPosition.y);
+
+                // Вычисляем тики на основе относительной позиции
+                var previosTick = _keyframe.Ticks;
+
+                _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
+                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition,
+                        _timeLineKeyframeScroll.Pan)));
+
+                var tickDifferent = _keyframe.Ticks - previosTick;
+
+
+                _sortKeyframes?.Invoke();
 
                 #endregion
 
                 #region Vertical
-                    
-                    // Вычисляем новую позицию без учета смещения корня
-                    float newPositionY = _startObjectPosition.y - (_startMousePosition.y - GetMousePosition().y);
-                    
-                    rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, newPositionY);
-                    
-                    _keyframe.GetData().SetValue(rectTransform.anchoredPosition.y / _verticalBezierPan.Pan);
-                
+
+                // Вычисляем новую позицию без учета смещения корня
+                float newPositionY = _startObjectPosition.y - (_startMousePosition.y - GetMousePosition().y);
+
+                rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, newPositionY);
+
+                var previosValue = _keyframe.GetData().GetValue();
+
+                _keyframe.GetData().SetValue(rectTransform.anchoredPosition.y / _verticalBezierPan.Pan);
+
+                var difference = (float)_keyframe.GetData().GetValue() - (float)previosValue;
+
                 #endregion
+
+                _bezierSelectPointsController.MultipleDrag(tickDifferent, difference, _keyframe);
 
                 _bezierLineDrawer.SortPoints();
                 _bezierController.SortPoints();
@@ -149,65 +166,69 @@ namespace TimeLine
                 bezierPointTangleLineDrawer.UpdatePosition();
             }
 
+            // Внутри BezierDragPoint.Update()
             if (_isDraggingTangleRight)
             {
-                Vector2 position = tangentRight.anchoredPosition - (tangentRight.anchoredPosition - GetMousePosition(rectTransform));
+                Vector2 localMousePos = GetMousePosition(rectTransform);
+                Vector2 newPosition = localMousePos; // Прямое позиционирование вместо сложных вычислений
 
-                // Ограничение минимального X
-                if (position.x < 0.1f) 
-                    position = new Vector2(0.1f, position.y);
+                // ===== ИСПРАВЛЕННЫЕ ОГРАНИЧЕНИЯ =====
+                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan;
+                float bpmFactor = _main.MusicData.bpm / 60f;
 
-                print(bezierPoint.NextKey.Ticks);
-                
-                // 🔒 Ограничение максимального X, чтобы weight не превышал 1
-                double nextTimeDelta = _timeLineConverter.TicksToSeconds(bezierPoint.NextKey.Ticks - _keyframe.Ticks);
-                float maxTangentTime = (float)nextTimeDelta; // в секундах
-                float maxTangentX = maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicData.bpm);
+                // Минимальное смещение (0.1f) остаётся
+                newPosition.x = Mathf.Max(0.1f, newPosition.x);
 
-                if (position.x > maxTangentX)
-                    position = new Vector2(maxTangentX, position.y);
+                // Максимальное смещение в пикселях для правого уса
+                double nextTimeSec = _timeLineConverter.TicksToSeconds(bezierPoint.NextKey.Ticks);
+                double currentTimeSec = _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
+                double deltaTimeSec = nextTimeSec - currentTimeSec;
+                float maxX = (float)(deltaTimeSec * pan * bpmFactor); // Правильный расчёт максимума
 
-                tangentRight.anchoredPosition = position;
+                newPosition.x = Mathf.Min(maxX, newPosition.x);
+                tangentRight.anchoredPosition = newPosition;
 
-                float tangleValue = tangentRight.anchoredPosition.y / _verticalBezierPan.Pan;
-                float tangleTime = (tangentRight.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicData.bpm);
+                // ===== ИСПРАВЛЕННЫЕ ВЫЧИСЛЕНИЯ =====
+                float outTimeOffset = newPosition.x / (pan * bpmFactor); // Время в секундах
+                float outValueOffset = newPosition.y / _verticalBezierPan.Pan; // Значение в юнитах
 
-                double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
-                float weight = (float)(tangleTimeDelta / nextTimeDelta);
+                // Вес: отношение смещения к общему времени
+                _keyframe.OutWeight = Mathf.Clamp01((float)(outTimeOffset / deltaTimeSec));
 
-                _keyframe.OutTangent = tangleValue / tangleTime;
-                _keyframe.OutWeight = Mathf.Clamp01(weight); // всё равно ограничиваем, на всякий случай
+                // Тангенс: отношение изменения значения ко времени
+                _keyframe.OutTangent = outValueOffset / outTimeOffset; // Без деления на deltaTime!
 
+                // Обновление визуала
                 _bezierLineDrawer.UpdateBezierCurve();
                 bezierPointTangleLineDrawer.UpdatePosition();
             }
-            
+
             if (_isDraggingTangleLeft)
             {
-                Vector2 position = tangentLeft.anchoredPosition - (tangentLeft.anchoredPosition - GetMousePosition(rectTransform));
+                Vector2 localMousePos = GetMousePosition(rectTransform);
+                Vector2 newPosition = localMousePos;
 
-                // Ограничение максимального X (т.к. отрицательный)
-                if (position.x > -0.1f) 
-                    position = new Vector2(-0.1f, position.y);
+                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan;
+                float bpmFactor = _main.MusicData.bpm / 60f;
 
-                // 🔒 Ограничение минимального X, чтобы weight не был больше 1
-                double prevTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks - bezierPoint.PrevKey.Ticks);
-                float maxTangentTime = (float)prevTimeDelta; // в секундах
-                float maxTangentX = -maxTangentTime * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) / (60f / _main.MusicData.bpm);
+                // Для левого уса: координаты отрицательные
+                newPosition.x = Mathf.Min(-0.1f, newPosition.x); // Максимум -0.1f (ближе к нулю)
 
-                if (position.x < maxTangentX)
-                    position = new Vector2(maxTangentX, position.y);
+                double prevTimeSec = _timeLineConverter.TicksToSeconds(bezierPoint.PrevKey.Ticks);
+                double currentTimeSec = _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
+                double deltaTimeSec = currentTimeSec - prevTimeSec;
+                float maxX = (float)(deltaTimeSec * pan * bpmFactor); // Максимальное смещение по модулю
 
-                tangentLeft.anchoredPosition = position;
+                newPosition.x = Mathf.Max(-maxX, newPosition.x); // Ограничение по модулю
+                tangentLeft.anchoredPosition = newPosition;
 
-                float tangleValue = tangentLeft.anchoredPosition.y / _verticalBezierPan.Pan;
-                float tangleTime = (tangentLeft.anchoredPosition.x) / (_timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan) * (60f / _main.MusicData.bpm);
+                // ===== ОСОБЕННОСТИ ЛЕВОГО УСА =====
+                // В Setup(): x = -(inTimeOffset * pan * bpmFactor)
+                float inTimeOffset = -newPosition.x / (pan * bpmFactor); // Делаем положительным
+                float inValueOffset = -newPosition.y / _verticalBezierPan.Pan; // Знак зависит от направления
 
-                double tangleTimeDelta = _timeLineConverter.TicksToSeconds(_keyframe.Ticks) + tangleTime - _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
-                float weight = (float)(tangleTimeDelta / prevTimeDelta);
-
-                _keyframe.InTangent = tangleValue / tangleTime;
-                _keyframe.InWeight = Mathf.Clamp01(Math.Abs(weight));
+                _keyframe.InWeight = Mathf.Clamp01((float)(inTimeOffset / deltaTimeSec));
+                _keyframe.InTangent = inValueOffset / inTimeOffset;
 
                 _bezierLineDrawer.UpdateBezierCurve();
                 bezierPointTangleLineDrawer.UpdatePosition();

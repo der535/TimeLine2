@@ -12,11 +12,13 @@ namespace TimeLine
         public List<BezierPoint> selectedPoints = new List<BezierPoint>();
         
         private GameEventBus _gameEventBus;
+        private BezierController _bezierController;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus)
+        private void Constructor(GameEventBus gameEventBus, BezierController bezierController)
         {
             _gameEventBus = gameEventBus;
+            _bezierController = bezierController;
         }
 
         private void Start()
@@ -35,6 +37,11 @@ namespace TimeLine
                     Deselect();
                     selectedPoints.Add(point);
                 }
+                else if (selectedPoints.Contains(point) && isShiftHold)
+                {
+                    point.BezierSelectPoint.Deselect();
+                    selectedPoints.Remove(point);
+                }
 
                 if (isShiftHold && !selectedPoints.Contains(point))
                 {
@@ -43,17 +50,17 @@ namespace TimeLine
             });
         }
 
-        private void Deselect(BezierPoint selectedPoint = null)
-        {
-            if (selectedPoints == null || selectedPoints.Count <= 0) return;
-            foreach (var point in selectedPoints)
-            {
-                if(selectedPoint == point) continue;
-                    point.BezierSelectPoint.Deselect();
-            }
-            
-            selectedPoints.Clear();
-        }
+        // private void Deselect(BezierPoint selectedPoint = null)
+        // {
+        //     if (selectedPoints == null || selectedPoints.Count <= 0) return;
+        //     foreach (var point in selectedPoints)
+        //     {
+        //         if(selectedPoint == point) continue;
+        //             point.BezierSelectPoint.Deselect();
+        //     }
+        //     
+        //     selectedPoints.Clear();
+        // }
         
         public void Deselect()
         {
@@ -64,6 +71,18 @@ namespace TimeLine
             }
             
             selectedPoints.Clear();
+        }
+
+        public void MultipleDrag(double tickDifferent, double valueDifferent,  Keyframe.Keyframe thisKeyframe)
+        {
+            foreach (var point in selectedPoints)
+            {
+                if(thisKeyframe == point.BezierDragPoint._keyframe) continue;
+                
+                point.BezierDragPoint._keyframe.Ticks += tickDifferent;
+                point.BezierDragPoint._keyframe.GetData().SetValue((float)((float)point.BezierDragPoint._keyframe.GetData().GetValue() + valueDifferent));
+            }
+            _bezierController.UpdatePositions();
         }
     }
 }

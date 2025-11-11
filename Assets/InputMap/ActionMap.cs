@@ -64,24 +64,6 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""F"",
-                    ""type"": ""Button"",
-                    ""id"": ""5b586770-9835-4b3f-ab82-070825e76d1d"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""L"",
-                    ""type"": ""Button"",
-                    ""id"": ""e249866e-9c7d-4e03-a74a-e256c84c20ad"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""MouseScroll"",
                     ""type"": ""Button"",
                     ""id"": ""53c37fc5-60a8-4141-9421-d6f48a6f4165"",
@@ -100,6 +82,24 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""F"",
+                    ""type"": ""Button"",
+                    ""id"": ""5b586770-9835-4b3f-ab82-070825e76d1d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""L"",
+                    ""type"": ""Button"",
+                    ""id"": ""e249866e-9c7d-4e03-a74a-e256c84c20ad"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""X"",
                     ""type"": ""Button"",
                     ""id"": ""95bd5043-6fa4-478a-bd98-0b115d4bca02"",
@@ -112,6 +112,24 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""name"": ""I"",
                     ""type"": ""Button"",
                     ""id"": ""ae7f6038-1716-4bfc-8c7e-5ad8f99fb2de"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""C"",
+                    ""type"": ""Button"",
+                    ""id"": ""9ff89636-50aa-4155-968c-d2aed5d864cc"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""V"",
+                    ""type"": ""Button"",
+                    ""id"": ""6f897535-d895-4baa-a644-3c1ed60a321d"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -248,6 +266,28 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""I"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""050be5eb-2d83-4832-aa51-63b79c087bba"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""C"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""018cb82c-c1e4-4c97-870a-57f181bdfa12"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""V"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -395,12 +435,14 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         m_Editor_LeftCtrl = m_Editor.FindAction("LeftCtrl", throwIfNotFound: true);
         m_Editor_LeftAlt = m_Editor.FindAction("LeftAlt", throwIfNotFound: true);
         m_Editor_Space = m_Editor.FindAction("Space", throwIfNotFound: true);
-        m_Editor_F = m_Editor.FindAction("F", throwIfNotFound: true);
-        m_Editor_L = m_Editor.FindAction("L", throwIfNotFound: true);
         m_Editor_MouseScroll = m_Editor.FindAction("MouseScroll", throwIfNotFound: true);
         m_Editor_MouseLeft = m_Editor.FindAction("MouseLeft", throwIfNotFound: true);
+        m_Editor_F = m_Editor.FindAction("F", throwIfNotFound: true);
+        m_Editor_L = m_Editor.FindAction("L", throwIfNotFound: true);
         m_Editor_X = m_Editor.FindAction("X", throwIfNotFound: true);
         m_Editor_I = m_Editor.FindAction("I", throwIfNotFound: true);
+        m_Editor_C = m_Editor.FindAction("C", throwIfNotFound: true);
+        m_Editor_V = m_Editor.FindAction("V", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Newaction = m_Player.FindAction("New action", throwIfNotFound: true);
@@ -475,12 +517,14 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     private readonly InputAction m_Editor_LeftCtrl;
     private readonly InputAction m_Editor_LeftAlt;
     private readonly InputAction m_Editor_Space;
-    private readonly InputAction m_Editor_F;
-    private readonly InputAction m_Editor_L;
     private readonly InputAction m_Editor_MouseScroll;
     private readonly InputAction m_Editor_MouseLeft;
+    private readonly InputAction m_Editor_F;
+    private readonly InputAction m_Editor_L;
     private readonly InputAction m_Editor_X;
     private readonly InputAction m_Editor_I;
+    private readonly InputAction m_Editor_C;
+    private readonly InputAction m_Editor_V;
     public struct EditorActions
     {
         private @ActionMap m_Wrapper;
@@ -489,12 +533,14 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         public InputAction @LeftCtrl => m_Wrapper.m_Editor_LeftCtrl;
         public InputAction @LeftAlt => m_Wrapper.m_Editor_LeftAlt;
         public InputAction @Space => m_Wrapper.m_Editor_Space;
-        public InputAction @F => m_Wrapper.m_Editor_F;
-        public InputAction @L => m_Wrapper.m_Editor_L;
         public InputAction @MouseScroll => m_Wrapper.m_Editor_MouseScroll;
         public InputAction @MouseLeft => m_Wrapper.m_Editor_MouseLeft;
+        public InputAction @F => m_Wrapper.m_Editor_F;
+        public InputAction @L => m_Wrapper.m_Editor_L;
         public InputAction @X => m_Wrapper.m_Editor_X;
         public InputAction @I => m_Wrapper.m_Editor_I;
+        public InputAction @C => m_Wrapper.m_Editor_C;
+        public InputAction @V => m_Wrapper.m_Editor_V;
         public InputActionMap Get() { return m_Wrapper.m_Editor; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -516,24 +562,30 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @Space.started += instance.OnSpace;
             @Space.performed += instance.OnSpace;
             @Space.canceled += instance.OnSpace;
-            @F.started += instance.OnF;
-            @F.performed += instance.OnF;
-            @F.canceled += instance.OnF;
-            @L.started += instance.OnL;
-            @L.performed += instance.OnL;
-            @L.canceled += instance.OnL;
             @MouseScroll.started += instance.OnMouseScroll;
             @MouseScroll.performed += instance.OnMouseScroll;
             @MouseScroll.canceled += instance.OnMouseScroll;
             @MouseLeft.started += instance.OnMouseLeft;
             @MouseLeft.performed += instance.OnMouseLeft;
             @MouseLeft.canceled += instance.OnMouseLeft;
+            @F.started += instance.OnF;
+            @F.performed += instance.OnF;
+            @F.canceled += instance.OnF;
+            @L.started += instance.OnL;
+            @L.performed += instance.OnL;
+            @L.canceled += instance.OnL;
             @X.started += instance.OnX;
             @X.performed += instance.OnX;
             @X.canceled += instance.OnX;
             @I.started += instance.OnI;
             @I.performed += instance.OnI;
             @I.canceled += instance.OnI;
+            @C.started += instance.OnC;
+            @C.performed += instance.OnC;
+            @C.canceled += instance.OnC;
+            @V.started += instance.OnV;
+            @V.performed += instance.OnV;
+            @V.canceled += instance.OnV;
         }
 
         private void UnregisterCallbacks(IEditorActions instance)
@@ -550,24 +602,30 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @Space.started -= instance.OnSpace;
             @Space.performed -= instance.OnSpace;
             @Space.canceled -= instance.OnSpace;
-            @F.started -= instance.OnF;
-            @F.performed -= instance.OnF;
-            @F.canceled -= instance.OnF;
-            @L.started -= instance.OnL;
-            @L.performed -= instance.OnL;
-            @L.canceled -= instance.OnL;
             @MouseScroll.started -= instance.OnMouseScroll;
             @MouseScroll.performed -= instance.OnMouseScroll;
             @MouseScroll.canceled -= instance.OnMouseScroll;
             @MouseLeft.started -= instance.OnMouseLeft;
             @MouseLeft.performed -= instance.OnMouseLeft;
             @MouseLeft.canceled -= instance.OnMouseLeft;
+            @F.started -= instance.OnF;
+            @F.performed -= instance.OnF;
+            @F.canceled -= instance.OnF;
+            @L.started -= instance.OnL;
+            @L.performed -= instance.OnL;
+            @L.canceled -= instance.OnL;
             @X.started -= instance.OnX;
             @X.performed -= instance.OnX;
             @X.canceled -= instance.OnX;
             @I.started -= instance.OnI;
             @I.performed -= instance.OnI;
             @I.canceled -= instance.OnI;
+            @C.started -= instance.OnC;
+            @C.performed -= instance.OnC;
+            @C.canceled -= instance.OnC;
+            @V.started -= instance.OnV;
+            @V.performed -= instance.OnV;
+            @V.canceled -= instance.OnV;
         }
 
         public void RemoveCallbacks(IEditorActions instance)
@@ -646,12 +704,14 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         void OnLeftCtrl(InputAction.CallbackContext context);
         void OnLeftAlt(InputAction.CallbackContext context);
         void OnSpace(InputAction.CallbackContext context);
-        void OnF(InputAction.CallbackContext context);
-        void OnL(InputAction.CallbackContext context);
         void OnMouseScroll(InputAction.CallbackContext context);
         void OnMouseLeft(InputAction.CallbackContext context);
+        void OnF(InputAction.CallbackContext context);
+        void OnL(InputAction.CallbackContext context);
         void OnX(InputAction.CallbackContext context);
         void OnI(InputAction.CallbackContext context);
+        void OnC(InputAction.CallbackContext context);
+        void OnV(InputAction.CallbackContext context);
     }
     public interface IPlayerActions
     {

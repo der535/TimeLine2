@@ -15,8 +15,11 @@ namespace TimeLine
 
         public RectTransform RenameCompositionPanel => renameCompositionPanel;
         
-        internal void Setup(string compositionID)
+        
+        internal void Setup(string compositionID, string compositionName)
         {
+            ok.onClick.RemoveAllListeners();
+            inputField.text = compositionName;
             ok.onClick.AddListener(() =>
             {
                 RenameCompositionPanel.gameObject.SetActive(false);

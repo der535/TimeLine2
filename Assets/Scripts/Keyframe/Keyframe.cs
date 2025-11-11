@@ -1,4 +1,6 @@
-﻿using TimeLine.Keyframe.AnimationDatas.TransformComponent;
+﻿using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
+using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
+using TimeLine.Keyframe.AnimationDatas.TransformComponent;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
 
@@ -17,7 +19,7 @@ namespace TimeLine.Keyframe
         
         private AnimationData animationData;
 
-        public Keyframe(double ticks, double outTangent = 0, double inTangent = 0, double inWeight = 0.5f, double outWeight = 0.5f)
+        public Keyframe(double ticks, double outTangent = 2, double inTangent = 2, double inWeight = 0.5f, double outWeight = 0.5f)
         {
             this.Ticks = Mathf.Round((float)ticks);
 
@@ -35,6 +37,7 @@ namespace TimeLine.Keyframe
         public void Apply(GameObject target)
         {
             // Debug.Log(target);
+            // Debug.Log(animationData);
             animationData.Apply(target);
         }
         
@@ -122,6 +125,11 @@ namespace TimeLine.Keyframe
                 nameof(ZRotationData) => new ZRotationData(0),
                 nameof(XScaleData) => new XScaleData(0),
                 nameof(YScaleData) => new YScaleData(0),
+                
+                nameof(XSizeData) => new XSizeData(0),
+                nameof(YSizeData) => new YSizeData(0),
+                nameof(XOffsetData) => new XOffsetData(0),
+                nameof(YOffsetData) => new YOffsetData(0),
                 _ => null
             };
         }

@@ -42,24 +42,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "F",
-                    "type": "Button",
-                    "id": "5b586770-9835-4b3f-ab82-070825e76d1d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "L",
-                    "type": "Button",
-                    "id": "e249866e-9c7d-4e03-a74a-e256c84c20ad",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "MouseScroll",
                     "type": "Button",
                     "id": "53c37fc5-60a8-4141-9421-d6f48a6f4165",
@@ -78,6 +60,24 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "F",
+                    "type": "Button",
+                    "id": "5b586770-9835-4b3f-ab82-070825e76d1d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "L",
+                    "type": "Button",
+                    "id": "e249866e-9c7d-4e03-a74a-e256c84c20ad",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "X",
                     "type": "Button",
                     "id": "95bd5043-6fa4-478a-bd98-0b115d4bca02",
@@ -90,6 +90,24 @@
                     "name": "I",
                     "type": "Button",
                     "id": "ae7f6038-1716-4bfc-8c7e-5ad8f99fb2de",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "C",
+                    "type": "Button",
+                    "id": "9ff89636-50aa-4155-968c-d2aed5d864cc",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "V",
+                    "type": "Button",
+                    "id": "6f897535-d895-4baa-a644-3c1ed60a321d",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -226,6 +244,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "I",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "050be5eb-2d83-4832-aa51-63b79c087bba",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "C",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "018cb82c-c1e4-4c97-870a-57f181bdfa12",
+                    "path": "<Keyboard>/v",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "V",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

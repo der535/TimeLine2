@@ -19,17 +19,15 @@ namespace TimeLine
         [SerializeField] private TrackObjectStorage trackObjectStorage;
         [SerializeField] private CompositionEdit compositionEdit;
         [SerializeField] private CompositionUpdater compositionUpdater;
-        [Space] 
-        [SerializeField] private CompositionCard compositionCard;
+        [Space] [SerializeField] private CompositionCard compositionCard;
         [SerializeField] private RectTransform cardContainer;
-        [Space] 
-        [SerializeField] private RenameComposition renameComposition;
+        [Space] [SerializeField] private RenameComposition renameComposition;
 
         private List<GroupGameObjectSaveData> _compositionData = new();
         private readonly List<CompositionCard> _cards = new();
 
         private GameEventBus _gameEventBus;
-        
+
         [Inject]
         private void Construct(GameEventBus gameEventBus)
         {
@@ -49,7 +47,8 @@ namespace TimeLine
         [Button]
         public void Load()
         {
-            string path = $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
+            string path =
+                $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
 
             if (!File.Exists(path))
                 return;
@@ -77,10 +76,7 @@ namespace TimeLine
                 CheckCards(_.Group);
                 LockCompositionCard();
             });
-            _gameEventBus.SubscribeTo((ref EndCompositionEdit _) =>
-            {
-                UnlockCompositionCard();
-            });
+            _gameEventBus.SubscribeTo((ref EndCompositionEdit _) => { UnlockCompositionCard(); });
         }
 
         private void CheckCards(GroupGameObjectSaveData group)
@@ -107,10 +103,11 @@ namespace TimeLine
                     }
                     else
                     {
-                        return CheckGroup(group.children, id);   
+                        return CheckGroup(group.children, id);
                     }
                 }
             }
+
             return false;
         }
 
@@ -152,7 +149,7 @@ namespace TimeLine
                 () => { compositionEdit.Edit(FindCompositionDataById(data.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
-                    renameComposition.Setup(data.compositionID);
+                    renameComposition.Setup(data.compositionID, data.branch.Name);
                 }, () => { DeleteComposition(FindCompositionDataById(data.compositionID)); },
                 () => { DuplicateComposition(FindCompositionDataById(data.compositionID)); }, data.compositionID);
 
@@ -195,7 +192,7 @@ namespace TimeLine
                 () => { compositionEdit.Edit(FindCompositionDataById(group.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
-                    renameComposition.Setup(group.compositionID);
+                    renameComposition.Setup(group.compositionID, group.branch.Name);
                 }, () => { DeleteComposition(FindCompositionDataById(group.compositionID)); },
                 () => { DuplicateComposition(FindCompositionDataById(group.compositionID)); }, group.compositionID);
 
@@ -226,6 +223,26 @@ namespace TimeLine
             {
                 if (_compositionData[i].compositionID == compositionID)
                 {
+                    var editedComposition = compositionData.DuplicateComposition();
+                    var existing = _compositionData[i].DuplicateComposition();
+
+                    RemoveIDFromComposition(editedComposition);
+                    RemoveIDFromComposition(existing);
+                    
+                    print(JsonConvert.SerializeObject(editedComposition, Formatting.Indented));
+                    print(JsonConvert.SerializeObject(existing, Formatting.Indented));
+                    if (JsonConvert.SerializeObject(editedComposition, Formatting.Indented) !=
+                        JsonConvert.SerializeObject(existing, Formatting.Indented))
+                    {
+                        print(false);
+                        compositionData.lastEditID = Guid.NewGuid().ToString();
+                    }
+                    else
+                    {
+                        print(true);
+                        compositionData.lastEditID = _compositionData[i].lastEditID;
+                    }
+
                     // Обновляем только нужные поля, сохраняя ID
                     _compositionData[i] = compositionData;
                     _compositionData[i].compositionID = compositionID; // на случай, если он был перезаписан
@@ -235,6 +252,25 @@ namespace TimeLine
 
             // Опционально: если композиция не найдена, можно добавить логирование или выбросить исключение
             Debug.LogWarning($"Composition with ID '{compositionID}' not found for editing.");
+        }
+
+        private void RemoveIDFromComposition(GroupGameObjectSaveData compositionData)
+        {
+            compositionData.compositionID = string.Empty;
+            compositionData.sceneObjectID = string.Empty;
+            compositionData.parentObjectID = string.Empty;
+            compositionData.branch.ID = string.Empty;
+            foreach (var child in compositionData.children)
+            {
+                RemoveIDFromTrackObject(child);
+            }
+        }
+
+        private void RemoveIDFromTrackObject(GameObjectSaveData trackObject)
+        {
+            trackObject.parentObjectID = string.Empty;
+            trackObject.branch.ID = string.Empty;
+            trackObject.sceneObjectID = string.Empty;
         }
 
 
@@ -264,6 +300,7 @@ namespace TimeLine
             GroupGameObjectSaveData data = FindCompositionDataById(compositionID);
             print($"Rename {data.gameObjectName} --> {changedName}");
             data.gameObjectName = changedName;
+            data.branch.Name = changedName;
         }
     }
 }

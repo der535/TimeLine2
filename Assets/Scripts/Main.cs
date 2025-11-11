@@ -60,7 +60,7 @@ namespace TimeLine
                 StartCoroutine(LoadAudioClip(
                     $"{Application.persistentDataPath}/Levels/{data.LevelInfo.levelName}/{data.LevelInfo.songName}"));
             });
-            _gameEventBus.SubscribeTo((ref OpenEditorEvent data) => { SetTimeInTicks(0); }, 1);
+            // _gameEventBus.SubscribeTo((ref OpenEditorEvent data) => { SetTimeInTicks(0); }, 1);
 
 
             CultureInfo culture = CultureInfo.InvariantCulture;

@@ -39,6 +39,8 @@ namespace TimeLine
         [SerializeField] private BezierSelectPointsController selectPointsController;
         [SerializeField] private SelectObjectController selectObjectController;
 
+        [SerializeField] private RectTransform leftPanelAnimations;
+
         private TimeLineSettings _timeLineSettings;
         private TimeLineConverter _timeLineConverter;
         private List<BezierPointsGroup> groups = new();
@@ -47,6 +49,9 @@ namespace TimeLine
         private DiContainer _container;
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
+        
+        private List<BezierPoint> activePoints = new();
+
 
         private string LogFile => string.IsNullOrEmpty(logFilePath) ? Path.Combine(Application.persistentDataPath, "BezierController.log") : logFilePath;
 
@@ -60,14 +65,28 @@ namespace TimeLine
             _actionMap = actionMap;
         }
         
+        
         private void Focus()
         {
+            List<BezierPoint> focusPoints = new();
+            if(selectPointsController.selectedPoints.Count > 1) 
+                focusPoints = selectPointsController.selectedPoints;
+            else if (activePoints.Count > 1)
+            {
+                focusPoints = activePoints;
+            }
+            else
+            {
+                return;
+            }
+           
+            
             float maxTime = -1;
             float minTime = float.MaxValue;
             float maxValue = float.MinValue;
             float minValue = float.MaxValue;
             
-            foreach (var keyframe in selectPointsController.selectedPoints)
+            foreach (var keyframe in focusPoints)
             {
                 if(keyframe.BezierDragPoint._keyframe.Ticks > maxTime) maxTime = (float)keyframe.BezierDragPoint._keyframe.Ticks;
                 if(keyframe.BezierDragPoint._keyframe.Ticks < minTime) minTime = (float)keyframe.BezierDragPoint._keyframe.Ticks;
@@ -75,40 +94,29 @@ namespace TimeLine
                 if(keyframe.BezierDragPoint._keyframe.GetData().GetValue() is float value2 && value2 < minValue) minValue = value2;
             }
             
-            // print(maxTime);
-            // print(minTime);
-            //
-            // print(maxValue);
-            // print(minValue);
-            //
-            // print(rootPoints.rect.width);
-            // print(rootPoints.rect.height);
 
-            var panHorizontal = Math.Abs((minTime - maxTime) / (rootPoints.rect.width - spacing) * (minTime - maxTime));
-            var panVertical = Math.Abs((rootPoints.rect.height - spacing) / (minValue - maxValue));
+
+            // var panHorizontal = Math.Abs((minTime - maxTime) / (rootPoints.rect.width - spacing) * (minTime - maxTime));
+            // var panVertical = Math.Abs((rootPoints.rect.height - spacing) / (minValue - maxValue));
             
-            // print(panHorizontal);
-            // print(panVertical);
             
+
             var timeDelta = maxTime / (float)Main.TICKS_PER_BEAT - minTime / (float)Main.TICKS_PER_BEAT;
-            var targetWith = (rootPoints.rect.width - spacing) / timeDelta;
+            var targetWith = (rootPoints.rect.width - spacing - leftPanelAnimations.sizeDelta.x) / timeDelta;
             var result = targetWith - _timeLineSettings.DistanceBetweenBeatLines;
             
-            // print(timeDelta);
-            // print(targetWith);
-            // print(result);
             
             var one = (_timeLineSettings.DistanceBetweenBeatLines + result) * (minTime / (float)Main.TICKS_PER_BEAT);
             var two = (_timeLineSettings.DistanceBetweenBeatLines + result) * (maxTime / (float)Main.TICKS_PER_BEAT);
 
-            var offset = two - one;
+            var offset = two - one  - leftPanelAnimations.sizeDelta.x;
             
             timeLineKeyframeScroll.SetPan(result);
             ScrollTimeLineKeyframe.SetPosition(-(offset / 2 + one));
             
             var valueDelta = maxValue - minValue;
             var targetHeight = (rootPoints.rect.height - spacing) / valueDelta;
-            // var vertialpan = targetHeight; 
+
             
             verticalBezierPan.SetPan(targetHeight);
             
@@ -116,11 +124,7 @@ namespace TimeLine
             var positionTwo = maxValue * targetHeight;
             
             var positionOffset = positionTwo - positionOne;
-            //
-            // print(positionOne);
-            // print(positionTwo);
-            // print(positionOffset);
-            // print(-(positionOffset / 2 + positionOne));
+
             
             SetPosition(-(positionOffset / 2 + positionOne));
         }
@@ -219,7 +223,6 @@ namespace TimeLine
             Build();
             foreach (var group in groups)
             {
-                
                 foreach (var keyframe in group._keyframes)
                     if (keyframe != null)
                         keyframe.gameObject.SetActive(active);
@@ -280,6 +283,8 @@ namespace TimeLine
 
         private void Build()
         {
+            selectPointsController.Deselect();
+            
             if (!_active || !gameObject.activeInHierarchy)
             {
                 LogMessage("[Build] Skipping build: not active or inactive in hierarchy.");
@@ -311,6 +316,8 @@ namespace TimeLine
             lineDrawer.ClearBeziers();
             
             List<TreeNode> activeNodes = new List<TreeNode>();
+            
+            activePoints.Clear();
             
             foreach (var tree in treeViewUI.AnimationLineController.Lines)
             {
@@ -383,6 +390,7 @@ namespace TimeLine
                     _keyframes = points, _track = track
                 });
                 lineDrawer.AddPoints(points, track.AnimationColor);
+                activePoints.AddRange(points);
             }
 
             bezierLineDrawer?.UpdateBezierCurve();
@@ -405,6 +413,7 @@ namespace TimeLine
 
             bezierLineDrawer?.ClearLines();
             lineDrawer.ClearBeziers();
+            selectPointsController.Deselect();
         }
         
         public void UpdatePositions()
