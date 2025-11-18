@@ -27,11 +27,13 @@ namespace TimeLine
         private readonly List<CompositionCard> _cards = new();
 
         private GameEventBus _gameEventBus;
+        private ActionMap _actionMap;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap)
         {
             _gameEventBus = gameEventBus;
+            _actionMap = actionMap;
         }
 
         [Button]
@@ -283,6 +285,7 @@ namespace TimeLine
         {
             if (UnityEngine.Input.GetKeyDown(KeyCode.F5))
             {
+                _actionMap.Dispose();
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }

@@ -5,6 +5,7 @@ using System.Linq;
 using EventBus;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
@@ -49,12 +50,20 @@ namespace TimeLine
                 Formatting = Formatting.Indented,
                 TypeNameHandling = TypeNameHandling.Auto
             };
+            
+            _gameEventBus.SubscribeTo((ref SetBPMEvent data) =>
+            {
+                LevelBaseInfo.bpm = data.BPM;
+            });
+            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) =>
+            {
+                LevelBaseInfo.offset = data.Offset;
+            });
 
-            // _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) =>
-            // {
-            //     _levelBaseInfo = eventData.LevelInfo;
-            //     Load(eventData.LevelInfo);
-            // });
+            _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) =>
+            {
+                _levelBaseInfo = eventData.LevelInfo;
+            });
             
             
         }
@@ -85,6 +94,9 @@ namespace TimeLine
             string filePath = $"{directoryPath}/LevelObjects.json";
             string json = JsonConvert.SerializeObject(saveLevelDto, Formatting.Indented);
             File.WriteAllText(filePath, json);
+            
+            string levelBaseInfoPath = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelBaseInfo.json";
+            File.WriteAllText(levelBaseInfoPath, JsonConvert.SerializeObject(LevelBaseInfo, Formatting.Indented));
         }
 
         internal void Load(LevelBaseInfo levelBaseInfo)

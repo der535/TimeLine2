@@ -3,11 +3,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
+using TimeLine.Waveform;
 using Zenject;
 
 [ExecuteInEditMode]
 public class WaveformRenderer : MonoBehaviour
 {
+    [SerializeField] private WaveformPosition _waveformPosition;
+    [SerializeField] private WaveformSegmentLayout _layout;
     public AudioSource source;
     public float amplitudeScale = 1f;
     public int totalResolution = 2048;
@@ -40,6 +43,7 @@ public class WaveformRenderer : MonoBehaviour
         InitializeSegments();
         CacheFullAudioData();
         GenerateWaveform();
+        _layout.SetLayoutHorizontal();
         _lastColor = waveColor; // Инициализируем последний цвет
     }
 
@@ -55,7 +59,6 @@ public class WaveformRenderer : MonoBehaviour
 
     private void InitializeSegments()
     {
-        
         if (segments == null || segments.Length == 0) return;
 
         if (_segmentImages == null || _segmentImages.Length != segments.Length)
@@ -115,7 +118,7 @@ public class WaveformRenderer : MonoBehaviour
 
     private void CacheFullAudioData()
     {
-        print(source.clip);
+        // print(source.clip);
         if (source.clip == null) return;
         
         _cachedSamples = new float[source.clip.samples * source.clip.channels];

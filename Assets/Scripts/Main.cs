@@ -7,9 +7,12 @@ using System.Collections;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using DG.Tweening;
+using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 namespace TimeLine
 {
@@ -18,6 +21,8 @@ namespace TimeLine
         [SerializeField] private float offset; // in seconds
         [Space] [SerializeField] private AudioSource audioSource;
         [SerializeField] private float minResetOffset; // in seconds
+        [SerializeField] private PlayAndStopButton playAndStopButton;
+        [SerializeField, Range(-5, 5)] private float gameSpeed = 1;
 
         internal const double TICKS_PER_BEAT = 96.0; // 96 ticks per quarter note
         private const double SECONDS_IN_MINUTE = 60.0;
@@ -27,49 +32,73 @@ namespace TimeLine
 
         public double TicksCurrentTime()
         {
-            return _timeLineConverter.SecondsToTicks(audioSource.time);
+            return _timeLineConverter.SecondsToTicks(audioSource.time)-_timeLineConverter.SecondsToTicks(offset);
         }
 
         private double _smoothTimeInTicks;
         private double _exactTimeInTicks;
 
         private GameEventBus _gameEventBus;
-        private TimeLineSettings _timeLineSettings;
 
         private bool _isPlaying;
+        private bool firstPlayaing = true;
+        
+        private double setTime;
 
         // Conversion properties
         private double SecondsPerTick => SECONDS_IN_MINUTE / (MusicData.bpm * TICKS_PER_BEAT);
         private double TicksPerSecond => 1.0 / SecondsPerTick;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, TimeLineSettings timeLineSettings,
+        private void Construct(
+            GameEventBus gameEventBus, 
             TimeLineConverter timeLineConverter)
         {
             _gameEventBus = gameEventBus;
-            _timeLineSettings = timeLineSettings;
             _timeLineConverter = timeLineConverter;
         }
+
+        private void OnValidate()
+        {
+            audioSource.pitch = gameSpeed;
+        }
+
 
         private void Awake()
         {
             MusicData = new MusicData();
+            
+            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) =>
+            {
+                this.offset = data.Offset;
+                SetTimeInTicks(TicksCurrentTime());
+            });
+            
+            _gameEventBus.SubscribeTo((ref SetBPMEvent data) =>
+            {
+                MusicData.bpm = data.BPM;
+                SetTimeInTicks(TicksCurrentTime());
+            });
+            
             _gameEventBus.SubscribeTo((ref OpenEditorEvent data) =>
             {
                 MusicData.bpm = data.LevelInfo.bpm;
+                offset = data.LevelInfo.offset;
                 StartCoroutine(LoadAudioClip(
                     $"{Application.persistentDataPath}/Levels/{data.LevelInfo.levelName}/{data.LevelInfo.songName}"));
+                DOVirtual.DelayedCall(0.01f, playAndStopButton.Turn);
+                DOVirtual.DelayedCall(0.02f, playAndStopButton.Turn);
+                SetTime(0);
             });
             // _gameEventBus.SubscribeTo((ref OpenEditorEvent data) => { SetTimeInTicks(0); }, 1);
-
-
+            
             CultureInfo culture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
         }
-
+        
         IEnumerator LoadAudioClip(string filePath)
         {
             // Определяем расширение файла и сопоставляем с AudioType
@@ -116,8 +145,9 @@ namespace TimeLine
                 _ => AudioType.UNKNOWN
             };
         }
-
-        public float Offset() => offset * _timeLineSettings.DistanceBetweenBeatLines;
+//
+        public float BeatPerSecondOffset() => offset * (MusicData.bpm / 60);
+        public float Offset() => offset;
 
         internal double SecondsToTicks(double seconds)
         {
@@ -133,6 +163,12 @@ namespace TimeLine
         {
             _isPlaying = true;
 
+            if (firstPlayaing)
+            {
+                SetTimeInTicks(_smoothTimeInTicks);
+                firstPlayaing = false;
+            }
+            
             if (_smoothTimeInTicks >= 0)
             {
                 audioSource.Play();
@@ -150,10 +186,12 @@ namespace TimeLine
         internal void SetTimeInTicks(double ticks)
         {
             double timeInSeconds = TicksToSeconds(ticks);
+            timeInSeconds += offset;
             // if (timeInSeconds < 0) timeInSeconds = 0;
             audioSource.time = timeInSeconds < 0 ? 0 : (float)timeInSeconds;
             _smoothTimeInTicks = ticks;
             _exactTimeInTicks = ticks;
+            setTime = _smoothTimeInTicks;
 
             _gameEventBus.Raise(new TickSmoothTimeEvent(ticks));
             _gameEventBus.Raise(new TickExactTimeEvent(ticks));
@@ -170,16 +208,27 @@ namespace TimeLine
 
         private void Update()
         {
-            if (!_isPlaying) return;
 
-            if (_smoothTimeInTicks >= 0)
+            
+            if (_smoothTimeInTicks > 0 && setTime >= 0)
+            {
+                // _isPlaying = audioSource.isPlaying;
+                if(audioSource.isPlaying == false && playAndStopButton._isPlaying)
+                    playAndStopButton.Turn();
+            }
+             
+            if (!_isPlaying) return;
+            
+            // if(audioSource.time >= audioSource.clip.length) Pause();
+
+            if (_smoothTimeInTicks + _timeLineConverter.SecondsToTicks(offset)  >= 0)
             {
                 if (!audioSource.isPlaying) audioSource.Play();
                 // Update exact time from audio source
                 _exactTimeInTicks = SecondsToTicks(audioSource.time);
 
                 // Update smooth time using Time.deltaTime
-                _smoothTimeInTicks += SecondsToTicks(Time.deltaTime);
+                _smoothTimeInTicks += SecondsToTicks(Time.deltaTime) * gameSpeed;
 
                 // Apply offset to get the visual position
                 double visualOffsetTicks = SecondsToTicks(offset);
@@ -200,11 +249,11 @@ namespace TimeLine
             else
             {
                 // Update smooth time using Time.deltaTime
-                _smoothTimeInTicks += SecondsToTicks(Time.deltaTime);
+                _smoothTimeInTicks += SecondsToTicks(Time.deltaTime) * gameSpeed;
                 _exactTimeInTicks = _smoothTimeInTicks;
 
                 // Apply offset to get the visual position
-                double visualOffsetTicks = SecondsToTicks(offset);
+                double visualOffsetTicks = 0;
                 double exactVisualTimeInTicks = _exactTimeInTicks - visualOffsetTicks;
                 double smoothVisualTimeInTicks = _smoothTimeInTicks - visualOffsetTicks;
 
@@ -212,6 +261,12 @@ namespace TimeLine
                 _gameEventBus.Raise(new TickSmoothTimeEvent(smoothVisualTimeInTicks));
                 _gameEventBus.Raise(new TickExactTimeEvent(exactVisualTimeInTicks));
             }
+            //
+            // print(_smoothTimeInTicks);
+            // print(oldTime);
+            // if(_smoothTimeInTicks == 0 && oldTime != 0) Pause();
+            //
+            // oldTime = _smoothTimeInTicks;
         }
     }
 

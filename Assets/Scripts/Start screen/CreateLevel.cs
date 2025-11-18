@@ -7,6 +7,7 @@ using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 using Zenject;
 
 namespace TimeLine
@@ -15,12 +16,15 @@ namespace TimeLine
     {
         [SerializeField] private TMP_InputField _name;
         [SerializeField] private TMP_InputField _bpm;
-        [FormerlySerializedAs("createScreen")]
-        [Space] 
-        [SerializeField] private GameObject levels;
+        [SerializeField] private TextMeshProUGUI _textOnButtonLoadSong;
+        [SerializeField] private Button _createButton;
+
+        [FormerlySerializedAs("createScreen")] [Space] [SerializeField]
+        private GameObject levels;
+
         [SerializeField] private GameObject selectLevelScreen;
         [SerializeField] private GameObject createLevelScreen;
-        
+
         private LevelBaseInfo levelInfo;
         private string songName;
         private string tempFolderPath;
@@ -31,6 +35,13 @@ namespace TimeLine
         {
             _gameEventBus = gameEventBus;
         }
+
+        private void Start()
+        {
+            _createButton.interactable = false;
+            _name.onValueChanged.AddListener(_ => CheckFields());
+            _bpm.onValueChanged.AddListener(_ => CheckFields());
+        }
         
         public void CreateTempFolder()
         {
@@ -38,6 +49,13 @@ namespace TimeLine
             Directory.CreateDirectory(levelsPath);
 
             TempFolder();
+        }
+
+        private void CheckFields()
+        {
+            _createButton.interactable = !string.IsNullOrEmpty(_name.text) &&
+                                         !string.IsNullOrEmpty(_bpm.text) &&
+                                         !string.IsNullOrEmpty(songName);
         }
 
         private void TempFolder()
@@ -49,19 +67,36 @@ namespace TimeLine
 
         public void SelectMusic()
         {
-            var extensions = new [] {
-                new ExtensionFilter("Sound Files", "mp3", "wav" )
+            var extensions = new[]
+            {
+                new ExtensionFilter("Sound Files", "mp3", "wav")
             };
 
-            var path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false)[0];
-            songName = Path.GetFileName(path);
-            File.Copy(path, $"{Application.persistentDataPath}/Levels/{tempFolderPath}/{Path.GetFileName(path)}", overwrite: true);
+            var path = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
+
+            if (path.Length == 0) return;
+
+            var musicPath = path[0];
+
+            songName = Path.GetFileName(musicPath);
+
+            _textOnButtonLoadSong.text = songName;
+            File.Copy(musicPath,
+                $"{Application.persistentDataPath}/Levels/{tempFolderPath}/{Path.GetFileName(musicPath)}",
+                overwrite: true);
+            
+            CheckFields();
         }
 
         public void Create()
         {
-            Directory.Move($"{Application.persistentDataPath}/Levels/{tempFolderPath}", $"{Application.persistentDataPath}/Levels/{_name.text}");
-            LevelBaseInfo levelInfo = new LevelBaseInfo(_name.text, songName, float.Parse(_bpm.text, NumberStyles.Float, CultureInfo.InvariantCulture));
+            Directory.Move($"{Application.persistentDataPath}/Levels/{tempFolderPath}",
+                $"{Application.persistentDataPath}/Levels/{_name.text}");
+            LevelBaseInfo levelInfo = new LevelBaseInfo(
+                _name.text, 
+                songName,
+                float.Parse(_bpm.text, NumberStyles.Float, CultureInfo.InvariantCulture), 
+                0);
             string info = JsonUtility.ToJson(levelInfo, true);
             File.WriteAllText($"{Application.persistentDataPath}/Levels/{_name.text}/LevelBaseInfo.json", info);
             _gameEventBus.Raise(new OpenEditorEvent(levelInfo));
@@ -70,7 +105,29 @@ namespace TimeLine
 
         public void Cancel()
         {
-            Directory.Delete($"{Application.persistentDataPath}/Levels/{tempFolderPath}");
+            string folderPath = $"{Application.persistentDataPath}/Levels/{tempFolderPath}";
+    
+            // Проверяем, существует ли папка
+            if (Directory.Exists(folderPath))
+            {
+                // Удаляем все файлы в папке
+                string[] files = Directory.GetFiles(folderPath);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+        
+                // Удаляем все подпапки и их содержимое
+                string[] directories = Directory.GetDirectories(folderPath);
+                foreach (string directory in directories)
+                {
+                    Directory.Delete(directory, true);
+                }
+        
+                // Удаляем саму папку
+                Directory.Delete(folderPath);
+            }
+    
             createLevelScreen.gameObject.SetActive(false);
             selectLevelScreen.gameObject.SetActive(true);
         }
@@ -80,14 +137,16 @@ namespace TimeLine
 [Serializable]
 public class LevelBaseInfo
 {
-    public LevelBaseInfo(string levelName, string songName, float bpm)
+    public LevelBaseInfo(string levelName, string songName, float bpm, float offset)
     {
         this.levelName = levelName;
         this.songName = songName;
         this.bpm = bpm;
+        this.offset = offset;
     }
-    
+
     public string levelName;
     public string songName;
     public float bpm;
+    public float offset;
 }

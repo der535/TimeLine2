@@ -1,4 +1,5 @@
 using EventBus;
+using TimeLine.Player;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -9,6 +10,9 @@ namespace TimeLine
     {
         [SerializeField] private AudioSource hit;
         [SerializeField] private Slider healthSlider;
+        [SerializeField] private PlayerDeath playerDeath;
+        [SerializeField] private PlayModeController playModeController;
+        [Space]
         [SerializeField] private int maxHealth = 3;
 
         private int _currentHealth;
@@ -45,16 +49,18 @@ namespace TimeLine
 
         private void TakeDamage()
         {
+            if(playerDeath.IsPlayerDeath) return;
+            
             hit.Play();
-            print(_currentHealth);
+            
+            if(!playModeController.IsPlaying) return;
+            
             _currentHealth--;
-            print(_currentHealth);
             if (_currentHealth <= 0)
             {
                 _currentHealth = 0;
                 _gameEventBus.Raise(new PlayerDeathEvent());
             }
-            print(_currentHealth);
             healthSlider.value = _currentHealth;
         }
     }

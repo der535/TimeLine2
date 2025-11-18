@@ -12,7 +12,7 @@ public class PlayAndStopButton : MonoBehaviour
     
     private Main _main;
 
-    private bool _isPlaying;
+    public bool _isPlaying;
 
     [Inject]
     private void Main(Main main)

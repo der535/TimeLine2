@@ -34,6 +34,7 @@ namespace TimeLine
             _eventBus = eventBus;
             _mainObjects = mainObjects;
             _actionMap = actionMap;
+            Pan = 1;
         }
         
         private bool GetCursorPosition()
@@ -45,7 +46,7 @@ namespace TimeLine
         private void Awake()
         {
             _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
-            Pan = 1;
+            
         }
         
         

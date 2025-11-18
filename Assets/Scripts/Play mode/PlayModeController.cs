@@ -17,7 +17,7 @@ namespace TimeLine
         [SerializeField] private Camera playCamera;
         
         private Main _main;
-        private bool _isPlaying;
+        internal bool IsPlaying;
 
         private GameEventBus _gameEventBus;
         
@@ -36,7 +36,7 @@ namespace TimeLine
 
         public void TurnToPlayMode()
         {
-            _isPlaying = true;
+            IsPlaying = true;
             editCamera.gameObject.SetActive(false);
             playCamera.gameObject.SetActive(true);
             _gameEventBus.Raise(new TurnToPlayModeEvent());
@@ -45,7 +45,7 @@ namespace TimeLine
 
         public void ExitPlayMode()
         {
-            _isPlaying = false;
+            IsPlaying = false;
             editCamera.gameObject.SetActive(true);
             playCamera.gameObject.SetActive(false);
             _gameEventBus.Raise(new ExitPlayEvent());
@@ -54,7 +54,7 @@ namespace TimeLine
 
         private void Play()
         {
-            if(!_isPlaying) return;
+            if(!IsPlaying) return;
             
             _main.SetTimeInTicks((float)trackObjectStorage.GetMinTime());
             _main.Play();

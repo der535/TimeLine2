@@ -21,7 +21,6 @@ namespace TimeLine.Waveform
         
         private MainObjects _mainObjects;
         private TimeLineSettings _timeLineSettings;
-        private Scroll _scroll;
         private Main _main;
         private TimeLineScroll _timeLineScroll;
         private GameEventBus _gameEventBus;
@@ -33,14 +32,12 @@ namespace TimeLine.Waveform
         private void Construct(
             MainObjects mainObjects, 
             TimeLineSettings timeLineSettings,
-            Scroll scroll, 
             Main main,
             GameEventBus gameEventBus,
             TimeLineScroll timeLineScroll)
         {
             _mainObjects = mainObjects;
             _timeLineSettings = timeLineSettings;
-            _scroll = scroll;
             _main = main;
             _timeLineScroll = timeLineScroll;
             _gameEventBus = gameEventBus;
@@ -51,22 +48,39 @@ namespace TimeLine.Waveform
             _gameEventBus.SubscribeTo((ref OldPanEvent data) => BuildWaveForm(), -2);
             _gameEventBus.SubscribeTo((ref PanEvent data) => BuildWaveForm(), -2);
             _gameEventBus.SubscribeTo((ref ScrollTimeLineEvent data) => BuildWaveForm(), -2);
+            
             _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
             {
                 BuildWaveForm();
-            }));
+            }),-2);
+            
+            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) =>
+            {
+                BuildWaveForm();
+            });
+            
+            _gameEventBus.SubscribeTo((ref SetBPMEvent data) =>
+            {
+                BuildWaveForm();
+            }, -2);
         }
         
-        private void BuildWaveForm()
+        internal void BuildWaveForm()
         {
             if(_main.MusicData.music == null) return;
-            
+
             if (toggle)
+            {
+                // print((_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
+                //     _main.MusicData.music.length * _main.MusicData.bpm / 60);
+
                 waveformRect.sizeDelta =
                     new Vector2(
                         (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
                         _main.MusicData.music.length * _main.MusicData.bpm / 60,
                         waveformRect.rect.height);
+            }
+
             else
             {
                 waveformRect.sizeDelta =
@@ -77,8 +91,8 @@ namespace TimeLine.Waveform
             
             waveformRect.localPosition =
                 new Vector2(
-                    (waveformRect.sizeDelta.x / 2) + _mainObjects.ContentRectTransform.offsetMin.x +
-                    _main.Offset(), 0);
+                    (waveformRect.sizeDelta.x / 2) + _mainObjects.ContentRectTransform.offsetMin.x -
+                    _main.BeatPerSecondOffset()*(_timeLineSettings.DistanceBetweenBeatLines +_timeLineScroll.Pan), 0);
         }
     }
 }

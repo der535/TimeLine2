@@ -10,18 +10,20 @@ public class TimeMarkerRenderer : MonoBehaviour
     [Space] [SerializeField] private GameObject beatLinesPrefab;
     [SerializeField] private int countBeatLines;
     [SerializeField] private Canvas canvas;
-    [Space] private Dictionary<RectTransform, Vector2> _lines = new();
+    [Space] private Dictionary<RectTransform, int> _lines = new();
     
     private TimeLineSettings _timeLineSettings;
     private GameEventBus _gameEventBus;
     private MainObjects _mainObjects;
+    private TimeLineScroll _timeLineScroll;
 
     [Inject]
-    private void Construct(TimeLineSettings timeLineSettings, GameEventBus gameEventBus, MainObjects mainObjects)
+    private void Construct(TimeLineSettings timeLineSettings, GameEventBus gameEventBus, MainObjects mainObjects, TimeLineScroll timeLineScroll)
     {
         _timeLineSettings = timeLineSettings;
         _gameEventBus = gameEventBus;
         _mainObjects = mainObjects;
+        _timeLineScroll = timeLineScroll;
     }
     private void Awake()
     {
@@ -29,22 +31,22 @@ public class TimeMarkerRenderer : MonoBehaviour
         
         for (int i = 0; i < countBeatLines; i++)
         {
-            Vector3 position = new Vector3(_timeLineSettings.DistanceBetweenBeatLines * i, 0, 0);
+            Vector3 position = new Vector3((_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) * i, 0, 0);
             TimeMarker beatLine = Instantiate(beatLinesPrefab, _mainObjects.ContentRectTransform).GetComponent<TimeMarker>();
             beatLine.Setup(canvas, i);
             RectTransform beatLineRectTransform = beatLine.GetComponent<RectTransform>();
             beatLineRectTransform.anchoredPosition = position;
-            _lines.Add(beatLineRectTransform, beatLineRectTransform.anchoredPosition);
+            _lines.Add(beatLineRectTransform, i);
         }
     }
 
     public void SetPan(ref PanEvent panEvent)
     {
-        float scale = 1 + panEvent.PanOffset / _timeLineSettings.DistanceBetweenBeatLines;
-        foreach (KeyValuePair<RectTransform, Vector2> entry in _lines)
+        float scale = _timeLineSettings.DistanceBetweenBeatLines + panEvent.PanOffset;
+        foreach (KeyValuePair<RectTransform, int> entry in _lines)
         {
             entry.Key.anchoredPosition =
-                new Vector2(entry.Value.x * scale, 0);
+                new Vector2(entry.Value * scale, 0);
         }
     }
 }
