@@ -134,6 +134,15 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ESC"",
+                    ""type"": ""Button"",
+                    ""id"": ""5f7c7ea2-b611-4e27-a952-b7879141a35d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -290,6 +299,17 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""action"": ""V"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""78a47bf0-671e-4444-8411-61c8fd3a4e18"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ESC"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -298,7 +318,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             ""id"": ""94843c9b-cdaf-470e-bdc2-7c8183b977df"",
             ""actions"": [
                 {
-                    ""name"": ""New action"",
+                    ""name"": ""PlayerMove"",
                     ""type"": ""PassThrough"",
                     ""id"": ""46ccad50-a116-44f1-bc76-9a338743012e"",
                     ""expectedControlType"": """",
@@ -315,7 +335,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""New action"",
+                    ""action"": ""PlayerMove"",
                     ""isComposite"": true,
                     ""isPartOfComposite"": false
                 },
@@ -326,7 +346,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
+                    ""action"": ""PlayerMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -337,7 +357,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
+                    ""action"": ""PlayerMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -348,7 +368,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
+                    ""action"": ""PlayerMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -359,64 +379,37 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
+                    ""action"": ""PlayerMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
-                },
+                }
+            ]
+        },
+        {
+            ""name"": ""LevelFinished"",
+            ""id"": ""fa01c724-1105-4ce5-95cf-f2163046d0e8"",
+            ""actions"": [
                 {
-                    ""name"": ""2D Vector"",
-                    ""id"": ""42d7921b-4ec6-45af-ae9c-5c3e7e88e3a2"",
-                    ""path"": ""2DVector"",
+                    ""name"": ""CloseFinishScreen"",
+                    ""type"": ""Button"",
+                    ""id"": ""867640a4-2cd5-4f63-97f1-40fafefd2bd3"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""88400989-d7e8-430c-a03c-e1bbf4318b95"",
+                    ""path"": ""<Keyboard>/enter"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""New action"",
-                    ""isComposite"": true,
+                    ""groups"": "";Keyboard"",
+                    ""action"": ""CloseFinishScreen"",
+                    ""isComposite"": false,
                     ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": ""up"",
-                    ""id"": ""cc469685-5b84-4036-a689-cb71f283596c"",
-                    ""path"": ""<Keyboard>/upArrow"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""down"",
-                    ""id"": ""796b7ecb-1818-4059-b2c3-65e93fbc2203"",
-                    ""path"": ""<Keyboard>/downArrow"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""left"",
-                    ""id"": ""a1711907-5c0c-4851-b6bb-f46ce044c9f5"",
-                    ""path"": ""<Keyboard>/leftArrow"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": ""right"",
-                    ""id"": ""d7c487e3-c5ba-4476-8c46-6f25f14063b1"",
-                    ""path"": ""<Keyboard>/rightArrow"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";Keyboard"",
-                    ""action"": ""New action"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": true
                 }
             ]
         }
@@ -443,15 +436,20 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         m_Editor_I = m_Editor.FindAction("I", throwIfNotFound: true);
         m_Editor_C = m_Editor.FindAction("C", throwIfNotFound: true);
         m_Editor_V = m_Editor.FindAction("V", throwIfNotFound: true);
+        m_Editor_ESC = m_Editor.FindAction("ESC", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
-        m_Player_Newaction = m_Player.FindAction("New action", throwIfNotFound: true);
+        m_Player_PlayerMove = m_Player.FindAction("PlayerMove", throwIfNotFound: true);
+        // LevelFinished
+        m_LevelFinished = asset.FindActionMap("LevelFinished", throwIfNotFound: true);
+        m_LevelFinished_CloseFinishScreen = m_LevelFinished.FindAction("CloseFinishScreen", throwIfNotFound: true);
     }
 
     ~@ActionMap()
     {
         UnityEngine.Debug.Assert(!m_Editor.enabled, "This will cause a leak and performance issues, ActionMap.Editor.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, ActionMap.Player.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_LevelFinished.enabled, "This will cause a leak and performance issues, ActionMap.LevelFinished.Disable() has not been called.");
     }
 
     public void Dispose()
@@ -525,6 +523,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     private readonly InputAction m_Editor_I;
     private readonly InputAction m_Editor_C;
     private readonly InputAction m_Editor_V;
+    private readonly InputAction m_Editor_ESC;
     public struct EditorActions
     {
         private @ActionMap m_Wrapper;
@@ -541,6 +540,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         public InputAction @I => m_Wrapper.m_Editor_I;
         public InputAction @C => m_Wrapper.m_Editor_C;
         public InputAction @V => m_Wrapper.m_Editor_V;
+        public InputAction @ESC => m_Wrapper.m_Editor_ESC;
         public InputActionMap Get() { return m_Wrapper.m_Editor; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -586,6 +586,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @V.started += instance.OnV;
             @V.performed += instance.OnV;
             @V.canceled += instance.OnV;
+            @ESC.started += instance.OnESC;
+            @ESC.performed += instance.OnESC;
+            @ESC.canceled += instance.OnESC;
         }
 
         private void UnregisterCallbacks(IEditorActions instance)
@@ -626,6 +629,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @V.started -= instance.OnV;
             @V.performed -= instance.OnV;
             @V.canceled -= instance.OnV;
+            @ESC.started -= instance.OnESC;
+            @ESC.performed -= instance.OnESC;
+            @ESC.canceled -= instance.OnESC;
         }
 
         public void RemoveCallbacks(IEditorActions instance)
@@ -647,12 +653,12 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     // Player
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
-    private readonly InputAction m_Player_Newaction;
+    private readonly InputAction m_Player_PlayerMove;
     public struct PlayerActions
     {
         private @ActionMap m_Wrapper;
         public PlayerActions(@ActionMap wrapper) { m_Wrapper = wrapper; }
-        public InputAction @Newaction => m_Wrapper.m_Player_Newaction;
+        public InputAction @PlayerMove => m_Wrapper.m_Player_PlayerMove;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -662,16 +668,16 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_PlayerActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_PlayerActionsCallbackInterfaces.Add(instance);
-            @Newaction.started += instance.OnNewaction;
-            @Newaction.performed += instance.OnNewaction;
-            @Newaction.canceled += instance.OnNewaction;
+            @PlayerMove.started += instance.OnPlayerMove;
+            @PlayerMove.performed += instance.OnPlayerMove;
+            @PlayerMove.canceled += instance.OnPlayerMove;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
         {
-            @Newaction.started -= instance.OnNewaction;
-            @Newaction.performed -= instance.OnNewaction;
-            @Newaction.canceled -= instance.OnNewaction;
+            @PlayerMove.started -= instance.OnPlayerMove;
+            @PlayerMove.performed -= instance.OnPlayerMove;
+            @PlayerMove.canceled -= instance.OnPlayerMove;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -689,6 +695,52 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         }
     }
     public PlayerActions @Player => new PlayerActions(this);
+
+    // LevelFinished
+    private readonly InputActionMap m_LevelFinished;
+    private List<ILevelFinishedActions> m_LevelFinishedActionsCallbackInterfaces = new List<ILevelFinishedActions>();
+    private readonly InputAction m_LevelFinished_CloseFinishScreen;
+    public struct LevelFinishedActions
+    {
+        private @ActionMap m_Wrapper;
+        public LevelFinishedActions(@ActionMap wrapper) { m_Wrapper = wrapper; }
+        public InputAction @CloseFinishScreen => m_Wrapper.m_LevelFinished_CloseFinishScreen;
+        public InputActionMap Get() { return m_Wrapper.m_LevelFinished; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(LevelFinishedActions set) { return set.Get(); }
+        public void AddCallbacks(ILevelFinishedActions instance)
+        {
+            if (instance == null || m_Wrapper.m_LevelFinishedActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_LevelFinishedActionsCallbackInterfaces.Add(instance);
+            @CloseFinishScreen.started += instance.OnCloseFinishScreen;
+            @CloseFinishScreen.performed += instance.OnCloseFinishScreen;
+            @CloseFinishScreen.canceled += instance.OnCloseFinishScreen;
+        }
+
+        private void UnregisterCallbacks(ILevelFinishedActions instance)
+        {
+            @CloseFinishScreen.started -= instance.OnCloseFinishScreen;
+            @CloseFinishScreen.performed -= instance.OnCloseFinishScreen;
+            @CloseFinishScreen.canceled -= instance.OnCloseFinishScreen;
+        }
+
+        public void RemoveCallbacks(ILevelFinishedActions instance)
+        {
+            if (m_Wrapper.m_LevelFinishedActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(ILevelFinishedActions instance)
+        {
+            foreach (var item in m_Wrapper.m_LevelFinishedActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_LevelFinishedActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public LevelFinishedActions @LevelFinished => new LevelFinishedActions(this);
     private int m_KeyboardSchemeIndex = -1;
     public InputControlScheme KeyboardScheme
     {
@@ -712,9 +764,14 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         void OnI(InputAction.CallbackContext context);
         void OnC(InputAction.CallbackContext context);
         void OnV(InputAction.CallbackContext context);
+        void OnESC(InputAction.CallbackContext context);
     }
     public interface IPlayerActions
     {
-        void OnNewaction(InputAction.CallbackContext context);
+        void OnPlayerMove(InputAction.CallbackContext context);
+    }
+    public interface ILevelFinishedActions
+    {
+        void OnCloseFinishScreen(InputAction.CallbackContext context);
     }
 }

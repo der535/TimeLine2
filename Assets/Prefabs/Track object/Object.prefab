@@ -338,6 +338,7 @@ MonoBehaviour:
   image: {fileID: 3925783461775147451}
   nameText: {fileID: 4206961575465642762}
   rect: {fileID: 632330435956980517}
+  offsetObject: {fileID: 0}
 --- !u!114 &8583969578343439964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -418,6 +419,7 @@ GameObject:
   - component: {fileID: 129148551120839721}
   - component: {fileID: 2806403240883706544}
   - component: {fileID: 4206961575465642762}
+  - component: {fileID: 8741222460405309103}
   m_Layer: 5
   m_Name: name
   m_TagString: Untagged
@@ -543,6 +545,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8741222460405309103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7422259474525804369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5422f626aac9e614bb00fcbaf441b0db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fontNames: 0
 --- !u!1 &8870092897383441676
 GameObject:
   m_ObjectHideFlags: 0

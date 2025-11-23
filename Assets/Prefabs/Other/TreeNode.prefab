@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 90087367838431901}
   - component: {fileID: 3379145683625307377}
   - component: {fileID: 425878542853247733}
-  - component: {fileID: 2473764381929648530}
   m_Layer: 5
   m_Name: TreeNode
   m_TagString: Untagged
@@ -77,25 +76,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2473764381929648530
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3781216920772803191}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3da17d89188dce41bff9c63b64119cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  text: {fileID: 2814124622713029422}
-  namePanel: {fileID: 3927034484057054580}
-  rootRect: {fileID: 90087367838431901}
-  nodeImage: {fileID: 425878542853247733}
-  expandButton: {fileID: 0}
-  icon: {fileID: 0}
-  selectionToggle: {fileID: 0}
 --- !u!1 &5104466042932847706
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,6 +87,7 @@ GameObject:
   - component: {fileID: 3799264827038320013}
   - component: {fileID: 7224358275919415285}
   - component: {fileID: 2814124622713029422}
+  - component: {fileID: 5218610624782077594}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -232,6 +213,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5218610624782077594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5104466042932847706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5422f626aac9e614bb00fcbaf441b0db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fontNames: 0
 --- !u!1 &7895898091826175831
 GameObject:
   m_ObjectHideFlags: 0

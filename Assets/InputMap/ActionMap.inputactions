@@ -112,6 +112,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ESC",
+                    "type": "Button",
+                    "id": "5f7c7ea2-b611-4e27-a952-b7879141a35d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -268,6 +277,17 @@
                     "action": "V",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "78a47bf0-671e-4444-8411-61c8fd3a4e18",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ESC",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -276,7 +296,7 @@
             "id": "94843c9b-cdaf-470e-bdc2-7c8183b977df",
             "actions": [
                 {
-                    "name": "New action",
+                    "name": "PlayerMove",
                     "type": "PassThrough",
                     "id": "46ccad50-a116-44f1-bc76-9a338743012e",
                     "expectedControlType": "",
@@ -293,7 +313,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "New action",
+                    "action": "PlayerMove",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
@@ -304,7 +324,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "New action",
+                    "action": "PlayerMove",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -315,7 +335,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "New action",
+                    "action": "PlayerMove",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -326,7 +346,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "New action",
+                    "action": "PlayerMove",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -337,64 +357,37 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "New action",
+                    "action": "PlayerMove",
                     "isComposite": false,
                     "isPartOfComposite": true
-                },
+                }
+            ]
+        },
+        {
+            "name": "LevelFinished",
+            "id": "fa01c724-1105-4ce5-95cf-f2163046d0e8",
+            "actions": [
                 {
-                    "name": "2D Vector",
-                    "id": "42d7921b-4ec6-45af-ae9c-5c3e7e88e3a2",
-                    "path": "2DVector",
+                    "name": "CloseFinishScreen",
+                    "type": "Button",
+                    "id": "867640a4-2cd5-4f63-97f1-40fafefd2bd3",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "88400989-d7e8-430c-a03c-e1bbf4318b95",
+                    "path": "<Keyboard>/enter",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "New action",
-                    "isComposite": true,
+                    "groups": ";Keyboard",
+                    "action": "CloseFinishScreen",
+                    "isComposite": false,
                     "isPartOfComposite": false
-                },
-                {
-                    "name": "up",
-                    "id": "cc469685-5b84-4036-a689-cb71f283596c",
-                    "path": "<Keyboard>/upArrow",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard",
-                    "action": "New action",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "down",
-                    "id": "796b7ecb-1818-4059-b2c3-65e93fbc2203",
-                    "path": "<Keyboard>/downArrow",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard",
-                    "action": "New action",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "left",
-                    "id": "a1711907-5c0c-4851-b6bb-f46ce044c9f5",
-                    "path": "<Keyboard>/leftArrow",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard",
-                    "action": "New action",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "right",
-                    "id": "d7c487e3-c5ba-4476-8c46-6f25f14063b1",
-                    "path": "<Keyboard>/rightArrow",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard",
-                    "action": "New action",
-                    "isComposite": false,
-                    "isPartOfComposite": true
                 }
             ]
         }

@@ -1,0 +1,73 @@
+using System;
+using System.ComponentModel;
+using System.IO;
+using EventBus;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
+using UnityEngine;
+using Zenject;
+
+namespace TimeLine
+{
+    public class LevelCardController : MonoBehaviour
+    {
+        [SerializeField] private RectTransform _content;
+        [SerializeField] private LevelCard levelCardPrefab;
+        [SerializeField] private SaveLevel _saveLevel;
+        [Space]
+        [SerializeField] private GameObject canvasCreateLevel;
+        
+        private GameEventBus _gameEventBus;
+        private DiContainer _container;
+
+        [Inject]
+        private void Construct(GameEventBus eventBus, DiContainer container)
+        {
+            _gameEventBus = eventBus;
+            _container = container;
+        }
+
+        private void Start()
+        {
+            string levelsPath = Path.Combine(Application.persistentDataPath, "Levels");
+
+            if (!Directory.Exists(levelsPath))
+            {
+                Debug.LogWarning($"Папка с уровнями не найдена: {levelsPath}");
+                return;
+            }
+
+            string[] levelFolders = Directory.GetDirectories(levelsPath);
+
+            foreach (string folder in levelFolders)
+            {
+                try
+                {
+                    string jsonContent = File.ReadAllText($"{folder}/LevelBaseInfo.json");
+                    // print(jsonContent);
+
+                    LevelBaseInfo levelData = JsonUtility.FromJson<LevelBaseInfo>(jsonContent);
+                    // print(levelData);
+
+                    CreateLevelCard(levelData);
+                    // print("CreateLevelCard");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"Ошибка при загрузке уровня: {e}");
+                }
+            }
+        }
+
+        private void CreateLevelCard(LevelBaseInfo data)
+        {
+            LevelCard card = _container.InstantiatePrefab(levelCardPrefab, _content).GetComponent<LevelCard>();
+
+            card.Setup(data.levelName, () =>
+            {
+                _gameEventBus.Raise(new OpenEditorEvent(data));
+                _saveLevel.Load(data);
+                canvasCreateLevel.gameObject.SetActive(false);
+            }, null, null, null);
+        }
+    }
+}

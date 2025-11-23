@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 3414714404056203588}
   - component: {fileID: 899381088387071087}
   - component: {fileID: 1715711694276869759}
+  - component: {fileID: 7026458176346280311}
   m_Layer: 5
   m_Name: SpriteFieldUI
   m_TagString: Untagged
@@ -214,6 +215,19 @@ MonoBehaviour:
   _rectTransform: {fileID: 2960653962264612017}
   button: {fileID: 5481352234176687026}
   text: {fileID: 1255220235600383408}
+--- !u!114 &7026458176346280311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2514367800227592561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0e16e7c3521f214fa714c9cdbf53fc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fontItems: []
 --- !u!1 &3659537781400877195
 GameObject:
   m_ObjectHideFlags: 0
@@ -281,8 +295,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: qweqw
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: e295c15d4b0f6df419d3fee379f7728e, type: 2}
-  m_sharedMaterial: {fileID: 805558025504722925, guid: e295c15d4b0f6df419d3fee379f7728e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 44692214a41a5c94290cedc270a8c72c, type: 2}
+  m_sharedMaterial: {fileID: 6774004885202909411, guid: 44692214a41a5c94290cedc270a8c72c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -306,7 +320,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.2
+  m_fontSize: 19.8
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

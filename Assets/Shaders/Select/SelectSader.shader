@@ -78,7 +78,7 @@ Shader "Unlit/MovingStripesDiagonalClipped"
                 float sina = sin(_Angle);
                 float cosa = cos(_Angle);
                 float coord = -sina * i.worldPos.x + cosa * i.worldPos.y;
-                float timeOffset = (_Time.y + 3) * _Speed;
+                float timeOffset = (_Time.y + 100000) * _Speed;
                 float patternCoord = coord + timeOffset;
 
                 float spacing = 1.0 / _Density;
