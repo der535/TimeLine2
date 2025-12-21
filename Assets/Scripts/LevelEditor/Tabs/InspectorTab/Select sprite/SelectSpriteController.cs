@@ -1,6 +1,10 @@
+using System;
 using System.Collections.Generic;
+using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.LevelEditor.SpriteLoader;
 using UnityEngine;
+using Zenject;
 
 namespace TimeLine
 {
@@ -10,39 +14,79 @@ namespace TimeLine
         [SerializeField] private SpriteCard prefab;
         [SerializeField] private RectTransform content;
         [SerializeField] private BaseSpriteStorage storage;
+        [SerializeField] private CustomSpriteStorage customStorage;
 
-        private List<SpriteCard> _spriteCards = new List<SpriteCard>();
-        private bool _isInitialized = false;
+        private List<SpriteCard> _spriteCards = new();
+        private bool _isInitialized;
 
-        private void InitializeCards()
+        private GameEventBus _gameEventBus;
+
+        [Inject]
+        private void Constructor(GameEventBus gameEventBus)
         {
-            if (_isInitialized) return;
+            _gameEventBus = gameEventBus;
+        }
 
+        private void Start()
+        {
             foreach (var card in storage.Sprites)
             {
                 SpriteCard spriteCard = Instantiate(prefab, content);
                 spriteCard.Setup(card, null); // Изначально без действия
                 _spriteCards.Add(spriteCard);
             }
-
-            _isInitialized = true;
+            
+            _gameEventBus.SubscribeTo((ref SpriteStorageAddSpriteEvent spriteStorageAddSpriteEvent) =>
+            {
+                SpriteCard spriteCard = Instantiate(prefab, content);
+                spriteCard.Setup(spriteStorageAddSpriteEvent.Data.Value, spriteStorageAddSpriteEvent.Data.Key,
+                    null); // Изначально без действия
+                _spriteCards.Add(spriteCard);
+            });
+            
+            _gameEventBus.SubscribeTo((ref SpriteStorageRemoveSpriteEvent data) =>
+            {
+                foreach (var card in _spriteCards)
+                {
+                    if (card.textureData == data.TextureData)
+                    {
+                        Destroy(card.gameObject);
+                    }
+                }
+            });
         }
 
         internal void Setup(SpriteParameter spriteParameter)
         {
-            InitializeCards(); // Создаём карточки при первом вызове
-
             windows.gameObject.SetActive(true);
 
-            // Теперь просто обновляем action для каждой карточки
-            for (int i = 0; i < _spriteCards.Count; i++)
+            foreach (var card in _spriteCards)
             {
-                int index = i; // Замыкание для правильного захвата индекса
-                _spriteCards[index].Setup(storage.Sprites[index], () =>
+                Action onSelect = () =>
                 {
-                    spriteParameter.Value = storage.Sprites[index];
+                    if (card.SpriteParameter != null)
+                    {
+                        spriteParameter.Value = card.SpriteParameter.Value;
+                        customStorage.CheckAndRemoveSpriteRenderer(spriteParameter);
+                        customStorage.AddSpriteRenderer(card.textureData, spriteParameter);
+                    }
+                    else
+                    {
+                        spriteParameter.Value = card.sprite;
+                        customStorage.CheckAndRemoveSpriteRenderer(spriteParameter);
+                    }
+
                     windows.gameObject.SetActive(false);
-                });
+                };
+
+                if (card.SpriteParameter != null)
+                {
+                    card.Setup(card.SpriteParameter, card.textureData, onSelect);
+                }
+                else
+                {
+                    card.Setup(card.sprite, onSelect);
+                }
             }
         }
     }

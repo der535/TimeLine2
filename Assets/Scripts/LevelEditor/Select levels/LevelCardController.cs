@@ -1,5 +1,5 @@
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.IO;
 using EventBus;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
@@ -13,8 +13,12 @@ namespace TimeLine
         [SerializeField] private RectTransform _content;
         [SerializeField] private LevelCard levelCardPrefab;
         [SerializeField] private SaveLevel _saveLevel;
+        [SerializeField] private LevelRenamePanel _levelRenamePanel;
+        [SerializeField] private DeleteLevelPanel _deleteLevelPanel;
         [Space]
         [SerializeField] private GameObject canvasCreateLevel;
+        
+        private List<LevelCard> _levelCards = new List<LevelCard>();
         
         private GameEventBus _gameEventBus;
         private DiContainer _container;
@@ -28,7 +32,19 @@ namespace TimeLine
 
         private void Start()
         {
+            UpdateCards();
+        }
+
+        private void UpdateCards()
+        {
             string levelsPath = Path.Combine(Application.persistentDataPath, "Levels");
+
+            foreach (var level in _levelCards)
+            {
+                Destroy(level.gameObject);
+            }
+            
+            _levelCards.Clear();
 
             if (!Directory.Exists(levelsPath))
             {
@@ -67,7 +83,21 @@ namespace TimeLine
                 _gameEventBus.Raise(new OpenEditorEvent(data));
                 _saveLevel.Load(data);
                 canvasCreateLevel.gameObject.SetActive(false);
-            }, null, null, null);
+            }, () =>
+            {
+                LevelActions.Copy(data.levelName);
+                UpdateCards();
+            }, () =>
+            {
+                //renameAction
+                _levelRenamePanel.Open(data.levelName, UpdateCards);
+            }, () =>
+            {
+                //deleteAction
+                _deleteLevelPanel.Open(data.levelName, UpdateCards);
+            });
+            
+            _levelCards.Add(card);
         }
     }
 }

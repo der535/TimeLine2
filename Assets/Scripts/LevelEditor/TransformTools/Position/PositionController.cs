@@ -215,9 +215,7 @@ namespace TimeLine
                 _transformComponent.transform.position.y);
             Log($"[SelectObject] World position for UI Tool: {worldPositionForUI:F4}");
 
-            print(worldPositionForUI);
             worldPositionForUI = GetCenter.GetSelectionCenter(_allObjects.Select(i => i.transform).ToList()); //todo test
-            print(worldPositionForUI);
 
             // Сообщаем GridScene текущую локальную позицию объекта (для расчета оффсета)
             Log($"[SelectObject] Calling gridScene.SetCurrentObjectPosition({localPositionForGrid:F4})");

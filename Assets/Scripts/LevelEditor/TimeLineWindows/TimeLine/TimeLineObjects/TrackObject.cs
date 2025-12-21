@@ -491,7 +491,7 @@ namespace TimeLine
         private void Drag()
         {
             if (!_isDragging) return;
-
+            
             TrackLine = _trackStorage.CheckTracks(this);
             if (transform.parent != TrackLine.RectTransform) transform.parent = TrackLine.RectTransform;
             rect.offsetMax = new Vector2(rect.offsetMax.x, 0);
@@ -499,6 +499,8 @@ namespace TimeLine
 
             UpdatePosition();
             CalculatePosition();
+            
+            
         }
 
         internal void UpdatePosition()

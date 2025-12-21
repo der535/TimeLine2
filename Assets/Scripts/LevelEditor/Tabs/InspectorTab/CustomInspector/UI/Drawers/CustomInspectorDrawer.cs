@@ -14,6 +14,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         [SerializeField] private ComponentUI componentUIPrefab;
     
         [Header("Fields")]
+        [SerializeField] private IntFieldUI intFieldUIPrefab;
         [SerializeField] private FloatFieldUI floatFieldUIPrefab;
         [SerializeField] private DropDownFieldUI dropDownFieldUI;
         [SerializeField] private Vector2FieldUI vector2FieldUI;
@@ -61,10 +62,17 @@ namespace TimeLine.CustomInspector.UI.Drawers
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         
-        public void CreateColorField(ColorParameter colorParameter)
+        public void CreateIntField(IntParameter intParameter, Action createKeyframe)
+        {
+            var parameter = Instantiate(intFieldUIPrefab, _currentComponent.RootObject);
+            parameter.Setup(intParameter, createKeyframe);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
+        public void CreateColorField(ColorParameter colorParameter, Action createKeyframe)
         {
             var parameter = _container.InstantiatePrefab(colorField, _currentComponent.RootObject).GetComponent<ColorFieldUI>();
-            parameter.Setup(colorParameter);
+            parameter.Setup(colorParameter, createKeyframe);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         

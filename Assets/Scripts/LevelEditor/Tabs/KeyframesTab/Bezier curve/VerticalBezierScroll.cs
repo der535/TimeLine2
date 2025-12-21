@@ -19,29 +19,34 @@ namespace TimeLine
         public float VerticalScroll => _verticalScroll;
         
         private GameEventBus _eventBus;
+        private ActionMap _actionMap;
         
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap)
         {
             _eventBus = gameEventBus;
+            _actionMap = actionMap;
         }
 
         private void Start()
         {
-            _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
+            _actionMap.Editor.MouseScroll.started += data =>
+            {
+                Calculate(data.ReadValue<float>());
+            };
         }
 
-        private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
+        private void Calculate(float value)
         {
             if (RectTransformUtility.RectangleContainsScreenPoint(
                     _rightPanel, 
                     UnityEngine.Input.mousePosition, 
                     _mainCamera))
             {
-                if (UnityEngine.Input.GetKey(KeyCode.LeftAlt))
+                if (_actionMap.Editor.LeftCtrl.IsPressed())
                 {
-                    _eventBus.Raise(new ScrollBezier(mouseScrollDeltaY.Y * ScrollMultiplier));
+                    _eventBus.Raise(new ScrollBezier(value * ScrollMultiplier));
                 }
             }
         }

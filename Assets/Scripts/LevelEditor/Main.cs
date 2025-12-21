@@ -92,9 +92,9 @@ namespace TimeLine
                 offset = data.LevelInfo.offset;
                 StartCoroutine(LoadAudioClip(
                     $"{Application.persistentDataPath}/Levels/{data.LevelInfo.levelName}/{data.LevelInfo.songName}"));
-                DOVirtual.DelayedCall(0.01f, playAndStopButton.Turn);
-                DOVirtual.DelayedCall(0.02f, playAndStopButton.Turn);
-                SetTime(0);
+                // DOVirtual.DelayedCall(0.01f, playAndStopButton.Turn);
+                // DOVirtual.DelayedCall(0.02f, playAndStopButton.Turn);
+                SetTimeInTicks(0);
             });
             // _gameEventBus.SubscribeTo((ref OpenEditorEvent data) => { SetTimeInTicks(0); }, 1);
             
@@ -167,7 +167,6 @@ namespace TimeLine
 
         public void Play()
         {
-            print("PLay");
             _isPlaying = true;
 
             if (firstPlayaing)
@@ -192,6 +191,7 @@ namespace TimeLine
 
         internal void SetTimeInTicks(double ticks)
         {
+            print($"set time {ticks}");
             double timeInSeconds = TicksToSeconds(ticks);
             timeInSeconds += offset;
 

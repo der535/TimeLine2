@@ -1,4 +1,6 @@
 using System;
+using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.LevelEditor.SpriteLoader;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,16 +11,54 @@ namespace TimeLine
         [SerializeField] private Image image;
         [SerializeField] private TMPro.TextMeshProUGUI text;
         [SerializeField] private Button button;
+        
+        public Sprite sprite;
+        
+        private Action onValueChanged;
+        public SpriteParameter SpriteParameter;
+        public TextureData textureData;
 
-        internal void Setup(Sprite spriteCardSO, Action onClick)
+        internal void Setup(Sprite sprite, Action onClick)
         {
-            image.sprite = spriteCardSO;
-            text.text = spriteCardSO.name;
+            this.sprite = sprite;
+            image.sprite = sprite;
+            text.text = sprite.name;
             if (onClick != null)
             {
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(onClick.Invoke);
             }
+        }
+        
+        internal void Setup(SpriteParameter spriteParameter, TextureData textureData, Action onClick)
+        {
+            this.SpriteParameter = spriteParameter;
+            this.textureData = textureData;
+            sprite = spriteParameter.Value;
+            image.sprite = spriteParameter.Value;
+            text.text = textureData.SpriteName;
+            
+            SpriteParameter.OnValueChanged -= onValueChanged;
+            
+            onValueChanged = () =>
+            {
+                sprite = spriteParameter.Value;
+                image.sprite = spriteParameter.Value;
+                text.text = textureData.SpriteName;
+            };
+           
+            spriteParameter.OnValueChanged += onValueChanged;
+
+            if (onClick != null)
+            {
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(onClick.Invoke);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            SpriteParameter.OnValueChanged -= onValueChanged;
         }
     }
 }

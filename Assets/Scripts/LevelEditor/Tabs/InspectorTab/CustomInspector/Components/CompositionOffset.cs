@@ -167,25 +167,25 @@ namespace TimeLine
             yield return YOffset;
         }
 
-        public override void CopyTo(Component targetComponent)
-        {
-            if (targetComponent is CompositionOffset other)
-            {
-                other.XOffset.Value = XOffset.Value;
-                other.YOffset.Value = YOffset.Value;
-            }
-            else
-            {
-                throw new ArgumentException("Target component must be of type CompositionOffset");
-            }
-        }
-
-        public override Component Copy(GameObject targetGameObject)
-        {
-            var component = targetGameObject.AddComponent<CompositionOffset>();
-            _container.Inject(component);
-            CopyTo(component);
-            return component;
-        }
+        // public override void CopyTo(Component targetComponent)
+        // {
+        //     if (targetComponent is CompositionOffset other)
+        //     {
+        //         other.XOffset.Value = XOffset.Value;
+        //         other.YOffset.Value = YOffset.Value;
+        //     }
+        //     else
+        //     {
+        //         throw new ArgumentException("Target component must be of type CompositionOffset");
+        //     }
+        // }
+        //
+        // public override Component Copy(GameObject targetGameObject)
+        // {
+        //     var component = targetGameObject.AddComponent<CompositionOffset>();
+        //     _container.Inject(component);
+        //     CopyTo(component);
+        //     return component;
+        // }
     }
 }

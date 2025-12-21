@@ -8,8 +8,7 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
 {
     [SerializeField] private GameObject marker;
     public float TimeLineAnchoredPosition => marker.GetComponent<RectTransform>().anchoredPosition.x;
-
-    private Scroll _scroll;
+    
     private Main _main;
     private GameEventBus _gameEventBus;
     private TimeLineSettings _timeLineSettings;
@@ -18,9 +17,8 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
     private double _ticksSaved;
 
     [Inject]
-    private void Construct(Main main, Scroll scroll, GameEventBus gameEventBus, TimeLineScroll timeLineScroll, TimeLineSettings timeLineSettings)
+    private void Construct(Main main, GameEventBus gameEventBus, TimeLineScroll timeLineScroll, TimeLineSettings timeLineSettings)
     {
-        _scroll = scroll;
         _main = main;
         _gameEventBus = gameEventBus;
         _timeLineSettings = timeLineSettings;

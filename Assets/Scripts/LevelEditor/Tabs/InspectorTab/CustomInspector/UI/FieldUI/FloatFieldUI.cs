@@ -25,7 +25,7 @@ namespace TimeLine
             parameterName.text = floatParameter.Name;
             inputField.text = floatParameter.Value.ToString(CultureInfo.InvariantCulture);
 
-            _inputValidator = new FloatInputValidator(inputField, value => _floatParameter.Value = value, value => _floatParameter.Value = value);
+            _inputValidator = new FloatInputValidator(inputField, value => _floatParameter.Value = value);
 
             // floatParameter.OnValueChanged += () =>
             //     inputField.text = _floatParameter.Value.ToString(CultureInfo.InvariantCulture);

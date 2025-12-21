@@ -4,6 +4,7 @@ using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Input;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -19,7 +20,6 @@ namespace TimeLine.Installers
         [SerializeField] private TimeLineRenderer timeLineRenderer;
         [SerializeField] private TimeMarkerRenderer timeMarkerRenderer;
         [SerializeField] private CurrentTimeMarkerRenderer currentTimeMarkerRenderer;
-        [SerializeField] private Scroll scroll;
         [SerializeField] private CursorBeatPosition cursorBeatPosition;
         [SerializeField] private TrackObjectSpawner trackObjectSpawner;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
@@ -30,7 +30,7 @@ namespace TimeLine.Installers
         [SerializeField] private TreeViewUI treeViewUI;
         [SerializeField] private TimeLineSettings settings;
         [SerializeField] private TimeLineScroll timeLineScroll;
-        [SerializeField] private SceneObjectAddKeyFrame sceneObjectAddKeyFrame;
+        // [SerializeField] private SceneObjectAddKeyFrame sceneObjectAddKeyFrame;
         [FormerlySerializedAs("gridSystem")] [SerializeField] private GridUI gridUI;
         [SerializeField] private ParentMain parentMain;
         [SerializeField] private TimeLineKeyframeScroll timeLineKeyframeScroll;
@@ -54,6 +54,11 @@ namespace TimeLine.Installers
         [SerializeField] private FinishLevelController finishLevelController;
         [SerializeField] private TimeLineMarkersController timeLineMarkersController;
         [SerializeField] private SaveLevel saveLevel;
+        [SerializeField] private GridScene gridScene;
+        [FormerlySerializedAs("spriteStorage")] [SerializeField] private CustomSpriteStorage customSpriteStorage;
+        [SerializeField] private SpriteLoadController spriteLoadController;
+        [SerializeField] private GetSpriteName getSpriteName;
+        [SerializeField] private BaseSpriteStorage baseSpriteStorage;
         
         [SerializeField] private MainObjects mainObjects;
         
@@ -62,12 +67,14 @@ namespace TimeLine.Installers
         // ReSharper disable Unity.PerformanceAnalysis
         public override void InstallBindings()
         {
+            Container.Bind<BaseSpriteStorage>().FromInstance(baseSpriteStorage);
+            Container.Bind<GetSpriteName>().FromInstance(getSpriteName).AsSingle();
+
             Container.Bind<TimeLineConverter>().FromInstance(timeLineConverter).AsSingle();
             Container.Bind<BarBeatCounter>().FromInstance(barBeatCounter).AsSingle();
             Container.Bind<TimeLineRenderer>().FromInstance(timeLineRenderer).AsSingle();
             Container.Bind<TimeMarkerRenderer>().FromInstance(timeMarkerRenderer).AsSingle();
             Container.Bind<CurrentTimeMarkerRenderer>().FromInstance(currentTimeMarkerRenderer).AsSingle();
-            Container.Bind<Scroll>().FromInstance(scroll).AsSingle();
             Container.Bind<CursorBeatPosition>().FromInstance(cursorBeatPosition).AsSingle();
             Container.Bind<TrackObjectSpawner>().FromInstance(trackObjectSpawner).AsSingle();
             Container.Bind<KeyframeTrackStorage>().FromInstance(keyframeTrackStorage).AsSingle();
@@ -77,7 +84,7 @@ namespace TimeLine.Installers
             Container.Bind<TrackStorage>().FromInstance(trackStorage).AsSingle();
             Container.Bind<TreeViewUI>().FromInstance(treeViewUI).AsSingle();
             Container.Bind<TimeLineScroll>().FromInstance(timeLineScroll).AsSingle();
-            Container.Bind<SceneObjectAddKeyFrame>().FromInstance(sceneObjectAddKeyFrame).AsSingle();
+            // Container.Bind<SceneObjectAddKeyFrame>().FromInstance(sceneObjectAddKeyFrame).AsSingle();
             Container.Bind<GridUI>().FromInstance(gridUI).AsSingle();
             Container.Bind<ParentMain>().FromInstance(parentMain).AsSingle();
             Container.Bind<TimeLineKeyframeScroll>().FromInstance(timeLineKeyframeScroll);
@@ -101,6 +108,12 @@ namespace TimeLine.Installers
             Container.Bind<FinishLevelController>().FromInstance(finishLevelController).AsSingle();
             Container.Bind<TimeLineMarkersController>().FromInstance(timeLineMarkersController);
             Container.Bind<SaveLevel>().FromInstance(saveLevel).AsSingle();
+            Container.Bind<GridScene>().FromInstance(gridScene).AsSingle();
+            Container.Bind<CustomSpriteStorage>().FromInstance(customSpriteStorage).AsSingle();
+            Container.Bind<SpriteLoadController>().FromInstance(spriteLoadController).AsSingle();
+            
+            
+            
             
             
             
@@ -125,4 +138,7 @@ namespace TimeLine.Installers
 class CollidersPrefab
 {
     public BoxCollider2DOutline BoxCollider2DPrefab;
+    public CircleCollider2DOutline CircleCollider2DPrefab;
+    public CapsuleCollider2DOutline CapsuleCollider2DPrefab;
+    public EdgeColliderEditor EdgeCollider2DPrefab;
 }

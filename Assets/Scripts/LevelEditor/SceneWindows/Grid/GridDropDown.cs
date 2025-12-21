@@ -21,19 +21,19 @@ namespace TimeLine
             dropdown.AddOptions(new List<string>()
             {
                 "None",
-                "1/64",
-                "1/48",
-                "1/32",
-                "1/24",
-                "1/16",
-                "1/12",
-                "1/8",
-                "1/6",
-                "1/4",
-                "1/3",
-                "1/2",
                 "Step",
-                "Whole Note"
+                "Whole Note",
+                "1/2",
+                "1/3",
+                "1/4",
+                "1/6",
+                "1/8",
+                "1/12",
+                "1/16",
+                "1/24",
+                "1/32",
+                "1/48",
+                "1/64"
             });
             
             dropdown.onValueChanged.AddListener(arg0 =>

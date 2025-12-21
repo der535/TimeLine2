@@ -127,7 +127,6 @@ public class WaveformRenderer : MonoBehaviour
 
     public void GenerateWaveform()
     {
-        print(_cachedSamples);
         if (source.clip == null || 
             _cachedSamples == null || 
             _dataTextures == null || 

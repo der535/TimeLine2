@@ -38,23 +38,23 @@ namespace TimeLine
             yield return new StringParameter("NameComponent", "empty");
         }
 
-        public override void CopyTo(Component targetComponent)
-        {
-            if (targetComponent is NameComponent other)
-            {
-                other.Name.Value = Name.Value;
-            }
-            else
-            {
-                throw new ArgumentException("Target component must be of type NameComponent");
-            }
-        }
-
-        public override Component Copy(GameObject targetGameObject)
-        {
-            var component = targetGameObject.GetComponent<NameComponent>();
-            CopyTo(component);
-            return component;
-        }
+        // public override void CopyTo(Component targetComponent)
+        // {
+        //     if (targetComponent is NameComponent other)
+        //     {
+        //         other.Name.Value = Name.Value;
+        //     }
+        //     else
+        //     {
+        //         throw new ArgumentException("Target component must be of type NameComponent");
+        //     }
+        // }
+        //
+        // public override Component Copy(GameObject targetGameObject)
+        // {
+        //     var component = targetGameObject.GetComponent<NameComponent>();
+        //     CopyTo(component);
+        //     return component;
+        // }
     }
 }

@@ -9,6 +9,7 @@ using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.SpriteLoader;
 using UnityEngine;
 using Zenject;
 
@@ -31,14 +32,16 @@ namespace TimeLine
         private LevelBaseInfo _levelBaseInfo;
         private GameEventBus _gameEventBus;
         private MainObjects _mainObjects;
-
+        private CustomSpriteStorage _customSpriteStorage;
         public LevelBaseInfo LevelBaseInfo => _levelBaseInfo;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, MainObjects mainObjects)
+        private void Construct(GameEventBus gameEventBus, MainObjects mainObjects,
+            CustomSpriteStorage customSpriteStorage)
         {
             _gameEventBus = gameEventBus;
             _mainObjects = mainObjects;
+            _customSpriteStorage = customSpriteStorage;
         }
 
         // === Unity Lifecycle ===
@@ -51,22 +54,11 @@ namespace TimeLine
                 Formatting = Formatting.Indented,
                 TypeNameHandling = TypeNameHandling.Auto
             };
-            
-            _gameEventBus.SubscribeTo((ref SetBPMEvent data) =>
-            {
-                LevelBaseInfo.bpm = data.BPM;
-            });
-            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) =>
-            {
-                LevelBaseInfo.offset = data.Offset;
-            });
 
-            _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) =>
-            {
-                _levelBaseInfo = eventData.LevelInfo;
-            });
-            
-            
+            _gameEventBus.SubscribeTo((ref SetBPMEvent data) => { LevelBaseInfo.bpm = data.BPM; });
+            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) => { LevelBaseInfo.offset = data.Offset; });
+
+            _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) => { _levelBaseInfo = eventData.LevelInfo; });
         }
 
         #region Buttons
@@ -76,19 +68,18 @@ namespace TimeLine
             editorSettings.Save();
             composition.Save();
             finishLevelController.Save();
+            _customSpriteStorage.Save();
+
+
             var saveLevelDto = new SaveLevelDTO();
 
             saveLevelDto.Lines = trackStorage.TrackLines.Count;
 
             foreach (var group in trackObjectStorage.TrackObjectGroups)
-            {
                 saveLevelDto.groupGameObjectSaveData.Add(SaveGroup(group, true));
-            }
 
             foreach (var track in trackObjectStorage.TrackObjects)
-            {
                 saveLevelDto.gameObjectSaveData.Add(SaveGameObject(track, ""));
-            }
 
             string directoryPath = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}";
             Directory.CreateDirectory(directoryPath);
@@ -96,46 +87,52 @@ namespace TimeLine
             string filePath = $"{directoryPath}/LevelObjects.json";
             string json = JsonConvert.SerializeObject(saveLevelDto, Formatting.Indented);
             File.WriteAllText(filePath, json);
-            
-            string levelBaseInfoPath = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelBaseInfo.json";
+
+            string levelBaseInfoPath =
+                $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelBaseInfo.json";
             File.WriteAllText(levelBaseInfoPath, JsonConvert.SerializeObject(LevelBaseInfo, Formatting.Indented));
         }
 
         internal void Load(LevelBaseInfo levelBaseInfo)
         {
             _levelBaseInfo = levelBaseInfo;
-            
+
             editorSettings.Load();
             composition.Load();
             finishLevelController.Load();
-
-            string path = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json";
-            if (!File.Exists(path)) return;
-
-            string json = File.ReadAllText(path);
-            var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
-
-            // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
-            // var sortedRootObjects = TopologicalSort(saveLevelDto.gameObjectSaveData);
-            foreach (var saveData in saveLevelDto.gameObjectSaveData)
+            _customSpriteStorage.Load(() =>
             {
-                trackObjectSpawner.LoadTrackObject(saveData);
-            }
+                
+                string path = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json";
+                if (!File.Exists(path)) return;
 
-            // 2. Загружаем корневые ГРУППЫ в правильном порядке
-            var rootGroupsAsBase = saveLevelDto.groupGameObjectSaveData.Cast<GameObjectSaveData>().ToList();
-            var sortedRootGroups = TopologicalSort(rootGroupsAsBase);
+                string json = File.ReadAllText(path);
+                var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
 
-            foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
-            {
-                //
-                var group = groupBase;
-                GroupGameObjectSaveData groupGameObjectSaveData =
-                    composition.FindCompositionDataById(group.compositionID);
-                // print(groupGameObjectSaveData.compositionID);
-                trackObjectSpawner.LoadGroupNew(group, group.compositionID, groupGameObjectSaveData);
-                // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
-            }
+                // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
+                // var sortedRootObjects = TopologicalSort(saveLevelDto.gameObjectSaveData);
+                foreach (var saveData in saveLevelDto.gameObjectSaveData)
+                {
+                    trackObjectSpawner.LoadTrackObject(saveData);
+                }
+
+                // 2. Загружаем корневые ГРУППЫ в правильном порядке
+                var rootGroupsAsBase = saveLevelDto.groupGameObjectSaveData.Cast<GameObjectSaveData>().ToList();
+                var sortedRootGroups = TopologicalSort(rootGroupsAsBase);
+
+                foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
+                {
+                    //
+                    var group = groupBase;
+                    GroupGameObjectSaveData groupGameObjectSaveData =
+                        composition.FindCompositionDataById(group.compositionID);
+                    // print(groupGameObjectSaveData.compositionID);
+                    trackObjectSpawner.LoadGroupNew(group, group.compositionID, groupGameObjectSaveData);
+                    // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
+                }
+            });
+
+
         }
 
         #endregion
@@ -343,7 +340,7 @@ namespace TimeLine
         {
             var baseData = SaveGameObject(group, "");
             GroupGameObjectSaveData groupData;
-        
+
             groupData = new GroupGameObjectSaveData
             {
                 lineIndex = trackStorage.GetTrackLineIndex(group.trackObject.TrackLine),
@@ -359,7 +356,7 @@ namespace TimeLine
                 tracks = baseData.tracks,
                 children = new List<GameObjectSaveData>()
             };
-            
+
             foreach (var child in group.TrackObjectDatas)
             {
                 if (child is TrackObjectGroup childGroup)
@@ -437,7 +434,7 @@ namespace TimeLine
                 duractionTime = duractionTime,
                 branch = branch.Duplicate(),
                 Components = new List<ComponentData>(Components),
-                tracks = new List<TrackSaveData>(tracks) ,
+                tracks = new List<TrackSaveData>(tracks),
                 compositionID = Guid.NewGuid().ToString(),
                 lastEditID = lastEditID,
                 children = new List<GameObjectSaveData>(children)
@@ -451,7 +448,7 @@ namespace TimeLine
         public string ComponentType;
         public Dictionary<string, object> Parameters;
     }
-    
+
     [System.Serializable]
     public class TreeNodeSaveData
     {
@@ -495,7 +492,7 @@ namespace TimeLine
             return duplicate;
         }
     }
-    
+
 
     [System.Serializable]
     public class KeyframeSaveData

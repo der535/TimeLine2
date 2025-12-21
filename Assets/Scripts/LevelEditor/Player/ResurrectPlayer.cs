@@ -23,6 +23,7 @@ namespace TimeLine.LevelEditor.Player
         private void Start()
         {
             _gameEventBus.SubscribeTo((ref RestartGameEvent _) => Resurrect());
+            _gameEventBus.SubscribeTo((ref TurnToPlayModeEvent _) => Resurrect());
         }
         private void Resurrect()
         {

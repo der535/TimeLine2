@@ -24,15 +24,16 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
         {
             return value;
         }
+
         public override void SetValue(object value)
         {
-            if(value is float f) this.value = f;
+            if (value is float f) this.value = f;
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
             }
         }
-        
+
         public override string GetDataType()
         {
             return nameof(XRotationData);
@@ -53,8 +54,9 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 value = token.ToObject<float>();
             }
         }
-        
-        public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next)
+
+        public override AnimationData Interpolate(AnimationData other, double t,
+            global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType)
         {
             if (other is not XRotationData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
@@ -65,7 +67,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 otherPos.value,
                 current,
                 next,
-                localT
+                localT,
+                interpolationType
             );
 
             return new XRotationData(interpolatedValue);
@@ -73,7 +76,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 
         public override void Apply(GameObject target)
         {
-            global::TimeLine.TransformComponent transformComponent = target.GetComponent<global::TimeLine.TransformComponent>();
+            global::TimeLine.TransformComponent transformComponent =
+                target.GetComponent<global::TimeLine.TransformComponent>();
             transformComponent.XRotation.Value = value;
         }
     }

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
-using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.KeyframeTimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -13,6 +13,7 @@ namespace TimeLine
     public class KeyframeCopy : MonoBehaviour
     {
         [SerializeField] private KeyfeameVizualizer keyframeVizualizer;
+        [FormerlySerializedAs("keyframeSelectStorage")] [SerializeField] private KeyframeSelectController keyframeSelectController;
         [SerializeField] private TrackObjectStorage trackObjectStorage;
         [SerializeField] private KeyframeTrackStorage trackStorage;
         [SerializeField] private WindowsFocus windowsFocus;
@@ -40,12 +41,12 @@ namespace TimeLine
             {
                 if (!_actionMap.Editor.LeftCtrl.IsPressed() || !windowsFocus.IsFocused) return;
 
-                if (!keyframeTypeActive.IsBezier() && keyframeVizualizer.SelectedKeyframe.Count > 0)
+                if (!keyframeTypeActive.IsBezier() && keyframeSelectController.SelectedKeyframe.Count > 0)
                 {
                     copyKeyframes.Clear();
                     
-                    minTime = keyframeVizualizer.GetMinTimeSelectedKeyframe(keyframeVizualizer.SelectedKeyframe);
-                    foreach (var keyframe in keyframeVizualizer.SelectedKeyframe)
+                    minTime = keyframeVizualizer.GetMinTimeSelectedKeyframe(keyframeSelectController.SelectedKeyframe);
+                    foreach (var keyframe in keyframeSelectController.SelectedKeyframe)
                     {
                         Copy(keyframe.Keyframe, keyframe.Track);
                     }

@@ -1,5 +1,6 @@
 using System;
 using EventBus;
+using EventBus.Events;
 using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
@@ -16,15 +17,17 @@ public class PixelPerfectClick : MonoBehaviour
     private SelectObjectController _selectObjectController;
     private MainObjects _mainObjects;
     private ActionMap _actionMap;
+    private GameEventBus _gameEventBus;
 
     [Inject]
     void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController,
-        MainObjects mainObjects, ActionMap actionMap)
+        MainObjects mainObjects, ActionMap actionMap, GameEventBus gameEventBus)
     {
         _trackObjectStorage = trackObjectStorage;
         _selectObjectController = selectObjectController;
         _mainObjects = mainObjects;
         _actionMap = actionMap;
+        _gameEventBus = gameEventBus;
     }
 
     internal void Start()
@@ -37,8 +40,22 @@ public class PixelPerfectClick : MonoBehaviour
         Vector2 mousePos = _mainObjects.MainCamera.ScreenToWorldPoint(Input.mousePosition);
         if (IsPixelOpaque(mousePos))
         {
+            _gameEventBus.Raise(new ObjectUnderCursorEvent());
             TransformComponent transformComponent = FindTopmostParentWithComponent.Find<TransformComponent>(transform);
-            TrackObjectData data = _trackObjectStorage.GetTrackObjectData(transformComponent.gameObject);
+            TrackObjectData data;
+            if (transformComponent != null)
+            {
+                if(transformComponent.transform.gameObject.activeSelf == false) return;
+                Debug.Log(transformComponent.transform.gameObject, transformComponent.transform.gameObject);
+                data = _trackObjectStorage.GetTrackObjectData(transformComponent.gameObject);
+            }
+            else
+            {
+                if(transform.gameObject.activeSelf == false) return;
+                Debug.Log(transform.gameObject, transform.gameObject);
+                data = _trackObjectStorage.GetTrackObjectData(transform.gameObject);
+            }
+            
             _selectObjectController.Select(data, Input.GetKey(KeyCode.LeftShift));
         }
     }

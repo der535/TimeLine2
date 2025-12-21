@@ -1,6 +1,7 @@
 ﻿using TimeLine.Keyframe.AnimationDatas.TransformComponent;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
+using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using UnityEngine;
 
 namespace TimeLine.CustomInspector.UI.Drawers

@@ -10,16 +10,16 @@ namespace TimeLine
     public class BezierLineDrawer : MonoBehaviour
     {
         [SerializeField, Range(0f, 10f)] private float value;
-        [Header("Визуализация")] 
-        [SerializeField]  private int lineResolution = 30;
+
+        [Header("Визуализация")] [SerializeField]
+        private int lineResolution = 30;
+
         [SerializeField] private float lineWidth = 0.1f;
         [SerializeField] private RectTransform pointsRoot;
-        [Space]
-        [SerializeField] private BezierCurve curvePrefab;
+        [Space] [SerializeField] private BezierCurve curvePrefab;
         [SerializeField] private RectTransform root;
-        [Space] 
-        [SerializeField] private List<BezierCurve> bezierLines;
-        
+        [Space] [SerializeField] private List<BezierCurve> bezierLines;
+
         private List<BezierData> _bezierDates = new();
 
 
@@ -43,7 +43,8 @@ namespace TimeLine
         {
             foreach (var data in _bezierDates)
             {
-                data.Points.Sort((x, y) => x.BezierDragPoint._keyframe.Ticks.CompareTo(y.BezierDragPoint._keyframe.Ticks));
+                data.Points.Sort((x, y) =>
+                    x.BezierDragPoint._keyframe.Ticks.CompareTo(y.BezierDragPoint._keyframe.Ticks));
             }
         }
 
@@ -59,7 +60,7 @@ namespace TimeLine
                 BezierColor = bezierColor,
                 Points = validPoints
             });
-            
+
             print(_bezierDates.Count);
         }
 
@@ -80,42 +81,82 @@ namespace TimeLine
             {
                 if (bezierData.Points.Count < 2) continue;
 
-                int totalPoints = (bezierData.Points.Count - 1) * lineResolution + 1;
-
-                Vector2[] points = new Vector2[totalPoints];
+                Vector2[] points = new Vector2[2];
+                int totalPoints = 2;
                 
-                int index = 0;
-                for (int i = 0; i < bezierData.Points.Count - 1; i++)
+                if (bezierData.Points[0].BezierDragPoint._keyframe.Interpolation ==
+                    Keyframe.Keyframe.InterpolationType.Bezier)
                 {
-                    BezierPoint start = bezierData.Points[i];
-                    BezierPoint end = bezierData.Points[i + 1];
+                    totalPoints = (bezierData.Points.Count - 1) * lineResolution + 1;
 
-                    // Пропускаем уничтоженные точки
-                    if (start == null || end == null) continue;
+                    points = new Vector2[totalPoints];
 
-                    for (int j = 0; j < lineResolution; j++)
+                    int index = 0;
+                    for (int i = 0; i < bezierData.Points.Count - 1; i++)
                     {
-                        float t = (float)j / lineResolution;
-                        Vector2 anchoredPos = Bezier.GetPoint(
-                            start.Point,
-                            start.TangentRight,
-                            end.TangentLeft,
-                            end.Point,
-                            t);
+                        BezierPoint start = bezierData.Points[i];
+                        BezierPoint end = bezierData.Points[i + 1];
 
-                        points[index++] = anchoredPos;
+                        // Пропускаем уничтоженные точки
+                        if (start == null || end == null) continue;
+
+                        for (int j = 0; j < lineResolution; j++)
+                        {
+                            float t = (float)j / lineResolution;
+                            Vector2 anchoredPos = Bezier.GetPoint(
+                                start.Point,
+                                start.TangentRight,
+                                end.TangentLeft,
+                                end.Point,
+                                t);
+
+                            points[index++] = anchoredPos;
+                        }
+                    }
+                }
+                else if(bezierData.Points[0].BezierDragPoint._keyframe.Interpolation ==
+                        Keyframe.Keyframe.InterpolationType.Linear)
+                {
+                    for (int i = 0; i < bezierData.Points.Count - 1; i++)
+                    {
+                        BezierPoint start = bezierData.Points[i];
+                        BezierPoint end = bezierData.Points[i + 1];
+
+                        // Пропускаем уничтоженные точки
+                        if (start == null || end == null) continue;
+
+                        points[0] = start.Point;
+                        points[1] = end.Point;
+                    }
+                }
+                else if(bezierData.Points[0].BezierDragPoint._keyframe.Interpolation ==
+                        Keyframe.Keyframe.InterpolationType.Hold)
+                {
+                    for (int i = 0; i < bezierData.Points.Count - 1; i++)
+                    {
+                        points = new Vector2[3];
+                        totalPoints = 3;
+                        BezierPoint start = bezierData.Points[i];
+                        BezierPoint end = bezierData.Points[i + 1];
+
+                        // Пропускаем уничтоженные точки
+                        if (start == null || end == null) continue;
+
+                        points[0] = start.Point;
+                        points[1] = new Vector2(end.Point.x, start.Point.y);
+                        points[2] = end.Point;
                     }
                 }
 
                 BezierCurve curve = Instantiate(curvePrefab, root);
                 curve.Setup(lineWidth, bezierData.BezierColor);
-                
+
                 if (bezierData.Points[^1] != null)
                 {
                     Vector2 lastAnchoredPos = bezierData.Points[^1].Point;
                     points[totalPoints - 1] = lastAnchoredPos;
                 }
-                
+
                 curve.UpdatePoints(points);
                 bezierLines.Add(curve);
             }

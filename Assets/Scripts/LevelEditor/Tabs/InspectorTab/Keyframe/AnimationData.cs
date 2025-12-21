@@ -6,7 +6,7 @@ namespace TimeLine.Keyframe
 
     public abstract class AnimationData
     {
-        public abstract AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next);
+        public abstract AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next, Keyframe.InterpolationType interpolationType);
         public abstract void Apply(GameObject target);
         
         // Добавленный абстрактный метод для клонирования

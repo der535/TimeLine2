@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using EventBus;
 using TimeLine.LevelEditor.Player;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace TimeLine
         [Space]
         [SerializeField] private float startDelay;
         [SerializeField] private TrackObjectStorage trackObjectStorage;
+        [SerializeField] private List<GameObject> editorObjects;
 
         [Space] 
         [SerializeField] private Camera editCamera;
@@ -44,6 +46,10 @@ namespace TimeLine
         
         public void TurnToPlayMode()
         {
+            foreach (var editorObject in editorObjects)
+            {
+                editorObject.SetActive(false);
+            }
             IsPlaying = true;
             editCamera.gameObject.SetActive(false);
             playCamera.gameObject.SetActive(true);
@@ -55,6 +61,10 @@ namespace TimeLine
 
         public void ExitPlayMode()
         {
+            foreach (var editorObject in editorObjects)
+            {
+                editorObject.SetActive(true);
+            }
             IsPlaying = false;
             editCamera.gameObject.SetActive(true);
             playCamera.gameObject.SetActive(false);

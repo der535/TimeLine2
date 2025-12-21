@@ -52,7 +52,7 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
                 value = token.ToObject<float>();
             }
         }
-        public override AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next)
+        public override AnimationData Interpolate(AnimationData other, double t, Keyframe current, Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType)
         {
             if (other is not ZRotationData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
@@ -63,7 +63,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
                 otherPos.value,
                 current,
                 next,
-                localT
+                localT,
+                interpolationType
             );
 
             return new ZRotationData(interpolatedValue);

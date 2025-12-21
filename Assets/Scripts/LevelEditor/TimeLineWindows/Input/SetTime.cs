@@ -1,3 +1,4 @@
+using TimeLine.LevelEditor.Tabs.SettingTab.Current_time_type;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -9,6 +10,7 @@ namespace TimeLine.Input
         [SerializeField] private TimeLineSettings settings;
         [Space]
         [SerializeField] private TMP_InputField inputField;
+        [SerializeField] private SettingDisplayCurrentTime settingDisplayCurrentTime;
     
         private Main _main;
 
@@ -20,7 +22,11 @@ namespace TimeLine.Input
 
         private void Start()
         {
-            inputField.onEndEdit.AddListener(time => _main.SetTime(float.Parse(time)));
+            inputField.onEndEdit.AddListener(time =>
+            {
+                print((float)settingDisplayCurrentTime.ConvertFromFormatToTicks(time));
+                _main.SetTimeInTicks((float)settingDisplayCurrentTime.ConvertFromFormatToTicks(time));
+            });
         }
     }
 }

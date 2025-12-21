@@ -74,38 +74,38 @@ namespace TimeLine
             yield return YRandomScaleActive;
         }
 
-        public override void CopyTo(Component targetComponent)
-        {
-            if (targetComponent is RandomTransformComponent other)
-            {
-                other.XRandomPosition.Value = XRandomPosition.Value;
-                other.YRandomPosition.Value = YRandomPosition.Value;
-                other.XRandomRotation.Value = XRandomRotation.Value;
-                other.YRandomRotation.Value = YRandomRotation.Value;
-                other.ZRandomRotation.Value = ZRandomRotation.Value;
-                other.XRandomScale.Value = XRandomScale.Value;
-                other.YRandomScale.Value = YRandomScale.Value;
-            }
-            else
-            {
-                throw new ArgumentException("Target component must be of type TransformComponent");
-            }
-        }
-
-        public override Component Copy(GameObject targetGameObject)
-        {
-            print("RandomTransformComponent copy");
-            if (targetGameObject.TryGetComponent(out RandomTransformComponent component))
-            {
-                CopyTo(component);
-            }
-            else
-            {
-                component = targetGameObject.AddComponent<RandomTransformComponent>();
-                CopyTo(component);
-            }
-
-            return component;
-        }
+        // public override void CopyTo(Component targetComponent)
+        // {
+        //     if (targetComponent is RandomTransformComponent other)
+        //     {
+        //         other.XRandomPosition.Value = XRandomPosition.Value;
+        //         other.YRandomPosition.Value = YRandomPosition.Value;
+        //         other.XRandomRotation.Value = XRandomRotation.Value;
+        //         other.YRandomRotation.Value = YRandomRotation.Value;
+        //         other.ZRandomRotation.Value = ZRandomRotation.Value;
+        //         other.XRandomScale.Value = XRandomScale.Value;
+        //         other.YRandomScale.Value = YRandomScale.Value;
+        //     }
+        //     else
+        //     {
+        //         throw new ArgumentException("Target component must be of type TransformComponent");
+        //     }
+        // }
+        //
+        // public override Component Copy(GameObject targetGameObject)
+        // {
+        //     print("RandomTransformComponent copy");
+        //     if (targetGameObject.TryGetComponent(out RandomTransformComponent component))
+        //     {
+        //         CopyTo(component);
+        //     }
+        //     else
+        //     {
+        //         component = targetGameObject.AddComponent<RandomTransformComponent>();
+        //         CopyTo(component);
+        //     }
+        //
+        //     return component;
+        // }
     }
 }

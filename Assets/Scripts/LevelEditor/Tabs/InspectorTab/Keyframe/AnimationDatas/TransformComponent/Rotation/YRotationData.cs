@@ -54,7 +54,7 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
             }
         }
 
-        public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next)
+        public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType)
         {
             if (other is not YRotationData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
@@ -65,7 +65,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 otherPos.value,
                 current,
                 next,
-                localT
+                localT,
+                interpolationType
             );
 
             return new YRotationData(interpolatedValue);

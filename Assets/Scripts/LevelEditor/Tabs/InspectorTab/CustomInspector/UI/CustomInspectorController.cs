@@ -50,6 +50,9 @@ namespace TimeLine
             _componentDrawers.Add(new NameDrawer());
             _componentDrawers.Add(new SpriteRendererDrawer());
             _componentDrawers.Add(new BoxCollider2DDrawer());
+            _componentDrawers.Add(new CircleCollider2DDrawer());
+            _componentDrawers.Add(new CapsuleCollider2DDrawer());
+            _componentDrawers.Add(new EdgeCollider2DDrawer());
         }
 
         internal IEnumerator Redraw()

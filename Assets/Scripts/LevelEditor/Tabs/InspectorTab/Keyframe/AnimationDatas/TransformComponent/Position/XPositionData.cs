@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
+using TimeLine.Keyframe;
 using TimeLine.TimeLine;
+using TimeLine;
+using UnityEngine;
 
-namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
+namespace TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position
 {
-    using UnityEngine;
-
     [System.Serializable]
     public class XPositionData : AnimationData
     {
@@ -59,7 +60,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
             AnimationData other, 
             double t, 
             global::TimeLine.Keyframe.Keyframe current, 
-            global::TimeLine.Keyframe.Keyframe next)
+            global::TimeLine.Keyframe.Keyframe next,
+            global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType)
         {
             if (other is not XPositionData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
@@ -70,7 +72,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 otherPos.value,
                 current,
                 next,
-                localT
+                localT,
+                interpolationType
             );
 
             return new XPositionData(interpolatedValue);

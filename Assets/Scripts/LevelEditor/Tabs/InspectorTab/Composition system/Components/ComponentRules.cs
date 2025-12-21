@@ -15,7 +15,10 @@ namespace TimeLine.Components
             { typeof(NameComponent), new Rule(typeof(NameComponent), maxInstances: 1) },
             { typeof(TransformComponent), new Rule(typeof(TransformComponent), maxInstances: 1) },
             { typeof(BoxCollider2DComponent), new Rule(typeof(BoxCollider2DComponent), maxInstances: 1) },
-            { typeof(CompositionOffset), new Rule(typeof(CompositionOffset), maxInstances: 1) }
+            { typeof(CompositionOffset), new Rule(typeof(CompositionOffset), maxInstances: 1) },
+            { typeof(CircleCollider2DComponent), new Rule(typeof(CircleCollider2DComponent), maxInstances: 1) },
+            { typeof(CapsuleCollider2DComponent), new Rule(typeof(CapsuleCollider2DComponent), maxInstances: 1) },
+            { typeof(EdgeCollider2DComponent), new Rule(typeof(EdgeCollider2DComponent), maxInstances: 1) }
         };
 
         public static Dictionary<string, Type> GetAllComponents(GameObject gameObject)

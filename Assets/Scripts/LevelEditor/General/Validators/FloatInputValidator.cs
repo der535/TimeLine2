@@ -10,14 +10,12 @@ namespace TimeLine
     {
         private TMP_InputField _inputField;
         private Action<float> _onValidValueChanged;
-        private Action<float> _onEndEdit;
         private readonly float _minValue;
         private readonly bool _hasMinValue;
 
-        public FloatInputValidator(TMP_InputField inputField, Action<float> onValidValueChanged, Action<float> onEndEdit = null, float? minValue = null)
+        public FloatInputValidator(TMP_InputField inputField, Action<float> onValidValueChanged, float? minValue = null)
         {
             _onValidValueChanged = onValidValueChanged;
-            _onEndEdit = onEndEdit;
             _inputField = inputField;
             _hasMinValue = minValue.HasValue;
             _minValue = minValue ?? 0f;
@@ -43,21 +41,30 @@ namespace TimeLine
             if (string.IsNullOrEmpty(input))
             {
                 float value = _hasMinValue ? _minValue : 0f;
-                _onEndEdit?.Invoke(value);
+                _onValidValueChanged?.Invoke(value);
                 _inputField.text = value.ToString(CultureInfo.InvariantCulture);
             }
             else if (float.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsed))
             {
                 float clamped = _hasMinValue ? Mathf.Max(parsed, _minValue) : parsed;
-                _onEndEdit?.Invoke(clamped);
+                _onValidValueChanged?.Invoke(clamped);
                 _inputField.text = clamped.ToString(CultureInfo.InvariantCulture);
             }
             else
             {
                 // Некорректный ввод — сброс к минимуму или нулю
                 float fallback = _hasMinValue ? _minValue : 0f;
-                _onEndEdit?.Invoke(fallback);
+                _onValidValueChanged?.Invoke(fallback);
                 _inputField.text = fallback.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+        
+        public void Dispose()
+        {
+            if (_inputField != null)
+            {
+                _inputField.onValueChanged.RemoveListener(OnInputValueChanged);
+                _inputField.onEndEdit.RemoveListener(OnInputEndEdit);
             }
         }
     }

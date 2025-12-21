@@ -26,7 +26,7 @@ namespace TimeLine.Keyframe
 
         void Awake()
         {
-            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(Evaluate);
+            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>((ref TickSmoothTimeEvent data) => Evaluate(data.Time));
         }
 
         [Button]
@@ -48,14 +48,14 @@ namespace TimeLine.Keyframe
             }
         }
 
-        private void Evaluate(ref TickSmoothTimeEvent smoothTimeEvent)
+        internal void Evaluate(double time)
         {
             foreach (var variable in tracks)
             {
                 if (variable.Active)
                 {
                     // print(variable.Track.Keyframes.Count);
-                    variable.Track.Evaluate(smoothTimeEvent.Time - variable.TrackObject.StartTimeInTicks);
+                    variable.Track.Evaluate(time - variable.TrackObject.StartTimeInTicks);
                 }
             }
         }

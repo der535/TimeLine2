@@ -26,6 +26,7 @@ namespace TimeLine
         private SaveComposition _composition;
         private ActionMap _actionMap;
         private TrackObjectRemover _trackObjectRemover;
+        private Main _main;
 
         [Button]
         private void CheckCount()
@@ -35,13 +36,14 @@ namespace TimeLine
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController,
-            SaveComposition saveComposition, ActionMap actionMap, TrackObjectRemover trackObjectRemover)
+            SaveComposition saveComposition, ActionMap actionMap, TrackObjectRemover trackObjectRemover, Main main)
         {
             _gameEventBus = gameEventBus;
             _selectObjectController = selectObjectController;
             _composition = saveComposition;
             _actionMap = actionMap;
             _trackObjectRemover = trackObjectRemover;
+            _main = main;
         }
 
         public List<TrackObjectData> TrackObjects => _trackObjects;
@@ -59,6 +61,11 @@ namespace TimeLine
                 if (trackObjectData != null)
                 {
                     InternalSelectObject(trackObjectData);
+                }
+
+                foreach (var track in data.Tracks)
+                {
+                    SelectObject(track.trackObject);
                 }
             });
         }
@@ -121,6 +128,18 @@ namespace TimeLine
             foreach (var group in _trackObjectGroups)
             {
                 CheckActiveGroup(group, smoothTimeEvent.Time);
+            }
+        }
+
+        internal void CheckActiveTrackSingle(TrackObjectData trackObject)
+        {
+            if (trackObject is TrackObjectGroup group)
+            {
+                CheckActiveGroup(group, _main.TicksCurrentTime());
+            }
+            else
+            {
+                CheckActiveTrackObjects(trackObject, _main.TicksCurrentTime());
             }
         }
 

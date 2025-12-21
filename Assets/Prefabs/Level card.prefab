@@ -93,7 +93,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6053154338813567922
 RectTransform:
   m_ObjectHideFlags: 0
@@ -109,9 +109,9 @@ RectTransform:
   - {fileID: 8048453434291708937}
   m_Father: {fileID: 321829959620668932}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 1545.2338, y: -50}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &8901585374128173785
@@ -586,8 +586,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   compositionButton: {fileID: 374660397837503281}
-  editButton: {fileID: 2437280114192508166}
-  renameButton: {fileID: 7569941815186216798}
+  duplicateButton: {fileID: 7569941815186216798}
+  renameButton: {fileID: 9139603724480226223}
   deleteButton: {fileID: 8557571752458221728}
   _text: {fileID: 7492094024868384521}
 --- !u!1 &6086586900553642051

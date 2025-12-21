@@ -45,12 +45,12 @@ namespace TimeLine
 
         private void Awake()
         {
-            _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
-            
+            _actionMap.Editor.MouseScroll.started += context => Calculate();
         }
         
         
-        private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
+        
+        private void Calculate()
         {
             if (!GetCursorPosition()) return;
 

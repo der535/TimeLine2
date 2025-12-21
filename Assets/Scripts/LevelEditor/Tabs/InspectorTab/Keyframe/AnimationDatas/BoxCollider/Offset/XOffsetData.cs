@@ -57,8 +57,8 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
         public override AnimationData Interpolate(
             AnimationData other, 
             double t, 
-            global::TimeLine.Keyframe.Keyframe current, 
-            global::TimeLine.Keyframe.Keyframe next)
+            Keyframe current, 
+            Keyframe next, Keyframe.InterpolationType interpolationType)
         {
             if (other is not XOffsetData otherPos)
                 throw new System.ArgumentException($"Interpolation requires another {GetType()}.");
@@ -69,7 +69,8 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
                 otherPos.value,
                 current,
                 next,
-                localT
+                localT,
+                interpolationType
             );
 
             return new XOffsetData(interpolatedValue);

@@ -31,29 +31,31 @@ namespace TimeLine
             {
                 _offset.text = _main.Offset().ToString();
                 _bpm.text = _main.MusicData.bpm.ToString();
-            });
+                
+                            
+                _offset.onValueChanged.AddListener((string value) =>
+                {
+                    if (value == "-" || value == "." || string.IsNullOrEmpty(value)) return;
+
+                    var calculated = Math.Abs(float.Parse(value)).ToString(CultureInfo.InvariantCulture);
+                    var original = float.Parse(value);
+                    if (original < 0) _offset.text = calculated;
+
+                    _gameEventBus.Raise(new SetOffsetEvent(float.Parse(calculated)));
+                });
             
-            _offset.onValueChanged.AddListener((string value) =>
-            {
-                if (value == "-" || value == "." || string.IsNullOrEmpty(value)) return;
+                _bpm.onValueChanged.AddListener((string value) =>
+                {
+                    if (value == "-" || value == "." || string.IsNullOrEmpty(value)) return;
 
-                var calculated = Math.Abs(float.Parse(value)).ToString(CultureInfo.InvariantCulture);
-                var original = float.Parse(value);
-                if (original < 0) _offset.text = calculated;
+                    var calculated = Math.Abs(float.Parse(value)).ToString(CultureInfo.InvariantCulture);
+                    var original = float.Parse(value);
+                    if (original < 0) _offset.text = calculated;
 
-                _gameEventBus.Raise(new SetOffsetEvent(float.Parse(calculated)));
+                    _gameEventBus.Raise(new SetBPMEvent(float.Parse(calculated)));
+                });
             });
-            
-            _bpm.onValueChanged.AddListener((string value) =>
-            {
-                if (value == "-" || value == "." || string.IsNullOrEmpty(value)) return;
 
-                var calculated = Math.Abs(float.Parse(value)).ToString(CultureInfo.InvariantCulture);
-                var original = float.Parse(value);
-                if (original < 0) _offset.text = calculated;
-
-                _gameEventBus.Raise(new SetBPMEvent(float.Parse(calculated)));
-            });
         }
     }
 }

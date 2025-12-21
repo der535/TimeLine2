@@ -37,17 +37,16 @@ namespace TimeLine
 
         private void Awake()
         {
-            _eventBus.SubscribeTo<MouseScrollDeltaY>(Calculate);
-            
-
             _actionMap.Editor.MouseScroll.started += _ =>
             {
+                Calculate();
+                
                 if (!RectTransformUtility.RectangleContainsScreenPoint(
                         targetObject,
                         UnityEngine.Input.mousePosition,
                         targetCamera)) return;
                 
-                if(!_actionMap.Editor.LeftCtrl.IsPressed()) return;
+                if(!_actionMap.Editor.LeftAlt.IsPressed()) return;
                 
                 var mouseScroll = _actionMap.Editor.MouseScroll.ReadValue<float>();
                 
@@ -66,7 +65,7 @@ namespace TimeLine
             _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Pan));
         }
 
-        private void Calculate(ref MouseScrollDeltaY mouseScrollDeltaY)
+        private void Calculate()
         {
             if (RectTransformUtility.RectangleContainsScreenPoint(
                     targetObject, 

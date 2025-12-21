@@ -10,7 +10,7 @@ public interface IParameterComponent
     string GetComponentTypeName(); // ← новое
 }
 
-public abstract class BaseParameterComponent : MonoBehaviour, ICopyableComponent, IParameterComponent
+public abstract class BaseParameterComponent : MonoBehaviour, IParameterComponent
 {
     protected abstract IEnumerable<InspectableParameter> GetParameters();
 
@@ -41,6 +41,6 @@ public abstract class BaseParameterComponent : MonoBehaviour, ICopyableComponent
     }
 
     public virtual string GetComponentTypeName() => this.GetType().Name;
-    public abstract void CopyTo(Component targetComponent);
-    public abstract Component Copy(GameObject targetGameObject);
+    // public abstract void CopyTo(Component targetComponent);
+    // public abstract Component Copy(GameObject targetGameObject);
 }

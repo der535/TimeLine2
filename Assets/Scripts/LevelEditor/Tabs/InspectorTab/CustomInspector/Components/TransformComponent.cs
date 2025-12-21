@@ -123,32 +123,32 @@ namespace TimeLine
             };
         }
         
-        public override void CopyTo(Component targetComponent)
-        {
-            if (targetComponent is TransformComponent other)
-            {
-                other.XPosition.Value = XPosition.Value;
-                other.YPosition.Value = YPosition.Value;
-                
-                other.XRotation.Value = XRotation.Value;
-                other.YRotation.Value = YRotation.Value;
-                other.ZRotation.Value = ZRotation.Value;
-                
-                other.XScale.Value = XScale.Value;
-                other.YScale.Value = YScale.Value;
-            }
-            else
-            {
-                throw new ArgumentException("Target component must be of type TransformComponent");
-            }
-        }
-
-        public override Component Copy(GameObject targetGameObject)
-        {
-            var component = targetGameObject.GetComponent<TransformComponent>();
-            CopyTo(component);
-            // print("Оп скопировал");
-            return component;
-        }
+        // public override void CopyTo(Component targetComponent)
+        // {
+        //     if (targetComponent is TransformComponent other)
+        //     {
+        //         other.XPosition.Value = XPosition.Value;
+        //         other.YPosition.Value = YPosition.Value;
+        //         
+        //         other.XRotation.Value = XRotation.Value;
+        //         other.YRotation.Value = YRotation.Value;
+        //         other.ZRotation.Value = ZRotation.Value;
+        //         
+        //         other.XScale.Value = XScale.Value;
+        //         other.YScale.Value = YScale.Value;
+        //     }
+        //     else
+        //     {
+        //         throw new ArgumentException("Target component must be of type TransformComponent");
+        //     }
+        // }
+        //
+        // public override Component Copy(GameObject targetGameObject)
+        // {
+        //     var component = targetGameObject.GetComponent<TransformComponent>();
+        //     CopyTo(component);
+        //     // print("Оп скопировал");
+        //     return component;
+        // }
     }
 }

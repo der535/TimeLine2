@@ -11,10 +11,10 @@ public class FileBrowserSelectAudio : MonoBehaviour
 	internal void OpenFilePanel(Action<List<string>> onComplete)
 	{
 		FileBrowser.SetFilters( false, new FileBrowser.Filter( "Audio", ".mp3", ".wav", ".ogg" ));
-		FileBrowser.SetDefaultFilter( ".jpg" );
+		FileBrowser.SetDefaultFilter( ".wav" );
 		FileBrowser.SetExcludedExtensions( ".lnk", ".tmp", ".zip", ".rar", ".exe" );
 		FileBrowser.AddQuickLink( "Users", "C:\\Users", null );
-		FileBrowser.AddQuickLink( "Dowloads", $"C:\\Users\\{System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments)}\\Downloads", null );
+		FileBrowser.AddQuickLink( "Downloads", $"C:\\Users\\{System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments)}\\Downloads", null );
 		StartCoroutine( ShowLoadDialogCoroutine(onComplete));
 	}
 

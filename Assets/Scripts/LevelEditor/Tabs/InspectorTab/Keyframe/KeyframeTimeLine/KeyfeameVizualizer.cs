@@ -5,6 +5,7 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -21,6 +22,7 @@ namespace TimeLine
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
         [Space] [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
         [SerializeField] private RectTransform _content;
+        [FormerlySerializedAs("_keyframeSelectStorage")] [SerializeField] private KeyframeSelectController keyframeSelectController;
 
         [FormerlySerializedAs("keframeScrollView")]
         [FormerlySerializedAs("keframeScrollV")]
@@ -36,13 +38,14 @@ namespace TimeLine
         private List<KeyframeObjectData> _keyframes = new();
         private GameEventBus _gameEventBus;
 
+        public List<KeyframeObjectData> Keyframes => _keyframes;
+
         private KeyframeSelect _keyframeObjectSelect;
         private Keyframe.Keyframe _keyframeSelect;
         private TimeLineConverter _timeLineConverter;
         private ActionMap _animationMap;
 
         private bool _active;
-        public List<KeyframeObjectData> SelectedKeyframe { get; private set; }
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, DiContainer container,
@@ -56,32 +59,33 @@ namespace TimeLine
 
         public double GetMinTimeSelectedKeyframe(List<KeyframeObjectData> keyframe)
         {
-            if (!keyframe.Any()) 
+            if (!keyframe.Any())
                 throw new InvalidOperationException("No keyframes selected.");
             return keyframe.Min(k => (double)k.Keyframe.Ticks);
         }
 
         public double GetMaxTimeSelectedKeyframe()
         {
-            if (!SelectedKeyframe.Any()) 
+            if (!keyframeSelectController.SelectedKeyframe.Any())
                 throw new InvalidOperationException("No keyframes selected.");
-            return SelectedKeyframe.Max(k => (double)k.Keyframe.Ticks);
+            return keyframeSelectController.SelectedKeyframe.Max(k => (double)k.Keyframe.Ticks);
         }
 
         void Awake()
         {
-            SelectedKeyframe = new List<KeyframeObjectData>();
-            // _animationMap.Editor.I.started += context => InverKeyframes();
             
+            // _animationMap.Editor.I.started += context => InverKeyframes();
+
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => PoseKeyframes());
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.ScrollTimeLineKeyframeEvent _) => PoseKeyframes());
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.ScrollTimeLineKeyframeEvent _) =>
+                PoseKeyframes());
 
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Clear());
 
-            _gameEventBus.SubscribeTo<SelectKeyframeEvent>(SelectKeyframe);
+            
         }
 
         public void ActiveKeyframes(bool active)
@@ -99,56 +103,23 @@ namespace TimeLine
             return _keyframes.Where(k => bezierPoints.Any(b => k.Keyframe == b.BezierDragPoint._keyframe)).ToList();
         }
 
-        private void SelectKeyframe(ref SelectKeyframeEvent selectKeyframeEvent)
-        {
-            if (_animationMap.Editor.LeftShift.IsPressed())
-            {
-                if (SelectedKeyframe.Contains(selectKeyframeEvent.Keyframe))
-                {
-                    SelectedKeyframe.Remove(selectKeyframeEvent.Keyframe);
-                }
-                else
-                {
-                    SelectedKeyframe.Add(selectKeyframeEvent.Keyframe);
-                }
-            }
-            else
-            {
-                if (!SelectedKeyframe.Contains(selectKeyframeEvent.Keyframe))
-                {
-                    SelectedKeyframe.Clear();
-                    SelectedKeyframe.Add(selectKeyframeEvent.Keyframe);
-                }
-            }
-            
-            print(SelectedKeyframe.Count);
-
-            foreach (var keyframe in _keyframes)
-            {
-                keyframe.KeyframeSelect.SelectColor(false);
-            }
-
-            foreach (var sData in SelectedKeyframe)
-            {
-                sData.KeyframeSelect.SelectColor(true);
-            }
-        }
 
         public void MultipleDrag(double offset, KeyframeDrag drag)
         {
-            if(offset == 0) return;
-            
+            if (offset == 0) return;
+
             // print(offset);
-            
-            foreach (var keyframe in SelectedKeyframe)
+
+            foreach (var keyframe in keyframeSelectController.SelectedKeyframe)
             {
-                if(drag == keyframe.KeyframeDrag) continue;
-                
+                if (drag == keyframe.KeyframeDrag) continue;
+
                 float xOffset = _content.offsetMin.x - keyframeScrollView.offsetMin.x -
                                 keyframeVerticalLayoutGroup.padding.left / 2f;
 
                 float positionX =
-                    _timeLineConverter.TicksToPositionX(keyframe.Keyframe.Ticks+=offset, _timeLineKeyframeScroll.Pan) +
+                    _timeLineConverter.TicksToPositionX(keyframe.Keyframe.Ticks += offset,
+                        _timeLineKeyframeScroll.Pan) +
                     xOffset;
                 keyframe.RectTransform.anchoredPosition = new Vector2(
                     positionX,
@@ -158,17 +129,18 @@ namespace TimeLine
 
         public void DeselectAllKeyframes()
         {
-            foreach (var keyframe in SelectedKeyframe)
+            foreach (var keyframe in keyframeSelectController.SelectedKeyframe)
             {
-                if(keyframe != null) keyframe.KeyframeSelect.SelectColor(false);
+                if (keyframe != null) keyframe.KeyframeSelect.SelectColor(false);
             }
-            SelectedKeyframe.Clear();
+
+            keyframeSelectController.SelectedKeyframe.Clear();
         }
 
         internal List<(Track, Keyframe.Keyframe)> GetAllKeyframes()
         {
             var result = new List<(Track, Keyframe.Keyframe)>();
-            
+
             _keyframes = new List<KeyframeObjectData>();
 
             foreach (var tree in treeViewUI.AnimationLineController.Lines)
@@ -182,6 +154,7 @@ namespace TimeLine
                     result.Add((track, keyframe));
                 }
             }
+
             return result;
         }
 
@@ -211,7 +184,7 @@ namespace TimeLine
                     keyframeDrag.Setup(keyframe, track.SortKeyframes);
                     keyframeObjectData.Keyframe = keyframe;
                     keyframeObjectData.Track = track;
-                    
+
                     _keyframes.Add(keyframeObjectData);
                 }
             }
@@ -221,7 +194,7 @@ namespace TimeLine
 
         private void InverKeyframes()
         {
-            var min = GetMinTimeSelectedKeyframe(SelectedKeyframe);
+            var min = GetMinTimeSelectedKeyframe(keyframeSelectController.SelectedKeyframe);
             var max = GetMaxTimeSelectedKeyframe();
             // x' = min + (max - x)
             foreach (var keyframe in _keyframes)
@@ -232,7 +205,7 @@ namespace TimeLine
             foreach (var tree in treeViewUI.AnimationLineController.Lines)
             {
                 Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
-                if(track == null) continue;
+                if (track == null) continue;
                 track.SortKeyframes();
             }
 
@@ -267,7 +240,6 @@ namespace TimeLine
             _gameEventBus.UnsubscribeFrom((ref AddKeyframeEvent _) => Build());
             _gameEventBus.UnsubscribeFrom((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.UnsubscribeFrom((ref SelectObjectEvent _) => Build());
-            _gameEventBus.UnsubscribeFrom<SelectKeyframeEvent>(SelectKeyframe);
         }
     }
 }

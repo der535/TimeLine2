@@ -3,6 +3,7 @@ using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
+using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position;
 
 namespace TimeLine.Keyframe
 {
@@ -16,12 +17,22 @@ namespace TimeLine.Keyframe
         public double InTangent { get; set; }
         public double InWeight { get; set; }
         public double OutWeight { get; set; }
+        public InterpolationType Interpolation  { get; set; }
+
+        public enum InterpolationType
+        {
+            Linear,
+            Bezier,
+            Hold
+        }
         
         private AnimationData animationData;
 
-        public Keyframe(double ticks, double outTangent = 2, double inTangent = 2, double inWeight = 0.5f, double outWeight = 0.5f)
+        public Keyframe(double ticks, double outTangent = 0, double inTangent = 0, double inWeight = 0.5f, double outWeight = 0.5f)
         {
             this.Ticks = Mathf.Round((float)ticks);
+            
+            Interpolation = InterpolationType.Linear;
 
             OutTangent = outTangent;
             InTangent = inTangent;
@@ -57,7 +68,7 @@ namespace TimeLine.Keyframe
 
             if (currentData != null && nextData != null)
             {
-                currentData.Interpolate(nextData, t, this,next).Apply(target);
+                currentData.Interpolate(nextData, t, this,next, Interpolation).Apply(target);
             }
             else if (currentData != null)
             {
@@ -117,7 +128,7 @@ namespace TimeLine.Keyframe
         {
             return typeName switch
             {
-                nameof(PositionData) => new PositionData(Vector3.zero),
+                // nameof(PositionData) => new PositionData(Vector3.zero),
                 nameof(XPositionData) => new XPositionData(0),
                 nameof(YPositionData) => new YPositionData(0),
                 nameof(XRotationData) => new XRotationData(0),

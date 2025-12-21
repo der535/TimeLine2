@@ -39,7 +39,7 @@ namespace TimeLine.TimeLine
         }
 
         [Inject]
-        private void Construct(MainObjects mainObjects, Scroll scroll, Main main, TimeLineScroll timeLineScroll,
+        private void Construct(MainObjects mainObjects, Main main, TimeLineScroll timeLineScroll,
             TimeLineSettings timeLineSettings)
         {
             _mainObjects = mainObjects;
@@ -206,38 +206,47 @@ namespace TimeLine.TimeLine
             float end,
             Keyframe.Keyframe current,
             Keyframe.Keyframe next,
-            float t)
+            float t,
+            Keyframe.Keyframe.InterpolationType interpolationType)
         {
-            // Создаём временную кривую — локальную для этого вызова
-            var curve = new AnimationCurve();
+            switch (interpolationType)
+            {
+                case Keyframe.Keyframe.InterpolationType.Hold:
+                    return start; // или end при t == 1f, если нужно "ступенчатое" поведение на границе
 
-            float time1 = (float)TicksToSeconds(current.Ticks);
-            float time2 = (float)TicksToSeconds(next.Ticks);
-            float deltaTime = time2 - time1;
-            float evalTime = time1 + t * deltaTime;
+                case Keyframe.Keyframe.InterpolationType.Linear:
+                    return Mathf.Lerp(start, end, t);
 
-            var key1 = new UnityEngine.Keyframe(
-                time: time1,
-                value: start,
-                inTangent: 0f,
-                outTangent: (float)current.OutTangent,
-                inWeight: 0f,
-                outWeight: (float)current.OutWeight
-            ) { weightedMode = WeightedMode.Out };
+                case Keyframe.Keyframe.InterpolationType.Bezier:
+                    // Используем AnimationCurve только для Bezier
+                    float time1 = (float)TicksToSeconds(current.Ticks);
+                    float time2 = (float)TicksToSeconds(next.Ticks);
+                    float evalTime = time1 + t * (time2 - time1);
 
-            var key2 = new UnityEngine.Keyframe(
-                time: time2,
-                value: end,
-                inTangent: (float)next.InTangent,
-                outTangent: 0f,
-                inWeight: (float)next.InWeight,
-                outWeight: 0f
-            ) { weightedMode = WeightedMode.In };
+                    var key1 = new UnityEngine.Keyframe(
+                        time: time1,
+                        value: start,
+                        inTangent: 0f,
+                        outTangent: (float)current.OutTangent,
+                        inWeight: 0f,
+                        outWeight: (float)current.OutWeight
+                    ) { weightedMode = WeightedMode.Out };
 
-            curve.AddKey(key1);
-            curve.AddKey(key2);
+                    var key2 = new UnityEngine.Keyframe(
+                        time: time2,
+                        value: end,
+                        inTangent: (float)next.InTangent,
+                        outTangent: 0f,
+                        inWeight: (float)next.InWeight,
+                        outWeight: 0f
+                    ) { weightedMode = WeightedMode.In };
 
-            return curve.Evaluate(evalTime);
+                    var curve = new AnimationCurve(key1, key2);
+                    return curve.Evaluate(evalTime);
+
+                default:
+                    return Mathf.Lerp(start, end, t);
+            }
         }
 
         private void SafeInitializeCurve(float startValue = 0f, float endValue = 0f)

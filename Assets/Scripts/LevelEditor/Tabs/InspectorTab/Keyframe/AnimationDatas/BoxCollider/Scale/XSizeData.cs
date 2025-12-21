@@ -58,7 +58,8 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale
             AnimationData other, 
             double t, 
             global::TimeLine.Keyframe.Keyframe current, 
-            global::TimeLine.Keyframe.Keyframe next)
+            global::TimeLine.Keyframe.Keyframe next,
+            Keyframe.InterpolationType interpolationType)
         {
             if (other is not XSizeData otherPos)
                 throw new System.ArgumentException($"Interpolation requires another {GetType()}.");
@@ -69,7 +70,8 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale
                 otherPos.value,
                 current,
                 next,
-                localT
+                localT,
+                interpolationType
             );
 
             return new XSizeData(interpolatedValue);

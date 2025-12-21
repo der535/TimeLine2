@@ -1,3 +1,4 @@
+using TimeLine.LevelEditor.SpriteLoader;
 using UnityEngine;
 
 namespace TimeLine.CustomInspector.Logic.Parameter
@@ -52,6 +53,11 @@ namespace TimeLine.CustomInspector.Logic.Parameter
                 if (BaseSpriteStorage.Instance != null)
                 {
                     foundSprite = BaseSpriteStorage.Instance.GetSprite(spriteName);
+                }
+
+                if (CustomSpriteStorage.Instance != null && foundSprite == null)
+                {
+                    foundSprite = CustomSpriteStorage.Instance.GetSpriteFromID(spriteName);
                 }
 
                 if (foundSprite != null)
