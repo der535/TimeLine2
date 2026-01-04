@@ -26,7 +26,7 @@ namespace TimeLine
         private MainObjects _mainObjects;
         private ActionMap _actionMap;
 
-        public float Pan { get; private set; }
+        public float Zoom { get; private set; } = 70;
         
         [Inject]
         private void Construct(GameEventBus eventBus, MainObjects mainObjects, ActionMap actionMap)
@@ -34,7 +34,6 @@ namespace TimeLine
             _eventBus = eventBus;
             _mainObjects = mainObjects;
             _actionMap = actionMap;
-            Pan = 1;
         }
         
         private bool GetCursorPosition()
@@ -67,17 +66,17 @@ namespace TimeLine
             }
             else
             {
-                _eventBus.Raise(new OldPanEvent(Pan));
+                _eventBus.Raise(new OldPanEvent(Zoom));
 
-                float currentSpacing = timeLineSettings.DistanceBetweenBeatLines + Pan;
+                float currentSpacing = Zoom;
                 // Используем panFactor как базу экспоненты
                 float factor = Mathf.Pow(panFactor, scroll);
                 float newSpacing = currentSpacing * factor;
 
                 newSpacing = Mathf.Clamp(newSpacing, panMin, panMax);
-                Pan = newSpacing - timeLineSettings.DistanceBetweenBeatLines;
+                Zoom = newSpacing - timeLineSettings.DistanceBetweenBeatLines;
 
-                _eventBus.Raise(new PanEvent(Pan));
+                _eventBus.Raise(new PanEvent(Zoom));
             }
         }
     }

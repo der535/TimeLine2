@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.dbrizov.naughtyattributes": "https://github.com/dbrizov/NaughtyAttributes.git#upm",
+    "com.elringus.spriteglow": "https://github.com/elringus/sprite-glow.git#package",
     "com.luca3317.tmpeffects": "https://github.com/Luca3317/TMPEffects.git?path=/Package",
     "com.peturdarri.generic-event-bus": "https://github.com/PeturDarri/GenericEventBus.git",
     "com.unity.collab-proxy": "2.8.2",

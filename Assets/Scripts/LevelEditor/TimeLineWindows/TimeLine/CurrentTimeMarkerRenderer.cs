@@ -1,6 +1,7 @@
 using EventBus;
 using TimeLine;
 using TimeLine.EventBus.Events.TimeLine;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -13,16 +14,18 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
     private GameEventBus _gameEventBus;
     private TimeLineSettings _timeLineSettings;
     private TimeLineScroll _timeLineScroll;
+    private TimeLineConverter _timeLineConverter;
 
     private double _ticksSaved;
 
     [Inject]
-    private void Construct(Main main, GameEventBus gameEventBus, TimeLineScroll timeLineScroll, TimeLineSettings timeLineSettings)
+    private void Construct(Main main, GameEventBus gameEventBus, TimeLineScroll timeLineScroll, TimeLineSettings timeLineSettings, TimeLineConverter timeLineConverter)
     {
         _main = main;
         _gameEventBus = gameEventBus;
         _timeLineSettings = timeLineSettings;
         _timeLineScroll = timeLineScroll;
+        _timeLineConverter = timeLineConverter;
     }
 
     private void Awake()
@@ -37,7 +40,7 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
         double beats = timeEvent.Time / Main.TICKS_PER_BEAT;
         double seconds = beats * (60.0 / _main.MusicData.bpm);
         
-        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) * (_main.MusicData.bpm / 60.0));
+        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) * (_main.MusicData.bpm / 60.0));
         
         marker.transform.localPosition = new Vector3(
             positionX,
@@ -46,6 +49,11 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
         );
 
         _ticksSaved = timeEvent.Time;
+    }
+
+    public double GetTime()
+    {
+        return _timeLineConverter.GetTimeFromAnchorPosition(marker.transform.localPosition.x, _timeLineScroll.Zoom);
     }
 
     public void OnScrollPan(ref PanEvent panEvent)

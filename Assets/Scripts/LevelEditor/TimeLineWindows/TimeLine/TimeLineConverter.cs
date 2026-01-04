@@ -128,7 +128,7 @@ namespace TimeLine.TimeLine
         public float GetCursorBeatPosition(float offset = 0)
         {
             return (CursorPosition().x - offset - _mainObjects.ContentRectTransform.offsetMin.x) /
-                   (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan);
+                   (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
         }
 
         public float GetTimeFromAnchorPosition(float anchorPosition, float pan = 0)
@@ -164,7 +164,7 @@ namespace TimeLine.TimeLine
 
         public float GetAnchorPositionFromBeatPosition(float time)
         {
-            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Pan);
+            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Zoom);
         }
 
         public float GetAnchorPositionFromBeatPosition(float time, float pan)

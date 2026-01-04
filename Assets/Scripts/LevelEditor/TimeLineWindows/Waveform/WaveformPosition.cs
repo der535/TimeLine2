@@ -76,7 +76,7 @@ namespace TimeLine.Waveform
 
                 waveformRect.sizeDelta =
                     new Vector2(
-                        (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
+                        (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) *
                         _main.MusicData.music.length * _main.MusicData.bpm / 60,
                         waveformRect.rect.height);
             }
@@ -85,14 +85,14 @@ namespace TimeLine.Waveform
             {
                 waveformRect.sizeDelta =
                     new Vector2(
-                        (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) *
+                        (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) *
                         _main.MusicData.music.length * (factor / acur), waveformRect.rect.height);
             }
             
             waveformRect.localPosition =
                 new Vector2(
                     (waveformRect.sizeDelta.x / 2) + _mainObjects.ContentRectTransform.offsetMin.x -
-                    _main.BeatPerSecondOffset()*(_timeLineSettings.DistanceBetweenBeatLines +_timeLineScroll.Pan), 0);
+                    _main.BeatPerSecondOffset()*(_timeLineSettings.DistanceBetweenBeatLines +_timeLineScroll.Zoom), 0);
         }
     }
 }

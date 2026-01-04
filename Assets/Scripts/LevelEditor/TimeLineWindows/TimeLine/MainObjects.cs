@@ -20,14 +20,7 @@ namespace TimeLine.Installers
         [SerializeField] private RectTransform keyframeScrollView;
         [SerializeField] private VerticalLayoutGroup keyframeVerticalLayoutGroup;
         [SerializeField] private Camera mainCamera;
-
-        private GameEventBus _gameEventBus;
-
-        public void Init(GameEventBus gameEventBus)
-        {
-            _gameEventBus = gameEventBus;
-        }
-
+        
         public RectTransform CanvasRectTransform
         {
             get => canvasRectTransform;
@@ -43,17 +36,6 @@ namespace TimeLine.Installers
         public RectTransform KeyframeScrollView => keyframeScrollView;
         public Transform SceneObjectParent => sceneObjectParent;
         public VerticalLayoutGroup KeyframeVerticalLayoutGroup => keyframeVerticalLayoutGroup;
-
-        public void NotifyContentRectChanged()
-        {
-            if (_gameEventBus != null)
-            {
-                _gameEventBus.Raise(new ContentRectTransformChangedEvent(contentRectTransform));
-            }
-            else
-            {
-                Debug.LogWarning("EventBus is not initialized! ContentRectTransform change not notified.");
-            }
-        }
+        
     }
 }

@@ -1,3 +1,4 @@
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -5,7 +6,7 @@ namespace TimeLine
 {
     public class TrackObjectSpawnerUI : MonoBehaviour
     {
-        [SerializeField] private TrackObjectSpawner trackObjectSpawner;
+        [FormerlySerializedAs("objectSpawner")] [FormerlySerializedAs("trackObjectSpawner")] [SerializeField] private FacadeObjectSpawner facadeObjectSpawner;
         [SerializeField] private GameObject trackObjectUIPrefab;
         [SerializeField] private BaseSpriteStorage sprites;
         [SerializeField] private RectTransform root;
@@ -15,7 +16,7 @@ namespace TimeLine
             foreach (var trackObject in sprites.Sprites)
             {
                TrackObjectUI trackObjectUI = Instantiate(trackObjectUIPrefab, root).GetComponent<TrackObjectUI>();
-               trackObjectUI.Setup(trackObject, () => trackObjectSpawner.Spawn(trackObject));
+               trackObjectUI.Setup(trackObject, () => facadeObjectSpawner.CreateSceneObjectAndAddSprite(trackObject));
             }
         }
     }

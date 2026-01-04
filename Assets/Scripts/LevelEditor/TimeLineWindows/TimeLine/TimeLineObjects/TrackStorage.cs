@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;

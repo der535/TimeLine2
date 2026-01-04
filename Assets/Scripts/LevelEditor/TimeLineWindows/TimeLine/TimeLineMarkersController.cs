@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
-using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine
 {
     public class TimeLineMarkersController : MonoBehaviour
     {

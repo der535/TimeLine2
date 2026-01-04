@@ -233,7 +233,7 @@ public class CreateWaveformMesh : Graphic
         SetVerticesDirty();
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
         if (startPart > endPart)
             endPart = startPart;

@@ -66,32 +66,39 @@ Shader "Unlit/MovingStripesDiagonalClipped"
             }
 
             fixed4 frag (v2f i) : SV_Target
-            {
-                
-                
-                // === 1. Маска по текстуре ===
-                fixed4 texColor = tex2D(_MainTex, i.uv);
-                if (texColor.a < 0.5) // прозрачные части — не рисуем
-                    return fixed4(0,0,0,0);
+{
+    // Маска по текстуре
+    fixed4 texColor = tex2D(_MainTex, i.uv);
+    if (texColor.a < 0.5)
+        return fixed4(0,0,0,0);
 
-                // === 2. Диагональный узор в мировых координатах ===
-                float sina = sin(_Angle);
-                float cosa = cos(_Angle);
-                float coord = -sina * i.worldPos.x + cosa * i.worldPos.y;
-                float timeOffset = (_Time.y + 100000) * _Speed;
-                float patternCoord = coord + timeOffset;
+    // Получаем мировые размеры объекта
+    float3 worldScale;
+    worldScale.x = length(mul((float3x3)unity_ObjectToWorld, float3(1,0,0)));
+    worldScale.y = length(mul((float3x3)unity_ObjectToWorld, float3(0,1,0)));
 
-                float spacing = 1.0 / _Density;
-                float cycle = spacing;
-                float local = fmod(patternCoord, cycle);
-                if (local < 0.0) local += cycle;
+    // Преобразуем UV в "мировые координаты", чтобы ширина и плотность были в мировых единицах
+    float2 worldUV = float2(i.uv.x * worldScale.x, i.uv.y * worldScale.y);
 
-                // === 3. Рисуем только если в полосе ===
-                if (local < _Width)
-                    return _Color * texColor.a; // можно умножить на альфу маски
-                else
-                    return fixed4(0,0,0,0);
-            }
+    // Диагональный узор
+    float sina = sin(_Angle);
+    float cosa = cos(_Angle);
+    float coord = -sina * worldUV.x + cosa * worldUV.y;
+
+    float timeOffset = (_Time.y + 100000) * _Speed;
+    float patternCoord = coord + timeOffset;
+
+    float spacing = 1.0 / _Density;
+    float cycle = spacing;
+    float local = fmod(patternCoord, cycle);
+    if (local < 0.0) local += cycle;
+
+    if (local < _Width)
+        return _Color * texColor.a;
+    else
+        return fixed4(0,0,0,0);
+}
+
             ENDCG
         }
     }

@@ -7,6 +7,7 @@ using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -52,7 +53,7 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(ActiveSceneObject);
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => DeselectObject());
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref RemoveTrackLineEvent data) =>
                 RemoveAllTrackObjectsHaveTrackLine(data.TrackLine));
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
@@ -67,6 +68,11 @@ namespace TimeLine
                 {
                     SelectObject(track.trackObject);
                 }
+            });
+            
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
+            {
+                DeselectObject(data.DeselectedObject);
             });
         }
 
@@ -120,12 +126,12 @@ namespace TimeLine
 
         private void ActiveSceneObject(ref TickSmoothTimeEvent smoothTimeEvent)
         {
-            foreach (var trackObject in _trackObjects)
+            foreach (var trackObject in _trackObjects.ToList())
             {
                 CheckActiveTrackObjects(trackObject, smoothTimeEvent.Time);
             }
 
-            foreach (var group in _trackObjectGroups)
+            foreach (var group in _trackObjectGroups.ToList())
             {
                 CheckActiveGroup(group, smoothTimeEvent.Time);
             }
@@ -143,6 +149,14 @@ namespace TimeLine
             }
         }
 
+        // if (select is TrackObjectGroup group)
+        // {
+        //     ListRemove(group);
+        // }
+        // else
+        // {
+        //     SingleRemove(trackObject);
+        // }
         private void CheckActiveTrackObjects(TrackObjectData trackObject, double time)
         {
             if (trackObject.trackObject.gameObject.activeSelf)
@@ -151,11 +165,20 @@ namespace TimeLine
                                       trackObject.trackObject.TimeDuractionInTicks +
                                       trackObject.trackObject.StartTimeInTicks > time;
 
-                trackObject.sceneObject.SetActive(shouldBeActive);
+                trackObject.sceneObject.SetActive(trackObject.trackObject.isActive && shouldBeActive);
             }
             else
             {
                 trackObject.sceneObject.SetActive(false);
+            }
+            
+            
+            //REMOVE TEMP OBJECTS
+            if (trackObject.trackObject.isTemp &&
+                time > trackObject.trackObject.TimeDuractionInTicks +
+                trackObject.trackObject.StartTimeInTicks)
+            {
+                trackObject.trackObject.isActive = false;
             }
         }
 
@@ -173,7 +196,7 @@ namespace TimeLine
             }
             else
             {
-                group.sceneObject.SetActive(true);
+                group.sceneObject.SetActive(group.trackObject.isActive);
             }
 
             double groupStart = group.trackObject.StartTimeInTicks;
@@ -210,7 +233,16 @@ namespace TimeLine
                 //     isObjectActive = time >= group.trackObject.StartTimeInTicks && time < groupStart + group.trackObject.TimeDuractionInTicks;
                 // }
 
-                trackObject.sceneObject.SetActive(isObjectActive);
+                trackObject.sceneObject.SetActive(group.trackObject.isActive && isObjectActive);
+            }
+            
+            
+            //REMOVE TEMP OBJECTS
+            if (group.trackObject.isTemp &&
+                time > group.trackObject.TimeDuractionInTicks +
+                group.trackObject.StartTimeInTicks)
+            {
+                group.trackObject.isActive = false;
             }
         }
 
@@ -242,7 +274,8 @@ namespace TimeLine
             if (compositionID == "")
                 compositionID = Guid.NewGuid().ToString();
             TrackObjectGroup group =
-                new TrackObjectGroup(sceneObject, trackObject, branch, sceneObjectID, objectsForGroup, compositionID, lastEditID)
+                new TrackObjectGroup(sceneObject, trackObject, branch, sceneObjectID, objectsForGroup, compositionID,
+                    lastEditID)
                 {
                     compositionID = compositionID
                 };
@@ -342,7 +375,7 @@ namespace TimeLine
             //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
             return null;
         }
-        
+
         internal TrackObjectGroup DeepSearchGroup(GameObject gObject)
         {
             foreach (var group in _trackObjectGroups)
@@ -359,11 +392,11 @@ namespace TimeLine
             {
                 if (child is TrackObjectGroup childGroup)
                 {
-                    if(child.sceneObject == gObject) return childGroup;
+                    if (child.sceneObject == gObject) return childGroup;
                     DeepSearchGroup(childGroup, gObject);
                 }
             }
-            
+
             return null;
         }
 
@@ -430,10 +463,11 @@ namespace TimeLine
 
         public void UpdatePositionSelectedTrackObject()
         {
-            _gameEventBus.Raise(new DragTrackObjectEvent(selectedObject));
+            if(selectedObject != null)
+                _gameEventBus.Raise(new DragTrackObjectEvent(selectedObject));
         }
 
-        private void DeselectObject()
+        private void DeselectAllObject()
         {
             selectedObject = null;
             foreach (var trackObject in _trackObjects)
@@ -448,6 +482,29 @@ namespace TimeLine
             //Debug.Log("[DeselectObject] All objects deselected.");
         }
 
+        private void DeselectObject(TrackObjectData deselectObject)
+        {
+            selectedObject = null;
+            foreach (var trackObject in _trackObjects)
+            {
+                if (deselectObject == trackObject)
+                {
+                    trackObject.trackObject.Deselect();
+                    return;
+                }
+            }
+
+            foreach (var group in _trackObjectGroups)
+            {
+                if (deselectObject == group)
+                {
+                    group.trackObject.Deselect();
+                    return;
+                }
+            }
+        }
+        
+
         public void SelectObject(TrackObject trackObjectToSelect)
         {
             var targetData = GetTrackObjectData(trackObjectToSelect);
@@ -458,12 +515,29 @@ namespace TimeLine
             }
 
             if (!_actionMap.Editor.LeftShift.IsPressed())
-                DeselectObject();
+                DeselectAllObject();
 
             InternalSelectObject(targetData);
-            _selectObjectController.Select(targetData, _actionMap.Editor.LeftShift.IsPressed());
+            // _selectObjectController.Select(targetData);
             SelectColor();
         }
+        public void SelectObjectTrackObject(TrackObject trackObjectToSelect)
+        {
+            var targetData = GetTrackObjectData(trackObjectToSelect);
+            if (targetData == null)
+            {
+                //Debug.LogWarning($"[SelectObject] Cannot select: TrackObject '{trackObjectToSelect.Name}' not found in storage.");
+                return;
+            }
+
+            if (!_actionMap.Editor.LeftShift.IsPressed())
+                DeselectAllObject();
+
+            InternalSelectObject(targetData);
+            _selectObjectController.Select(targetData);
+            SelectColor();
+        }
+        
 
         /// <summary>
         /// Ищет TrackObjectData (включая TrackObjectGroup) по уникальному идентификатору sceneObjectID.
@@ -546,7 +620,8 @@ namespace TimeLine
         }
 
         public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID,
-            List<TrackObjectData> trackObjectDatas, string compositionID, string lastEditID) : base(sceneObject, trackObject, branch,
+            List<TrackObjectData> trackObjectDatas, string compositionID, string lastEditID) : base(sceneObject,
+            trackObject, branch,
             sceneObjectID)
         {
             this.compositionID = compositionID;
@@ -559,10 +634,12 @@ namespace TimeLine
         }
 
         public void Update(double newDuraction, List<TrackObjectData> trackObjectDatas, TrackObjectRemover remover,
-            MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID)
+            MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID, SaveComposition saveComposition)
         {
+            Debug.Log(this.lastEditID);
             this.lastEditID = lastEditID;
-            
+            Debug.Log(this.lastEditID);
+
             trackObject.UpdateDuraction(newDuraction);
             foreach (var data in TrackObjectDatas)
             {
@@ -570,6 +647,8 @@ namespace TimeLine
             }
 
             TrackObjectDatas = trackObjectDatas;
+
+            UpdateLastEditID(TrackObjectDatas, saveComposition);
 
             foreach (var track in TrackObjectDatas)
             {
@@ -593,6 +672,7 @@ namespace TimeLine
                     selectObject.sceneObject.transform.localRotation = rot;
                     selectObject.sceneObject.transform.localScale = scale;
                 }
+                
 
                 foreach (var node in selectObject.branch.Nodes)
                 {
@@ -600,6 +680,21 @@ namespace TimeLine
                     {
                         _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
                     }
+                }
+            }
+            
+        }
+
+        private void UpdateLastEditID(List<TrackObjectData> trackObjectDatas, SaveComposition saveComposition)
+        {
+            foreach (var expr in trackObjectDatas)
+            {
+                if (expr is TrackObjectGroup group)
+                {
+                    UpdateLastEditID(group.TrackObjectDatas, saveComposition);
+                    Debug.Log("GROUP");
+                    Debug.Log(group.lastEditID);
+                    group.lastEditID = saveComposition.FindCompositionDataById(group.compositionID).lastEditID;
                 }
             }
         }

@@ -31,7 +31,7 @@ public class TimeLineRenderer : MonoBehaviour
         {
             _mainObjects.ContentRectTransform.offsetMin += new Vector2(scrollEvent.ScrollOffset, 0); //Left
             _mainObjects.ContentRectTransform.offsetMax += new Vector2(scrollEvent.ScrollOffset, 0); //Right
-            _mainObjects.NotifyContentRectChanged();
+            // _mainObjects.NotifyContentRectChanged();
         }, 1);
         _gameEventBus.SubscribeTo((ref OldPanEvent oldPanEvent) => _oldPan = oldPanEvent.OldPanOffset,1);
         _gameEventBus.SubscribeTo((ref PanEvent _) =>
@@ -47,6 +47,6 @@ public class TimeLineRenderer : MonoBehaviour
     {
         _mainObjects.ContentRectTransform.offsetMin = new Vector2(position, 0); //Left
         _mainObjects.ContentRectTransform.offsetMax = new Vector2(position, 0); //Right
-        _mainObjects.NotifyContentRectChanged();
+        // _mainObjects.NotifyContentRectChanged();
     }
 }

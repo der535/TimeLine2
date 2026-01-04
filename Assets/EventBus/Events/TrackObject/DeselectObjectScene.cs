@@ -2,13 +2,14 @@ using System.Collections;
 using EventBus;
 using EventBus.Events;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEngine.EventSystems; // Обязательно для интерфейсов событий
 using Zenject;
 
 namespace TimeLine
 {
-    public class DeselectObjectScene : MonoBehaviour
+    // Добавляем интерфейс IPointerDownHandler
+    public class DeselectObjectScene : MonoBehaviour, IPointerDownHandler
     {
         [SerializeField] private UnityEvent onPressed;
 
@@ -20,6 +21,7 @@ namespace TimeLine
         {
             _gameEventBus = gameEventBus;
         }
+
         private void Start()
         {
             _gameEventBus.SubscribeTo<ObjectUnderCursorEvent>((ref ObjectUnderCursorEvent data) => StartCoroutine(Select()));
@@ -32,17 +34,25 @@ namespace TimeLine
             isSelected = false;
         }
 
-        void OnMouseDown()
+        // Этот метод автоматически заменяет OnMouseDown и проверку IsPointerOverGameObject
+        public void OnPointerDown(PointerEventData eventData)
         {
-            if(isSelected) return;
-            // Проверяем, находится ли курсор над UI-элементом
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            // 1. Проверяем, что нажата именно левая кнопка мыши
+            if (eventData.button != PointerEventData.InputButton.Left)
             {
-                // Если курсор над UI — игнорируем клик
                 return;
             }
 
-            // Если не над UI — вызываем событие
+            // 2. Проверяем флаг временной блокировки (из вашего Coroutine)
+            if (isSelected)
+            {
+                return;
+            }
+
+            // ПРИМЕЧАНИЕ: Нам больше не нужна проверка EventSystem.current.IsPointerOverGameObject(),
+            // так как если клик будет поглощен UI-элементом, это событие (OnPointerDown) 
+            // просто не дойдет до объекта сцены.
+
             onPressed?.Invoke();
         }
     }

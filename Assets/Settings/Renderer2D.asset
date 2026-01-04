@@ -1,5 +1,22 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7201860770590270315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf234d5e3e28b184cad36a57b0020590, type: 3}
+  m_Name: BlurRendererFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    horizontalBlur: 0
+    verticalBlur: 0
+  shader: {fileID: 4800000, guid: dd143b2ab954aa446b8e7b87c1e2651a, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24,8 +41,9 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: -3555484719484374845, guid: 57d7c4c16e2765b47a4d2069b311bffe, type: 3}
     probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures: []
-  m_RendererFeatureMap: 
+  m_RendererFeatures:
+  - {fileID: -7201860770590270315}
+  m_RendererFeatureMap: 955c2547c9d90d9c
   m_UseNativeRenderPass: 0
   m_TransparencySortMode: 0
   m_TransparencySortAxis: {x: 0, y: 1, z: 0}
@@ -53,3 +71,87 @@ MonoBehaviour:
   m_PostProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_DefaultMaterialType: 0
   m_DefaultCustomMaterial: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+--- !u!114 &647222364492825142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b65a0bb522c53c14c9c81cad5bf990d2, type: 3}
+  m_Name: InvertColorsFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  material: {fileID: 0}
+--- !u!114 &2458060488091234868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177ddeadd26a80641ad757c51fb7f5d1, type: 3}
+  m_Name: OutlineFxFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  _event: 600
+  _solid: 0.199
+  _thickness: 0.322
+  _alphaCutout: 0.203
+  _mode: 0
+  _filter: 1
+  _attachDepth: 1
+  _output:
+    enabled: 0
+    value: _globalTex
+  _solidMask:
+    _enabled: 0
+    _pattern: {fileID: 2800000, guid: 41acea03acbaebe4a9dc26dd8264449e, type: 3}
+    _scale: 50
+    _velocity: {x: 0, y: 0}
+  _shader: {fileID: 4800000, guid: 9a902e6d68fe8344890c5926c684e820, type: 3}
+  _outlineMat: {fileID: 0}
+  _step: {x: 0.0012678751, y: 0.002254, z: 0, w: 0}
+--- !u!114 &6747970613115325806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b454202a2676ba24b8cd450836f55c9e, type: 3}
+  m_Name: ScreenSpaceOutlines
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  renderPassEvent: 350
+  outlinesLayerMask:
+    m_Bits: 64
+  outlineSettings:
+    outlineColor:
+      r: 0
+      g: 0
+      b: 0
+      a: 1
+    outlineScale: 1
+    depthThreshold: 1.5
+    robertsCrossMultiplier: 100
+    normalThreshold: 0.4
+    steepAngleThreshold: 0.2
+    steepAngleMultiplier: 25
+    colorFormat: 0
+    depthBufferBits: 0
+    filterMode: 0
+    backgroundColor:
+      r: 0
+      g: 0
+      b: 0
+      a: 0
+    perObjectData: 0
+    enableDynamicBatching: 0
+    enableInstancing: 0

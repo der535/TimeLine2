@@ -17,7 +17,7 @@ namespace TimeLine
         
         public void Deselect()
         {
-            _gameEventBus.Raise(new DeselectObjectEvent());
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
     }
 }

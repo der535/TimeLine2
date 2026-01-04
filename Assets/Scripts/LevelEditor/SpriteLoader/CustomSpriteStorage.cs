@@ -16,9 +16,11 @@ namespace TimeLine.LevelEditor.SpriteLoader
         private SaveLevel _saveLevel;
         private Main _main;
         private SpriteLoadController _spriteLoadController;
-        public GameEventBus _eventBus; // Добавить евент добовления спрайта и сделать подписку на обноление галереи спрайтов
+        public GameEventBus _eventBus; 
         
-        private Dictionary<TextureData, SpriteParameter> _spriteRenderers = new();
+        // Теперь словарь хранит СПИСОК параметров для каждого TextureData
+        private Dictionary<TextureData, List<SpriteParameter>> _spriteRenderers = new();
+        public Dictionary<TextureData, SpriteParameter> TextureData = new();
         
         private static CustomSpriteStorage _instance;
         public static CustomSpriteStorage Instance
@@ -27,10 +29,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
             {
                 if (_instance == null)
                 {
-                    // Пытаемся найти существующий объект на сцене
-                    _instance = FindObjectOfType<CustomSpriteStorage>();
-
-                    // Если не найден — создаём временный объект (только в рантайме!)
+                    _instance = FindFirstObjectByType<CustomSpriteStorage>();
                     if (_instance == null && Application.isPlaying)
                     {
                         GameObject obj = new GameObject("CustomSpriteStorage");
@@ -50,39 +49,30 @@ namespace TimeLine.LevelEditor.SpriteLoader
             _spriteLoadController = spriteLoadController;
         }
 
-        public readonly Dictionary<TextureData, SpriteParameter> TextureData = new();
-
-        private void Start()
+        private void Awake()
         {
+            _spriteRenderers.Clear();
+            TextureData.Clear();
             _eventBus.SubscribeTo((ref SpriteStorageRemoveSpriteEvent data) =>
             {
                 RemoveSprite(data.TextureData);
-            } );
+            });
         }
 
         public void AddSprite(Sprite sprite, TextureData textureData)
         {
-            
             var param = new SpriteParameter(textureData.Id, sprite, Color.black);
-            TextureData[textureData] = param; // или TryAdd, если нужно избегать перезаписи
+            if (!TextureData.ContainsKey(textureData))
+            {
+                TextureData.Add(textureData, param);
+            }
             _eventBus.Raise(new SpriteStorageAddSpriteEvent(new KeyValuePair<TextureData, SpriteParameter>(textureData, param)));
-            _spriteRenderers.Add(textureData, param);
         }
-
-        // public string GetSpriteName(SpriteParameter spriteParameter)
-        // {
-        //     foreach (var data in _spriteRenderers)
-        //     {
-        //         if(data.Value.Value.name == spriteParameter.Value.name) return data.Key.SpriteName;
-        //     }
-        //     return String.Empty;
-        // }
 
         public Sprite GetSpriteFromID(string id)
         {
-            foreach (var data in _spriteRenderers)
+            foreach (var data in TextureData)
             {
-                print(data.Key.Id);
                 if(data.Key.Id == id) return data.Value.Value;
             }
             return null;
@@ -91,11 +81,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         [Button]
         public void Save()
         {
-            List<TextureData> sprites = new();
-            foreach (var data in TextureData)
-            {
-                sprites.Add(data.Key);
-            }
+            List<TextureData> sprites = new List<TextureData>(TextureData.Keys);
             string json = JsonConvert.SerializeObject(sprites);
             string galleryPath = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Gallery.json";
             File.WriteAllText(galleryPath, json);
@@ -105,112 +91,116 @@ namespace TimeLine.LevelEditor.SpriteLoader
         public void Load(Action onFinish)
         {
             onLoaded = onFinish;
-            coutTask = 0;
-            List<TextureData> sprites = new();
             string galleryPath = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Gallery.json";
+            
             if (File.Exists(galleryPath))
             {
-                sprites = JsonConvert.DeserializeObject<List<TextureData>>(File.ReadAllText(galleryPath));
-                coutTask = sprites.Count;
-                foreach (var VARIABLE in sprites)
+                var sprites = JsonConvert.DeserializeObject<List<TextureData>>(File.ReadAllText(galleryPath));
+                coutTask = sprites?.Count ?? 0;
+                
+                if (coutTask <= 0)
                 {
-                    _spriteLoadController.LoadTextureFromSave(VARIABLE, CheckTasks);
+                    onFinish?.Invoke();
+                    return;
+                }
+
+                foreach (var data in sprites)
+                {
+                    _spriteLoadController.LoadTextureFromSave(data, CheckTasks);
                 }
             }
-            
+            else
+            {
+                onFinish?.Invoke();
+            }
         }
 
         private Action onLoaded;
-        int coutTask;
+        private int coutTask;
         
         private void CheckTasks()
         {
             coutTask--;
             if (coutTask <= 0)
             {
-                onLoaded.Invoke();
+                onLoaded?.Invoke();
             }
         }
 
+        // Добавляет рендерер в список по ключу
         public void AddSpriteRenderer(TextureData textureData, SpriteParameter spriteParameter)
         {
-            _spriteRenderers.TryAdd(textureData, spriteParameter);
-            // Optionally: else Debug.LogWarning("Key already exists, skipped add.");
+            if (!_spriteRenderers.ContainsKey(textureData))
+            {
+                _spriteRenderers[textureData] = new List<SpriteParameter>();
+            }
+            
+            if (!_spriteRenderers[textureData].Contains(spriteParameter))
+            {
+                _spriteRenderers[textureData].Add(spriteParameter);
+            }
         }
 
-        public void CheckAndRemoveSpriteRenderer(SpriteParameter textureData)
+        // Удаляет конкретный рендерер из всех списков
+        public void CheckAndRemoveSpriteRenderer(SpriteParameter spriteParameter)
         {
-            var data = Check(textureData)?.Key;
-            if (data != null) _spriteRenderers.Remove(data);
+            foreach (var list in _spriteRenderers.Values)
+            {
+                if (list.Contains(spriteParameter))
+                {
+                    list.Remove(spriteParameter);
+                    break; 
+                }
+            }
         }
 
+        // Полностью удаляет спрайт и очищает все связанные рендереры
         public void RemoveSprite(TextureData textureData)
         {
-            foreach (var VARIABLE in CheckTextureData(textureData))
+            if (_spriteRenderers.TryGetValue(textureData, out var renderers))
             {
-                VARIABLE.Value.Value = null;
-                _spriteRenderers.Remove(VARIABLE.Key);
+                foreach (var renderer in renderers)
+                {
+                    renderer.Value = null;
+                }
+                _spriteRenderers.Remove(textureData);
+            }
+            
+            if (TextureData.ContainsKey(textureData))
+            {
+                TextureData.Remove(textureData);
             }
         }
 
-        private List<KeyValuePair<TextureData, SpriteParameter>> CheckTextureData(TextureData textureData)
+        // Метод для обновления всех рендереров, подписанных на этот TextureData
+        private void UpdateAllRenderersForKey(TextureData textureData, Sprite sprite)
         {
-            List<KeyValuePair<TextureData, SpriteParameter>> result = new();
-            foreach (KeyValuePair<TextureData, SpriteParameter> pair in _spriteRenderers)
+            if (_spriteRenderers.TryGetValue(textureData, out var renderers))
             {
-                if (pair.Key == textureData)
+                foreach (var renderer in renderers)
                 {
-                    result.Add(pair);
+                    renderer.Value = sprite;
                 }
-            }
-            return result;
-        }
-
-        private KeyValuePair<TextureData, SpriteParameter>? Check(SpriteParameter spriteParameter)
-        {
-            foreach (KeyValuePair<TextureData, SpriteParameter> pair in _spriteRenderers)
-            {
-                if (pair.Value == spriteParameter)
-                {
-                    return pair;
-                }
-            }
-            return null;
-        }
-
-        private void UpdateSpriteRenderers(Sprite sprite)
-        {
-            print("UpdateSpriteRenderers");
-            foreach (var renderer in _spriteRenderers)
-            {
-                print(renderer.Key.Id == sprite.name);
-                if (renderer.Key.Id == sprite.name)
-                {
-                    print("set value");
-                    renderer.Value.Value = sprite;
-                }
+                Debug.Log($"Updated {renderers.Count} renderers for {textureData.Id}");
             }
         }
 
         public void UpdateCard(TextureData textureData)
         {
-            print("UpdateCard");
-            print(textureData);
-            foreach (KeyValuePair<TextureData, SpriteParameter> data in _spriteRenderers)
+            // Загружаем новый спрайт и обновляем ВСЕ связанные объекты
+            string path = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Pictures/{textureData.Id}.png";
+            
+            StartCoroutine(SpriteLoad.LoadSpriteFromPath(path, textureData, (newSprite) =>
             {
-                if (data.Key == textureData)
-                { 
-                    print(textureData.Id);
-                   StartCoroutine(SpriteLoad.LoadSpriteFromPath(
-                        $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Pictures/{textureData.Id}.png",
-                        textureData, (value) =>
-                        {
-                            data.Value.Value = value;
-                            UpdateSpriteRenderers(data.Value.Value);
-                        }));
-                    return;
+                // Обновляем основное хранилище
+                if (TextureData.TryGetValue(textureData, out var mainParam))
+                {
+                    mainParam.Value = newSprite;
                 }
-            }
+
+                // Обновляем все зарегистрированные SpriteRenderers
+                UpdateAllRenderersForKey(textureData, newSprite);
+            }));
         }
     }
 }

@@ -35,7 +35,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine
         
         internal void UpdatePosition()
         {
-            rectTransform.anchoredPosition = new Vector2(_timeLineConverter.TicksToPositionXWithTimeLineOffset(_markerTime, _timeLineScroll.Pan), 0);
+            rectTransform.anchoredPosition = new Vector2(_timeLineConverter.TicksToPositionXWithTimeLineOffset(_markerTime, _timeLineScroll.Zoom), 0);
         }
     }
 }

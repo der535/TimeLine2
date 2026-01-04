@@ -12,13 +12,15 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 {
     public class TrackObject : MonoBehaviour
     {
         [SerializeField] private Image image;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private RectTransform rect;
+        [SerializeField] private TrackObjectCustomizationController customizationController;
+        [SerializeField] private TrackObjectVisual trackObjectVisual;
 
         #region Вспомогательные переменные
 
@@ -30,7 +32,7 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
         private TimeLineScroll _timeLineScroll;
         private GridUI _gridUI;
-        private ScrollOld _scrollOld;
+        // private ScrollOld _scrollOld;
         private Main _main;
         private KeyframeTrackStorage _keyframeTrackStorage;
         private SelectObjectController _selectObjectController;
@@ -71,9 +73,12 @@ namespace TimeLine
                 OnChangeStartTime?.Invoke(_startTimeInTicks);
             }
         }
-
+        internal bool isActive = true;
+        internal bool isTemp = false;
+        internal TrackObjectVisual Visual => trackObjectVisual;
+        public void SetTime(double time) => _startTimeInTicks = time;
         internal Action<double> OnChangeStartTime;
-
+        internal string _parentID;
         internal double TimeDuractionInTicks
         {
             get => Math.Round(_timeDurationInTicks);
@@ -81,9 +86,7 @@ namespace TimeLine
         }
         internal TrackLine TrackLine { get; private set; }
         internal string Name { get; private set; }
-
         internal Action<double> Rezise { get; set; }
-
         internal float BeatDuraction => (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
 
         private bool _lockSize;
@@ -136,6 +139,7 @@ namespace TimeLine
         }
 
         internal bool GetActive() => rect.gameObject.activeSelf;
+        internal TrackObjectCustomizationController CustomizationController() => customizationController;
         internal void Hide()
         {
             rect.gameObject.SetActive(false);
@@ -158,24 +162,7 @@ namespace TimeLine
         }
 
         // 🆕 Перегрузка с флагом
-        // internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks,
-        //     bool enableResizeLimits = false)
-        // {
-        //     StartTimeInTicks = startTimeInTicks;
-        //     TrackLine = trackLine;
-        //     TimeDuractionInTicks = trackObjectSo.startLiveTime * Main.TICKS_PER_BEAT;
-        //     Name = trackObjectSo.name;
-        //     nameText.text = trackObjectSo.name;
-        //
-        //     _reducedLeft = 0;
-        //     _reducedRight = 0;
-        //     _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
-        //
-        //     UpdateVisuals();
-        // }
-
-        // 🆕 Перегрузка с флагом
-        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks,
+        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, string parentID, double startTimeInTicks,
             bool enableResizeLimits = false)
         {
             StartTimeInTicks = startTimeInTicks;
@@ -183,6 +170,7 @@ namespace TimeLine
             TimeDuractionInTicks = ticksLifeTime;
             Name = name;
             nameText.text = name;
+            _parentID = parentID;
 
             _reducedLeft = 0;
             _reducedRight = 0;
@@ -190,13 +178,6 @@ namespace TimeLine
 
             UpdateVisuals();
         }
-
-        // Старые перегрузки для обратной совместимости (лимиты ВКЛЮЧЕНЫ по умолчанию)
-        // internal void Setup(TrackObjectSO trackObjectSo, TrackLine trackLine, double startTimeInTicks)
-        //     => Setup(trackObjectSo, trackLine, startTimeInTicks, false);
-
-        // internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, double startTimeInTicks)
-        //     => Setup(ticksLifeTime, name, trackLine, startTimeInTicks, false);
         
 
         internal void GroupOffset(double tickOffset)
@@ -206,11 +187,6 @@ namespace TimeLine
         
         internal void GroupOffsetTrack(TrackObject track)
         {
-            // if(track != null)
-            //      print($"SetOffsetTrack {track} {track.StartTimeInTicks}");
-            // else
-            //     print("SetOffsetTrack null");
-            
             offsetObject = track;
         }
 
@@ -231,7 +207,7 @@ namespace TimeLine
                 print("Предупреждение: достигнут лимит глубины — возможна циклическая ссылка.");
 
             return StartTimeInTicks + (offsetObject != null ? offsetObject.GetKeyframeTrackOffset() : 0);
-        }//
+        }
 
         private Vector2 GetMousePosition()
         {
@@ -345,7 +321,7 @@ namespace TimeLine
             
             if (_isResizing)
             {
-                float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
+                float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
 
                 if (_isRightResizing)
                 {
@@ -439,7 +415,7 @@ namespace TimeLine
         {
             float durationInBeats = (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
             rect.sizeDelta = new Vector2(
-                durationInBeats * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan),
+                durationInBeats * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom),
                 rect.sizeDelta.y);
 
             CalculatePosition();
@@ -455,7 +431,7 @@ namespace TimeLine
 
         public void Select()
         {
-            _trackObjectStorage.SelectObject(this);
+            _trackObjectStorage.SelectObjectTrackObject(this);
         }
 
         public void SelectColor()
@@ -523,7 +499,7 @@ namespace TimeLine
 
         private double AnchorPositionDeltaToTicks(float deltaAnchorPosition)
         {
-            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan;
+            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
             float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
             return beatsDelta * Main.TICKS_PER_BEAT;
         }

@@ -31,7 +31,7 @@ public class TimeMarkerRenderer : MonoBehaviour
         
         for (int i = 0; i < countBeatLines; i++)
         {
-            Vector3 position = new Vector3((_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Pan) * i, 0, 0);
+            Vector3 position = new Vector3((_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) * i, 0, 0);
             TimeMarker beatLine = Instantiate(beatLinesPrefab, _mainObjects.ContentRectTransform).GetComponent<TimeMarker>();
             beatLine.Setup(canvas, i);
             RectTransform beatLineRectTransform = beatLine.GetComponent<RectTransform>();

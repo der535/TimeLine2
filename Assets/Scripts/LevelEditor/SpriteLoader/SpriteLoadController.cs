@@ -67,9 +67,13 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
         public void LoadTextureFromSave(TextureData textureData, Action onLoaded)
         {
+            // print("load sprite from save");
             string filePath =$"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Pictures/{textureData.Id}.png";
+            // print(filePath);
             StartCoroutine(SpriteLoad.LoadSpriteFromPath(filePath, textureData, (sprite) =>
             {
+                // print(sprite);
+                // print(textureData);
                 _customSpriteStorage.AddSprite(sprite, textureData);
                 onLoaded?.Invoke();
             }));

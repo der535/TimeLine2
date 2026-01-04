@@ -55,7 +55,7 @@ namespace TimeLine
                 }
             }
 
-            _gameEventBus.Raise(new DeselectObjectEvent());
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
 
         internal void SingleRemove(TrackObjectData select)
@@ -96,7 +96,7 @@ namespace TimeLine
             _trackObjectStorage.Remove(select);
         }
 
-        private void ListRemove(TrackObjectGroup list)
+        internal void ListRemove(TrackObjectGroup list)
         {
             foreach (var item in list.TrackObjectDatas)
             {
