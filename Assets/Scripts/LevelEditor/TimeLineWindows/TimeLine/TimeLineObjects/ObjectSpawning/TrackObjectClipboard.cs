@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using TimeLine.TimeLine;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning
 {
@@ -34,7 +35,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         {
             dataCopy = new List<GameObjectSaveData>();
             var minTicks = selectedObjects.Min(x => x.trackObject.StartTimeInTicks);
-            var savedTime = _main.TicksCurrentTime();
+            var savedTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(minTicks);
             foreach (var sObject in selectedObjects)
             {
@@ -60,7 +61,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             var minTime = GetMinTime(dataCopy);
             foreach (var data in dataCopy)
             {
-                data.startTime = data.startTime - minTime + _main.TicksCurrentTime();
+                data.startTime = data.startTime - minTime + TimeLineConverter.Instance.TicksCurrentTime();
                 if (data is GroupGameObjectSaveData group)
                 {
                     PasteGroup(group);

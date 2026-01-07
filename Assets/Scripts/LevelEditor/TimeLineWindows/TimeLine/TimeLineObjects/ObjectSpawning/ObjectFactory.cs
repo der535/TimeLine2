@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TimeLine.TimeLine;
+using UnityEngine;
 using Zenject;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning
@@ -88,7 +89,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 .InstantiatePrefab(_trackObjectPrefab, trackLine.RectTransform)
                 .GetComponent<TrackObject>();
 
-            double actualStartTime = startTime >= 0 ? startTime : _main.TicksCurrentTime();
+            double actualStartTime = startTime >= 0 ? startTime : TimeLineConverter.Instance.TicksCurrentTime();
             trackObject.Setup(ticksLifeTime, name, trackLine, string.Empty,actualStartTime);
 
             return trackObject;

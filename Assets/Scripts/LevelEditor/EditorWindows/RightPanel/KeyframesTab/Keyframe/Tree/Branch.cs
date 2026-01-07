@@ -87,6 +87,47 @@ public class Branch
         }
     }
     
+    public void RemoveNode(TreeNode nodeToRemove)
+    {
+        if (nodeToRemove == null) return;
+    
+        // Запрещаем удаление корневого узла
+        if (nodeToRemove == Root)
+        {
+            Debug.LogWarning("[Branch] Нельзя удалить корневой узел ветки.");
+            return;
+        }
+
+        // 1. Находим родителя ноды
+        // В TreeNode обычно полезно хранить ссылку на Parent, 
+        // но если её нет, ищем родителя по пути
+        string parentPath = GetParentPathFromPath(nodeToRemove.Path);
+        TreeNode parentNode = FindNode(parentPath);
+
+        if (parentNode != null)
+        {
+            // Удаляем узел из списка детей родителя
+            parentNode.Children.Remove(nodeToRemove);
+        }
+
+        // 2. Рекурсивно удаляем саму ноду и всех её потомков из общего списка Nodes
+        RemoveNodeFromListRecursive(nodeToRemove);
+    
+        Debug.Log($"[Branch] Узел '{nodeToRemove.Name}' и его потомки удалены.");
+    }
+
+    private void RemoveNodeFromListRecursive(TreeNode node)
+    {
+        // Сначала проходим по всем детям
+        foreach (var child in node.Children)
+        {
+            RemoveNodeFromListRecursive(child);
+        }
+
+        // Удаляем текущий узел из плоского списка Nodes
+        Nodes.Remove(node);
+    }
+    
     public TreeNode FindNode(string path)
     {
         // Debug.Log($"[FindNode] Начало поиска по пути: '{path}'");

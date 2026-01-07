@@ -3,6 +3,7 @@ using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -32,6 +33,7 @@ namespace TimeLine
         private TransformComponent _component;
         private GameEventBus _gameEventBus;
         private TrackObjectStorage _trackObjectStorage;
+        private TimeLineConverter _timeLineConverter;
         
         private TrackObject _trackObject;
         private Main _main;
@@ -40,11 +42,12 @@ namespace TimeLine
         private GenericEventBus.GenericEventBus<IEvent>.EventHandler<TickSmoothTimeEvent> _tickEventHandler;
 
         [Inject]
-        private void Construct(GameEventBus eventBus, TrackObjectStorage trackObjectStorage, Main main)
+        private void Construct(GameEventBus eventBus, TrackObjectStorage trackObjectStorage, Main main, TimeLineConverter timeLineConverter)
         {
             _gameEventBus = eventBus;
             _trackObjectStorage = trackObjectStorage;
             _main = main;
+            _timeLineConverter = timeLineConverter;
         }
         
         private void Start()
@@ -73,7 +76,7 @@ namespace TimeLine
             if(ComponentActive.Value == false || gameObject.activeSelf == false) return;
             
             // Конвертируем тики в секунды с учетом BPM
-            double seconds = TicksToSeconds(ticks, _main.MusicData.bpm);
+            double seconds = _timeLineConverter.TicksToSeconds(ticks);
             
             if(DynamicXPositionActive.Value)
                 _component.XPosition.Value = (float)(DynamicXPosition.Value.x + seconds * DynamicXPosition.Value.y);
@@ -90,11 +93,5 @@ namespace TimeLine
             if(DynamicYScaleActive.Value)
                 _component.YScale.Value = (float)(DynamicYScale.Value.x + seconds * DynamicYScale.Value.y);
         }
-        
-        private double TicksToSeconds(double ticks, double bpm)
-        {
-            // Конвертация тиков в секунды: ticks * (60 / (bpm * TICKS_PER_BEAT))
-            return ticks * (60.0 / (bpm * Main.TICKS_PER_BEAT));
-        } 
     }
 }

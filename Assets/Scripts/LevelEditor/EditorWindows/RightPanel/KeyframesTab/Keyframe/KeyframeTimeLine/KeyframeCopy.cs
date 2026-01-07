@@ -3,8 +3,10 @@ using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
-using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.KeyframeTimeLine;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -24,16 +26,20 @@ namespace TimeLine
         private Main _main;
         private ActionMap _actionMap;
         private GameEventBus _gameEventBus;
+        private M_KeyframeSelectedStorage _selectedKeyframesStorage;
+        private KeyfeameVizualizer _selectedKeyframeVizualizer;
 
         private List<(KeyframeSaveData, Track)> copyKeyframes = new();
         private double minTime;
 
         [Inject]
-        private void Construct(Main main, GameEventBus eventBus, ActionMap actionMap)
+        private void Construct(Main main, GameEventBus eventBus, ActionMap actionMap, M_KeyframeSelectedStorage selectedKeyframesStorage, KeyfeameVizualizer keyframeVizualizer)
         {
             _gameEventBus = eventBus;
             _main = main;
             _actionMap = actionMap;
+            _selectedKeyframesStorage = selectedKeyframesStorage;
+            _selectedKeyframeVizualizer = keyframeVizualizer;
         }
 
         private void Start()
@@ -42,24 +48,25 @@ namespace TimeLine
             {
                 if (!_actionMap.Editor.LeftCtrl.IsPressed() || !windowsFocus.IsFocused) return;
 
-                if (!keyframeTypeActive.IsBezier() && keyframeSelectController.SelectedKeyframe.Count > 0)
+                if (!keyframeTypeActive.IsBezier() && _selectedKeyframesStorage.Keyframes.Count > 0)
                 {
                     copyKeyframes.Clear();
                     
-                    minTime = keyframeVizualizer.GetMinTimeSelectedKeyframe(keyframeSelectController.SelectedKeyframe);
-                    foreach (var keyframe in keyframeSelectController.SelectedKeyframe)
+                    minTime = keyframeVizualizer.GetMinTimeSelectedKeyframe(_selectedKeyframesStorage.Keyframes);
+                    foreach (var keyframe in _selectedKeyframesStorage.Keyframes)
                     {
-                        Copy(keyframe.Keyframe, keyframe.Track);
+                        
+                        Copy(keyframe, _selectedKeyframeVizualizer.GetKeyframeObjectData(keyframe).Track);
                     }
                 }
-                else if(bezierSelectPointsController.selectedPoints.Count > 0)
+                else if(_selectedKeyframesStorage.Keyframes.Count > 0)
                 {
                     copyKeyframes.Clear();
 
                     keyframeVizualizer.GetAllKeyframes();
 
                     var result = keyframeVizualizer.GetAllKeyframes().Where(k =>
-                        bezierSelectPointsController.selectedPoints.Any(b => k.Item2 == b.BezierDragPoint._keyframe));
+                        _selectedKeyframesStorage.Keyframes.Any(b => k.Item2 == b));
                     
                     var valueTuples = result.ToList();
                     minTime = valueTuples.Min(i => i.Item2.Ticks);
@@ -98,7 +105,7 @@ namespace TimeLine
         {
             Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe);
             var difference = keyframe.Ticks - minTimeSelected;
-            loadedKeyframe.Ticks = _main.TicksCurrentTime() - trackObject.StartTimeInTicks + difference;
+            loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.StartTimeInTicks + difference;
             track.AddKeyframe(loadedKeyframe);
             _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
         }

@@ -3,6 +3,7 @@ using System.Linq;
 using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Installers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using UnityEngine;
 using Zenject;
@@ -105,21 +106,6 @@ namespace TimeLine
             yield return isDamageable;
             yield return isObstacle;
         }
-
-        // public override void CopyTo(Component targetComponent)
-        // {
-        //     if (targetComponent is BoxCollider2DComponent other)
-        //     {
-        //         other.OffsetX.Value = _boxCollider2DOutline.BoxCollider.offset.x;
-        //         other.OffsetY.Value = _boxCollider2DOutline.BoxCollider.offset.y;
-        //         other.SizeX.Value = _boxCollider2DOutline.BoxCollider.size.x;
-        //         other.SizeY.Value = _boxCollider2DOutline.BoxCollider.size.y;
-        //     }
-        //     else
-        //     {
-        //         throw new ArgumentException("Target component must be of type NameComponent");
-        //     }
-        // }
         
         private void HandleSelectObjectEvent(ref SelectObjectEvent selectObjectEvent)
         {
@@ -155,12 +141,5 @@ namespace TimeLine
             
             Destroy(_boxCollider2DOutline.gameObject);
         }
-        //
-        // public override Component Copy(GameObject targetGameObject)
-        // {
-        //     var component = targetGameObject.AddComponent<BoxCollider2DComponent>();
-        //     CopyTo(component);
-        //     return component;
-        // }
     }
 }

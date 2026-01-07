@@ -1,13 +1,23 @@
 using System.Collections.Generic;
 using System.Linq;
+using EventBus;
 using NaughtyAttributes;
 using TimeLine;
 using UnityEngine;
+using Zenject;
 
 public class BranchCollection : MonoBehaviour
 {
     public List<Branch> Branches { get; } = new List<Branch>();
 
+    private GameEventBus _gameEventBus;
+
+    [Inject]
+    private void Constructor(GameEventBus gameEventBus)
+    {
+        _gameEventBus = gameEventBus;
+    }
+    
     [Button]
     public void printTree()
     {
@@ -50,60 +60,6 @@ public class BranchCollection : MonoBehaviour
         var newBranch = AddBranch(branchId, branchName);
         return newBranch.AddNode(path);
     }
-
-    // // 🔑 Новое: загрузка всей коллекции (вся логика здесь!)
-    // public Branch LoadFromSaveData(BranchSaveData branchData)
-    // {
-    //     if (string.IsNullOrEmpty(branchData?.ID)) return null; 
-    //
-    //     // Создаём новую ветку
-    //     var branch = new Branch(branchData.ID, branchData.Name);
-    //     branch.Nodes.Clear(); // удаляем автоматически созданный Root
-    //
-    //     // Словарь для поиска узлов по Path
-    //     var nodeMap = new Dictionary<string, TreeNode>();
-    //
-    //     // Создаём все узлы
-    //     foreach (var nodeData in branchData.Nodes)
-    //     {
-    //         if (string.IsNullOrEmpty(nodeData?.Path) || string.IsNullOrEmpty(nodeData.Name)) continue;
-    //
-    //         var node = new TreeNode(nodeData.Name, nodeData.Path);
-    //         nodeMap[node.Path] = node;
-    //     }
-    //
-    //     // Восстанавливаем иерархию
-    //     foreach (var nodeData in branchData.Nodes)
-    //     {
-    //         if (!nodeMap.TryGetValue(nodeData.Path, out TreeNode node)) continue;
-    //
-    //         // Определяем корень: Path == Name
-    //         bool isRoot = nodeData.Path == nodeData.Name;
-    //
-    //         if (isRoot)
-    //         {
-    //             branch.Root = node;
-    //         }
-    //         else
-    //         {
-    //             // Находим родителя
-    //             string parentPath = GetParentPathFromPath(nodeData.Path);
-    //             if (nodeMap.TryGetValue(parentPath, out TreeNode parent))
-    //             {
-    //                 parent.Children.Add(node);
-    //             }
-    //             else
-    //             {
-    //                 Debug.LogWarning($"Parent not found for: {nodeData.Path}");
-    //             }
-    //         }
-    //
-    //         branch.Nodes.Add(node);
-    //     }
-    //
-    //     Branches.Add(branch);
-    //     return branch;
-    // }
 
     // Вспомогательный метод (можно сделать private static)
     private static string GetParentPathFromPath(string fullPath)

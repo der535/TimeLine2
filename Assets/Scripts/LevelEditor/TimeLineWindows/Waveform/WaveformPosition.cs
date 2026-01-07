@@ -4,6 +4,8 @@ using NaughtyAttributes;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core.MusicData;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 using OldPanEvent = TimeLine.EventBus.Events.Input.OldPanEvent;
@@ -24,6 +26,7 @@ namespace TimeLine.Waveform
         private Main _main;
         private TimeLineScroll _timeLineScroll;
         private GameEventBus _gameEventBus;
+        private M_MusicData _musicData;
 
         private float _panOffset;
         private float _scrollOffset;
@@ -34,13 +37,14 @@ namespace TimeLine.Waveform
             TimeLineSettings timeLineSettings,
             Main main,
             GameEventBus gameEventBus,
-            TimeLineScroll timeLineScroll)
+            TimeLineScroll timeLineScroll, M_MusicData musicData)
         {
             _mainObjects = mainObjects;
             _timeLineSettings = timeLineSettings;
             _main = main;
             _timeLineScroll = timeLineScroll;
             _gameEventBus = gameEventBus;
+            _musicData = musicData;
         }
 
         private void Start()
@@ -67,7 +71,7 @@ namespace TimeLine.Waveform
         
         internal void BuildWaveForm()
         {
-            if(_main.MusicData.music == null) return;
+            if(_musicData.music == null) return;
 
             if (toggle)
             {
@@ -77,7 +81,7 @@ namespace TimeLine.Waveform
                 waveformRect.sizeDelta =
                     new Vector2(
                         (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) *
-                        _main.MusicData.music.length * _main.MusicData.bpm / 60,
+                        _musicData.music.length * _musicData.bpm / 60,
                         waveformRect.rect.height);
             }
 
@@ -86,13 +90,13 @@ namespace TimeLine.Waveform
                 waveformRect.sizeDelta =
                     new Vector2(
                         (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) *
-                        _main.MusicData.music.length * (factor / acur), waveformRect.rect.height);
+                        _musicData.music.length * (factor / acur), waveformRect.rect.height);
             }
             
             waveformRect.localPosition =
                 new Vector2(
                     (waveformRect.sizeDelta.x / 2) + _mainObjects.ContentRectTransform.offsetMin.x -
-                    _main.BeatPerSecondOffset()*(_timeLineSettings.DistanceBetweenBeatLines +_timeLineScroll.Zoom), 0);
+                    TimeLineConverter.Instance.BeatPerSecondOffset()*(_timeLineSettings.DistanceBetweenBeatLines +_timeLineScroll.Zoom), 0);
         }
     }
 }

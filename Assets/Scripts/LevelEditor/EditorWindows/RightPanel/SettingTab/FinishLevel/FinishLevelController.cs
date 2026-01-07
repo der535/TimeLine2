@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.LevelFinishedEvent;
 using TimeLine.EventBus.Events.TimeLine;
+using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Player;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
 using TimeLine.TimeLine;
@@ -31,6 +32,7 @@ namespace TimeLine
         private TimeLineConverter _timeLineConverter;
         private FloatInputValidator _inputValidator;
         private SaveLevel _saveLevel;
+        private M_MusicData _musicData;
 
         private TimeLineMarker _timeLineMarker;
 
@@ -44,7 +46,7 @@ namespace TimeLine
             Main main,
             TimeLineMarkersController timeLineMarkersController, 
             TimeLineConverter timeLineConverter,
-            SaveLevel saveLevel)
+            SaveLevel saveLevel, M_MusicData musicData)
         {
             _gameEventBus = gameEventBus;
             _main = main;
@@ -52,7 +54,7 @@ namespace TimeLine
             _timeLineMarkersController = timeLineMarkersController;
             _timeLineConverter = timeLineConverter;
             _saveLevel = saveLevel;
-            
+            _musicData = musicData;
             
         }
 
@@ -87,7 +89,7 @@ namespace TimeLine
 
                 if (_finishTime == 0)
                 {
-                    SetTime(_timeLineConverter.SecondsToTicks(_main.MusicData.music.length));
+                    SetTime(_timeLineConverter.SecondsToTicks(_musicData.music.length));
                     inputField.text = _finishTime.ToString(CultureInfo.InvariantCulture);
                 }
 

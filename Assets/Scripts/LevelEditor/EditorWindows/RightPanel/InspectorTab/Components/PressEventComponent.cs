@@ -4,6 +4,7 @@ using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -112,27 +113,27 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components
             if (UnityEngine.Input.GetKeyDown(KeyCodeParameter.Value) && !_isPressed)
             {
                 var center = _trackObject.StartTimeInTicks + _trackObject.TimeDuractionInTicks / 2;
-                if (_main.TicksCurrentTime() <=
+                if (TimeLineConverter.Instance.TicksCurrentTime() <=
                     center + _trackObject.TimeDuractionInTicks * (perfectArea.Value / 100 / 2) &&
-                    _main.TicksCurrentTime() >=
+                    TimeLineConverter.Instance.TicksCurrentTime() >=
                     center - _trackObject.TimeDuractionInTicks * (perfectArea.Value / 100 / 2))
                 {
                     if (prefabPerfect.Value != null)
                     {
-                        _trackObjectDataPerfect.trackObject.SetTime(_main.TicksCurrentTime());
+                        _trackObjectDataPerfect.trackObject.SetTime(TimeLineConverter.Instance.TicksCurrentTime());
                         _trackObjectDataPerfect.trackObject.isActive = true;
                     }
 
                     print("HIT!");
                 }
-                else if (_main.TicksCurrentTime() <=
+                else if (TimeLineConverter.Instance.TicksCurrentTime() <=
                          center + _trackObject.TimeDuractionInTicks * (middleArea.Value / 100 / 2) &&
-                         _main.TicksCurrentTime() >=
+                         TimeLineConverter.Instance.TicksCurrentTime() >=
                          center - _trackObject.TimeDuractionInTicks * (middleArea.Value / 100 / 2))
                 {
                     if (prefabMiddel.Value != null)
                     {
-                        _trackObjectDataMiddel.trackObject.SetTime(_main.TicksCurrentTime());
+                        _trackObjectDataMiddel.trackObject.SetTime(TimeLineConverter.Instance.TicksCurrentTime());
                         _trackObjectDataPerfect.trackObject.isActive = true;
                     }
 
@@ -142,7 +143,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components
                 {
                     if (prefabMiss.Value != null)
                     {
-                        _trackObjectDataMiss.trackObject.SetTime(_main.TicksCurrentTime());
+                        _trackObjectDataMiss.trackObject.SetTime(TimeLineConverter.Instance.TicksCurrentTime());
                         _trackObjectDataPerfect.trackObject.isActive = true;
                     }
 

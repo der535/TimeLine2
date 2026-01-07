@@ -81,7 +81,7 @@ namespace TimeLine.Keyframe
                 
                 // float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x;
                 float relativePosition = newPositionX - rootOffset;
-                float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Pan);
+                float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Zoom);
                 float finalPositionX = roundedRelativePosition + rootOffset;
 
                 _rectTransform.anchoredPosition = new Vector2(finalPositionX, _rectTransform.anchoredPosition.y);
@@ -89,7 +89,7 @@ namespace TimeLine.Keyframe
                 // Вычисляем тики на основе относительной позиции
                 var startTick = _keyframe.Ticks;
                 _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
-                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Pan)));
+                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Zoom)));
                 _keyframeVizualizer.MultipleDrag(_keyframe.Ticks - startTick, this);
                     
                 _sortKeyframes.Invoke();

@@ -1,88 +1,41 @@
-﻿using System.Collections.Generic;
-using EventBus;
+﻿using EventBus;
 using TimeLine.EventBus.Events.Bezier;
-using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve
 {
     public class BezierSelectPointsController : MonoBehaviour
     {
-        public List<BezierPoint> selectedPoints = new List<BezierPoint>();
-        
+        // public List<BezierPoint> selectedPoints = new();
+
         private GameEventBus _gameEventBus;
         private BezierController _bezierController;
+        private M_KeyframeSelectedStorage _selectKeyframe;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, BezierController bezierController)
+        private void Constructor(GameEventBus gameEventBus, BezierController bezierController,
+            M_KeyframeSelectedStorage selectedStorage)
         {
             _gameEventBus = gameEventBus;
             _bezierController = bezierController;
+            _selectKeyframe = selectedStorage;
         }
-
-        private void Start()
-        {
-            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Deselect(), -1);
-            _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Deselect(), -1);
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Deselect(), -1);
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Deselect(), -1);
-            
-            _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
-            {
-                bool isShiftHold = UnityEngine.Input.GetKey(KeyCode.LeftShift);
-                var point = data.BezierPoint;
-
-                if (!selectedPoints.Contains(point) && !isShiftHold)
-                {
-                    Deselect();
-                    selectedPoints.Add(point);
-                }
-                else if (selectedPoints.Contains(point) && isShiftHold)
-                {
-                    point.BezierSelectPoint.Deselect();
-                    selectedPoints.Remove(point);
-                }
-
-                if (isShiftHold && !selectedPoints.Contains(point))
-                {
-                    selectedPoints.Add(point);
-                }
-            });
-        }
-
-        // private void Deselect(BezierPoint selectedPoint = null)
-        // {
-        //     if (selectedPoints == null || selectedPoints.Count <= 0) return;
-        //     foreach (var point in selectedPoints)
-        //     {
-        //         if(selectedPoint == point) continue;
-        //             point.BezierSelectPoint.Deselect();
-        //     }
-        //     
-        //     selectedPoints.Clear();
-        // }
         
-        public void Deselect()
+        public void MultipleDrag(double tickDifferent, double valueDifferent,
+            global::TimeLine.Keyframe.Keyframe thisKeyframe)
         {
-            if (selectedPoints == null || selectedPoints.Count <= 0) return;
-            foreach (var point in selectedPoints)
+            foreach (var keyframe in _selectKeyframe.Keyframes)
             {
-                point.BezierSelectPoint.Deselect();
-            }
-            
-            selectedPoints.Clear();
-        }
+                if (thisKeyframe == keyframe) continue;
 
-        public void MultipleDrag(double tickDifferent, double valueDifferent,  Keyframe.Keyframe thisKeyframe)
-        {
-            foreach (var point in selectedPoints)
-            {
-                if(thisKeyframe == point.BezierDragPoint._keyframe) continue;
-                
-                point.BezierDragPoint._keyframe.Ticks += tickDifferent;
-                point.BezierDragPoint._keyframe.GetData().SetValue((float)((float)point.BezierDragPoint._keyframe.GetData().GetValue() + valueDifferent));
+                _bezierController.GetBezierPoint(keyframe).BezierDragPoint._keyframe.Ticks += tickDifferent;
+                _bezierController.GetBezierPoint(keyframe).BezierDragPoint._keyframe.GetData().SetValue(
+                    (float)((float)_bezierController.GetBezierPoint(keyframe).BezierDragPoint._keyframe.GetData()
+                        .GetValue() + valueDifferent));
             }
+
             _bezierController.UpdatePositions();
         }
     }

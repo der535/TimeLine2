@@ -31,6 +31,10 @@ namespace TimeLine
 
         public void Deselect()
         {
+            print( image.color);
+            print( image.color);
+            print(image);
+            if(image==null) return;
             image.color = deselectedColor;
         }
     }

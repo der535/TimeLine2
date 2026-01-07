@@ -1,6 +1,7 @@
 using TimeLine.CustomInspector.Logic;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -31,9 +32,9 @@ namespace TimeLine
             
             if (_keyframeTrackStorage.GetTrack(node) == null)
                 _keyframeTrackStorage.AddTrack(node, new Track(target, target.name, fieldName.AnimationColor),
-                    trackObjectData.trackObject);
+                    trackObjectData.trackObject, trackObjectData.branch.ID);
             
-            _keyframeTrackStorage.AddKeyframe(node, _main.TicksCurrentTime() - trackObjectData.trackObject.StartTimeInTicks,
+            _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectData.trackObject.StartTimeInTicks,
                 animationData);
         }
     }

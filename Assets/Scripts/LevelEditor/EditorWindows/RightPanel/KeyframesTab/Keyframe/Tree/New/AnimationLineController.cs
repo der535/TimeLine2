@@ -32,7 +32,7 @@ namespace TimeLine
         {
             foreach (var line in Lines.ToArray())
             {
-                Destroy(line.FieldLine.gameObject);
+               if(line.FieldLine!=null) Destroy(line.FieldLine.gameObject);
                 Destroy(line.KeyframeLine.gameObject);
             }
             
@@ -55,6 +55,7 @@ namespace TimeLine
         }
     }
 
+    [Serializable]
     public class AnimationLineData
     {
         public TreeNode LogicalNode;

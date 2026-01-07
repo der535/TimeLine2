@@ -1,7 +1,9 @@
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -19,15 +21,17 @@ namespace TimeLine
         private TimeLineSettings _timeLineSettings;
         private GridUI _gridUI;
         private TrackObject _trackObjectData;
+        private M_MusicData _musicData;
 
         [Inject]
         private void Construct(Main main, GameEventBus gameEventBus, TimeLineSettings timeLineSettings,
-            GridUI gridUI)
+            GridUI gridUI, M_MusicData musicData)
         {
             _gridUI = gridUI;
             _main = main;
             _gameEventBus = gameEventBus;
             _timeLineSettings = timeLineSettings;
+            _musicData = musicData;
         }
 
         private void Awake()
@@ -41,7 +45,7 @@ namespace TimeLine
                 (ref EventBus.Events.KeyframeTimeLine.PanEvent data) =>
                 {
                     if(_trackObjectData != null)
-                        UpdatePosition(_main.TicksCurrentTime(), _trackObjectData);
+                        UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), _trackObjectData);
                 });
         }
 
@@ -53,12 +57,12 @@ namespace TimeLine
         public void OnSelectTrackObject(TrackObjectData trackObjectData)
         {
             _trackObject = trackObjectData.trackObject;
-            UpdatePosition(_main.TicksCurrentTime());
+            UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime());
         }
 
         public void OnDragTrackObject(ref DragTrackObjectEvent dragTrackObjectEvent)
         {
-            UpdatePosition(_main.TicksCurrentTime(), dragTrackObjectEvent.Track.trackObject);
+            UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), dragTrackObjectEvent.Track.trackObject);
         }
 
         private void UpdatePosition(double ticks, TrackObject trackObject)
@@ -71,12 +75,12 @@ namespace TimeLine
             double timeDiffTicks = ticks - startTimeTicks;
 
             // Конвертируем разницу в тиках в секунды для позиционирования
-            double timeDiffSeconds = TicksToSeconds(timeDiffTicks, _main.MusicData.bpm);
+            double timeDiffSeconds = TicksToSeconds(timeDiffTicks, _musicData.bpm);
 
             // Вычисляем позицию
             float positionX = (float)(timeDiffSeconds *
-                                      (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeScroll.Pan) *
-                                      (_main.MusicData.bpm / 60));
+                                      (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeScroll.Zoom) *
+                                      (_musicData.bpm / 60));
 
             rect.anchoredPosition = new Vector2(positionX, rect.anchoredPosition.y);
         }
@@ -91,12 +95,12 @@ namespace TimeLine
 
         private double SecondsToTicks(double seconds, double bpm)
         {
-            return seconds * (bpm * Main.TICKS_PER_BEAT / 60.0);
+            return seconds * (bpm * TimeLineConverter.TICKS_PER_BEAT / 60.0);
         }
 
         private double TicksToSeconds(double ticks, double bpm)
         {
-            return ticks * (60.0 / (bpm * Main.TICKS_PER_BEAT));
+            return ticks * (60.0 / (bpm * TimeLineConverter.TICKS_PER_BEAT));
         }
 
         private void OnDestroy()

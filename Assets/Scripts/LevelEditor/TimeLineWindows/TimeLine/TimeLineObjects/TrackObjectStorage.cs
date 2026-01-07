@@ -8,6 +8,7 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -137,15 +138,37 @@ namespace TimeLine
             }
         }
 
+        internal TrackObjectData FindObjectByID(string id)
+        {
+            foreach (var objectData in _trackObjects)
+            {
+                if (objectData.sceneObjectID == id)
+                {
+                    return objectData;
+                }
+            }
+
+            foreach (var objectData in _trackObjectGroups)
+            {
+                if (objectData.sceneObjectID == id)
+                {
+                    return objectData;
+                }
+            }
+
+            Debug.LogWarning($"Не найден объект {id}");
+            return null;
+        }
+
         internal void CheckActiveTrackSingle(TrackObjectData trackObject)
         {
             if (trackObject is TrackObjectGroup group)
             {
-                CheckActiveGroup(group, _main.TicksCurrentTime());
+                CheckActiveGroup(group, TimeLineConverter.Instance.TicksCurrentTime());
             }
             else
             {
-                CheckActiveTrackObjects(trackObject, _main.TicksCurrentTime());
+                CheckActiveTrackObjects(trackObject, TimeLineConverter.Instance.TicksCurrentTime());
             }
         }
 
@@ -171,6 +194,7 @@ namespace TimeLine
             {
                 trackObject.sceneObject.SetActive(false);
             }
+            
             
             
             //REMOVE TEMP OBJECTS
@@ -482,7 +506,7 @@ namespace TimeLine
             //Debug.Log("[DeselectObject] All objects deselected.");
         }
 
-        private void DeselectObject(TrackObjectData deselectObject)
+        internal void DeselectObject(TrackObjectData deselectObject)
         {
             selectedObject = null;
             foreach (var trackObject in _trackObjects)
@@ -534,7 +558,7 @@ namespace TimeLine
                 DeselectAllObject();
 
             InternalSelectObject(targetData);
-            _selectObjectController.Select(targetData);
+            _selectObjectController.SelectMultiple(targetData);
             SelectColor();
         }
         

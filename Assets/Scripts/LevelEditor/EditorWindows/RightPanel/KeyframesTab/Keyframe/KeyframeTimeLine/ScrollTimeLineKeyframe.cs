@@ -47,7 +47,7 @@ namespace TimeLine.Keyframe.KeyframeTimeLine
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) =>
             {
                 float curPos = (float)_timeLineConverter.GetCursorBeatPosition(_oldPan,0, content, panel);
-                SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos, scroll.Pan) -
+                SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos, scroll.Zoom) -
                               _timeLineConverter.CursorPosition(panel).x));
             }, 1);
         }

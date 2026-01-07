@@ -96,7 +96,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
             }
 
             print(data);
-            _selectObjectController.Select(data);
+            _selectObjectController.SelectMultiple(data);
         }
     }
 

@@ -1,5 +1,6 @@
 using System;
 using TimeLine.Installers;
+using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -9,6 +10,7 @@ namespace TimeLine.Input
     public class CursorBeatPosition : MonoBehaviour
     {
         [SerializeField] private TimeLineSettings timeLineSettings;
+        [SerializeField] private RectTransform clickArea;
 
         [FormerlySerializedAs("gridSystem")] [SerializeField]
         private GridUI gridUI;
@@ -35,7 +37,11 @@ namespace TimeLine.Input
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public void SetActive(bool isActive) => _isActive = isActive;
+        public void SetActive(bool isActive)
+        {
+            // _isActive = isActive;
+        }
+
 
         public Vector2 GetCursorPosition()
         {
@@ -43,9 +49,26 @@ namespace TimeLine.Input
                 UnityEngine.Input.mousePosition, _mainObjects.MainCamera, out var vector2);
             return vector2;
         }
+        public void ClickArea()
+        {
+            // 1. Переводим позицию мыши в локальные координаты RectTransform
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    clickArea, 
+                    UnityEngine.Input.mousePosition, 
+                    _mainObjects.MainCamera, 
+                    out var localPoint))
+            {
+                // 2. Проверяем, входит ли локальная точка в границы прямоугольника
+                if (clickArea.rect.Contains(localPoint) && UnityEngine.Input.GetMouseButtonDown(0))
+                {
+                    _isActive = true;
+                }
+            }
+        }
 
         private void Update()
         {
+            ClickArea();
             bool isMouseHeld = _actionMap.Editor.MouseLeft.IsPressed();
 
             if (!_dragStarted)
@@ -68,6 +91,7 @@ namespace TimeLine.Input
                 {
                     // Мышь отпущена — сбрасываем флаг, возвращаемся к строгому режиму
                     _dragStarted = false;
+                    _isActive = false;
                 }
             }
         }
@@ -77,7 +101,7 @@ namespace TimeLine.Input
             Vector2 cursorPos = GetCursorPosition();
             float pixelX = cursorPos.x - _mainObjects.ContentRectTransform.offsetMin.x;
 
-            double ticksPerPixel = Main.TICKS_PER_BEAT / (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
+            double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
             double rawTicks = pixelX * ticksPerPixel;
 
             // 1. Сетка работает всегда (базовое поведение)

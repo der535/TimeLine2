@@ -5,6 +5,7 @@ using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -40,7 +41,7 @@ namespace TimeLine
 
         private void Update()
         {
-            if (_main.TicksCurrentTime() > _trackObjectData.trackObject.StartTimeInTicks && isShakeActive == false)
+            if (TimeLineConverter.Instance.TicksCurrentTime() > _trackObjectData.trackObject.StartTimeInTicks && isShakeActive == false)
             {
                 isShakeActive = true;
                 print(isShakeActive);

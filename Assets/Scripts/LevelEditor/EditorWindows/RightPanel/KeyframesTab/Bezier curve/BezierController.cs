@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using EventBus;
 using TimeLine;
 using TimeLine.EventBus.Events.Grid;
@@ -9,6 +10,8 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.Keyframe.KeyframeTimeLine;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -66,8 +69,11 @@ namespace TimeLine
         private DiContainer _container;
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
+        private M_KeyframeSelectedStorage _keyframeSelectedStorage;
 
         private List<BezierPoint> activePoints = new();
+
+        // private List<BezierPoint> points;
 
 
         private string LogFile => string.IsNullOrEmpty(logFilePath)
@@ -76,24 +82,37 @@ namespace TimeLine
 
         [Inject]
         void Construct(DiContainer container, GameEventBus gameEventBus, TimeLineConverter timeLineConverter,
-            TimeLineSettings timeLineSettings, ActionMap actionMap)
+            TimeLineSettings timeLineSettings, ActionMap actionMap, M_KeyframeSelectedStorage keyframeSelectedStorage)
         {
             _container = container;
             _gameEventBus = gameEventBus;
             _timeLineConverter = timeLineConverter;
             _timeLineSettings = timeLineSettings;
             _actionMap = actionMap;
+            _keyframeSelectedStorage = keyframeSelectedStorage;
         }
 
+        public BezierPoint GetBezierPoint(Keyframe.Keyframe keyframe)
+        {
+           return activePoints.Find(x => x.BezierDragPoint._keyframe == keyframe);
+        }
+
+        public void DeselectAll()
+        {
+            foreach (var point in activePoints)
+            {
+                point.BezierSelectPoint.Deselect();
+            }
+        }
 
         private void Focus()
         {
-            List<BezierPoint> focusPoints = new();
-            if (selectPointsController.selectedPoints.Count > 1)
-                focusPoints = selectPointsController.selectedPoints;
+            List<Keyframe.Keyframe> focusPoints = new();
+            if (_keyframeSelectedStorage.Keyframes.Count > 1)
+                focusPoints = _keyframeSelectedStorage.Keyframes;
             else if (activePoints.Count > 1)
             {
-                focusPoints = activePoints;
+                focusPoints = activePoints.Select(x => x.BezierDragPoint._keyframe).ToList();
             }
             else
             {
@@ -108,23 +127,23 @@ namespace TimeLine
 
             foreach (var keyframe in focusPoints)
             {
-                if (keyframe.BezierDragPoint._keyframe.Ticks > maxTime)
-                    maxTime = (float)keyframe.BezierDragPoint._keyframe.Ticks;
-                if (keyframe.BezierDragPoint._keyframe.Ticks < minTime)
-                    minTime = (float)keyframe.BezierDragPoint._keyframe.Ticks;
-                if (keyframe.BezierDragPoint._keyframe.GetData().GetValue() is float value && value > maxValue)
+                if (keyframe.Ticks > maxTime)
+                    maxTime = (float)keyframe.Ticks;
+                if (keyframe.Ticks < minTime)
+                    minTime = (float)keyframe.Ticks;
+                if (keyframe.GetData().GetValue() is float value && value > maxValue)
                     maxValue = value;
-                if (keyframe.BezierDragPoint._keyframe.GetData().GetValue() is float value2 && value2 < minValue)
+                if (keyframe.GetData().GetValue() is float value2 && value2 < minValue)
                     minValue = value2;
             }
             
-            var timeDelta = maxTime / (float)Main.TICKS_PER_BEAT - minTime / (float)Main.TICKS_PER_BEAT;
+            var timeDelta = maxTime / (float)TimeLineConverter.TICKS_PER_BEAT - minTime / (float)TimeLineConverter.TICKS_PER_BEAT;
             var targetWith = (rootPoints.rect.width - spacing - leftPanelAnimations.sizeDelta.x) / timeDelta;
             var result = targetWith - _timeLineSettings.DistanceBetweenBeatLines;
 
 
-            var one = (_timeLineSettings.DistanceBetweenBeatLines + result) * (minTime / (float)Main.TICKS_PER_BEAT);
-            var two = (_timeLineSettings.DistanceBetweenBeatLines + result) * (maxTime / (float)Main.TICKS_PER_BEAT);
+            var one = (_timeLineSettings.DistanceBetweenBeatLines + result) * (minTime / (float)TimeLineConverter.TICKS_PER_BEAT);
+            var two = (_timeLineSettings.DistanceBetweenBeatLines + result) * (maxTime / (float)TimeLineConverter.TICKS_PER_BEAT);
 
             var offset = two - one - leftPanelAnimations.sizeDelta.x;
 
@@ -151,7 +170,7 @@ namespace TimeLine
             lineDrawer?.ClearLines();
             EnsureLogDirectory();
             
-            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build(), -1);
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Build());
@@ -240,6 +259,14 @@ namespace TimeLine
                     if (keyframe != null)
                         keyframe.gameObject.SetActive(active);
             }
+
+            foreach (var keyframe in _keyframeSelectedStorage.Keyframes)
+            {
+                BezierPoint point = activePoints.Find(x => x.BezierDragPoint._keyframe == keyframe);
+                point.Select(true);
+                point.BezierSelectPoint.Select();
+            }
+
         }
 
         public Vector2 GetCursorPosition()
@@ -294,7 +321,7 @@ namespace TimeLine
 
         private void Build()
         {
-            selectPointsController.Deselect();
+            // selectPointsController.Deselect();
 
             if (!_active || !gameObject.activeInHierarchy)
             {
@@ -365,12 +392,12 @@ namespace TimeLine
                     Keyframe.Keyframe prevKey = index - 1 >= 0 ? data[index - 1] : null;
                     Keyframe.Keyframe nextKey = index + 1 < data.Count ? data[index + 1] : null;
 
-                    point.Setup(keyframeData, track.SortKeyframes, prevKey, nextKey, timeLineKeyframeScroll.Pan,
+                    point.Setup(keyframeData, track.SortKeyframes, prevKey, nextKey, timeLineKeyframeScroll.Zoom,
                         verticalBezierZoom.Zoom, track.Keyframes[index]);
 
                     // Конвертируем тики в позицию по X
                     float positionX =
-                        _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Pan) +
+                        _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Zoom) +
                         content.offsetMin.x;
 
                     // Позиция по Y: сначала получаем "чистую" позицию от value и пана, потом ДОБАВЛЯЕМ скролл
@@ -437,7 +464,7 @@ namespace TimeLine
 
             bezierLineDrawer?.ClearLines();
             lineDrawer.ClearBeziers();
-            selectPointsController.Deselect();
+            // selectPointsController.Deselect();
         }
 
         public void UpdatePositions()
@@ -472,12 +499,12 @@ namespace TimeLine
                         ? group._keyframes[keyframe + 1].BezierDragPoint._keyframe
                         : null;
 
-                    point.UpdatePosition(keyframeData, prevKey, nextKey, timeLineKeyframeScroll.Pan,
+                    point.UpdatePosition(keyframeData, prevKey, nextKey, timeLineKeyframeScroll.Zoom,
                         verticalBezierZoom.Zoom);
 
                     // Обновляем X-позицию
                     float positionX =
-                        _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Pan) +
+                        _timeLineConverter.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeScroll.Zoom) +
                         content.offsetMin.x;
 
                     // Обновляем Y-позицию

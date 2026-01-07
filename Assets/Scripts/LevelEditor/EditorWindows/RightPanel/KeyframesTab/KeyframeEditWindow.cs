@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.KeyframeTimeLine;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -22,11 +22,13 @@ namespace TimeLine
 
         private GameEventBus _gameEventBus;
         private FloatInputValidator _floatInputValidators;
+        private M_KeyframeSelectedStorage _selectedKeyframesStorage;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, M_KeyframeSelectedStorage selectedKeyframesStorage)
         {
             _gameEventBus = gameEventBus;
+            _selectedKeyframesStorage = selectedKeyframesStorage;
         }
 
         private void Start()
@@ -57,7 +59,7 @@ namespace TimeLine
 
         private void Setup(ref SelectKeyframeEvent _)
         {
-            if (keyframeSelectController.SelectedKeyframe == null || keyframeSelectController.SelectedKeyframe.Count == 0)
+            if (_selectedKeyframesStorage.Keyframes == null || _selectedKeyframesStorage.Keyframes.Count == 0)
                 return;
 
             // Очищаем старые слушатели перед настройкой
@@ -66,7 +68,7 @@ namespace TimeLine
             _dropDown.onValueChanged.RemoveAllListeners();
 
             // --- 1. Логика проверки идентичности данных ---
-            var firstKey = keyframeSelectController.SelectedKeyframe[0].Keyframe;
+            var firstKey = _selectedKeyframesStorage.Keyframes[0];
             double sameTime = firstKey.Ticks;
             var sameValue = firstKey.GetData().GetValue().ToString();
             var sameTypeValue = firstKey.GetData().GetValue().GetType();
@@ -77,9 +79,9 @@ namespace TimeLine
             bool isSameType = true;
             bool isSameInterpolation = true;
 
-            foreach (var wrapper in keyframeSelectController.SelectedKeyframe)
+            foreach (var wrapper in _selectedKeyframesStorage.Keyframes)
             {
-                var k = wrapper.Keyframe;
+                var k = wrapper;
                 if (Math.Abs(sameTime - k.Ticks) > 0.001) isSameTime = false;
                 if (sameValue != k.GetData().GetValue().ToString()) isSameValue = false;
                 if (sameTypeValue != k.GetData().GetValue().GetType()) isSameType = false;
@@ -102,8 +104,8 @@ namespace TimeLine
             {
                 if (int.TryParse(val, out int newTicks))
                 {
-                    foreach (var k in keyframeSelectController.SelectedKeyframe)
-                        k.Keyframe.Ticks = newTicks;
+                    foreach (var k in _selectedKeyframesStorage.Keyframes)
+                        k.Ticks = newTicks;
                 }
             });
 
@@ -130,8 +132,8 @@ namespace TimeLine
                 _floatInputValidators?.Dispose();
                 _floatInputValidators = new FloatInputValidator(valueInput, f =>
                 {
-                    foreach (var k in keyframeSelectController.SelectedKeyframe)
-                        k.Keyframe.GetData().SetValue(f);
+                    foreach (var k in _selectedKeyframesStorage.Keyframes)
+                        k.GetData().SetValue(f);
                 });
             }
 
@@ -152,8 +154,8 @@ namespace TimeLine
                 string selectedText = _dropDown.options[index].text;
                 if (Enum.TryParse(selectedText, out Keyframe.Keyframe.InterpolationType newType))
                 {
-                    foreach (var k in keyframeSelectController.SelectedKeyframe)
-                        k.Keyframe.Interpolation = newType;
+                    foreach (var k in _selectedKeyframesStorage.Keyframes)
+                        k.Interpolation = newType;
                 }
             });
         }

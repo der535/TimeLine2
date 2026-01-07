@@ -1,6 +1,8 @@
 ﻿using System;
 using TimeLine.Bezier_curve;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core.MusicData;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -30,6 +32,7 @@ namespace TimeLine
 
         private Main _main;
         private TimeLineSettings _timeLineSettings;
+        private M_MusicData _musicData;
 
         public Keyframe.Keyframe PrevKey;
         public Keyframe.Keyframe NextKey;
@@ -37,10 +40,11 @@ namespace TimeLine
         private bool isSelected;
 
         [Inject]
-        private void Construct(Main main, TimeLineSettings timeLineSettings)
+        private void Construct(Main main, TimeLineSettings timeLineSettings, M_MusicData musicData)
         {
             _main = main;
             _timeLineSettings = timeLineSettings;
+            _musicData = musicData;
         }
 
         public void Setup(
@@ -57,7 +61,7 @@ namespace TimeLine
             PrevKey = prevKey;
             NextKey = nextKey;
 
-            double currentTime = _main.TicksToSeconds(keyframe.Ticks);
+            double currentTime = TimeLineConverter.Instance.TicksToSeconds(keyframe.Ticks);
             // double currentValue = keyframe.GetData().GetValue() is float val ? val : 0f;
 
             // ---------- IN ----------
@@ -66,7 +70,7 @@ namespace TimeLine
 
             if (prevKey != null)
             {
-                double prevTime = _main.TicksToSeconds(prevKey.Ticks);
+                double prevTime =  TimeLineConverter.Instance.TicksToSeconds(prevKey.Ticks);
                 // double prevValue = prevKey.GetData().GetValue() is float pVal ? pVal : 0f;
 
                 double deltaTime = currentTime - prevTime;
@@ -76,7 +80,7 @@ namespace TimeLine
                 double inValueOffset = inTimeOffset * inTangent;
 
                 tangentLeft.anchoredPosition = new Vector2(
-                    -(float)(inTimeOffset * pan * (_main.MusicData.bpm / 60f)),
+                    -(float)(inTimeOffset * pan * (_musicData.bpm / 60f)),
                     -(float)(inValueOffset * verticalScale)
                 );
             }
@@ -91,7 +95,7 @@ namespace TimeLine
 
             if (nextKey != null)
             {
-                double nextTime = _main.TicksToSeconds(nextKey.Ticks);
+                double nextTime =  TimeLineConverter.Instance.TicksToSeconds(nextKey.Ticks);
                 // double nextValue = nextKey.GetData().GetValue() is float nVal ? nVal : 0f;
 
                 double deltaTime = nextTime - currentTime;
@@ -100,7 +104,7 @@ namespace TimeLine
                 double outValueOffset = outTimeOffset * outTangent;
 
                 tangentRight.anchoredPosition = new Vector2(
-                    (float)(outTimeOffset * pan * (_main.MusicData.bpm / 60f)),
+                    (float)(outTimeOffset * pan * (_musicData.bpm / 60f)),
                     (float)(outValueOffset * verticalScale)
                 );
             }
@@ -142,7 +146,7 @@ namespace TimeLine
             
             Select(isSelected);
 
-            double currentTime = _main.TicksToSeconds(keyframe.Ticks);
+            double currentTime =  TimeLineConverter.Instance.TicksToSeconds(keyframe.Ticks);
             // double currentValue = keyframe.GetData().GetValue() is float val ? val : 0f;
 
             // ---------- IN ----------
@@ -152,7 +156,7 @@ namespace TimeLine
 
             if (prevKey != null)
             {
-                double prevTime = _main.TicksToSeconds(prevKey.Ticks);
+                double prevTime =  TimeLineConverter.Instance.TicksToSeconds(prevKey.Ticks);
                 // double prevValue = prevKey.GetData().GetValue() is float pVal ? pVal : 0f;
 
                 double deltaTime = currentTime - prevTime;
@@ -162,7 +166,7 @@ namespace TimeLine
                 double inValueOffset = inTimeOffset * inTangent;
 
                 tangentLeft.anchoredPosition = new Vector2(
-                    -(float)(inTimeOffset * pan * (_main.MusicData.bpm / 60f)),
+                    -(float)(inTimeOffset * pan * (_musicData.bpm / 60f)),
                     -(float)(inValueOffset * verticalScale)
                 );
             }
@@ -177,7 +181,7 @@ namespace TimeLine
 
             if (nextKey != null)
             {
-                double nextTime = _main.TicksToSeconds(nextKey.Ticks);
+                double nextTime =  TimeLineConverter.Instance.TicksToSeconds(nextKey.Ticks);
                 double nextValue = nextKey.GetData().GetValue() is float nVal ? nVal : 0f;
 
                 double deltaTime = nextTime - currentTime;
@@ -186,7 +190,7 @@ namespace TimeLine
                 double outValueOffset = outTimeOffset * outTangent;
 
                 tangentRight.anchoredPosition = new Vector2(
-                    (float)(outTimeOffset * pan * (_main.MusicData.bpm / 60f)),
+                    (float)(outTimeOffset * pan * (_musicData.bpm / 60f)),
                     (float)(outValueOffset * verticalScale)
                 );
             }

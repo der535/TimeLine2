@@ -1,6 +1,7 @@
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -39,7 +40,7 @@ namespace TimeLine
             _eventBus.SubscribeTo((ref DragTrackObjectEvent trackObjectEvent) =>
             {
                 _trackObjectStorage.CheckActiveTrackSingle(trackObjectEvent.Track);
-                _keyframeTrackStorage.Evaluate(_main.TicksCurrentTime());
+                _keyframeTrackStorage.Evaluate(TimeLineConverter.Instance.TicksCurrentTime());
             });
         }
     }

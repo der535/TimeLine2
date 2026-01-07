@@ -58,7 +58,7 @@ namespace TimeLine
         {
             // float rootOffset = _mainObjects.KeyframeScrollView.offsetMin.x - _mainObjects.KeyframeVerticalLayoutGroup.padding.left / 2f;
 
-            rect.sizeDelta = new Vector2(duraction * (_settings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Pan), rect.sizeDelta.y);
+            rect.sizeDelta = new Vector2(duraction * (_settings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Zoom), rect.sizeDelta.y);
             rect.anchoredPosition = new Vector2((rect.sizeDelta.x / 2), rect.anchoredPosition.y);
         }
     }

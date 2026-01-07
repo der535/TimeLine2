@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      "235 (2025.11.16) (10.37.25) (\u0413\u0440\u0443\u043F\u043F\u0430_8.psb_@_36,7%_(\u0421\u043B\u043E\u0439_12,_RGB8)_)_0": 4675999577308785878
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

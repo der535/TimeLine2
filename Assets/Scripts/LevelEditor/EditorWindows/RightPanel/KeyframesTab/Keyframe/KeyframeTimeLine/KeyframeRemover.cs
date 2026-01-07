@@ -2,7 +2,7 @@ using System;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
-using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.KeyframeTimeLine;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -11,27 +11,36 @@ namespace TimeLine
 {
     public class KeyframeRemover : MonoBehaviour
     {
-        [FormerlySerializedAs("keyframeSelectStorage")] [SerializeField] private KeyframeSelectController keyframeSelectController;
+        [FormerlySerializedAs("keyframeSelectStorage")] [SerializeField]
+        private KeyframeSelectController keyframeSelectController;
+
         [SerializeField] private WindowsFocus windowsFocus;
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
+        private KeyframeTrackStorage _keyframeTrackStorage;
+        private M_KeyframeSelectedStorage _keyframeSelectedStorage;
+        private KeyfeameVizualizer _keyframeVizualizer;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, ActionMap actionMap)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap,
+            KeyframeTrackStorage keyframeTrackStorage, M_KeyframeSelectedStorage keyframeSelectedStorage, KeyfeameVizualizer keyframeVizualizer)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
+            _keyframeTrackStorage = keyframeTrackStorage;
+            _keyframeVizualizer = keyframeVizualizer;
+            _keyframeSelectedStorage = keyframeSelectedStorage;
         }
 
         private void Start()
         {
             _actionMap.Editor.X.started += (_) =>
             {
-                if (!windowsFocus.IsFocused || keyframeSelectController.SelectedKeyframe == null) return;
+                if (!windowsFocus.IsFocused || _keyframeSelectedStorage.Keyframes == null) return;
 
-                foreach (var keyframe in keyframeSelectController.SelectedKeyframe)
+                foreach (var keyframe in _keyframeSelectedStorage.Keyframes)
                 {
-                    Remove(keyframe.Track, keyframe.Keyframe);
+                    Remove(_keyframeVizualizer.GetKeyframeObjectData(keyframe).Track, keyframe);
                 }
             };
         }
@@ -39,6 +48,11 @@ namespace TimeLine
         void Remove(Track track, Keyframe.Keyframe keyframe)
         {
             track.RemoveKeyframe(keyframe);
+            if (track.Keyframes.Count == 0)
+            {
+                _keyframeTrackStorage.RemoveTrackWithNode(track);
+            }
+
             _gameEventBus.Raise(new RemoveKeyframeEvent());
         }
     }

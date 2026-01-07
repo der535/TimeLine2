@@ -94,3 +94,9 @@ public abstract class BaseParameterComponent : MonoBehaviour, IParameterComponen
 
     public virtual string GetComponentTypeName() => this.GetType().Name;
 }
+
+public class ParameterPacket
+{
+    public string Id;
+    public object Value;
+}

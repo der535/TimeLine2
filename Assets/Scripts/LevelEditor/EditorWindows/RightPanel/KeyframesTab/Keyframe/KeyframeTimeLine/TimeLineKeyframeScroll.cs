@@ -25,7 +25,7 @@ namespace TimeLine
         private MainObjects _mainObjects;
         private ActionMap _actionMap;
 
-        public float Pan { get; private set; } = 70;
+        public float Zoom { get; private set; } = 70;
         
         [Inject]
         private void Construct(GameEventBus eventBus, MainObjects mainObjects, ActionMap actionMap)
@@ -50,26 +50,26 @@ namespace TimeLine
         
                 var mouseScroll = _actionMap.Editor.MouseScroll.ReadValue<float>();
         
-                _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Pan));
+                _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Zoom));
 
                 // --- Экспоненциальное изменение ---
                 // Если mouseScroll > 0, зум увеличивается (умножаем на число > 1)
                 // Если mouseScroll < 0, зум уменьшается (делим или умножаем на число < 1)
                 float zoomFactor = Mathf.Pow(1.1f, mouseScroll); 
-                Pan *= zoomFactor;
+                Zoom *= zoomFactor;
                 // ----------------------------------
 
-                Pan = Mathf.Max(panMin, Pan);
-                _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Pan));
+                Zoom = Mathf.Max(panMin, Zoom);
+                _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Zoom));
             };
         }
 
         internal void SetPan(float value)
         {
-            _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Pan));
-            Pan = value;
-            Pan = Mathf.Max(panMin, Pan);
-            _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Pan));
+            _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.OldPanEvent(Zoom));
+            Zoom = value;
+            Zoom = Mathf.Max(panMin, Zoom);
+            _eventBus.Raise(new EventBus.Events.KeyframeTimeLine.PanEvent(Zoom));
         }
 
         private void Calculate()

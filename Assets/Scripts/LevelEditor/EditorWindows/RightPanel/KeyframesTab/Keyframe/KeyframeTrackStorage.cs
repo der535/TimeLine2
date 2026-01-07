@@ -19,11 +19,13 @@ namespace TimeLine.Keyframe
         private GameEventBus _gameEventBus;
         
         [SerializeField] private AnimationCurve curve;
+        private BranchCollection _branchCollection;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, BranchCollection branchCollection)
         {
             _gameEventBus = gameEventBus;
+            _branchCollection = branchCollection;
         }
 
         void Awake()
@@ -72,6 +74,19 @@ namespace TimeLine.Keyframe
             }
         }
 
+        public void RemoveTrackWithNode(Track trackr)
+        {
+            foreach (var track in tracks.ToList().Where(track => track.Track == trackr))
+            {
+                Branch branch = _branchCollection.GetBranch(track.BranchId);
+                branch.RemoveNode(track.TreeNode);
+                // _branchCollection.AddNodeToBranch()
+                // track.TreeNode
+                    
+                tracks.Remove(track);
+            }
+        }
+
         public void SetActiveTrack(TreeNode treeNode, bool active)
         {
             foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
@@ -80,9 +95,9 @@ namespace TimeLine.Keyframe
             }
         }
 
-        public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject)
+        public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject, string branchId)
         {
-            tracks.Add(new TrackData(treeNode, track, trackObject));
+            tracks.Add(new TrackData(treeNode, track, trackObject, branchId));
             _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
@@ -104,13 +119,15 @@ namespace TimeLine.Keyframe
 
         class TrackData
         {
-            public TrackData(TreeNode treeNode, Track track, TrackObject trackObject)
+            public TrackData(TreeNode treeNode, Track track, TrackObject trackObject, string branchId)
             {
+                BranchId = branchId;
                 TreeNode = treeNode;
                 Track = track;
                 TrackObject = trackObject;
             }
 
+            public string BranchId;
             public TreeNode TreeNode;
             public Track Track;
             public TrackObject TrackObject;

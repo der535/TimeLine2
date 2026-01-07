@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NaughtyAttributes;
 using TimeLine;
+using TimeLine.TimeLine;
 using UnityEngine;
 
 namespace TimeLine
@@ -100,7 +101,7 @@ namespace TimeLine
                         for (int j = 0; j < lineResolution; j++)
                         {
                             float t = (float)j / lineResolution;
-                            allPoints.Add(Bezier.GetPoint(
+                            allPoints.Add(TimeLineConverter.GetPointBezier(
                                 start.Point,
                                 start.TangentRight,
                                 end.TangentLeft,

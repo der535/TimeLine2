@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using EventBus;
+﻿using EventBus;
 using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Zenject;
 
 public class TreeViewUI : MonoBehaviour
@@ -28,7 +26,8 @@ public class TreeViewUI : MonoBehaviour
     private void Awake()
     {
         animationLineController.Clear();
-        _gameEventBus.SubscribeTo<AddTrackEvent>(RebuildBranch, 1);
+        _gameEventBus.SubscribeTo<AddTrackEvent>((ref AddTrackEvent a ) => RebuildBranch(), 1);
+        // _gameEventBus.SubscribeTo<AddKeyframeEvent>((ref AddKeyframeEvent a ) => RebuildBranch(), -1);
 
         _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => BuildBranch(data.Tracks[^1].branch), 1);
         _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
@@ -59,7 +58,7 @@ public class TreeViewUI : MonoBehaviour
         BuildNodeRecursive(branch.Root, root, 0, CurrentBranch.Name);
     }
 
-    private void RebuildBranch(ref AddTrackEvent addTrackEvent)
+    private void RebuildBranch()
     {
         ClearContent();
         
@@ -69,6 +68,7 @@ public class TreeViewUI : MonoBehaviour
         
         BuildNodeRecursive(CurrentBranch.Root, root, 0, CurrentBranch.Name);
     }
+
 
     private void BuildNodeRecursive(TreeNode node, Transform parent, int level, string customName = null)
     {

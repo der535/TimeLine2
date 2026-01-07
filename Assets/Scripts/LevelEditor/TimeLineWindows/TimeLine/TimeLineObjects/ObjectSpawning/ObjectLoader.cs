@@ -3,6 +3,7 @@ using System.Linq;
 using TimeLine.Components;
 using TimeLine.Keyframe;
 using TimeLine.Parent;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -86,7 +87,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             foreach (var track in data.tracks)
             {
                 Track trackm = new Track(sceneObject, track.branchPath, track.animationColor);
-                _keyframeTrackStorage.AddTrack(branch.FindNode(track.branchPath), trackm, trackObjectData.trackObject);
+                _keyframeTrackStorage.AddTrack(branch.FindNode(track.branchPath), trackm, trackObjectData.trackObject, branch.ID);
 
                 foreach (var saveData in track.keyframeSaveData)
                 {
@@ -211,7 +212,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             groupGameObject.GetComponent<NameComponent>().Name.Value = groupTrackObject.branch.Name;
 
 
-            var currentTime = _main.TicksCurrentTime();
+            var currentTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(currentTime);
 
 

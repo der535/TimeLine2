@@ -27,7 +27,7 @@ namespace TimeLine.EventBus.Events.TrackObject
                 _trackObjects.Clear();
             });
         }
-        public void Select(TrackObjectData trackObject)
+        public void SelectMultiple(TrackObjectData trackObject)
         {
             var isMultiple = UnityEngine.Input.GetKey(KeyCode.LeftShift);
             
@@ -44,16 +44,7 @@ namespace TimeLine.EventBus.Events.TrackObject
                 }
                 else
                 {
-                    _trackObjects.Remove(trackObject);
-                    if (_trackObjects.Count == 0)
-                    {
-                        _gameEventBus.Raise(new DeselectAllObjectEvent());
-                    }
-                    else
-                    {
-                        _gameEventBus.Raise(new DeselectObjectEvent(trackObject, SelectObjects));
-
-                    }
+                    Deselect(trackObject);
                 }
             }
             else
@@ -69,6 +60,36 @@ namespace TimeLine.EventBus.Events.TrackObject
             if (changed)
             {
                 _gameEventBus.Raise(new SelectObjectEvent(_trackObjects));
+            }
+        }
+
+        public void SelectNoClear(TrackObjectData trackObject)
+        {
+            if(_selectLock.IsLocked) return;
+            
+            var changed = false;
+
+            if (!_trackObjects.Contains(trackObject))
+            {
+                _trackObjects.Add(trackObject);
+                changed = true;
+            }
+            if (changed)
+            {
+                _gameEventBus.Raise(new SelectObjectEvent(_trackObjects));
+            }
+        }
+
+        public void Deselect(TrackObjectData trackObject)
+        {
+            _trackObjects.Remove(trackObject);
+            if (_trackObjects.Count == 0)
+            {
+                _gameEventBus.Raise(new DeselectAllObjectEvent());
+            }
+            else
+            {
+                _gameEventBus.Raise(new DeselectObjectEvent(trackObject, SelectObjects));
             }
         }
 

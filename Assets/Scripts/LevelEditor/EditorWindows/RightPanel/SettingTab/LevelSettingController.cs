@@ -3,6 +3,8 @@ using System.Globalization;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
+using TimeLine.LevelEditor.Core.MusicData;
+using TimeLine.LevelEditor.Core.MusicOffset;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -16,12 +18,16 @@ namespace TimeLine
         
         private Main _main;
         private GameEventBus _gameEventBus;
+        private M_MusicOffsetData _musicOffsetData;
+        private M_MusicData _musicData;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, Main game)
+        private void Constructor(GameEventBus gameEventBus, Main game, M_MusicOffsetData musicOffsetData, M_MusicData musicData)
         {
             _gameEventBus = gameEventBus;
             _main = game;
+            _musicOffsetData = musicOffsetData;
+            _musicData = musicData;
         }
         
 
@@ -29,8 +35,8 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref MusicLoadedEvent _) =>
             {
-                _offset.text = _main.Offset().ToString();
-                _bpm.text = _main.MusicData.bpm.ToString();
+                _offset.text = _musicOffsetData.Value.ToString(CultureInfo.InvariantCulture);
+                _bpm.text = _musicData.bpm.ToString(CultureInfo.InvariantCulture);
                 
                             
                 _offset.onValueChanged.AddListener((string value) =>

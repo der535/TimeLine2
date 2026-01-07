@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.Installers;
+using TimeLine.TimeLine;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -56,7 +57,7 @@ namespace TimeLine
                 switch (dropdown.options[arg0].text)
                 {
                     case "None":
-                        gridUI.GridSize = 1f / (float)Main.TICKS_PER_BEAT;
+                        gridUI.GridSize = 1f / (float)TimeLineConverter.TICKS_PER_BEAT;
                         break;
                     case "1/64":
                         gridUI.GridSize = 1f / 64f;

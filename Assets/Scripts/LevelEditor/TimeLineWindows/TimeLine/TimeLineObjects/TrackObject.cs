@@ -87,7 +87,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         internal TrackLine TrackLine { get; private set; }
         internal string Name { get; private set; }
         internal Action<double> Rezise { get; set; }
-        internal float BeatDuraction => (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
+        internal float BeatDuraction => (float)(TimeDuractionInTicks / TimeLineConverter.TICKS_PER_BEAT);
+        
+        internal RectTransform RectTransform => rect;
 
         private bool _lockSize;
         private double _reducedLeft;
@@ -327,7 +329,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 {
                     Vector2 currentMousePosition = GetMousePosition();
                     float deltaPixels = currentMousePosition.x - _startMousePosition.x;
-                    double deltaTicks = (deltaPixels / pixelsPerBeat) * Main.TICKS_PER_BEAT;
+                    double deltaTicks = (deltaPixels / pixelsPerBeat) * TimeLineConverter.TICKS_PER_BEAT;
                     deltaticksRight = deltaTicks;
 
                     double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
@@ -353,7 +355,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 {
                     Vector2 currentMousePosition = GetMousePosition();
                     float deltaPixels = _startMousePosition.x - currentMousePosition.x;
-                    double deltaTicks = (deltaPixels / pixelsPerBeat) * Main.TICKS_PER_BEAT;
+                    double deltaTicks = (deltaPixels / pixelsPerBeat) * TimeLineConverter.TICKS_PER_BEAT;
                     deltaticksLeft = deltaTicks;
 
                     double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
@@ -413,7 +415,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         private void UpdateVisuals()
         {
-            float durationInBeats = (float)(TimeDuractionInTicks / Main.TICKS_PER_BEAT);
+            float durationInBeats = (float)(TimeDuractionInTicks / TimeLineConverter.TICKS_PER_BEAT);
             rect.sizeDelta = new Vector2(
                 durationInBeats * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom),
                 rect.sizeDelta.y);
@@ -423,7 +425,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         internal void CalculatePosition()
         {
-            float startTimeInSeconds = (float)TicksToSeconds(StartTimeInTicks);
+            float startTimeInSeconds = (float)TimeLineConverter.Instance.TicksToSeconds(StartTimeInTicks);
             rect.anchoredPosition = new Vector2(
                 _timeLineConverter.GetAnchorPositionFromTime(startTimeInSeconds) + rect.sizeDelta.x / 2,
                 rect.anchoredPosition.y);
@@ -501,32 +503,22 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         {
             float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
             float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
-            return beatsDelta * Main.TICKS_PER_BEAT;
+            return beatsDelta * TimeLineConverter.TICKS_PER_BEAT;
         }
 
         #region Конвертация методов
 
-        private double TicksToSeconds(double ticks)
-        {
-            return ticks * (60.0 / (_main.MusicData.bpm * Main.TICKS_PER_BEAT));
-        }
-
-        private double SecondsToTicks(double seconds)
-        {
-            return seconds * (_main.MusicData.bpm * Main.TICKS_PER_BEAT / 60.0);
-        }
-
         private double AnchorPositionToTicks(float anchorPosition)
         {
             float timeInSeconds = _timeLineConverter.GetTimeFromAnchorPosition(anchorPosition);
-            return SecondsToTicks(timeInSeconds);
+            return TimeLineConverter.Instance.SecondsToTicks(timeInSeconds);
         }
 
         private double RoundTicksToGrid(double ticks)
         {
-            float timeInSeconds = (float)TicksToSeconds(ticks);
+            float timeInSeconds = (float)TimeLineConverter.Instance.TicksToSeconds(ticks);
             float roundedTimeInSeconds = _gridUI.RoundTimeToGrid(timeInSeconds);
-            return SecondsToTicks(roundedTimeInSeconds);
+            return TimeLineConverter.Instance.SecondsToTicks(roundedTimeInSeconds);
         }
 
         #endregion

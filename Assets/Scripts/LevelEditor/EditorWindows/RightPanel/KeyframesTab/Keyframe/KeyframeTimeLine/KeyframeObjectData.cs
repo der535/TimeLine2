@@ -1,8 +1,10 @@
+using System;
 using TimeLine.Keyframe;
 using UnityEngine;
 
 namespace TimeLine
 {
+    [Serializable]
     public class KeyframeObjectData : MonoBehaviour
     {
         [SerializeField] private KeyframeDrag keyframeDrag;

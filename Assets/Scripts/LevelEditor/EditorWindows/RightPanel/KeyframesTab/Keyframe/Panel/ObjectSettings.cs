@@ -21,7 +21,7 @@ namespace TimeLine
 
         private void OnMouseDown()
         {
-            _selectObjectController.Select(_trackObjectStorage.GetTrackObjectData(gameObject));
+            _selectObjectController.SelectMultiple(_trackObjectStorage.GetTrackObjectData(gameObject));
         }
     }
 }

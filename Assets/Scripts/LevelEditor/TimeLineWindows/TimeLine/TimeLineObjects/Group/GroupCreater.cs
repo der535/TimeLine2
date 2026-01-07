@@ -4,6 +4,7 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -95,7 +96,7 @@ namespace TimeLine
 
             var (minTime, maxTime) = CalculateMinAndMaxTime(_selectObjectController.SelectObjects);
             
-            var currentTime = _main.TicksCurrentTime();
+            var currentTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(minTime);
 
             

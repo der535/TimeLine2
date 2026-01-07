@@ -1,6 +1,7 @@
 using System;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
+using TimeLine.TimeLine;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -31,7 +32,7 @@ namespace TimeLine
             double currentTimeInTicks = timeEvent.Time;
             
             // Вычисляем текущую долю
-            double currentBeat = Math.Ceiling(currentTimeInTicks / Main.TICKS_PER_BEAT);
+            double currentBeat = Math.Ceiling(currentTimeInTicks / TimeLineConverter.TICKS_PER_BEAT);
             
             if (currentBeat != _oldBeat)
             {
@@ -57,7 +58,7 @@ namespace TimeLine
             const int stepsPerBar = (int)(beatsPerBar * stepsPerBeat); // 16 шагов в такте
 
             // Вычисляем компоненты времени
-            double totalBeats = currentTimeInTicks / Main.TICKS_PER_BEAT;
+            double totalBeats = currentTimeInTicks / TimeLineConverter.TICKS_PER_BEAT;
             double bars = totalBeats / beatsPerBar;
 
             // Целая часть - такты
@@ -69,7 +70,7 @@ namespace TimeLine
 
             int wholeBeats = (int)beatsInCurrentBar;
             double fractionalBeat = beatsInCurrentBar - wholeBeats;
-            int ticks = (int)(fractionalBeat * Main.TICKS_PER_BEAT);
+            int ticks = (int)(fractionalBeat * TimeLineConverter.TICKS_PER_BEAT);
 
             // Формат 1: bar:beat:tick (такты:доли:тики)
             string format1 = $"{wholeBars + 1}:{wholeBeats + 1}:{ticks:00}";
@@ -79,7 +80,7 @@ namespace TimeLine
             double totalStepsInBar = beatsInCurrentBar * stepsPerBeat;
             int wholeSteps = (int)totalStepsInBar;
             double fractionalStep = totalStepsInBar - wholeSteps;
-            int stepTicks = (int)(fractionalStep * (Main.TICKS_PER_BEAT / stepsPerBeat));
+            int stepTicks = (int)(fractionalStep * (TimeLineConverter.TICKS_PER_BEAT / stepsPerBeat));
 
             // Убеждаемся, что шаги в диапазоне 1-16
             int step = wholeSteps % stepsPerBar;

@@ -17,12 +17,13 @@ namespace TimeLine.CustomInspector.Logic.Parameter
                 NotifyValueChanged();
             }
         }
-
+        
         public FloatParameter(string name, float initialValue, Color animationColor) 
             : base(name, typeof(float))
         {
             _value = initialValue;
             AnimationColor = animationColor;
+            Id = UniqueIDGenerator.GenerateUniqueID();
         }
         public override object GetValue() => _value;
         public override void SetValue(object value)

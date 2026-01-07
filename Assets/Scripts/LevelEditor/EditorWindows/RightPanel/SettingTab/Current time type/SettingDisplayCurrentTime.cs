@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using EventBus;
 using EventBus.Events.Settings;
+using TimeLine.TimeLine;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -54,7 +55,7 @@ namespace TimeLine.LevelEditor.Tabs.SettingTab.Current_time_type
             const int stepsPerBeat = 4; // 4 шага на долю (1/16 ноты)
             const int stepsPerBar = (int)(beatsPerBar * stepsPerBeat); // 16 шагов в такте
             // Вычисляем компоненты времени
-            double totalBeats = currentTimeInTicks / Main.TICKS_PER_BEAT;
+            double totalBeats = currentTimeInTicks / TimeLineConverter.TICKS_PER_BEAT;
             double bars = totalBeats / beatsPerBar;
 
             // Целая часть - такты
@@ -66,7 +67,7 @@ namespace TimeLine.LevelEditor.Tabs.SettingTab.Current_time_type
 
             int wholeBeats = (int)beatsInCurrentBar;
             double fractionalBeat = beatsInCurrentBar - wholeBeats;
-            int ticks = (int)(fractionalBeat * Main.TICKS_PER_BEAT);
+            int ticks = (int)(fractionalBeat * TimeLineConverter.TICKS_PER_BEAT);
 
             switch (dropdown.options[dropdown.value].text)
             {
@@ -81,7 +82,7 @@ namespace TimeLine.LevelEditor.Tabs.SettingTab.Current_time_type
                     double totalStepsInBar = beatsInCurrentBar * stepsPerBeat;
                     int wholeSteps = (int)totalStepsInBar;
                     double fractionalStep = totalStepsInBar - wholeSteps;
-                    int stepTicks = (int)(fractionalStep * (Main.TICKS_PER_BEAT / stepsPerBeat));
+                    int stepTicks = (int)(fractionalStep * (TimeLineConverter.TICKS_PER_BEAT / stepsPerBeat));
 
                     // Убеждаемся, что шаги в диапазоне 1-16
                     int step = wholeSteps % stepsPerBar;
@@ -94,7 +95,7 @@ namespace TimeLine.LevelEditor.Tabs.SettingTab.Current_time_type
         {
             const double beatsPerBar = 4.0;
             const int stepsPerBeat = 4;
-            const int ticksPerBeat = (int)Main.TICKS_PER_BEAT;
+            const int ticksPerBeat = (int)TimeLineConverter.TICKS_PER_BEAT;
             const int stepsPerBar = (int)(beatsPerBar * stepsPerBeat); // 16
             const int ticksPerStep = ticksPerBeat / stepsPerBeat; // обычно 120, если TICKS_PER_BEAT = 480
 
