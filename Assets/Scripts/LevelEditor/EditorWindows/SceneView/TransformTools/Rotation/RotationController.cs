@@ -60,6 +60,10 @@ namespace TimeLine
                 {
                     // Одиночный объект: просто меняем ZRotation
                     var obj = _selectedObjects[0];
+                    print(obj.StartRotation );
+                    print(deltaAngle );
+                    print(obj.StartRotation + deltaAngle);
+                    print(_gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle));
                     obj.Transform.ZRotation.Value = _gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle);
                 }
                 else
@@ -74,10 +78,15 @@ namespace TimeLine
                 // Перед началом вращения фиксируем текущие данные и центр
                 _groupCenter = GetCenter.GetSelectionCenter(_selectedObjects.Select(x => x.Transform).ToList());
                 
+                print(_selectedObjects.Count);
+                
                 foreach (var item in _selectedObjects)
                 {
+                    print(item.Transform);
                     item.StartPosition = new Vector2(item.Transform.XPosition.Value, item.Transform.YPosition.Value);
                     item.StartRotation = item.Transform.ZRotation.Value;
+                    print(item.StartPosition);
+                    print(item.StartRotation);
                 }
             };
 
@@ -134,6 +143,7 @@ namespace TimeLine
             // 1. Отписываемся от старых объектов
             foreach (var item in _selectedObjects)
             {
+                if(item.Transform.XPosition == null || item.Transform.YPosition == null) continue;
                 item.Transform.XPosition.OnValueChanged -= _toolFollowingObject;
                 item.Transform.YPosition.OnValueChanged -= _toolFollowingObject;
             }

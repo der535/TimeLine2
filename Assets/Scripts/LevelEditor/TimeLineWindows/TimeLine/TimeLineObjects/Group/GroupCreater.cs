@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
 using UnityEngine;
@@ -95,11 +96,11 @@ namespace TimeLine
                 .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
 
             var (minTime, maxTime) = CalculateMinAndMaxTime(_selectObjectController.SelectObjects);
-            
+
             var currentTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(minTime);
 
-            
+
             GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
 
             sceneObject.GetComponent<NameComponent>().Name.Value = groupName;
@@ -109,7 +110,7 @@ namespace TimeLine
             {
                 selectObject.trackObject.GroupOffset(minTime);
                 selectObject.trackObject.GroupOffsetTrack(trackObject);
-                
+
                 if (string.IsNullOrEmpty(selectObject.trackObject._parentID))
                 {
                     var position = selectObject.sceneObject.transform.localPosition;
@@ -130,14 +131,15 @@ namespace TimeLine
                 }
             }
 
-            trackObject.Setup(maxTime - minTime, groupName, _trackStorage.TrackLines[0], string.Empty,minTime, true);
+            trackObject.Setup(maxTime - minTime, groupName, _trackStorage.TrackLines[0], string.Empty, minTime, 
+                0,0,true);
 
             Branch branch = _branchCollection.AddBranch(UniqueIDGenerator.GenerateUniqueID(), groupName);
 
             _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, _selectObjectController.SelectObjects,
                 UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID(), String.Empty);
-            
-            
+
+
             _main.SetTimeInTicks(currentTime);
         }
 
@@ -149,11 +151,11 @@ namespace TimeLine
                 .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
 
             var (minTime, maxTime) = CalculateMinAndMaxTime(trackObjects);
-            
+
             _main.SetTimeInTicks(minTime);
 
             var sceneObject = _container.InstantiatePrefab(scenePrefab, root);
-            
+
             sceneObject.AddComponent<CompositionOffset>();
 
             foreach (var selectObject in trackObjects)
@@ -182,7 +184,8 @@ namespace TimeLine
                 }
             }
 
-            trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], string.Empty,minTime, true);
+            trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], string.Empty, minTime, 
+                0,0,true);
 
             Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
 
@@ -192,6 +195,5 @@ namespace TimeLine
             return _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects,
                 UniqueIDGenerator.GenerateUniqueID(), compositionID, String.Empty); //?????????
         }
-
     }
 }

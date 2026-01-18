@@ -29,8 +29,7 @@ namespace TimeLine
         public Vector3 Point => point.anchoredPosition;
         public Vector3 TangentLeft => tangentLeft.anchoredPosition + point.anchoredPosition;
         public Vector3 TangentRight => tangentRight.anchoredPosition + point.anchoredPosition;
-
-        private Main _main;
+        
         private TimeLineSettings _timeLineSettings;
         private M_MusicData _musicData;
 
@@ -42,7 +41,6 @@ namespace TimeLine
         [Inject]
         private void Construct(Main main, TimeLineSettings timeLineSettings, M_MusicData musicData)
         {
-            _main = main;
             _timeLineSettings = timeLineSettings;
             _musicData = musicData;
         }

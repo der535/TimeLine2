@@ -1,16 +1,20 @@
 ﻿using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components;
+using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
 
-namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
+namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.Drawers
 {
     public class PressEventDrawer : IComponentDrawer
     {
         private CustomInspectorDrawer _customInspectorDrawer;
+        private TrackObjectStorage _trackObjectStorage;
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, KeyframeCreator keyframeCreator)
+        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator)
         {
             _customInspectorDrawer = customInspectorDrawer;
+            _trackObjectStorage = trackObjectStorage;
         }
 
         public bool GetComponent(Component component)
@@ -21,6 +25,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         public void Draw(Component component, GameObject target)
         {
             _customInspectorDrawer.CreateComponent(component, true);
+            string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
 
             if (component is PressEventComponent componentComponent)
             {
@@ -31,8 +36,8 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
                 _customInspectorDrawer.CreateSelectComposition(componentComponent.prefabPerfect);
                 _customInspectorDrawer.CreateSelectComposition(componentComponent.prefabMiddel);
                 _customInspectorDrawer.CreateSelectComposition(componentComponent.prefabMiss);
-                _customInspectorDrawer.CreateFloatField(componentComponent.perfectArea, null);
-                _customInspectorDrawer.CreateFloatField(componentComponent.middleArea, null);
+                _customInspectorDrawer.CreateFloatField(componentComponent.perfectArea, id, null);
+                _customInspectorDrawer.CreateFloatField(componentComponent.middleArea, id, null);
             }
         }
     }

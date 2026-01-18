@@ -2,8 +2,10 @@
 using System.Globalization;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.CustomInspector.UI.FieldUI;
+using TimeLine.LevelEditor.Helpers;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace TimeLine
@@ -18,7 +20,7 @@ namespace TimeLine
         [SerializeField] private Image readKeyImage;
         [SerializeField] private Color readKeyColor;
         [SerializeField] private Color notReadKeyColor;
-        [SerializeField] private Button createKeyframeButton;
+        [SerializeField] private EventTrigger createKeyframeButton;
         
         private KeyCodeParameter _keyCodeParameter;
         private bool _isReadingKey;
@@ -29,7 +31,7 @@ namespace TimeLine
 
             readKey.onClick.AddListener(ListenButton);
             
-            createKeyframeButton.onClick.AddListener(() => createKeyframe());
+            UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe);
         }
 
         private void ListenButton()

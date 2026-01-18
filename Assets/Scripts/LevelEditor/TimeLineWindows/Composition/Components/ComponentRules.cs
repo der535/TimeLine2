@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components;
+using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
 using Zenject;
 
@@ -22,6 +24,8 @@ namespace TimeLine.Components
             { typeof(EdgeCollider2DComponent), new Rule(typeof(EdgeCollider2DComponent), maxInstances: 1) },
             { typeof(PressEventComponent), new Rule(typeof(PressEventComponent), maxInstances: 1) },
             { typeof(ShakeComponent), new Rule(typeof(ShakeComponent), maxInstances: 1) },
+            { typeof(PolygonCollider2DComponent), new Rule(typeof(PolygonCollider2DComponent), maxInstances: 1) },
+            { typeof(ActiveObjectControllerComponent), new Rule(typeof(ActiveObjectControllerComponent), maxInstances: 1) },
         };
 
         public static Dictionary<string, Type> GetAllComponents(GameObject gameObject)
@@ -74,8 +78,6 @@ namespace TimeLine.Components
 
                 if (container != null)
                 {
-                    Debug.Log("inject");
-                    Debug.Log(comp);
                     container.Inject(comp); // 👈 внедряем зависимости
                 }
                 else

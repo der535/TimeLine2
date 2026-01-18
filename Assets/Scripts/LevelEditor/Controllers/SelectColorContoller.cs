@@ -1,4 +1,7 @@
+using System;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using UnityEngine;
 
 namespace TimeLine
@@ -9,13 +12,32 @@ namespace TimeLine
         [SerializeField] private FlexibleColorPicker flexibleColorPicker;
 
         private ColorParameter _colorParameter;
+        private TrackObjectStorage _trackObjectStorage;
+        private Color _previousValue;
+        private string _gameObjectID;
 
-        internal void Setup(ColorParameter colorParameter)
+        private void Construct(TrackObjectStorage trackObjectStorage)
         {
+            _trackObjectStorage = trackObjectStorage;
+        }
+        private void Start()
+        {
+            flexibleColorPicker.onColorChange.AddListener((value) =>
+            {
+                CommandHistory.ExecuteCommand(new ColorParameterChangeCommand(_trackObjectStorage, _colorParameter,
+                    _colorParameter.Name, _gameObjectID, _previousValue, value));
+                _previousValue = _colorParameter.Value;
+                //
+                // _colorParameter.Value = color;
+            }); 
+        }
+
+        internal void Setup(ColorParameter colorParameter, string gameObjectId)
+        {
+            _gameObjectID = gameObjectId;
             _colorParameter = colorParameter;
             rectTransform.gameObject.SetActive(true);
             flexibleColorPicker.color = colorParameter.Value;
-            flexibleColorPicker.onColorChange.AddListener((color) => _colorParameter.Value = color); 
         }
 
         public void Close()

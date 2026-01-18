@@ -147,17 +147,21 @@ namespace TimeLine.TimeLine
         
         internal (Vector2 position, bool isInside) GetMousePosition(RectTransform rectTransformParentObject, Camera camera)
         {
-            // 1. Берем позицию мыши
             Vector2 mousePos = UnityEngine.Input.mousePosition;
 
-            bool isInside = RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rectTransformParentObject, // RectTransform родителя (например, TimeLineArea)
-                mousePos, // Экранная позиция (Input.mousePosition)
-                camera, // Камера (или null)
-                out Vector2 position // Сюда запишется результат
+            // 1. Конвертируем экранную точку в локальную
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rectTransformParentObject, 
+                mousePos, 
+                camera, 
+                out Vector2 localPoint
             );
 
-            return (position, isInside);
+            // 2. Проверяем, входит ли локальная точка в прямоугольник RectTransform
+            // rectTransformParentObject.rect — это область [-width/2, -height/2, width, height]
+            bool actuallyInside = rectTransformParentObject.rect.Contains(localPoint);
+
+            return (localPoint, actuallyInside);
         }
 
         public float GetTimeFromAnchorPosition(float anchorPosition, float pan = 0)
@@ -399,6 +403,15 @@ namespace TimeLine.TimeLine
                 3f * oneMinusT * oneMinusT * t * p1 +
                 3f * oneMinusT * t * t * p2 +
                 t * t * t * p3;
+        }
+
+        internal float GetAnchorPositionFromValue(float value, float pan)
+        {
+            float scrollFactor = pan;
+            float position = value * scrollFactor; // ← Скролл НЕ добавляем!
+
+
+            return position;
         }
     }
 }

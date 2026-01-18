@@ -61,7 +61,7 @@ namespace TimeLine.LevelEditor.SelectBox
             }
 
 
-            if (_state.IsDragging)
+            if (_state.IsDragging&& _state.CursorIsInside)
             {
                 Vector2 currentMousePos = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
 
@@ -89,6 +89,8 @@ namespace TimeLine.LevelEditor.SelectBox
         private void StartMove()
         {
             // Только инициализируем данные, но рамку пока не включаем
+            _state.CursorIsInside = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).isInside;
+
             _state.IsDragging = true;
             _state.HasExceededDeadZone = false;
             _state.StartPosition = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
@@ -116,25 +118,27 @@ namespace TimeLine.LevelEditor.SelectBox
             selectBox.anchoredPosition = (mouseStartPositionModified + TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position) / 2;
         }
 
-        private void UpdateSelection() //Логика подсчёта выделенных объектов
+        private void UpdateSelection()
         {
-            int couter = 0;
+            // Кэшируем данные, чтобы не обращаться к свойствам в каждой итерации
+            var currentSelection = _selectObjectController.SelectObjects; 
+            var allObjects = _trackObjectStorage.TrackObjects;
+    
+            // Если selectBox вычисляется динамически, лучше сохранить его в переменную
+            var box = selectBox; 
 
-            foreach (var trackObject in _trackObjectStorage.TrackObjects)
+            foreach (var trackObject in allObjects)
             {
-                if (CheckIsSelected(trackObject.trackObject.RectTransform, selectBox))
+                bool isInside = CheckIsSelected(trackObject.trackObject.RectTransform, box);
+                bool isAlreadySelected = currentSelection.Contains(trackObject);
+
+                if (isInside && !isAlreadySelected)
                 {
-                    if (!_selectObjectController.SelectObjects.Contains(trackObject))
-                    {
-                        _selectObjectController.SelectNoClear(trackObject);
-                    }
+                    _selectObjectController.SelectNoClear(trackObject);
                 }
-                else
+                else if (!isInside && isAlreadySelected)
                 {
-                    if (_selectObjectController.SelectObjects.Contains(trackObject))
-                    {
-                        _selectObjectController.Deselect(trackObject);
-                    }
+                    _selectObjectController.Deselect(trackObject);
                 }
             }
         }

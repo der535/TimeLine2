@@ -2,6 +2,7 @@
 using TimeLine.Installers;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -18,7 +19,7 @@ namespace TimeLine
         [SerializeField] private RectTransform tangentLeft;
         [SerializeField] private RectTransform tangentRight;
 
-        private TimeLineKeyframeScroll _timeLineKeyframeScroll;
+        private TimeLineKeyframeZoom _timeLineKeyframeZoom;
         private VerticalBezierZoom _verticalBezierZoom;
         private TimeLineConverter _timeLineConverter;
         private BezierLineDrawer _bezierLineDrawer;
@@ -46,7 +47,7 @@ namespace TimeLine
             MainObjects mainObject,
             TimeLineConverter timeLineConverter,
             GridUI gridUI,
-            TimeLineKeyframeScroll timeLineKeyframeScroll,
+            TimeLineKeyframeZoom timeLineKeyframeZoom,
             VerticalBezierZoom verticalBezierZoom,
             BezierLineDrawer bezierLineDrawer,
             BezierController bezierController,
@@ -57,7 +58,7 @@ namespace TimeLine
             _gridUI = gridUI;
             _mainObjects = mainObject;
             _timeLineConverter = timeLineConverter;
-            _timeLineKeyframeScroll = timeLineKeyframeScroll;
+            _timeLineKeyframeZoom = timeLineKeyframeZoom;
             _verticalBezierZoom = verticalBezierZoom;
             _bezierLineDrawer = bezierLineDrawer;
             _bezierController = bezierController;
@@ -125,7 +126,7 @@ namespace TimeLine
 
                 float relativePosition = newPositionX - rootOffset;
                 float roundedRelativePosition =
-                    _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Zoom);
+                    _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeZoom.Zoom);
                 float finalPositionX = roundedRelativePosition + rootOffset;
 
                 // Подробный принт X-позиции
@@ -139,7 +140,7 @@ namespace TimeLine
 
                 _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
                     _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition,
-                        _timeLineKeyframeScroll.Zoom)));
+                        _timeLineKeyframeZoom.Zoom)));
                 
                 _original.Ticks = _keyframe.Ticks;
 
@@ -165,7 +166,7 @@ namespace TimeLine
 
                 #endregion
 
-                _bezierSelectPointsController.MultipleDrag(tickDifferent, difference, _keyframe);
+                _bezierSelectPointsController.MultipleDrag(tickDifferent, difference, _original);
 
                 _bezierLineDrawer.SortPoints();
                 _bezierController.SortPoints();
@@ -181,7 +182,7 @@ namespace TimeLine
                 Vector2 newPosition = localMousePos; // Прямое позиционирование вместо сложных вычислений
 
                 // ===== ИСПРАВЛЕННЫЕ ОГРАНИЧЕНИЯ =====
-                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Zoom;
+                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeZoom.Zoom;
                 float bpmFactor = _musicData.bpm / 60f;
 
                 // Минимальное смещение (0.1f) остаётся
@@ -218,7 +219,7 @@ namespace TimeLine
                 Vector2 localMousePos = GetMousePosition(rectTransform);
                 Vector2 newPosition = localMousePos;
 
-                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Zoom;
+                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeZoom.Zoom;
                 float bpmFactor = _musicData.bpm / 60f;
 
                 // Для левого уса: координаты отрицательные

@@ -8,8 +8,12 @@ using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
+using TimeLine.LevelEditor.LoadingScreen.Controllers;
+using TimeLine.LevelEditor.MaxObjectIndex.Controller;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.LevelEditor.UIAnimation;
 using TimeLine.Parent;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -21,7 +25,10 @@ namespace TimeLine
     {
         // === Serialized Fields ===
         [SerializeField] private TrackObjectStorage trackObjectStorage;
-        [FormerlySerializedAs("objectSpawner")] [FormerlySerializedAs("trackObjectSpawner")] [SerializeField] private FacadeObjectSpawner facadeObjectSpawner;
+
+        [FormerlySerializedAs("objectSpawner")] [FormerlySerializedAs("trackObjectSpawner")] [SerializeField]
+        private FacadeObjectSpawner facadeObjectSpawner;
+
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
         [SerializeField] private SaveComposition composition;
         [SerializeField] private SaveEditorSettings editorSettings;
@@ -36,16 +43,24 @@ namespace TimeLine
         private MainObjects _mainObjects;
         private CustomSpriteStorage _customSpriteStorage;
         private ParentLinkRestorer _parentLinkRestorer;
+        private LoadingScreenController _loadingScreenController;
+        private MaxObjectIndexController _maxObjectIndexController;
+        private SaveButtonAnimation _saveButtonAnimation;
         public LevelBaseInfo LevelBaseInfo => _levelBaseInfo;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, MainObjects mainObjects,
-            CustomSpriteStorage customSpriteStorage, ParentLinkRestorer parentLinkRestorer)
+            CustomSpriteStorage customSpriteStorage, ParentLinkRestorer parentLinkRestorer,
+            LoadingScreenController loadingScreenController, MaxObjectIndexController maxObjectIndexController,
+            SaveButtonAnimation saveButtonAnimation)
         {
             _gameEventBus = gameEventBus;
             _mainObjects = mainObjects;
             _customSpriteStorage = customSpriteStorage;
             _parentLinkRestorer = parentLinkRestorer;
+            _loadingScreenController = loadingScreenController;
+            _maxObjectIndexController = maxObjectIndexController;
+            _saveButtonAnimation = saveButtonAnimation;
         }
 
         // === Unity Lifecycle ===
@@ -61,17 +76,19 @@ namespace TimeLine
 
             _gameEventBus.SubscribeTo((ref SetBPMEvent data) => { LevelBaseInfo.bpm = data.BPM; });
             _gameEventBus.SubscribeTo((ref SetOffsetEvent data) => { LevelBaseInfo.offset = data.Offset; });
-
             _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) => { _levelBaseInfo = eventData.LevelInfo; });
         }
 
 
         public void Save()
         {
-            M_BackupManager.CreateRollingBackup($"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}", maxBackups: 5);
+            _saveButtonAnimation.Saving();
+            M_BackupManager.CreateRollingBackup($"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}",
+                maxBackups: 5);
 
             editorSettings.Save();
             composition.Save();
+            _maxObjectIndexController.Save();
             finishLevelController.Save();
             _customSpriteStorage.Save();
 
@@ -96,47 +113,64 @@ namespace TimeLine
 
             string levelBaseInfoPath =
                 $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelBaseInfo.json";
-            
+
             File.WriteAllText(levelBaseInfoPath, JsonConvert.SerializeObject(LevelBaseInfo, Formatting.Indented));
+            _saveButtonAnimation.Saved();
         }
 
         internal void Load(LevelBaseInfo levelBaseInfo)
         {
             _levelBaseInfo = levelBaseInfo;
 
-            editorSettings.Load();
-            composition.Load();
-            finishLevelController.Load();
-            _customSpriteStorage.Load(() =>
+            _loadingScreenController.Clear();
+            // Сбрасываем старое состояние
+            _loadingScreenController.AddStep("Загрузка настроек", () => editorSettings.Load());
+            _loadingScreenController.AddStep("Загрузка настроек", () => finishLevelController.Load());
+            _loadingScreenController.AddStep("Загрузка настроек", () => _maxObjectIndexController.Load());
+            _loadingScreenController.AddStep("Загрузка композиций", () => composition.Load());
+
+            // Используем наш новый метод для спрайтов
+            _loadingScreenController.AddStep("Загрузка спрайтов", (onDone) =>
             {
-                
-                string path = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json";
-                if (!File.Exists(path)) return;
-
-                string json = File.ReadAllText(path);
-                var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
-
-                // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
-                foreach (var saveData in saveLevelDto.gameObjectSaveData)
-                {
-                    facadeObjectSpawner.LoadObject(saveData);
-                }
-                
-                // 2. Загружаем корневые ГРУППЫ в правильном порядке
-                foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
-                {
-                    //
-                    var group = groupBase;
-                    GroupGameObjectSaveData groupGameObjectSaveData =
-                        composition.FindCompositionDataById(group.compositionID);
-                    facadeObjectSpawner.LoadComposition(group, group.compositionID, groupGameObjectSaveData);
-                    // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
-                }
-
-                _parentLinkRestorer.Restor();
+                _customSpriteStorage.Load(onDone); // onDone вызовется внутри хранилища
             });
+
+            _loadingScreenController.AddStep("Загрузка объектов таймлайна", () =>
+            {
+                LoadLevelObjects(); // Вынесли сложную логику в отдельный метод
+            });
+
+            _loadingScreenController.StartLoading();
         }
-        
+
+        private void LoadLevelObjects()
+        {
+            string path = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json";
+            if (!File.Exists(path)) return;
+
+            string json = File.ReadAllText(path);
+            var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
+
+            // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
+            foreach (var saveData in saveLevelDto.gameObjectSaveData)
+            {
+                facadeObjectSpawner.LoadObject(saveData);
+            }
+
+            // 2. Загружаем корневые ГРУППЫ в правильном порядке
+            foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
+            {
+                //
+                var group = groupBase;
+                GroupGameObjectSaveData groupGameObjectSaveData =
+                    composition.FindCompositionDataById(group.compositionID);
+                facadeObjectSpawner.LoadComposition(group, group.compositionID, groupGameObjectSaveData);
+                // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
+            }
+
+            _parentLinkRestorer.Restor();
+        }
+
         internal GameObjectSaveData SaveGameObject(TrackObjectData trackObject, string groupID)
         {
             string parentObjectID = string.Empty;
@@ -214,6 +248,10 @@ namespace TimeLine
                 };
             }
 
+            groupData.reduceRight = group.trackObject._reducedRight;
+            groupData.reduceLeft = group.trackObject._reducedLeft;
+
+
             if (saveGroupID == false)
             {
                 foreach (var child in group.TrackObjectDatas)
@@ -251,8 +289,11 @@ namespace TimeLine
                 branch = baseData.branch,
                 Components = baseData.Components,
                 tracks = baseData.tracks,
-                children = new List<GameObjectSaveData>()
+                children = new List<GameObjectSaveData>(),
             };
+
+            groupData.reduceRight = group.trackObject._reducedRight;
+            groupData.reduceLeft = group.trackObject._reducedLeft;
 
             foreach (var child in group.TrackObjectDatas)
             {
@@ -318,6 +359,8 @@ namespace TimeLine
     {
         public string compositionID;
         public string lastEditID;
+        public double reduceLeft;
+        public double reduceRight;
 
         // Может содержать как обычные объекты, так и другие группы
         public List<GameObjectSaveData> children = new();
@@ -334,7 +377,9 @@ namespace TimeLine
                 tracks = new List<TrackSaveData>(tracks),
                 compositionID = Guid.NewGuid().ToString(),
                 lastEditID = lastEditID,
-                children = new List<GameObjectSaveData>(children)
+                children = new List<GameObjectSaveData>(children),
+                reduceLeft = reduceLeft,
+                reduceRight = reduceRight
             };
         }
     }
@@ -343,7 +388,7 @@ namespace TimeLine
     public class ComponentData
     {
         public string ComponentType;
-        public Dictionary<string, object> Parameters;
+        public Dictionary<string, ParameterPacket> Parameters;
     }
 
     [System.Serializable]

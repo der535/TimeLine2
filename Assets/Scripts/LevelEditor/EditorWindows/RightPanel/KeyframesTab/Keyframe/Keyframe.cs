@@ -30,7 +30,7 @@ namespace TimeLine.Keyframe
 
         public Keyframe(double ticks, InterpolationType interpolation, double outTangent = 0, double inTangent = 0, double inWeight = 0.5f, double outWeight = 0.5f)
         {
-            this.Ticks = Mathf.Round((float)ticks);
+            Ticks = Mathf.Round((float)ticks);
             
             Interpolation = interpolation;
 

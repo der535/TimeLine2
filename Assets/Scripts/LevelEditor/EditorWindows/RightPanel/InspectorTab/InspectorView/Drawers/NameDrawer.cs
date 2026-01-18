@@ -7,7 +7,8 @@ namespace TimeLine.CustomInspector.UI.Drawers
     {
         private CustomInspectorDrawer _customInspectorDrawer;
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, KeyframeCreator keyframeCreator)
+        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator)
         {
             _customInspectorDrawer = customInspectorDrawer;
         }

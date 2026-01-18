@@ -16,11 +16,12 @@ namespace TimeLine
         private Canvas canvas;
 
         public RectTransform RectTransform => rectTransform;
-        public void Setup(Canvas canvas, string time, Color color)
+        public void Setup(Canvas canvas, string time, Color color, Color textColor)
         {
             image.color = color;
             this.canvas = canvas;
             text.text = time;
+            text.color = textColor;
             float pixelWidth = 1f / canvas.scaleFactor;
             rectTransform.sizeDelta = new Vector2(pixelWidth, rectTransform.sizeDelta.y);
         }

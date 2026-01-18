@@ -59,6 +59,7 @@ namespace TimeLine.EventBus.Events.TrackObject
 
             if (changed)
             {
+                // print(_trackObjects);
                 _gameEventBus.Raise(new SelectObjectEvent(_trackObjects));
             }
         }
@@ -66,16 +67,10 @@ namespace TimeLine.EventBus.Events.TrackObject
         public void SelectNoClear(TrackObjectData trackObject)
         {
             if(_selectLock.IsLocked) return;
-            
-            var changed = false;
 
             if (!_trackObjects.Contains(trackObject))
             {
                 _trackObjects.Add(trackObject);
-                changed = true;
-            }
-            if (changed)
-            {
                 _gameEventBus.Raise(new SelectObjectEvent(_trackObjects));
             }
         }
@@ -108,6 +103,16 @@ namespace TimeLine.EventBus.Events.TrackObject
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {
                 trackObjectData.trackObject.AddTicksMove(ticks);
+            }
+        }
+        
+        public void MultipleChangeTrackLine(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, int deltaIndex)
+        {
+            if (_trackObjects.Count <= 1) return;
+            
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            {
+                trackObjectData.trackObject.AddLineTrackIndex(deltaIndex);
             }
         }
 

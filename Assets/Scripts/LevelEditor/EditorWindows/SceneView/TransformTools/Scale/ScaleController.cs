@@ -194,8 +194,13 @@ namespace TimeLine
         private void SetPosition(List<TrackObjectData> listObjects)
         {
             // print("SetPosition");
+            // print(_transformComponent.Count);
             foreach (var VARIABLE in _transformComponent)
             {
+                if(VARIABLE.Item1.XPosition == null || VARIABLE.Item1.YPosition == null) continue;
+                // print(VARIABLE.Item1.XPosition);
+                // print(VARIABLE.Item1.YPosition);
+                // print(_toolFollowingObject);
                 VARIABLE.Item1.XPosition.OnValueChanged -= _toolFollowingObject;
                 VARIABLE.Item1.YPosition.OnValueChanged -= _toolFollowingObject;
             }

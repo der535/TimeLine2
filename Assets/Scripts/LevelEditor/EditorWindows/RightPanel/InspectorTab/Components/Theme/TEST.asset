@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 170fb8fbe5021eb4f82b5c45e958a66f, type: 3}
+  m_Name: TEST
+  m_EditorClassIdentifier: 
+  primary: {r: 1, g: 0, b: 0, a: 1}
+  secondary: {r: 1, g: 0, b: 0, a: 1}
+  inputFieldBackground: {r: 1, g: 0, b: 0, a: 1}
+  inputFieldText: {r: 1, g: 0, b: 0, a: 1}
+  inputFieldTextPlaceholder: {r: 1, g: 0, b: 0, a: 1}
+  currentTimeLine: {r: 1, g: 0, b: 0, a: 1}
+  icons: {r: 1, g: 0, b: 0, a: 1}
+  keyframeColor: {r: 1, g: 0, b: 0, a: 1}
+  selectedKeyframeColor: {r: 1, g: 0, b: 0, a: 1}
+  bacroundButtons: {r: 1, g: 0, b: 0, a: 1}
+  textButtons: {r: 1, g: 0, b: 0, a: 1}
+  iconPlay: {r: 1, g: 0, b: 0, a: 1}
+  backgroundSceneColor: {r: 1, g: 0, b: 0, a: 1}
+  gridSceneColor: {r: 1, g: 0, b: 0, a: 1}
+  textColor: {r: 1, g: 0, b: 0, a: 1}
+  sliderBacround: {r: 1, g: 0, b: 0, a: 1}
+  sliderHandle: {r: 1, g: 0, b: 0, a: 1}
+  tabs: {r: 1, g: 0, b: 0, a: 1}
+  circleBeatActive: {r: 1, g: 0, b: 0, a: 1}
+  circleBeatInActive: {r: 1, g: 0, b: 0, a: 1}
+  dropDownBackground: {r: 1, g: 0, b: 0, a: 1}
+  dropDownText: {r: 1, g: 0, b: 0, a: 1}
+  dropDownArrow: {r: 1, g: 0, b: 0, a: 1}
+  dropDownItemBackground: {r: 1, g: 0, b: 0, a: 1}
+  dropDownItemCheckmark: {r: 1, g: 0, b: 0, a: 1}
+  dropDownItemLabel: {r: 1, g: 0, b: 0, a: 1}
+  timeMarkerPrimary: {r: 1, g: 0, b: 0, a: 1}
+  timeMarkerSecond: {r: 1, g: 0, b: 0, a: 1}
+  timeMarkerText: {r: 1, g: 0, b: 0, a: 1}
+  waveForm: {r: 1, g: 0, b: 0, a: 1}

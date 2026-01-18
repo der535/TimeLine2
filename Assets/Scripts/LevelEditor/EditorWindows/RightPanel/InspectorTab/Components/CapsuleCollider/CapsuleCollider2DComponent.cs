@@ -6,6 +6,7 @@ using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using UnityEngine;
 using Zenject;

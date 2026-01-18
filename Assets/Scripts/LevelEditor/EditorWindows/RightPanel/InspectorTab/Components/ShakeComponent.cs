@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
-using TimeLine.Installers;
-using TimeLine.LevelEditor.SpriteLoader;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using TimeLine.TimeLine;
 using UnityEngine;
@@ -22,33 +21,34 @@ namespace TimeLine
         private TrackObjectStorage _trackObjectStorage;
         private Main _main;
         
-        private TrackObjectData _trackObjectData;
+        private SceneObjectLink _sceneObjectLink;
+        private InitializedComponentController _initializedComponentController;
 
         private bool isShakeActive;
         
         [Inject]
-        private void Construct(ShakeCamera shakeCamera, TrackObjectStorage trackObjectStorage, Main main)
+        private void Construct(ShakeCamera shakeCamera, TrackObjectStorage trackObjectStorage, Main main, InitializedComponentController initializedComponentController)
         {
             _shakeCamera = shakeCamera;
             _trackObjectStorage = trackObjectStorage;
             _main = main;
+            _initializedComponentController = initializedComponentController;
         }
 
         private void Start()
         {
-            _trackObjectData = _trackObjectStorage.GetTrackObjectData(gameObject);
+            _sceneObjectLink = gameObject.GetComponent<SceneObjectLink>();
+            _initializedComponentController.Add(this, _sceneObjectLink.trackObjectData.trackObject);
         }
 
         private void Update()
         {
-            if (TimeLineConverter.Instance.TicksCurrentTime() > _trackObjectData.trackObject.StartTimeInTicks && isShakeActive == false)
+            if (TimeLineConverter.Instance.TicksCurrentTime() > _sceneObjectLink.trackObjectData.trackObject.StartTimeInTicks && isShakeActive == false)
             {
                 isShakeActive = true;
                 print(isShakeActive);
-
-
+                
                 _shakeCamera.Shake(ShakeStrength.Value, Duration.Value, Vibrato.Value, Randomness.Value);
-
             }
         }
 

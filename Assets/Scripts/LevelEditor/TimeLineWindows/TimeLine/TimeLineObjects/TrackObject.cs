@@ -9,6 +9,7 @@ using TimeLine.TimeLine;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Zenject;
 
@@ -22,6 +23,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         [SerializeField] private TrackObjectCustomizationController customizationController;
         [SerializeField] private TrackObjectVisual trackObjectVisual;
 
+        [FormerlySerializedAs("ticksDeathZone")] [SerializeField]
+        private int deathZone;
+
         #region Вспомогательные переменные
 
         private TimeLineSettings _timeLineSettings;
@@ -31,9 +35,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         private MainObjects _mainObjects;
         private GameEventBus _gameEventBus;
         private TimeLineScroll _timeLineScroll;
+
         private GridUI _gridUI;
-        // private ScrollOld _scrollOld;
-        private Main _main;
+
         private KeyframeTrackStorage _keyframeTrackStorage;
         private SelectObjectController _selectObjectController;
 
@@ -48,11 +52,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         private Vector2 _startMousePosition;
         private double _startTrackObjectTicks;
-        private double _startMouseTicks;
         private float _startMouseXLocal;
 
-        private double deltaticksRight;
-        private double deltaticksLeft;
+        private double _deltaticksRight;
+        private double _deltaticksLeft;
 
         public TrackObject offsetObject;
 
@@ -61,39 +64,41 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         private double _startTimeInTicks;
         private double _timeDurationInTicks;
 
+        private bool _deathZonePass;
+
         internal double StartTimeInTicks
         {
-            get
-            {
-                return Math.Round(_startTimeInTicks);
-            }
+            get { return Math.Round(_startTimeInTicks); }
             private set
             {
                 _startTimeInTicks = Math.Round(value);
                 OnChangeStartTime?.Invoke(_startTimeInTicks);
             }
         }
+
         internal bool isActive = true;
         internal bool isTemp = false;
         internal TrackObjectVisual Visual => trackObjectVisual;
         public void SetTime(double time) => _startTimeInTicks = time;
         internal Action<double> OnChangeStartTime;
         internal string _parentID;
+
         internal double TimeDuractionInTicks
         {
             get => Math.Round(_timeDurationInTicks);
             private set => _timeDurationInTicks = Math.Round(value);
         }
+
         internal TrackLine TrackLine { get; private set; }
         internal string Name { get; private set; }
         internal Action<double> Rezise { get; set; }
         internal float BeatDuraction => (float)(TimeDuractionInTicks / TimeLineConverter.TICKS_PER_BEAT);
-        
+
         internal RectTransform RectTransform => rect;
 
         private bool _lockSize;
-        private double _reducedLeft;
-        private double _reducedRight;
+        public double _reducedLeft;
+        public double _reducedRight;
         private ActionMap _actionMap;
 
         // 🔑 Новый флаг: включать/выключать ограничения ресайза
@@ -122,7 +127,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _mainObjects = mainObjects;
             _gameEventBus = gameEventBus;
             _timeLineScroll = timeLineScroll;
-            _main = main;
             _keyframeTrackStorage = keyframeTrackStorage;
             _selectObjectController = selectObjectController;
         }
@@ -142,10 +146,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         internal bool GetActive() => rect.gameObject.activeSelf;
         internal TrackObjectCustomizationController CustomizationController() => customizationController;
+
         internal void Hide()
         {
             rect.gameObject.SetActive(false);
         }
+
         internal void Show()
         {
             rect.gameObject.SetActive(true);
@@ -158,13 +164,15 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         internal void UpdateDuraction(double newDuractionInTicks)
         {
-            var delta = newDuractionInTicks - TimeDuractionInTicks;
+            var delta = newDuractionInTicks - (TimeDuractionInTicks - _reducedRight - _reducedLeft);
+            print($"update duraction {_reducedRight}");
             _reducedRight -= delta;
             // print(_reducedRight);
         }
 
         // 🆕 Перегрузка с флагом
-        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, string parentID, double startTimeInTicks,
+        internal void Setup(double ticksLifeTime, string name, TrackLine trackLine, string parentID,
+            double startTimeInTicks, double reducedLeft, double reducedRight,
             bool enableResizeLimits = false)
         {
             StartTimeInTicks = startTimeInTicks;
@@ -174,19 +182,22 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             nameText.text = name;
             _parentID = parentID;
 
-            _reducedLeft = 0;
-            _reducedRight = 0;
+            // _reducedRight = 0;
+            // _reducedLeft = 0;
+            
+            _reducedLeft = reducedLeft;
+            _reducedRight = reducedRight;
             _enableResizeLimits = enableResizeLimits; // ← Сохраняем флаг
 
             UpdateVisuals();
         }
-        
+
 
         internal void GroupOffset(double tickOffset)
         {
             StartTimeInTicks -= tickOffset;
         }
-        
+
         internal void GroupOffsetTrack(TrackObject track)
         {
             offsetObject = track;
@@ -234,9 +245,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             {
                 if (_enableResizeLimits)
                 {
-                    _reducedRight = Math.Min(_reducedRight +
-                                            RoundTicksToGrid(_startResizingDuractionInTicks + deltaticksRight) -
-                                            _startResizingDuractionInTicks, 0);
+                    _reducedRight = Math.Round(Math.Min(_reducedRight +
+                                             RoundTicksToGrid(_startResizingDuractionInTicks + _deltaticksRight) -
+                                             _startResizingDuractionInTicks, 0));
                 }
             }
 
@@ -287,9 +298,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 ApplyKeyframeOffset();
                 if (_enableResizeLimits)
                 {
-                    _reducedLeft = Math.Min(_reducedLeft +
-                                           RoundTicksToGrid(_startResizingDuractionInTicks + deltaticksLeft) -
-                                           _startResizingDuractionInTicks, 0);
+                    _reducedLeft = Math.Round(Math.Min(_reducedLeft +
+                                            RoundTicksToGrid(_startResizingDuractionInTicks + _deltaticksLeft) -
+                                            _startResizingDuractionInTicks, 0));
                 }
             }
 
@@ -320,7 +331,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         private void Update()
         {
             Drag();
-            
+
             if (_isResizing)
             {
                 float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
@@ -330,7 +341,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                     Vector2 currentMousePosition = GetMousePosition();
                     float deltaPixels = currentMousePosition.x - _startMousePosition.x;
                     double deltaTicks = (deltaPixels / pixelsPerBeat) * TimeLineConverter.TICKS_PER_BEAT;
-                    deltaticksRight = deltaTicks;
+                    _deltaticksRight = deltaTicks;
 
                     double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
                     double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
@@ -356,7 +367,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                     Vector2 currentMousePosition = GetMousePosition();
                     float deltaPixels = _startMousePosition.x - currentMousePosition.x;
                     double deltaTicks = (deltaPixels / pixelsPerBeat) * TimeLineConverter.TICKS_PER_BEAT;
-                    deltaticksLeft = deltaTicks;
+                    _deltaticksLeft = deltaTicks;
 
                     double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
                     double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
@@ -451,8 +462,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _startTrackObjectTicks = StartTimeInTicks;
             Vector2 mousePos = GetMousePosition();
             _startMouseXLocal = mousePos.x;
-            _startMouseTicks = AnchorPositionToTicks(_startMouseXLocal);
             _isDragging = true;
+            _deathZonePass = false;
             _selectObjectController.StartMultipleMove(this);
         }
 
@@ -469,16 +480,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         private void Drag()
         {
             if (!_isDragging) return;
-            
-            TrackLine = _trackStorage.CheckTracks(this);
+
             if (transform.parent != TrackLine.RectTransform) transform.parent = TrackLine.RectTransform;
             rect.offsetMax = new Vector2(rect.offsetMax.x, 0);
             rect.offsetMin = new Vector2(rect.offsetMin.x, 0);
 
             UpdatePosition();
             CalculatePosition();
-            
-            
         }
 
         internal void UpdatePosition()
@@ -487,6 +495,21 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             float currentMouseXLocal = currentMousePos.x;
             float mouseDeltaXLocal = currentMouseXLocal - _startMouseXLocal;
             double deltaTicks = AnchorPositionDeltaToTicks(mouseDeltaXLocal);
+            if (Mathf.Abs(mouseDeltaXLocal) < deathZone && _deathZonePass == false)
+            {
+                return;
+            }
+            else
+            {
+                _deathZonePass = true;
+            }
+
+            int oldIndex = _trackStorage.GetIndex(TrackLine);
+            TrackLine = _trackStorage.CheckTracks(this);
+            int newIndex = _trackStorage.GetIndex(TrackLine);
+            if (oldIndex != -1 && newIndex != -1 && Mathf.Abs(oldIndex - newIndex) > 0)
+                _selectObjectController.MultipleChangeTrackLine(this, oldIndex - newIndex);
+
             _selectObjectController.MultipleMove(this, deltaTicks);
             StartTimeInTicks = RoundTicksToGrid(_startTrackObjectTicks + deltaTicks);
             _trackObjectStorage.UpdatePositionSelectedTrackObject();
@@ -499,20 +522,22 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             CalculatePosition();
         }
 
+        internal void AddLineTrackIndex(int addedIndex)
+        {
+            TrackLine = _trackStorage.GetTrackLine( _trackStorage.GetIndex(TrackLine) - addedIndex);
+            transform.parent = TrackLine.RectTransform;
+            RectTransform.anchoredPosition = new Vector2(RectTransform.anchoredPosition.x, 0);
+        }
+
         private double AnchorPositionDeltaToTicks(float deltaAnchorPosition)
         {
-            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
+            float pixelsPerBeat = _timeLineScroll.Zoom;
             float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
             return beatsDelta * TimeLineConverter.TICKS_PER_BEAT;
         }
 
         #region Конвертация методов
-
-        private double AnchorPositionToTicks(float anchorPosition)
-        {
-            float timeInSeconds = _timeLineConverter.GetTimeFromAnchorPosition(anchorPosition);
-            return TimeLineConverter.Instance.SecondsToTicks(timeInSeconds);
-        }
+        
 
         private double RoundTicksToGrid(double ticks)
         {

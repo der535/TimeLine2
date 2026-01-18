@@ -11,7 +11,7 @@ public class Branch
     public string ID { get; }
     public TreeNode Root { get; set; }
     public List<TreeNode> Nodes { get; } = new();
-    
+
     public Branch(string id, string name)
     {
         Name = name;
@@ -19,7 +19,7 @@ public class Branch
         Root = new TreeNode(name, name);
         // Nodes.Add(Root);
     }
-    
+
     public Branch(Branch original, string id)
     {
         if (original == null) return;
@@ -30,10 +30,10 @@ public class Branch
 
         // Словарь для связи оригиналов и копий
         var mapping = new Dictionary<TreeNode, TreeNode>();
-        
+
         // Глубокое копирование дерева
         Root = original.Root?.DeepCopy(mapping);
-        
+
         // Восстанавливаем список Nodes
         Nodes = new List<TreeNode>(original.Nodes.Count);
         foreach (var node in original.Nodes)
@@ -49,7 +49,7 @@ public class Branch
     {
         Name = name;
     }
-    
+
     public void PrintTree()
     {
         if (Root == null)
@@ -70,12 +70,12 @@ public class Branch
         {
             sb.Append(parentLastFlags[i] ? "    " : "│   ");
         }
-    
+
         if (parentLastFlags.Count > 0)
         {
             sb.Append(parentLastFlags[^1] ? "└── " : "├── ");
         }
-    
+
         sb.AppendLine(node.Name);
 
         // Обработка дочерних элементов
@@ -86,60 +86,102 @@ public class Branch
             BuildTreeString(sb, node.Children[i], flags);
         }
     }
-    
+
     public void RemoveNode(TreeNode nodeToRemove)
     {
-        if (nodeToRemove == null) return;
-    
-        // Запрещаем удаление корневого узла
-        if (nodeToRemove == Root)
+        if (nodeToRemove == null || nodeToRemove == Root)
         {
-            Debug.LogWarning("[Branch] Нельзя удалить корневой узел ветки.");
+            Debug.LogWarning("[Branch] Нельзя удалить корень или null.");
             return;
         }
 
-        // 1. Находим родителя ноды
-        // В TreeNode обычно полезно хранить ссылку на Parent, 
-        // но если её нет, ищем родителя по пути
+        // 1. Находим родителя
         string parentPath = GetParentPathFromPath(nodeToRemove.Path);
-        TreeNode parentNode = FindNode(parentPath);
+        TreeNode parentNode = FindNode(parentPath).node;
 
         if (parentNode != null)
         {
-            // Удаляем узел из списка детей родителя
+            // Удаляем сам узел и всех его потомков из общего списка Nodes
+            RemoveFromNodesRecursive(nodeToRemove);
+        
+            // Удаляем узел из детей родителя
             parentNode.Children.Remove(nodeToRemove);
-        }
 
-        // 2. Рекурсивно удаляем саму ноду и всех её потомков из общего списка Nodes
-        RemoveNodeFromListRecursive(nodeToRemove);
-    
-        Debug.Log($"[Branch] Узел '{nodeToRemove.Name}' и его потомки удалены.");
+            // 2. Если у родителя больше нет детей, и это не корень — удаляем и родителя
+            if (parentNode.Children.Count == 0 && parentNode != Root)
+            {
+                RemoveRecursiveUp(parentNode);
+            }
+        }
     }
 
-    private void RemoveNodeFromListRecursive(TreeNode node)
+    private void RemoveRecursiveUp(TreeNode node)
     {
-        // Сначала проходим по всем детям
+        if (node == Root) return;
+
+        string parentPath = GetParentPathFromPath(node.Path);
+        TreeNode parentNode = FindNode(parentPath).node;
+
+        if (parentNode != null)
+        {
+            // Убираем из списка Nodes
+            Nodes.Remove(node);
+            // Убираем из списка детей
+            parentNode.Children.Remove(node);
+
+            // Рекурсивно идем выше, если родитель опустел
+            if (parentNode.Children.Count == 0 && parentNode != Root)
+            {
+                RemoveRecursiveUp(parentNode);
+            }
+        }
+    }
+
+// Вспомогательный метод для очистки списка Nodes от дочерних элементов
+    private void RemoveFromNodesRecursive(TreeNode node)
+    {
         foreach (var child in node.Children)
         {
-            RemoveNodeFromListRecursive(child);
+            RemoveFromNodesRecursive(child);
         }
-
-        // Удаляем текущий узел из плоского списка Nodes
         Nodes.Remove(node);
     }
-    
-    public TreeNode FindNode(string path)
+    private void RemovePath(TreeNode node)
+    {
+        string parentPath = GetParentPathFromPath(node.Path);
+        Debug.Log(parentPath);
+        Debug.Log(node.Path);
+        if (!string.IsNullOrEmpty(parentPath))
+        {
+            var node3 = FindNode(parentPath).node;
+            node3.Children.Remove(node);
+            Nodes.Remove(node);
+            RemovePath(FindNode(parentPath).node);
+        }
+
+        PrintTree();
+        Debug.Log(node.Path);
+        Debug.Log(Nodes.Count);
+        foreach (var VARIABLE in Nodes)
+        {
+            Debug.Log(VARIABLE.Path);
+        }
+        Nodes.Remove(node);
+    }
+
+    public (TreeNode node, int childCount) FindNode(string path)
     {
         // Debug.Log($"[FindNode] Начало поиска по пути: '{path}'");
 
         if (string.IsNullOrEmpty(path))
         {
             // Debug.Log("[FindNode] Путь пуст, возвращаю Root.");
-            return Root;
+            return (Root, 0);
         }
 
         string[] parts = path.Split('/');
         TreeNode currentNode = Root;
+        int childCount = 0;
 
         foreach (string part in parts)
         {
@@ -153,6 +195,7 @@ public class Branch
             {
                 if (child.Name == part)
                 {
+                    childCount = currentNode.Children.Count;
                     currentNode = child;
                     found = true;
                     break;
@@ -162,33 +205,33 @@ public class Branch
             if (!found)
             {
                 // Debug.LogWarning($"[FindNode] Ошибка: Узел '{part}' не найден в '{currentNode.Name}'. Поиск прерван.");
-                return null;
+                return (null, 0);
             }
         }
 
         // Debug.Log($"[FindNode] Успешно найден узел: '{currentNode.Name}' по пути '{path}'");
-        return currentNode;
+        return (currentNode, childCount);
     }
-    
+
     public TreeNode AddNode(string path)
     {
         // Объединяем путь и имя, чтобы корректно обработать все '/'
         // Учитываем пустой путь, чтобы не плодить лишние слэши в начале
         string fullPath = path;
-    
+
         // StringSplitOptions.RemoveEmptyEntries уберет пустые части при случайных double slash "//"
         string[] parts = fullPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-    
+
         TreeNode currentNode = Root;
         string currentCumulativePath = "";
 
         for (int i = 0; i < parts.Length; i++)
         {
             string partName = parts[i];
-        
+
             // Формируем путь для текущего узла (нужен для конструктора AddChild)
             currentCumulativePath = i == 0 ? partName : $"{currentCumulativePath}/{partName}";
-        
+
             TreeNode nextNode = null;
             foreach (var child in currentNode.Children)
             {
@@ -211,7 +254,7 @@ public class Branch
 
         return currentNode; // Возвращаем последний созданный или найденный узел
     }
-    
+
     public BranchSaveData ToSaveData()
     {
         var saveData = new BranchSaveData
@@ -222,8 +265,8 @@ public class Branch
 
         foreach (var node in Nodes)
         {
-            Debug.Log($"Path: {node.Path}");
-            if(node.Path == node.Name) continue;
+            // Debug.Log($"Path: {node.Path}");
+            if (node.Path == node.Name) continue;
             saveData.Nodes.Add(new TreeNodeSaveData
             {
                 Path = node.Path
@@ -237,6 +280,6 @@ public class Branch
     private static string GetParentPathFromPath(string fullPath)
     {
         int lastSlash = fullPath.LastIndexOf('/');
-        return lastSlash > 0 ? fullPath.Substring(0, lastSlash) : "";
+        return lastSlash > 0 ? fullPath.Substring(0, lastSlash) : string.Empty;
     }
 }

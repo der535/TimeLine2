@@ -16,30 +16,34 @@ public class VerticalGraphAnimationMarkerRenderer : MonoBehaviour
     [Space] [SerializeField] private TimeMarker beatLinesPrefab;
     [SerializeField] private int countBeatLines;
     [SerializeField] private float minDistance = 50;
-    [SerializeField] private Color major = Color.white;
-    [SerializeField] private Color between = Color.white;
 
     private List<TimeMarker> _lines = new();
     private GameEventBus _gameEventBus;
     private VerticalBezierZoom _verticalBezierZoom;
     private VerticalBezierScroll _verticalBezierScroll;
+    private ThemeStorage _themeStorage;
 
     private float _skipLines;
 
     [Inject]
     private void Construct(TimeLineSettings timeLineSettings, GameEventBus gameEventBus,
         VerticalBezierZoom verticalBezierZoom, TimeLineConverter timeLineConverter,
-        VerticalBezierScroll verticalBezierScroll)
+        VerticalBezierScroll verticalBezierScroll, ThemeStorage themeStorage)
     {
         _gameEventBus = gameEventBus;
         _verticalBezierZoom = verticalBezierZoom;
         _verticalBezierScroll = verticalBezierScroll;
+        _themeStorage = themeStorage;
     }
 
     private void Awake()
     {
         _gameEventBus.SubscribeTo((ref ScrollBezier data) => CalculateDistance(), -1);
         _gameEventBus.SubscribeTo((ref ZoomBezier data) => CalculateDistance(),-1);
+        _gameEventBus.SubscribeTo((ref ThemeChangedEvent data) =>
+        {
+            PoseLines();
+        });
 
         for (int i = 0; i < countBeatLines; i++)
         {
@@ -94,9 +98,6 @@ public class VerticalGraphAnimationMarkerRenderer : MonoBehaviour
         // Высота и смещение
         float viewPortHalfHeight = pointsRoot.rect.height / 2f;
         float scrollOffset = pointsRoot.offsetMax.y;
-        print(viewPortHalfHeight);
-        print(scrollOffset);
-        print(-(viewPortHalfHeight + scrollOffset));
 
         // Получаем значение в "тиках/единицах" для нижней границы экрана
         float valueAtBottom =
@@ -118,7 +119,6 @@ public class VerticalGraphAnimationMarkerRenderer : MonoBehaviour
         float zoom = _verticalBezierZoom.Zoom;
         float scroll = _verticalBezierScroll.VerticalScroll;
         float minPosition = GetMinPosition2();
-        print(minPosition);
 
         // subStep — это расстояние между палками в списке _lines.
         // Если мы хотим, чтобы между Major-линиями (числами) были промежуточные, 
@@ -139,11 +139,11 @@ public class VerticalGraphAnimationMarkerRenderer : MonoBehaviour
             if (isMajor)
             {
                 // Форматирование "0.##" уберет лишние нули (0.10 -> 0.1)
-                line.Setup(canvas, currentValue.ToString("0.##", CultureInfo.InvariantCulture), major);
+                line.Setup(canvas, currentValue.ToString("0.##", CultureInfo.InvariantCulture), _themeStorage.value.timeMarkerPrimary, _themeStorage.value.timeMarkerText);
             }
             else
             {
-                line.Setup(canvas, string.Empty, between);
+                line.Setup(canvas, string.Empty, _themeStorage.value.timeMarkerPrimary, _themeStorage.value.timeMarkerText);
             }
 
             float yPos = GetAnchorPositionFromValue(currentValue, zoom) + scroll;

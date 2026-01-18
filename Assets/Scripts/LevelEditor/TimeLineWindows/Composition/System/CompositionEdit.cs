@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using EventBus;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -46,7 +47,7 @@ namespace TimeLine
             trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
             trackObjectStorage.ShowAll();
             composition.EditComposition(saveLevel.SaveGroup(trackObjectGroup), trackObjectGroup.compositionID);
-            trackObjectRemover.SingleRemove(trackObjectGroup);
+            trackObjectRemover.SingleRemove(trackObjectGroup, false);
             compositionUpdater.UpdateCompositions();
             
             _gameEventBus.Raise(new EndCompositionEdit());

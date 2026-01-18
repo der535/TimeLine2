@@ -3,10 +3,9 @@ using UnityEngine.UI;
 
 public class SceneToRawImageConverter : MonoBehaviour
 {
-    [Header("Ссылки")]
-    public Camera mapCamera;          // Камера, которая рендерит 3D сцену
-    public RawImage rawImageDisplay;  // UI элемент, где отображается эта сцена
-    public Canvas mainUiCanvas;       // Основной Canvas, где лежит RawImage (для проверки RenderMode)
+    [Header("Ссылки")] public Camera mapCamera; // Камера, которая рендерит 3D сцену
+    public RawImage rawImageDisplay; // UI элемент, где отображается эта сцена
+    public Canvas mainUiCanvas; // Основной Canvas, где лежит RawImage (для проверки RenderMode)
 
     /// <summary>
     /// Переводит точку из 3D мира сцены в позицию UI инструмента (World Space UI)
@@ -27,6 +26,24 @@ public class SceneToRawImageConverter : MonoBehaviour
         return rt.TransformPoint(new Vector2(localX, localY));
     }
     
+    public Vector2 WorldToUIAnchoredPosition(Vector3 worldScenePosition, RectTransform parentRect)
+    {
+        if (!mapCamera || !rawImageDisplay) return Vector2.zero;
+
+        // 1. Из 3D мира в Viewport (0..1)
+        Vector3 viewportPoint = mapCamera.WorldToViewportPoint(worldScenePosition);
+
+        // 2. Из Viewport в мировые координаты UI пространства
+        RectTransform rt = rawImageDisplay.rectTransform;
+        float localX = (viewportPoint.x - rt.pivot.x) * rt.rect.width;
+        float localY = (viewportPoint.y - rt.pivot.y) * rt.rect.height;
+        Vector3 worldUIPos = rt.TransformPoint(new Vector2(localX, localY));
+
+        // 3. Из мировых координат UI в локальные координаты ПРЕДКА (anchoredPosition)
+        // InverseTransformPoint переводит мировую позицию в локальную систему координат родителя
+        return parentRect.InverseTransformPoint(worldUIPos);
+    }
+
     /// <summary>
     /// Конвертирует позицию курсора (Screen Point) в координаты 3D мира сцены.
     /// </summary>
@@ -44,7 +61,8 @@ public class SceneToRawImageConverter : MonoBehaviour
         Canvas canvas = rawImageDisplay.canvas;
         Camera canvasCam = (canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : canvas.worldCamera;
 
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rawRect, screenPoint, canvasCam, out Vector2 localPoint))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rawRect, screenPoint, canvasCam,
+                out Vector2 localPoint))
         {
             // 2. Преобразуем локальные координаты в нормализованные (Viewport: 0..1)
             // Учитываем Pivot (центр вращения/привязки)
@@ -58,31 +76,33 @@ public class SceneToRawImageConverter : MonoBehaviour
         return Vector3.zero;
     }
 
-    public Vector3? UIToWorldPosition(Vector3 toolWorldPosition)
+    public Vector3? UIToWorldPosition(Vector3 toolWorldPosition, RectTransform rectTransform = null)
     {
         // 1. ПЕРЕВОДИМ ПОЗИЦИЮ ИНСТРУМЕНТА В VIEWPORT (0...1) РЕНДЕР-ТЕКСТУРЫ
         // Сначала получаем локальную точку внутри RawImage
         RectTransform rawRect = rawImageDisplay.rectTransform;
-            
+
         // // Используем позицию инструмента в мировом пространстве UI
         // Vector3 toolWorldPos = toolTransform.position;
         //     
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rawRect, toolWorldPosition, null,
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform == null ? rawRect : rectTransform,
+                toolWorldPosition, null,
                 out Vector2 localInRaw))
         {
             return null;
         }
-            
+
         // Конвертируем локальные координаты в нормализованные Viewport координаты (от 0 до 1)
         // Учитываем размеры Rect и его Pivot
         float viewportX = (localInRaw.x / rawRect.rect.width) + rawRect.pivot.x;
         float viewportY = (localInRaw.y / rawRect.rect.height) + rawRect.pivot.y;
-            
+
         // 2. КОНВЕРТИРУЕМ VIEWPORT В МИРОВЫЕ КООРДИНАТЫ СЦЕНЫ
         // Для ViewportToWorldPoint нужно указать расстояние (Z), на котором находится объект от камеры
 
         Vector3 viewportPoint = new Vector3(viewportX, viewportY, 0);
-            
+
         Vector3 smoothWorldPosition3D = mapCamera.ViewportToWorldPoint(viewportPoint);
         return smoothWorldPosition3D;
     }

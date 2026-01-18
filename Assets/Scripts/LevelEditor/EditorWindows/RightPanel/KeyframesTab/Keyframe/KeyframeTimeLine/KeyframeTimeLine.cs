@@ -2,9 +2,11 @@ using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Core.MusicData;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
@@ -12,7 +14,7 @@ namespace TimeLine
     public class KeyframeTimeLine : MonoBehaviour
     {
         [SerializeField] private RectTransform rect;
-        [SerializeField] private TimeLineKeyframeScroll timeLineKeyframeScroll;
+        [FormerlySerializedAs("timeLineKeyframeScroll")] [SerializeField] private TimeLineKeyframeZoom timeLineKeyframeZoom;
 
         private TrackObject _trackObject;
 
@@ -42,7 +44,7 @@ namespace TimeLine
             
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
             _gameEventBus.SubscribeTo(
-                (ref EventBus.Events.KeyframeTimeLine.PanEvent data) =>
+                (ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent data) =>
                 {
                     if(_trackObjectData != null)
                         UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), _trackObjectData);
@@ -79,7 +81,7 @@ namespace TimeLine
 
             // Вычисляем позицию
             float positionX = (float)(timeDiffSeconds *
-                                      (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeScroll.Zoom) *
+                                      (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeZoom.Zoom) *
                                       (_musicData.bpm / 60));
 
             rect.anchoredPosition = new Vector2(positionX, rect.anchoredPosition.y);

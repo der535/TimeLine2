@@ -64,31 +64,29 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 data.startTime = data.startTime - minTime + TimeLineConverter.Instance.TicksCurrentTime();
                 if (data is GroupGameObjectSaveData group)
                 {
-                    PasteGroup(group);
+                    PasteGroup(group, generateNewSceneID: true, addToTitleCloneText: true);
                 }
                 else
                 {
-                    _objectLoader.LoadObject(data);
+                    _objectLoader.LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true);
                 }
             }
 
             // dataCopy = new List<GameObjectSaveData>();
         }
         
-        private void PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true)
+        private void PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true, bool generateNewSceneID = false, bool addToTitleCloneText = false)
         {
             foreach (var child in data.children)
             {
                 if (child is GroupGameObjectSaveData childGroup)
                 {
-                    PasteGroup(childGroup, false);
+                    PasteGroup(childGroup, false, generateNewSceneID, addToTitleCloneText);
                 }
             }
 
-
             GroupGameObjectSaveData composition = _saveComposition.FindCompositionDataById(data.compositionID);
             GroupGameObjectSaveData dataCopyComposition = data.DuplicateComposition();
-
 
             dataCopyComposition.startTime = 0;
             dataCopyComposition.branch.Nodes = new List<TreeNodeSaveData>();
@@ -110,7 +108,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
 
             if (addToStorage)
-                _objectLoader.LoadComposition(data, data.compositionID);
+                _objectLoader.LoadComposition(data, data.compositionID,  generateNewSceneID:generateNewSceneID, addToTitleCloneText:addToTitleCloneText);
         }
         
         internal bool PasteValidCheck(string past)

@@ -3,6 +3,7 @@ using System.Linq;
 using NaughtyAttributes;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using UnityEngine;
 using UnityEngine.Serialization;

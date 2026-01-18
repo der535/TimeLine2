@@ -1,0 +1,51 @@
+{
+  "customOrder": {
+    "/": {
+      "children": [
+        "Оглавление.md",
+        "Описание скриптов",
+        "ㅤ.md",
+        "Архив"
+      ],
+      "sortOrder": "custom"
+    },
+    "Архив": {
+      "children": [
+        "Архив/530 (2026.01.16) (23.26.59) (FontSetter_Tool).png",
+        "Архив/529 (2026.01.16) (23.25.19) (TimeLine2_-_Editor_-_Windows,_Mac,_Linux_-_Unity_6).png"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов": {
+      "children": [
+        "Описание скриптов/ШАБЛОН.md",
+        "Описание скриптов/Editor",
+        "Описание скриптов/General"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/Editor": {
+      "children": [
+        "Описание скриптов/Editor/Описание папки.md",
+        "Описание скриптов/Editor/AddFontSetterTool.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/General": {
+      "children": [
+        "Описание скриптов/General/Описание папки.md",
+        "Описание скриптов/General/FontController"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/General/FontController": {
+      "children": [
+        "Описание скриптов/General/FontController/FontSetter.md"
+      ],
+      "sortOrder": "custom"
+    }
+  },
+  "sortOrder": "custom",
+  "debugMode": false,
+  "newItemPlacement": "top"
+}

@@ -4,10 +4,12 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine;
 using TimeLine.EventBus.Events.Input;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
+using PanEvent = TimeLine.PanEvent;
 
 public class TimeLineMarkerRenderer : MonoBehaviour
 {
@@ -17,8 +19,7 @@ public class TimeLineMarkerRenderer : MonoBehaviour
     [SerializeField] private Canvas canvas;
     [Space] private List<TimeMarker> _lines = new();
     [SerializeField] private float minDistance = 50;
-    [SerializeField] private Color major = Color.white;
-    [SerializeField] private Color between = Color.white;
+private ThemeStorage _themeStorage;
 
     private TimeLineSettings _timeLineSettings;
     private GameEventBus _gameEventBus;
@@ -30,19 +31,24 @@ public class TimeLineMarkerRenderer : MonoBehaviour
 
     [Inject]
     private void Construct(TimeLineSettings timeLineSettings, GameEventBus gameEventBus, MainObjects mainObjects,
-        TimeLineScroll timeLineScroll, TimeLineConverter timeLineConverter)
+        TimeLineScroll timeLineScroll, TimeLineConverter timeLineConverter, ThemeStorage themeStorage)
     {
         _timeLineSettings = timeLineSettings;
         _gameEventBus = gameEventBus;
         _mainObjects = mainObjects;
         _timeLineScroll = timeLineScroll;
         _timeLineConverter = timeLineConverter;
+        _themeStorage = themeStorage;
     }
 
     private void Awake()
     {
         _gameEventBus.SubscribeTo<PanEvent>((ref PanEvent f) => CalculateDistance());
         _gameEventBus.SubscribeTo<ScrollTimeLineEvent>((ref ScrollTimeLineEvent data) => CalculateDistance());
+        _gameEventBus.SubscribeTo((ref ThemeChangedEvent data) =>
+        {
+            PoseLines();
+        });
 
         for (int i = 0; i < countBeatLines; i++)
         {
@@ -113,12 +119,12 @@ public class TimeLineMarkerRenderer : MonoBehaviour
             if (isMajor)
             {
                 // Главная линия с текстом
-                line.Setup(canvas, currentTick.ToString(CultureInfo.InvariantCulture), major);
+                line.Setup(canvas, currentTick.ToString(CultureInfo.InvariantCulture), _themeStorage.value.timeMarkerPrimary, _themeStorage.value.timeMarkerText);
             }
             else
             {
                 // Промежуточная линия без текста
-                line.Setup(canvas, string.Empty, between);
+                line.Setup(canvas, string.Empty,  _themeStorage.value.timeMarkerSecond, _themeStorage.value.timeMarkerText);
             }
 
             line.RectTransform.anchoredPosition = new Vector2(

@@ -26,8 +26,8 @@ namespace TimeLine.Parent
 
         public void Restor(List<TrackObjectData> trackObjectData)
         {
-            print("=== НАЧАЛО ВОССТАНОВЛЕНИЯ ===");
-            print($"Получено объектов для восстановления: {trackObjectData.Count}");
+            // print("=== НАЧАЛО ВОССТАНОВЛЕНИЯ ===");
+            // print($"Получено объектов для восстановления: {trackObjectData.Count}");
 
             // Проверка на дубликаты
             var duplicates = trackObjectData
@@ -38,14 +38,14 @@ namespace TimeLine.Parent
 
             if (duplicates.Any())
             {
-                Debug.LogError($"Обнаружены дублирующиеся ID объектов!");
+                // Debug.LogError($"Обнаружены дублирующиеся ID объектов!");
                 foreach (var group in duplicates)
                 {
-                    Debug.LogError($"ID: {group.Key} встречается {group.Count()} раз(а)");
+                    // Debug.LogError($"ID: {group.Key} встречается {group.Count()} раз(а)");
                     foreach (var item in group)
                     {
-                        Debug.LogError(
-                            $"  - Объект: {item.branch?.Name ?? "Неизвестно"}, SceneObject: {item.sceneObject?.name ?? "null"}");
+                        // Debug.LogError(
+                            // $"  - Объект: {item.branch?.Name ?? "Неизвестно"}, SceneObject: {item.sceneObject?.name ?? "null"}");
                     }
                 }
             }
@@ -65,7 +65,7 @@ namespace TimeLine.Parent
                 {
                     if (objectsById.ContainsKey(item.sceneObjectID))
                     {
-                        Debug.LogWarning($"Дубликат ID {item.sceneObjectID} уже в словаре. Пропускаем.");
+                        // Debug.LogWarning($"Дубликат ID {item.sceneObjectID} уже в словаре. Пропускаем.");
                     }
                     else
                     {
@@ -74,7 +74,7 @@ namespace TimeLine.Parent
                 }
             }
 
-            print($"Уникальных объектов в словаре: {objectsById.Count}");
+            // print($"Уникальных объектов в словаре: {objectsById.Count}");
 
             foreach (var item in trackObjectData)
             {
@@ -82,83 +82,83 @@ namespace TimeLine.Parent
 
                 if (item == null)
                 {
-                    Debug.LogWarning($"Элемент #{processedCount} в списке равен null. Пропускаем.");
+                    // Debug.LogWarning($"Элемент #{processedCount} в списке равен null. Пропускаем.");
                     nullItemsSkipped++;
                     continue;
                 }
 
-                print($"\nОбработка элемента #{processedCount}:");
-                print($"  ID объекта: {item.sceneObjectID}");
-                print($"  Имя ветки: {item.branch?.Name ?? "Не указано"}");
+                // print($"\nОбработка элемента #{processedCount}:");
+                // print($"  ID объекта: {item.sceneObjectID}");
+                // print($"  Имя ветки: {item.branch?.Name ?? "Не указано"}");
 
                 if (item.sceneObject == null)
                 {
-                    Debug.LogWarning($"  SceneObject равен null для ветки: {item.branch?.Name ?? "Неизвестно"}");
+                    // Debug.LogWarning($"  SceneObject равен null для ветки: {item.branch?.Name ?? "Неизвестно"}");
                     nullSceneObjectsSkipped++;
                     continue;
                 }
 
-                print($"  Имя объекта на сцене: {item.sceneObject.name}");
+                // print($"  Имя объекта на сцене: {item.sceneObject.name}");
 
                 // Проверяем trackObject на null
                 if (item.trackObject == null)
                 {
-                    Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
+                    // Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
                     continue;
                 }
 
                 string parentId = item.trackObject._parentID;
-                print($"  Родительский ID: {parentId ?? "null"}");
+                // print($"  Родительский ID: {parentId ?? "null"}");
 
                 if (!string.IsNullOrEmpty(parentId))
                 {
                     // Проверка на циклическую ссылку (объект ссылается сам на себя)
                     if (parentId == item.sceneObjectID)
                     {
-                        Debug.LogError(
-                            $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
+                        // Debug.LogError(
+                            // $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
                         selfParentAttempts++;
-                        print($"  Очистка некорректного parentID...");
+                        // print($"  Очистка некорректного parentID...");
                         item.trackObject._parentID = string.Empty;
                         continue;
                     }
 
-                    print($"  Поиск родительского объекта с ID: {parentId}");
+                    // print($"  Поиск родительского объекта с ID: {parentId}");
 
                     // Ищем родителя в словаре по ID
                     if (objectsById.TryGetValue(parentId, out var parentItem))
                     {
-                        print($"  Родительский объект найден в словаре!");
+                        // print($"  Родительский объект найден в словаре!");
 
                         if (parentItem.sceneObject != null)
                         {
                             // Проверяем, не пытаемся ли установить уже существующего родителя
                             if (item.sceneObject.transform.parent != parentItem.sceneObject.transform)
                             {
-                                print(
-                                    $"  Установка родителя для '{item.sceneObject.name}' -> '{parentItem.sceneObject.name}'");
+                                // print(
+                                    // $"  Установка родителя для '{item.sceneObject.name}' -> '{parentItem.sceneObject.name}'");
                                 item.sceneObject.transform.SetParent(parentItem.sceneObject.transform, false);
                                 parentSetCount++;
 
                                 // Проверяем результат
                                 if (item.sceneObject.transform.parent == parentItem.sceneObject.transform)
                                 {
-                                    print($"  Родитель успешно установлен!");
+                                    // print($"  Родитель успешно установлен!");
                                 }
                                 else
                                 {
-                                    Debug.LogError($"  ОШИБКА: Родитель не был установлен!");
+                                    // Debug.LogError($"  ОШИБКА: Родитель не был установлен!");
                                 }
                             }
                             else
                             {
-                                print($"  Родитель уже установлен ранее, пропускаем.");
+                                // print($"  Родитель уже установлен ранее, пропускаем.");
                             }
                         }
                         else
                         {
-                            Debug.LogWarning($"  Найден родительский item, но его sceneObject равен null!");
-                            print($"  Очистка поля _parentID...");
+                            // Debug.LogWarning($"  Найден родительский item, но его sceneObject равен null!");
+                            // print($"  Очистка поля _parentID...");
                             item.trackObject._parentID = string.Empty;
                             parentNotFoundCount++;
                         }
@@ -171,15 +171,15 @@ namespace TimeLine.Parent
 
                         if (parentItemFromList != null && parentItemFromList.sceneObject != null)
                         {
-                            print($"  Родитель найден в исходном списке!");
+                            // print($"  Родитель найден в исходном списке!");
                             item.sceneObject.transform.SetParent(parentItemFromList.sceneObject.transform, false);
                             parentSetCount++;
                         }
                         else
                         {
-                            Debug.LogWarning($"  Родительский объект с ID '{parentId}' не найден!");
-                            print($"  Объект: {item.branch?.Name ?? "Неизвестно"} (ID: {item.sceneObjectID})");
-                            print($"  Очистка поля _parentID...");
+                            // Debug.LogWarning($"  Родительский объект с ID '{parentId}' не найден!");
+                            // print($"  Объект: {item.branch?.Name ?? "Неизвестно"} (ID: {item.sceneObjectID})");
+                            // print($"  Очистка поля _parentID...");
                             item.trackObject._parentID = string.Empty;
                             parentNotFoundCount++;
                         }
@@ -187,31 +187,31 @@ namespace TimeLine.Parent
                 }
                 else
                 {
-                    print($"  Родительский ID не указан, объект остаётся на корневом уровне");
+                    // print($"  Родительский ID не указан, объект остаётся на корневом уровне");
 
                     // Если у объекта уже есть родитель, но в данных он указан как корневой
                     if (item.sceneObject.transform.parent != null)
                     {
-                        print(
-                            $"  Внимание: объект имеет родителя '{item.sceneObject.transform.parent.name}', но в данных parentID пустой");
+                        // print(
+                            // $"  Внимание: объект имеет родителя '{item.sceneObject.transform.parent.name}', но в данных parentID пустой");
                         // Можно раскомментировать следующую строку, чтобы сбрасывать родителя:
                         // item.sceneObject.transform.SetParent(null, false);
                     }
                 }
             }
 
-            print("\n=== СТАТИСТИКА ВОССТАНОВЛЕНИЯ ===");
-            print($"Всего обработано элементов: {processedCount}");
-            print($"Пропущено null элементов: {nullItemsSkipped}");
-            print($"Пропущено null sceneObject: {nullSceneObjectsSkipped}");
-            print($"Установлено родительских связей: {parentSetCount}");
-            print($"Не найдено родителей: {parentNotFoundCount}");
-            print($"Попыток стать родителем самому себе: {selfParentAttempts}");
-            print(
-                $"Осталось корневых объектов: {trackObjectData.Count - nullItemsSkipped - nullSceneObjectsSkipped - parentSetCount}");
+            // print("\n=== СТАТИСТИКА ВОССТАНОВЛЕНИЯ ===");
+            // print($"Всего обработано элементов: {processedCount}");
+            // print($"Пропущено null элементов: {nullItemsSkipped}");
+            // print($"Пропущено null sceneObject: {nullSceneObjectsSkipped}");
+            // print($"Установлено родительских связей: {parentSetCount}");
+            // print($"Не найдено родителей: {parentNotFoundCount}");
+            // print($"Попыток стать родителем самому себе: {selfParentAttempts}");
+            // print(
+                // $"Осталось корневых объектов: {trackObjectData.Count - nullItemsSkipped - nullSceneObjectsSkipped - parentSetCount}");
 
             // Дополнительная проверка результатов
-            print("\n=== ПРОВЕРКА РЕЗУЛЬТАТОВ ===");
+            // print("\n=== ПРОВЕРКА РЕЗУЛЬТАТОВ ===");
             int hasParentCount = 0;
             int noParentCount = 0;
             foreach (var item in trackObjectData.Where(x => x?.sceneObject != null))
@@ -219,19 +219,19 @@ namespace TimeLine.Parent
                 if (item.sceneObject.transform.parent != null)
                 {
                     hasParentCount++;
-                    print($"  {item.sceneObject.name} -> родитель: {item.sceneObject.transform.parent.name}");
+                    // print($"  {item.sceneObject.name} -> родитель: {item.sceneObject.transform.parent.name}");
                 }
                 else
                 {
                     noParentCount++;
-                    print($"  {item.sceneObject.name} -> корневой объект");
+                    // print($"  {item.sceneObject.name} -> корневой объект");
                 }
             }
 
-            print($"Объектов с родителем: {hasParentCount}");
-            print($"Корневых объектов: {noParentCount}");
+            // print($"Объектов с родителем: {hasParentCount}");
+            // print($"Корневых объектов: {noParentCount}");
 
-            print("=== ВОССТАНОВЛЕНИЕ ЗАВЕРШЕНО ===\n");
+            // print("=== ВОССТАНОВЛЕНИЕ ЗАВЕРШЕНО ===\n");
         }
     }
 }

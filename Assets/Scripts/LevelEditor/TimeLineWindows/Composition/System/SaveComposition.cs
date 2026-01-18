@@ -7,6 +7,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Linq;
 using EventBus;
+using TimeLine.LevelEditor;
+using TimeLine.LevelEditor.LevelJson;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using Zenject;
 
@@ -29,12 +32,14 @@ namespace TimeLine
 
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
+        private SavePathController _savePathController;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, ActionMap actionMap)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap, SavePathController savePathController)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
+            _savePathController = savePathController;
         }
 
         internal List<GroupGameObjectSaveData> GetCompositionData() => _compositionData;
@@ -42,10 +47,8 @@ namespace TimeLine
         [Button]
         public void Save()
         {
-            string path =
-                $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
             string json = JsonConvert.SerializeObject(_compositionData, Formatting.Indented);
-            File.WriteAllText(path, json);
+            File.WriteAllText(_savePathController.GetJsonPath(LevelJsonStorage.Compositions), json);
             print(json);
         }
 
@@ -53,7 +56,7 @@ namespace TimeLine
         public void Load()
         {
             string path =
-                $"{Application.persistentDataPath}/Levels/{saveLevel.LevelBaseInfo.levelName}/Compositions.json";
+                _savePathController.GetJsonPath(LevelJsonStorage.Compositions);
 
             if (!File.Exists(path))
                 return;
@@ -220,7 +223,7 @@ namespace TimeLine
 
         public void EditComposition(GroupGameObjectSaveData compositionData, string compositionID)
         {
-            // print(compositionID);
+            print(compositionID);
             if (string.IsNullOrEmpty(compositionID))
                 return;
 

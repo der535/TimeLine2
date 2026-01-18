@@ -3,6 +3,8 @@ using EventBus.Events;
 using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.General;
+using TimeLine.LevelEditor.SelectBox;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -10,32 +12,34 @@ using Zenject;
 
 public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 {
+    [SerializeField] private RectTransform selectBoxScene;
     public Camera mapCamera; // камера, что рендерит в RenderTexture
     public RawImage mapImage; // UI-элемент с RenderTexture
 
-
     private TrackObjectStorage _trackObjectStorage;
     private SelectObjectController _selectObjectController;
-    private MainObjects _mainObjects;
-    private ActionMap _actionMap;
+    private C_EditColliderState _cEditColliderState;
     private GameEventBus _gameEventBus;
 
     private bool _emptyClick = true;
 
     [Inject]
     void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController,
-        MainObjects mainObjects, ActionMap actionMap, GameEventBus gameEventBus)
+        MainObjects mainObjects, ActionMap actionMap, GameEventBus gameEventBus, C_EditColliderState cEditColliderState)
     {
         _trackObjectStorage = trackObjectStorage;
+        _trackObjectStorage = trackObjectStorage;
         _selectObjectController = selectObjectController;
-        _mainObjects = mainObjects;
-        _actionMap = actionMap;
         _gameEventBus = gameEventBus;
+        _cEditColliderState = cEditColliderState;
     }
 
 
     public void OnMapClick(PointerEventData eventData)
     {
+        if(selectBoxScene.gameObject.activeSelf) return;
+        if(_cEditColliderState.GetState() == true) return;
+        
         _emptyClick = true;
         // 1. Получить локальную точку на RawImage (в его RectTransform)
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -52,9 +56,6 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         // 3. Преобразовать UV → Viewport → World
         Vector3 viewportPos = new Vector3(uv.x, uv.y, mapCamera.nearClipPlane);
         Vector3 worldPos = mapCamera.ViewportToWorldPoint(viewportPos);
-
-        // Теперь worldPos — это позиция в мировом пространстве сцены
-        Debug.Log($"World position: {worldPos}");
 
 
         foreach (var active in _trackObjectStorage.GetAllActiveTrackData())
@@ -78,7 +79,6 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         if (IsPixelOpaque(mousePosition, spriteRenderer, sceneObject.transform))
         {
             _emptyClick = false;
-            print("select");
             _gameEventBus.Raise(new ObjectUnderCursorEvent());
             TransformComponent transformComponent = FindTopmostParentWithComponent.Find<TransformComponent>(sceneObject.transform);
             TrackObjectData data;

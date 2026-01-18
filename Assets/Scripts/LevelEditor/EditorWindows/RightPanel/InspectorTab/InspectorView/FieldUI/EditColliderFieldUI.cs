@@ -1,4 +1,5 @@
-﻿using EventBus;
+﻿using System;
+using EventBus;
 using TimeLine.CustomInspector.UI.FieldUI;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.LevelEditor.General;
@@ -19,13 +20,15 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         [SerializeField] private Color editColor;
         [SerializeField] private Color notEditColor;
         
-        private EditColliderState _editState;
+        private C_EditColliderState _cEditState;
         private GameEventBus _eventBus;
+        
+        private EventBinder _eventBinder = new EventBinder();
 
         [Inject]
-        private void Constructor(EditColliderState editColliderState, GameEventBus eventBus)
+        private void Constructor(C_EditColliderState cEditColliderState, GameEventBus eventBus)
         {
-            _editState = editColliderState;
+            _cEditState = cEditColliderState;
             _eventBus = eventBus;
         }
         
@@ -33,10 +36,10 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         {
             button.onClick.AddListener(() =>
             {
-                _editState.Turn(!_editState.GetState());
+                _cEditState.Turn(!_cEditState.GetState());
             });
-            
-            _eventBus.SubscribeTo((ref TurnEditColliderEvent data) =>
+
+            _eventBinder.Add(_eventBus, (ref TurnEditColliderEvent data) =>
             {
                 buttonImage.color = data.IsEditing ? editColor : notEditColor;
             });
@@ -45,6 +48,11 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         public float GetFieldHeight()
         {
             return fieldRect.sizeDelta.y;
+        }
+
+        private void OnDestroy()
+        {
+            _eventBinder.Dispose();
         }
     }
 }

@@ -28,16 +28,6 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref AddTrackObjectDataEvent data) =>
-            {
-                Add(data.TrackObjectData.sceneObject.GetComponent<IInitializedComponent>(),
-                    data.TrackObjectData.trackObject);
-            });
-            _gameEventBus.SubscribeTo((ref AddComponentEvent data) =>
-            {
-                if (data.component is IInitializedComponent initializedComponent)
-                    Add(initializedComponent, data.TrackObjectData.trackObject);
-            });
             _gameEventBus.SubscribeTo((ref TickExactTimeEvent data) => { CheckInitialized(data.Time); });
         }
 

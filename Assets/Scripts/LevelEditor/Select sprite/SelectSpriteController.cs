@@ -58,7 +58,6 @@ namespace TimeLine
 
         internal void CheckSpriteRendererAndAdd(SpriteParameter spriteParameter)
         {
-            print(_spriteCards.Count);
             foreach (var card in _spriteCards)
             {
 

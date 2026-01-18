@@ -60,37 +60,13 @@ namespace TimeLine
             {
                 SetPositionStepSize(f);
                 if(!load) _gameEventBus.Raise(new ChangeEditorSettingsEvent());
-            });
+            }, 0);
             
             FloatInputValidator gridRotateSizeInputFieldValidator = new FloatInputValidator(gridRotateSizeInputField, f =>
             {
                 _rotateStep = f;
                 if(!load) _gameEventBus.Raise(new ChangeEditorSettingsEvent());
-            });
-
-            // gridSizeInputField.onEndEdit.AddListener(arg0 =>
-            // {
-            //     if (float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result) && result > 0)
-            //     {
-            //         
-            //     }
-            //     else
-            //     {
-            //         gridSizeInputField.text = _positionStepSize.ToString(CultureInfo.InvariantCulture);
-            //     }
-            // });
-
-            // gridRotateSizeInputField.onEndEdit.AddListener(arg0 =>
-            // {
-            //     if (float.TryParse(arg0, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
-            //     {
-            //         _rotateStep = result;
-            //     }
-            //     else
-            //     {
-            //         gridRotateSizeInputField.text = _rotateStep.ToString(CultureInfo.InvariantCulture);
-            //     }
-            // });
+            }, 0);
         }
 
         
@@ -130,6 +106,7 @@ namespace TimeLine
 
         public float RotateSnapToGrid(float value)
         {
+            if(_rotateStep <= 0) return value;
             return Mathf.Round(value / _rotateStep) * _rotateStep;
         }
 

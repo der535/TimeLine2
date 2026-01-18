@@ -44,7 +44,7 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
         double beats = timeEvent.Time / TimeLineConverter.TICKS_PER_BEAT;
         double seconds = beats * (60.0 / _musicData.bpm);
 
-        float positionX = (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom) *
+        float positionX = (float)(seconds * _timeLineScroll.Zoom *
                                   (_musicData.bpm / 60.0));
 
         marker.transform.localPosition = new Vector3(

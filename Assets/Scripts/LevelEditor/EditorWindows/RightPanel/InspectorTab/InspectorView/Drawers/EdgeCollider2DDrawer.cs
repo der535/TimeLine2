@@ -8,7 +8,8 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         private KeyframeCreator _keyframeCreator;
         private CustomInspectorDrawer _customInspectorDrawer = null;
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, KeyframeCreator keyframeCreator)
+        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
@@ -27,6 +28,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
             {
                 _customInspectorDrawer.CreateEditColliderButton();
                 _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
+                _customInspectorDrawer.CreateFloatField(rendererComponent.edgeRadius, "0", null);
                 
                 _customInspectorDrawer.AddSpace(5);
                 

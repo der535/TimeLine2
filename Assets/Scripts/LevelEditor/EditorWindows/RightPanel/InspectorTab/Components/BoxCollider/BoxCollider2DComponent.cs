@@ -4,6 +4,7 @@ using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using UnityEngine;
 using Zenject;
@@ -13,16 +14,16 @@ namespace TimeLine
     public class BoxCollider2DComponent : BaseParameterComponent
     {
         public BoolParameter isActive = new("isActive", true, Color.red);
-        
+
         public FloatParameter OffsetX = new("OffsetX", 0, Color.yellow);
         public FloatParameter OffsetY = new("OffsetY", 0, Color.yellow);
 
         public FloatParameter SizeX = new("SizeX", 1, Color.red);
         public FloatParameter SizeY = new("SizeY", 1, Color.red);
-        
+
         public BoolParameter isDamageable = new("isDamageable", false, Color.red);
         public BoolParameter isObstacle = new("isObstacle", false, Color.red);
-        
+
         private GameEventBus _eventBus;
         private BoxCollider2DOutline _boxCollider2DOutline;
 
@@ -30,7 +31,8 @@ namespace TimeLine
         private void Construct(DiContainer container, CollidersPrefab collidersPrefab, GameEventBus eventBus)
         {
             _eventBus = eventBus;
-            _boxCollider2DOutline = container.InstantiatePrefab(collidersPrefab.BoxCollider2DPrefab, transform).GetComponent<BoxCollider2DOutline>();
+            _boxCollider2DOutline = container.InstantiatePrefab(collidersPrefab.BoxCollider2DPrefab, transform)
+                .GetComponent<BoxCollider2DOutline>();
 
             TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
             transformComponent.XPosition.OnValueChanged += _boxCollider2DOutline.UpdateOutline;
@@ -40,32 +42,25 @@ namespace TimeLine
             transformComponent.ZRotation.OnValueChanged += _boxCollider2DOutline.UpdateOutline;
             transformComponent.XScale.OnValueChanged += _boxCollider2DOutline.UpdateOutline;
             transformComponent.YScale.OnValueChanged += _boxCollider2DOutline.UpdateOutline;
-            
+
             // Подписки на обновление
             _boxCollider2DOutline.SetActiveLineRenderer(false);
-            
+
             _eventBus.SubscribeTo<SelectObjectEvent>(HandleSelectObjectEvent);
             _eventBus.SubscribeTo<DeselectAllObjectEvent>(HandleDeselectObjectEvent);
             _eventBus.SubscribeTo<DeselectObjectEvent>(HandleDeselectObjectEvent);
-            
-            isActive.OnValueChanged += () =>
-            {
-                _boxCollider2DOutline.BoxCollider.enabled = isActive.Value;
-            };
+
+            isActive.OnValueChanged += () => { _boxCollider2DOutline.BoxCollider.enabled = isActive.Value; };
             isDamageable.OnValueChanged += () =>
             {
-                if (isDamageable.Value)  _boxCollider2DOutline.gameObject.tag = TagsStorage.IsDamageable;
-                else  _boxCollider2DOutline.gameObject.tag = "Untagged";
+                if (isDamageable.Value) _boxCollider2DOutline.gameObject.tag = TagsStorage.IsDamageable;
+                else _boxCollider2DOutline.gameObject.tag = "Untagged";
             };
-            isObstacle.OnValueChanged += () =>
-            {
-                _boxCollider2DOutline.BoxCollider.isTrigger = !isObstacle.Value;
-            };
-            
+            isObstacle.OnValueChanged += () => { _boxCollider2DOutline.BoxCollider.isTrigger = !isObstacle.Value; };
+
             _boxCollider2DOutline.BoxCollider.isTrigger = !isObstacle.Value;
-            
-            
-            
+
+
             OffsetX.Value = _boxCollider2DOutline.BoxCollider.offset.x;
             OffsetY.Value = _boxCollider2DOutline.BoxCollider.offset.y;
             SizeX.Value = _boxCollider2DOutline.BoxCollider.size.x;
@@ -96,6 +91,7 @@ namespace TimeLine
                 _boxCollider2DOutline.UpdateOutline();
             };
         }
+
         protected override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return OffsetX;
@@ -106,7 +102,7 @@ namespace TimeLine
             yield return isDamageable;
             yield return isObstacle;
         }
-        
+
         private void HandleSelectObjectEvent(ref SelectObjectEvent selectObjectEvent)
         {
             _boxCollider2DOutline.SetActiveLineRenderer(selectObjectEvent.Tracks.Any(i => i.sceneObject == gameObject));
@@ -117,7 +113,7 @@ namespace TimeLine
         {
             _boxCollider2DOutline.SetActiveLineRenderer(false);
         }
-        
+
         private void HandleDeselectObjectEvent(ref DeselectObjectEvent _)
         {
             _boxCollider2DOutline.SetActiveLineRenderer(false);
@@ -126,19 +122,22 @@ namespace TimeLine
         public void OnDestroy()
         {
             TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
-            transformComponent.XPosition.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            transformComponent.YPosition.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            transformComponent.XRotation.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            transformComponent.YRotation.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            transformComponent.ZRotation.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            transformComponent.XScale.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            transformComponent.YScale.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
-            
+            if (transformComponent.XPosition != null)
+            {
+                transformComponent.XPosition.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+                transformComponent.YPosition.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+                transformComponent.XRotation.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+                transformComponent.YRotation.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+                transformComponent.ZRotation.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+                transformComponent.XScale.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+                transformComponent.YScale.OnValueChanged -= _boxCollider2DOutline.UpdateOutline;
+            }
+
             _eventBus.UnsubscribeFrom<SelectObjectEvent>(HandleSelectObjectEvent);
             _eventBus.UnsubscribeFrom<DeselectAllObjectEvent>(HandleDeselectObjectEvent);
             _eventBus.UnsubscribeFrom<DeselectObjectEvent>(HandleDeselectObjectEvent);
 
-            
+
             Destroy(_boxCollider2DOutline.gameObject);
         }
     }

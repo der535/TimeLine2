@@ -7,6 +7,7 @@ using Zenject;
 
 namespace TimeLine.Components
 {
+
     public class AddComponentWindowsController : MonoBehaviour
     {
         [SerializeField] private RectTransform componentWindow;

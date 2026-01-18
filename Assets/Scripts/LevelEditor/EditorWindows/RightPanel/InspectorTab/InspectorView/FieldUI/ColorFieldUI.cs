@@ -1,6 +1,8 @@
 ﻿using System;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.LevelEditor.Helpers;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Zenject;
@@ -9,43 +11,41 @@ namespace TimeLine.CustomInspector.UI.FieldUI
 {
     public class ColorFieldUI : MonoBehaviour, IGetFieldHeight
     {
-        [SerializeField] private RectTransform _rectTransform;
-
-        [Space] [FormerlySerializedAs("_button")] [SerializeField]
-        private Button _button;
-
+        [SerializeField] private RectTransform _rectTransform; //rectTransform для считываения размера панели 
+        [Space] [SerializeField] private Button _button; // Кнопка открытия цветовой палитры
         [FormerlySerializedAs("_text")] [SerializeField]
-        private Image _colorImage;
+        private Image _colorImage; //Image в котором отобращается выбранный цвет
 
-        [Space] [SerializeField] private Button createKeyframeButton;
-
-
+        [Space] [SerializeField] private EventTrigger createKeyframeButton;
+        
         private SelectColorContoller _selectColorController;
         private ColorParameter _currentParameter;
-
+        
+        private Color _previousValue;
+        
         [Inject]
         private void Constructor(SelectColorContoller selectColorController)
         {
             _selectColorController = selectColorController;
         }
 
-        public void Setup(ColorParameter colorParameter, Action createKeyframe)
+        public void Setup(ColorParameter colorParameter, Action createKeyframe, string gameObjectId)
         {
             // Отписка от предыдущего параметра (если есть)
             UnsubscribeFromParameter();
 
-            _currentParameter = colorParameter;
-            _colorImage.color = _currentParameter.Value;
+            _currentParameter = colorParameter; //Сохраняем ссылку на параметр
+            _colorImage.color = _currentParameter.Value; //Задаём цвет image
 
-            _button.onClick.AddListener(OnButtonClick);
+            _button.onClick.AddListener(() => OnButtonClick(gameObjectId));
             _currentParameter.OnValueChanged += OnParameterValueChange;
             
-            createKeyframeButton.onClick.AddListener(() => createKeyframe());
+            UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe.Invoke);
         }
-
-        private void OnButtonClick()
+        
+        private void OnButtonClick(string gameObjectId)
         {
-            _selectColorController?.Setup(_currentParameter);
+            _selectColorController?.Setup(_currentParameter, gameObjectId);
         }
 
         private void OnParameterValueChange()
@@ -70,7 +70,7 @@ namespace TimeLine.CustomInspector.UI.FieldUI
             UnsubscribeFromParameter();
             if (_button != null)
             {
-                _button.onClick.RemoveListener(OnButtonClick);
+                _button.onClick.RemoveAllListeners();
             }
         }
 

@@ -446,6 +446,7 @@ MonoBehaviour:
   rect: {fileID: 632330435956980517}
   customizationController: {fileID: 44788961498572395}
   trackObjectVisual: {fileID: 3871431382332990931}
+  deathZone: 5
   offsetObject: {fileID: 0}
 --- !u!114 &891881881006371073
 MonoBehaviour:

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic;
 using TimeLine.Keyframe;
@@ -42,15 +43,12 @@ namespace TimeLine
 
         private KeyframeTrackStorage _keyframeTrackStorage;
         private TrackObjectStorage _trackObjectStorage;
-        private KeyframeCreator _keyframeCreator;
 
         [Inject]
-        private void Construct(KeyframeTrackStorage keyframeTrackStorage, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator)
+        private void Construct(KeyframeTrackStorage keyframeTrackStorage, TrackObjectStorage trackObjectStorage)
         {
             _keyframeTrackStorage = keyframeTrackStorage;
             _trackObjectStorage = trackObjectStorage;
-            _keyframeCreator = keyframeCreator;
         }
 
 
@@ -97,15 +95,24 @@ namespace TimeLine
 
             Bind<float, FloatParameter>(XRotation,
                 val => new XRotationData(val),
-                val => transform.localRotation = Quaternion.Euler(val, transform.rotation.y, transform.rotation.z));
+                val => transform.localRotation = Quaternion.Euler(val, transform.localRotation.y, transform.localRotation.z));
 
             Bind<float, FloatParameter>(YRotation,
                 val => new YRotationData(val),
-                val => transform.localRotation = Quaternion.Euler(transform.rotation.x, val, transform.rotation.z));
+                val => transform.localRotation = Quaternion.Euler(transform.localRotation.x, val, transform.localRotation.z));
 
             Bind<float, FloatParameter>(ZRotation,
                 val => new ZRotationData(val),
-                val => transform.localRotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, val));
+                val =>
+                {
+                    // Извлекаем текущие углы в градусах
+                    Vector3 currentEuler = transform.localEulerAngles;
+        
+                    // Создаем новое вращение, меняя только Z
+                    Quaternion newRotation = Quaternion.Euler(currentEuler.x, currentEuler.y, val);
+        
+                    transform.localRotation = newRotation;
+                });
 
             Bind<float, FloatParameter>(XScale,
                 val => new XScaleData(val),
@@ -120,7 +127,7 @@ namespace TimeLine
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+XPosition.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + XPosition.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -129,7 +136,7 @@ namespace TimeLine
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+YPosition.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + YPosition.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -138,46 +145,46 @@ namespace TimeLine
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+XRotation.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + XRotation.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
-            
+
             Bind<bool, BoolParameter>(YRotationActive,
                 val => null,
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+YRotation.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + YRotation.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
-            
+
             Bind<bool, BoolParameter>(ZRotationActive,
                 val => null,
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+ZRotation.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + ZRotation.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
-            
-            Bind<bool, BoolParameter>(XScaleActive, 
+
+            Bind<bool, BoolParameter>(XScaleActive,
                 val => null,
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+XScale.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + XScale.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
-            
+
             Bind<bool, BoolParameter>(YScaleActive,
                 val => null,
                 val =>
                 {
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name+"/"+YScale.Name);
+                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + YScale.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
-            
+
             Bind<bool, BoolParameter>(isActiveTrackObject,
                 val => null,
                 val =>
@@ -185,7 +192,7 @@ namespace TimeLine
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
                     data.trackObject.isActive = val;
                 });
-            
+
             Bind<bool, BoolParameter>(isTempTrackObject,
                 val => null,
                 val =>
@@ -193,67 +200,33 @@ namespace TimeLine
                     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
                     data.trackObject.isTemp = val;
                 });
+            
+        }
 
-            // XPositionActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name,XPosition.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node, XPositionActive.Value);
-            // };
+        private void OnDestroy()
+        {
+            isActiveTrackObject = null;
+            isTempTrackObject = null;
 
-            // YPositionActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name,YPosition.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node ,YPositionActive.Value);
-            // };
+            XPosition = null;
+            XPositionActive = null;
+            YPosition = null;
+            YPositionActive = null;
 
-            // XRotationActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name, XRotation.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node, XRotationActive.Value);
-            // };
+            XPositionOffset = null;
+            YPositionOffset = null;
 
-            // YRotationActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name, YRotation.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node, YRotationActive.Value);
-            // };
-            //
-            // ZRotationActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name, ZRotation.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node, ZRotationActive.Value);
-            // };
+            XRotation = null;
+            XRotationActive = null;
+            YRotation = null;
+            YRotationActive = null;
+            ZRotation = null;
+            ZRotationActive = null;
 
-            // XScaleActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name, XScale.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node, XScaleActive.Value);
-            // };
-
-            // YScaleActive.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     TreeNode node = data.branch.AddNode(this.GetType().Name, YScale.Name);
-            //     _keyframeTrackStorage.SetActiveTrack(node, YScaleActive.Value);
-            // };
-
-            // isActiveTrackObject.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     data.trackObject.isActive = isActiveTrackObject.Value;
-            // };
-
-            // isTempTrackObject.OnValueChanged += () =>
-            // {
-            //     TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-            //     data.trackObject.isTemp = isTempTrackObject.Value;
-            // };
+            XScale = null;
+            XScaleActive = null;
+            YScale = null;
+            YScaleActive = null;
         }
     }
 }

@@ -1,5 +1,8 @@
+using EventBus;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 namespace TimeLine
 {
@@ -14,6 +17,20 @@ namespace TimeLine
         [SerializeField] private Color activeColorSound;
 
         private bool _active;
+        private GameEventBus _gameEventBus;
+
+        [Inject]
+        private void Constructor(GameEventBus gameEventBus)
+        {
+            _gameEventBus = gameEventBus;
+            
+            _gameEventBus.SubscribeTo((ref ThemeChangedEvent data) =>
+            {
+                inactiveColorSound = data.Theme.circleBeatInActive;
+                activeColorSound = data.Theme.circleBeatActive;
+                soundImage.color = _active ? activeColorSound : inactiveColorSound;
+            });
+        }
 
         private void Start()
         {

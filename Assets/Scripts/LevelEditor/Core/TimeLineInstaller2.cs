@@ -1,8 +1,10 @@
 using System;
 using EventBus;
 using TimeLine.Components;
+using TimeLine.EdgeColliderEditor;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Input;
+using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Controllers;
 using TimeLine.LevelEditor.Core.MusicData;
@@ -10,24 +12,30 @@ using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.Core.MusicOffset;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspector;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.View;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.GeneralEditor;
+using TimeLine.LevelEditor.LoadingScreen.Controllers;
+using TimeLine.LevelEditor.MaxObjectIndex.Controller;
 using TimeLine.LevelEditor.outline;
 using TimeLine.LevelEditor.Select_composition;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.LevelEditor.TrackObjectSize.Data;
+using TimeLine.LevelEditor.UIAnimation;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
 
-// Убедитесь, что все необходимые пространства имен подключены.
-// Я сократил список using для краткости, так как IDE добавит их сама.
-
-namespace TimeLine.Installers
+namespace TimeLine.LevelEditor.Core
 {
     public class TimeLineInstaller2 : MonoInstaller
     {
@@ -40,6 +48,8 @@ namespace TimeLine.Installers
         [SerializeField] private ToolReferences tools;
         [SerializeField] private ConfigReferences config;
         [SerializeField] private SpawnReferences spawnReferences;
+        [SerializeField] private CameraReferences cameraReferences;
+        [SerializeField] private KeyframeReferences keyframeReferences;
 
         // Отдельные объекты, которые не вошли в группы
         [Space] [SerializeField] private MainObjects mainObjects;
@@ -63,6 +73,7 @@ namespace TimeLine.Installers
             InstallRendering();
             InstallData();
             InstallTools();
+            InstallCameras();
 
             Container.Bind<ObjectFactory>()
                 .AsSingle()
@@ -74,6 +85,9 @@ namespace TimeLine.Installers
 
             Container.Bind<TrackObjectClipboard>()
                 .AsSingle();
+            
+            Container.BindInstance(keyframeReferences).AsSingle();
+            Container.Bind<BezierVerticalPosition>().AsSingle();
         }
 
         private void InstallCore()
@@ -83,9 +97,10 @@ namespace TimeLine.Installers
             Container.Bind<M_MusicOffsetData>().AsSingle();
             Container.Bind<M_AudioPlaybackService>().AsSingle().WithArguments(core.timeLineAudioSource);
             Container.Bind<M_PlaybackState>().AsSingle();
-            
+
+            Container.Bind<M_KeyframeActiveTypeData>().AsSingle();
             Container.Bind<M_KeyframeSelectedStorage>().AsSingle();
-            
+
             Container.BindInstance(core.musicDataController).AsSingle();
             Container.BindInstance(core.musicLoaderController).AsSingle();
             Container.BindInstance(core.musicOffsetController).AsSingle();
@@ -109,11 +124,14 @@ namespace TimeLine.Installers
 
         private void InstallUI()
         {
+            Container.BindInstance(ui.ScrollTimeLineKeyframe).AsSingle();
+            Container.BindInstance(ui.SaveButtonAnimation).AsSingle();
+            Container.BindInstance(ui.LoadingScreenController).AsSingle();
             Container.BindInstance(ui.TreeViewUI).AsSingle();
             Container.BindInstance(ui.SettingPanel).AsSingle();
             Container.BindInstance(ui.GridUI).AsSingle();
             Container.BindInstance(ui.TimeLineScroll).AsSingle();
-            Container.BindInstance(ui.TimeLineKeyframeScroll).AsSingle();
+            Container.BindInstance(ui.timeLineKeyframeZoom).AsSingle();
             Container.BindInstance(ui.AddComponentWindowsController).AsSingle();
             Container.BindInstance(ui.CustomInspectorController).AsSingle();
         }
@@ -124,7 +142,7 @@ namespace TimeLine.Installers
             Container.BindInstance(render.timeLineMarkerRenderer).AsSingle();
             Container.BindInstance(render.CurrentTimeMarkerRenderer).AsSingle();
             Container.BindInstance(render.CursorBeatPosition).AsSingle();
-            Container.BindInstance(render.KeyfeameVizualizer).AsSingle();
+            Container.BindInstance(render.keyframeVizualizer).AsSingle();
             Container.BindInstance(render.TimeLineMarkersController).AsSingle();
             Container.BindInstance(render.SpriteOutlineBuffer).AsSingle();
             Container.BindInstance(render.ShakeComponent).AsSingle();
@@ -133,6 +151,7 @@ namespace TimeLine.Installers
 
         private void InstallData()
         {
+            Container.BindInstance(data.ThemeStorage).AsSingle();
             Container.BindInstance(data.KeyframeTrackStorage).AsSingle();
             Container.BindInstance(data.KeyframeSelectController).AsSingle();
             Container.BindInstance(data.BranchCollection).AsSingle();
@@ -144,10 +163,24 @@ namespace TimeLine.Installers
             Container.BindInstance(data.GetSpriteName).AsSingle();
             Container.BindInstance(data.SaveComposition).AsSingle();
             Container.BindInstance(data.SaveEditorSettings).AsSingle();
+
+            var trackObjectSizeData = new TrackObjectSizeData();
+            Container.Bind<ITrackObjectSizeReader>().FromInstance(trackObjectSizeData).AsSingle();
+            Container.Bind<TrackObjectSizeData>().FromInstance(trackObjectSizeData).AsSingle();
+            Container.Bind<SavePathController>().AsSingle();
+            Container.Bind<MaxObjectIndexController>().AsSingle();
+            Container.Bind(typeof(ActiveBezierPointsData), typeof(IReadActiveBezierPointsData))
+                .To<ActiveBezierPointsData>()
+                .AsSingle();
+            Container.Bind(typeof(MaxObjectIndexData), typeof(IMaxObjectIndexDataReading))
+                .To<MaxObjectIndexData>()
+                .AsSingle();
         }
 
         private void InstallTools()
         {
+            Container.BindInstance(tools.PolygonColliderEditor).AsSingle();
+            Container.BindInstance(tools.EdgeColliderEditor).AsSingle();
             Container.BindInstance(tools.SelectObjectController).AsSingle();
             Container.BindInstance(tools.DeselectObject).AsSingle();
             Container.BindInstance(tools.TrackObjectRemover).AsSingle();
@@ -161,11 +194,16 @@ namespace TimeLine.Installers
             Container.BindInstance(tools.SelectColorContoller).AsSingle();
             Container.BindInstance(tools.BezierSelectPointsController).AsSingle();
             Container.BindInstance(tools.SpriteLoadController).AsSingle();
-            Container.BindInstance(tools.EditColliderState).AsSingle();
-            Container.BindInstance(tools.EdgeColliderSelectionCube).AsSingle();
+            Container.BindInstance(tools.cEditColliderState).AsSingle();
+            Container.BindInstance(tools.cEdgeColliderSelectionCube).AsSingle();
             Container.BindInstance(tools.SelectComposition).AsSingle();
             Container.BindInstance(tools.TimeLineRecorder).AsSingle();
             Container.BindInstance(tools.KeyframeCreator).AsSingle();
+        }
+
+        private void InstallCameras()
+        {
+            Container.BindInstance(cameraReferences).AsSingle();
         }
     }
 
@@ -177,11 +215,11 @@ namespace TimeLine.Installers
     public class CoreReferences
     {
         public AudioSource timeLineAudioSource;
-        
+
         public C_MusicDataController musicDataController;
         public C_MusicLoaderController musicLoaderController;
         public C_MusicOffsetController musicOffsetController;
-        
+
         public PlayAndStopButton playAndStopButton;
 
         public Main Main;
@@ -206,11 +244,14 @@ namespace TimeLine.Installers
     [Serializable]
     public class UIReferences
     {
+        public ScrollTimeLineKeyframe ScrollTimeLineKeyframe;
+        public SaveButtonAnimation SaveButtonAnimation;
+        public LoadingScreenController LoadingScreenController;
         public TreeViewUI TreeViewUI;
         public SettingPanel SettingPanel;
         [FormerlySerializedAs("gridSystem")] public GridUI GridUI;
         public TimeLineScroll TimeLineScroll;
-        public TimeLineKeyframeScroll TimeLineKeyframeScroll;
+        [FormerlySerializedAs("TimeLineKeyframeScroll")] public TimeLineKeyframeZoom timeLineKeyframeZoom;
         public AddComponentWindowsController AddComponentWindowsController;
         public CustomInspectorController CustomInspectorController;
     }
@@ -225,7 +266,7 @@ namespace TimeLine.Installers
 
         public CurrentTimeMarkerRenderer CurrentTimeMarkerRenderer;
         public CursorBeatPosition CursorBeatPosition;
-        public KeyfeameVizualizer KeyfeameVizualizer;
+        [FormerlySerializedAs("KeyfeameVizualizer")] public KeyframeVizualizer keyframeVizualizer;
         public TimeLineMarkersController TimeLineMarkersController;
         public SpriteOutlineBuffer SpriteOutlineBuffer;
         public ShakeCamera ShakeComponent;
@@ -235,6 +276,7 @@ namespace TimeLine.Installers
     [Serializable]
     public class DataReferences
     {
+        public ThemeStorage ThemeStorage;
         public KeyframeSelectController KeyframeSelectController;
         public KeyframeTrackStorage KeyframeTrackStorage;
         public BranchCollection BranchCollection;
@@ -254,6 +296,8 @@ namespace TimeLine.Installers
     [Serializable]
     public class ToolReferences
     {
+        public EdgeColliderEditorHost EdgeColliderEditor;
+        public PolygonColliderEditorHost PolygonColliderEditor;
         public SelectObjectController SelectObjectController;
         public DeselectObject DeselectObject;
         public TrackObjectRemover TrackObjectRemover;
@@ -270,8 +314,13 @@ namespace TimeLine.Installers
         public SelectColorContoller SelectColorContoller;
         public BezierSelectPointsController BezierSelectPointsController;
         public SpriteLoadController SpriteLoadController;
-        public EditColliderState EditColliderState;
-        public EdgeColliderSelectionCube EdgeColliderSelectionCube;
+
+        [FormerlySerializedAs("EditColliderState")]
+        public C_EditColliderState cEditColliderState;
+
+        [FormerlySerializedAs("EdgeColliderSelectionCube")]
+        public C_EdgeColliderSelectionCube cEdgeColliderSelectionCube;
+
         public SelectComposition SelectComposition;
         public TimeLineRecorder TimeLineRecorder;
         public KeyframeCreator KeyframeCreator;
@@ -289,7 +338,17 @@ namespace TimeLine.Installers
         public BoxCollider2DOutline BoxCollider2DPrefab;
         public CircleCollider2DOutline CircleCollider2DPrefab;
         public CapsuleCollider2DOutline CapsuleCollider2DPrefab;
-        public EdgeColliderEditor EdgeCollider2DPrefab;
+        public EdgeCollider2D edgeCollider2DPrefab;
+        public PolygonCollider2D polygonCollider2DPrefab;
+    }
+
+
+    [Serializable]
+    public class CameraReferences
+    {
+        public Camera playCamera;
+        public Camera editUICamera;
+        public Camera editSceneCamera;
     }
 
     [Serializable]
@@ -298,5 +357,19 @@ namespace TimeLine.Installers
         public Transform rootSceneObject;
         public GameObject sceneObjectPrefab;
         public GameObject trackObjectPrefab;
+    }
+
+    [Serializable]
+    public class KeyframeReferences
+    {
+        /// <summary>
+        /// Родительский объект внутри которого хранятся точки кривой
+        /// </summary>
+        public RectTransform rootPoints;
+        /// <summary>
+        /// Родительский объект внутри которого маркеры времени (горизонтальные), текущее время, и треки к
+        /// </summary>
+        public RectTransform rootObjects;
+        public RectTransform treePanelAnimations;
     }
 }

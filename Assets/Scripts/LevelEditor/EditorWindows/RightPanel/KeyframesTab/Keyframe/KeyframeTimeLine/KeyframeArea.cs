@@ -1,8 +1,10 @@
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
@@ -10,7 +12,7 @@ namespace TimeLine
     public class KeyframeArea : MonoBehaviour
     {
         [SerializeField] private RectTransform rect;
-        [SerializeField] private TimeLineKeyframeScroll _timeLineKeyframeScroll;
+        [FormerlySerializedAs("_timeLineKeyframeScroll")] [SerializeField] private TimeLineKeyframeZoom timeLineKeyframeZoom;
 
         private TrackObjectData selectedTrackObjectData;
 
@@ -35,7 +37,7 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.PanEvent _) => OnSelectTrackObject(selectedTrackObjectData));
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => OnSelectTrackObject(selectedTrackObjectData));
             
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
 
@@ -58,7 +60,7 @@ namespace TimeLine
         {
             // float rootOffset = _mainObjects.KeyframeScrollView.offsetMin.x - _mainObjects.KeyframeVerticalLayoutGroup.padding.left / 2f;
 
-            rect.sizeDelta = new Vector2(duraction * (_settings.DistanceBetweenBeatLines + _timeLineKeyframeScroll.Zoom), rect.sizeDelta.y);
+            rect.sizeDelta = new Vector2(duraction * (_settings.DistanceBetweenBeatLines + timeLineKeyframeZoom.Zoom), rect.sizeDelta.y);
             rect.anchoredPosition = new Vector2((rect.sizeDelta.x / 2), rect.anchoredPosition.y);
         }
     }

@@ -4,8 +4,11 @@ using System.Linq;
 using EventBus;
 using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.EdgeColliderEditor;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.EdgeCollider;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using UnityEngine;
 using Zenject;
@@ -17,36 +20,42 @@ namespace TimeLine
         public BoolParameter isActive = new("isActive", true, Color.red);
 
         public ListVector2Parameter Points = new("Points", new List<Vector2>(), Color.yellow);
+        public FloatParameter edgeRadius = new("edgeRadius", 0, Color.white);
 
         public BoolParameter isDamageable = new("isDamageable", false, Color.red);
         public BoolParameter isObstacle = new("isObstacle", false, Color.red);
 
         private GameEventBus _eventBus;
-        private EdgeColliderEditor _edgeColliderEditor;
+        private EdgeColliderEditorHost _cEdgeColliderEditor;
+        private GameObject _edgeColliderObject;
 
-        private bool _isUpdatingFromParameter = false;
-
-// Методы управления флагом
+        private bool _isUpdatingFromParameter;
+        private EdgeCollider2D _colliderObject;
+        
+        // Методы управления флагом
         public void BeginParameterUpdate() => _isUpdatingFromParameter = true;
         public void EndParameterUpdate() => _isUpdatingFromParameter = false;
 
         [Inject]
-        private void Construct(DiContainer container, CollidersPrefab collidersPrefab, GameEventBus eventBus)
+        private void Construct(DiContainer container, CollidersPrefab collidersPrefab, GameEventBus eventBus,
+            EdgeColliderEditorHost cEdgeColliderEditor)
         {
             _eventBus = eventBus;
-            _edgeColliderEditor = container.InstantiatePrefab(collidersPrefab.EdgeCollider2DPrefab, transform)
-                .GetComponent<EdgeColliderEditor>();
+            _cEdgeColliderEditor = cEdgeColliderEditor;
+            _edgeColliderObject = container.InstantiatePrefab(collidersPrefab.edgeCollider2DPrefab, transform);
 
-            _edgeColliderEditor.Init(Points, this);
+            _colliderObject = _edgeColliderObject.GetComponent<EdgeCollider2D>();
+
+           _cEdgeColliderEditor.Init(Points, this, _edgeColliderObject, edgeRadius);
 
             TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
-            transformComponent.XPosition.OnValueChanged += _edgeColliderEditor.UpdateOutline;
-            transformComponent.YPosition.OnValueChanged += _edgeColliderEditor.UpdateOutline;
-            transformComponent.XRotation.OnValueChanged += _edgeColliderEditor.UpdateOutline;
-            transformComponent.YRotation.OnValueChanged += _edgeColliderEditor.UpdateOutline;
-            transformComponent.ZRotation.OnValueChanged += _edgeColliderEditor.UpdateOutline;
-            transformComponent.XScale.OnValueChanged += _edgeColliderEditor.UpdateOutline;
-            transformComponent.YScale.OnValueChanged += _edgeColliderEditor.UpdateOutline;
+            transformComponent.XPosition.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.YPosition.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.XRotation.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.YRotation.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.ZRotation.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.XScale.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.YScale.OnValueChanged += _cEdgeColliderEditor.UpdateOutline;
 
             // Подписки на обновление
             // _edgeColliderEditor.SetActiveLineRenderer(false);
@@ -55,25 +64,29 @@ namespace TimeLine
             _eventBus.SubscribeTo<DeselectAllObjectEvent>(HandleDeselectObjectEvent);
             _eventBus.SubscribeTo<DeselectObjectEvent>(HandleDeselectObjectEvent);
 
-            isActive.OnValueChanged += () => { _edgeColliderEditor.EdgeCollider2D.enabled = isActive.Value; };
+            isActive.OnValueChanged += () => { _colliderObject.enabled = isActive.Value; };
             isDamageable.OnValueChanged += () =>
             {
-                if (isDamageable.Value) _edgeColliderEditor.gameObject.tag = TagsStorage.IsDamageable;
-                else _edgeColliderEditor.gameObject.tag = "Untagged";
+                if (isDamageable.Value) _colliderObject.gameObject.tag = TagsStorage.IsDamageable;
+                else _colliderObject.gameObject.tag = "Untagged";
             };
-            isObstacle.OnValueChanged += () => { _edgeColliderEditor.EdgeCollider2D.isTrigger = !isObstacle.Value; };
+            isObstacle.OnValueChanged += () =>
+            {
+                _colliderObject.isTrigger = !isObstacle.Value;
+            };
 
-            _edgeColliderEditor.EdgeCollider2D.isTrigger = !isObstacle.Value;
+            _colliderObject.isTrigger = !isObstacle.Value;
 
-            Points.Value = _edgeColliderEditor.EdgeCollider2D.points.ToList();
+            Points.Value = _colliderObject.points.ToList();
 
             Points.OnValueChanged += () =>
             {
                 print(Points.Value.Count);
                 if (!_isUpdatingFromParameter)
                 {
-                    _edgeColliderEditor.ReplaceAllPoints(Points.Value);
-                    _edgeColliderEditor.UpdateOutline();
+                    _cEdgeColliderEditor.ReplaceAllPoints(Points.Value);
+                     // _cEdgeColliderEditor.SynchronizationListVector2Parameter();
+                    _cEdgeColliderEditor.UpdateOutline();
                 }
             };
         }
@@ -85,37 +98,40 @@ namespace TimeLine
             yield return isDamageable;
             yield return isObstacle;
         }
-        
+
         private void HandleSelectObjectEvent(ref SelectObjectEvent selectObjectEvent)
         {
-            _edgeColliderEditor.SetActiveLineRenderer(selectObjectEvent.Tracks.Any(i => i.sceneObject == gameObject));
-            _edgeColliderEditor.UpdateOutline();
+            _cEdgeColliderEditor.SetActiveLineRenderer(
+                selectObjectEvent.Tracks.Any(i => i.sceneObject == gameObject));
+            _cEdgeColliderEditor.UpdateOutline();
         }
 
         private void HandleDeselectObjectEvent(ref DeselectAllObjectEvent _)
         {
-            _edgeColliderEditor.SetActiveLineRenderer(false);
+            _cEdgeColliderEditor.SetActiveLineRenderer(false);
         }
+
         private void HandleDeselectObjectEvent(ref DeselectObjectEvent _)
         {
-            _edgeColliderEditor.SetActiveLineRenderer(false);
+            _cEdgeColliderEditor.SetActiveLineRenderer(false);
         }
+
         public void OnDestroy()
         {
             TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
-            transformComponent.XPosition.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
-            transformComponent.YPosition.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
-            transformComponent.XRotation.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
-            transformComponent.YRotation.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
-            transformComponent.ZRotation.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
-            transformComponent.XScale.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
-            transformComponent.YScale.OnValueChanged -= _edgeColliderEditor.UpdateOutline;
+            transformComponent.XPosition.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.YPosition.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.XRotation.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.YRotation.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.ZRotation.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.XScale.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
+            transformComponent.YScale.OnValueChanged -= _cEdgeColliderEditor.UpdateOutline;
 
             _eventBus.UnsubscribeFrom<SelectObjectEvent>(HandleSelectObjectEvent);
             _eventBus.UnsubscribeFrom<DeselectAllObjectEvent>(HandleDeselectObjectEvent);
             _eventBus.UnsubscribeFrom<DeselectObjectEvent>(HandleDeselectObjectEvent);
 
-            Destroy(_edgeColliderEditor.gameObject);
+            Destroy(_cEdgeColliderEditor.gameObject);
         }
     }
 }

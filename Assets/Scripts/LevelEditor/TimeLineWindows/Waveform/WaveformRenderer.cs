@@ -1,7 +1,9 @@
-﻿using EventBus;
+﻿using System;
+using EventBus;
 using UnityEngine;
 using UnityEngine.UI;
 using NaughtyAttributes;
+using TimeLine;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Waveform;
 using Zenject;
@@ -11,7 +13,6 @@ public class WaveformRenderer : MonoBehaviour
 {
     [SerializeField] private WaveformPosition _waveformPosition;
     [SerializeField] private WaveformSegmentLayout _layout;
-    public AudioSource source;
     public float amplitudeScale = 1f;
     public int totalResolution = 2048;
     [ColorUsage(true, true)] // Добавляем атрибут для поддержки HDR цветов
@@ -22,18 +23,26 @@ public class WaveformRenderer : MonoBehaviour
     private Texture2D[] _dataTextures;
     private RawImage[] _segmentImages;
     private float[] _cachedSamples;
-    private Color _lastColor; // Для отслеживания изменений цвета
-    
+    private ThemeStorage _themeStorage;
     private GameEventBus _gameEventBus;
+    private AudioClip _audioClip;
 
     [Inject]
-    private void Construct(GameEventBus eventBus)
+    private void Construct(GameEventBus eventBus, ThemeStorage themeStorage)
     {
         _gameEventBus = eventBus;
-        eventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
+        _themeStorage = themeStorage;
+        _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>
         {
+            _audioClip = data.audioClip;
             Init();
         }));
+        _gameEventBus.SubscribeTo(((ref ThemeChangedEvent data) =>
+        {
+            waveColor = data.Theme.waveForm;
+            UpdateColor();
+        }));
+        waveColor = _themeStorage.value.waveForm;
     }
 
 
@@ -44,17 +53,6 @@ public class WaveformRenderer : MonoBehaviour
         CacheFullAudioData();
         GenerateWaveform();
         _layout.SetLayoutHorizontal();
-        _lastColor = waveColor; // Инициализируем последний цвет
-    }
-
-    void Update()
-    {
-        // Проверяем изменение цвета в реальном времени
-        if (waveColor != _lastColor)
-        {
-            UpdateColor();
-            _lastColor = waveColor;
-        }
     }
 
     private void InitializeSegments()
@@ -118,16 +116,16 @@ public class WaveformRenderer : MonoBehaviour
 
     private void CacheFullAudioData()
     {
-        // print(source.clip);
-        if (source.clip == null) return;
+        // print(_audioClip);
+        if (_audioClip == null) return;
         
-        _cachedSamples = new float[source.clip.samples * source.clip.channels];
-        source.clip.GetData(_cachedSamples, 0);
+        _cachedSamples = new float[_audioClip.samples * _audioClip.channels];
+        _audioClip.GetData(_cachedSamples, 0);
     }
 
     public void GenerateWaveform()
     {
-        if (source.clip == null || 
+        if (_audioClip == null || 
             _cachedSamples == null || 
             _dataTextures == null || 
             _segmentImages == null ||
@@ -158,8 +156,8 @@ public class WaveformRenderer : MonoBehaviour
     private void GenerateSegmentTexture(int segmentIndex, int segmentCount)
     {
         int res = _dataTextures[segmentIndex].width;
-        int channels = source.clip.channels;
-        int totalSamples = source.clip.samples;
+        int channels = _audioClip.channels;
+        int totalSamples = _audioClip.samples;
         
         // Рассчитываем диапазон семплов для сегмента
         int startSample = Mathf.FloorToInt((float)segmentIndex / segmentCount * totalSamples);

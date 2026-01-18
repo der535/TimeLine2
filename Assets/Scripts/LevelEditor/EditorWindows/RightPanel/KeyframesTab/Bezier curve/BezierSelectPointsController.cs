@@ -1,5 +1,6 @@
 ﻿using EventBus;
 using TimeLine.EventBus.Events.Bezier;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using UnityEngine;
 using Zenject;
@@ -11,16 +12,18 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
         // public List<BezierPoint> selectedPoints = new();
 
         private GameEventBus _gameEventBus;
-        private BezierController _bezierController;
+        private global::TimeLine.BezierController _bezierController;
         private M_KeyframeSelectedStorage _selectKeyframe;
+        private IReadActiveBezierPointsData _activeBezierPoints;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, BezierController bezierController,
-            M_KeyframeSelectedStorage selectedStorage)
+        private void Constructor(GameEventBus gameEventBus, global::TimeLine.BezierController bezierController,
+            M_KeyframeSelectedStorage selectedStorage, IReadActiveBezierPointsData activeBezierPoints)
         {
             _gameEventBus = gameEventBus;
             _bezierController = bezierController;
             _selectKeyframe = selectedStorage;
+            _activeBezierPoints = activeBezierPoints;
         }
         
         public void MultipleDrag(double tickDifferent, double valueDifferent,
@@ -28,11 +31,12 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
         {
             foreach (var keyframe in _selectKeyframe.Keyframes)
             {
+                print(thisKeyframe == keyframe);
                 if (thisKeyframe == keyframe) continue;
 
-                _bezierController.GetBezierPoint(keyframe).BezierDragPoint._keyframe.Ticks += tickDifferent;
-                _bezierController.GetBezierPoint(keyframe).BezierDragPoint._keyframe.GetData().SetValue(
-                    (float)((float)_bezierController.GetBezierPoint(keyframe).BezierDragPoint._keyframe.GetData()
+                _activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.Ticks += tickDifferent;
+                _activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.GetData().SetValue(
+                    (float)((float)_activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.GetData()
                         .GetValue() + valueDifferent));
             }
 

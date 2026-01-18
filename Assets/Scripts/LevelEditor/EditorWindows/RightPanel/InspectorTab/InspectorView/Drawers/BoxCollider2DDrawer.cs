@@ -9,11 +9,14 @@ namespace TimeLine.CustomInspector.UI.Drawers
     {
         private KeyframeCreator _keyframeCreator;
         private CustomInspectorDrawer _customInspectorDrawer = null;
+        private TrackObjectStorage _trackObjectStorage;
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, KeyframeCreator keyframeCreator)
+        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
+            _trackObjectStorage = trackObjectStorage;
         }
 
         public bool GetComponent(Component component)
@@ -24,26 +27,27 @@ namespace TimeLine.CustomInspector.UI.Drawers
         public void Draw(Component component, GameObject target)
         {
             _customInspectorDrawer.CreateComponent(component, true);
+            string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
 
             if (component is BoxCollider2DComponent rendererComponent)
             {
                 _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetX,
+                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetX, id,
                     () => _keyframeCreator.CreateKeyframe(new XOffsetData(rendererComponent.OffsetX.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.OffsetX));
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY, () =>
+                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY,  id,() =>
                     _keyframeCreator.CreateKeyframe(new YOffsetData(rendererComponent.OffsetY.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.OffsetY));
                 
                 _customInspectorDrawer.AddSpace(5);
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.SizeX, () =>
+                _customInspectorDrawer.CreateFloatField(rendererComponent.SizeX, id,() =>
                     _keyframeCreator.CreateKeyframe(new XSizeData(rendererComponent.SizeX.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.SizeX));
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.SizeY, () =>
+                _customInspectorDrawer.CreateFloatField(rendererComponent.SizeY, id,() =>
                     _keyframeCreator.CreateKeyframe(new YSizeData(rendererComponent.SizeY.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.SizeY));
                 

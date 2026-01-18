@@ -48,7 +48,7 @@ private DiContainer _container;
                     
                     if (trackObjectGroup.sceneObject.TryGetComponent(out CompositionOffset compositionOffset))
                     {
-                        print(compositionOffset.XOffset.Value);
+                        // print(compositionOffset.XOffset.Value);
                         xOffset.text = compositionOffset.XOffset.Value.ToString();
                         yOffset.text = compositionOffset.YOffset.Value.ToString();
                         compositionOffset.Setup(xOffset, yOffset, trackObjectGroup);

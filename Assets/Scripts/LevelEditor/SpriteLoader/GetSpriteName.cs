@@ -21,6 +21,8 @@ namespace TimeLine.LevelEditor.SpriteLoader
         {
             // Check base storage
 
+            if(spriteParameter == null || spriteParameter.Value == null) return string.Empty;
+            
             foreach (var sprite in _spriteStorage.Sprites)
             {
                 if (sprite.name == spriteParameter.Value.name) return sprite.name;

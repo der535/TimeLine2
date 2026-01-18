@@ -38,7 +38,6 @@ namespace TimeLine.LevelEditor.Core.MusicData
             _gameEventBus.SubscribeTo((ref MusicLoadedEvent data) =>
             {
                 _mMusicData.music = data.audioClip;
-                print("MusicLoadedEvent");
             });
         }
     }

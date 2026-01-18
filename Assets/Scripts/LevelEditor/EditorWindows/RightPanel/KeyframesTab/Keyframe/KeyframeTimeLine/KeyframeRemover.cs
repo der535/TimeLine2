@@ -19,11 +19,11 @@ namespace TimeLine
         private ActionMap _actionMap;
         private KeyframeTrackStorage _keyframeTrackStorage;
         private M_KeyframeSelectedStorage _keyframeSelectedStorage;
-        private KeyfeameVizualizer _keyframeVizualizer;
+        private KeyframeVizualizer _keyframeVizualizer;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, ActionMap actionMap,
-            KeyframeTrackStorage keyframeTrackStorage, M_KeyframeSelectedStorage keyframeSelectedStorage, KeyfeameVizualizer keyframeVizualizer)
+            KeyframeTrackStorage keyframeTrackStorage, M_KeyframeSelectedStorage keyframeSelectedStorage, KeyframeVizualizer keyframeVizualizer)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;

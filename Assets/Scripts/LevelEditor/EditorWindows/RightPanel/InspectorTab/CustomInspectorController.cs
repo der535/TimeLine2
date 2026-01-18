@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EventBus;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -14,21 +15,24 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
     {
         [SerializeField] private CustomInspectorDrawer inspectorDrawer;
         [SerializeField] private RectTransform rootObject;
-        [FormerlySerializedAs("keyframeCreater")] [SerializeField] private KeyframeCreator keyframeCreator;
-        
-        [Space]
-        [SerializeField] private ComponentUI componentUIPrefab;
+
+        [FormerlySerializedAs("keyframeCreater")] [SerializeField]
+        private KeyframeCreator keyframeCreator;
+
+        [Space] [SerializeField] private ComponentUI componentUIPrefab;
 
         private List<IComponentDrawer> _componentDrawers = new();
 
         private GameEventBus _gameEventBus;
 
         private GameObject _selectedObject;
+        private TrackObjectStorage _selectedTransform;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus)
+        private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage)
         {
             _gameEventBus = gameEventBus;
+            _selectedTransform = trackObjectStorage;
         }
 
         private void Awake()
@@ -36,15 +40,9 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].sceneObject));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Draw(data.SelectedObjects[^1].sceneObject));
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
-            _gameEventBus.SubscribeTo((ref AddComponentEvent data) =>
-            {
-                StartCoroutine(Redraw());
-            }, -1);
-            _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) =>
-            {
-                StartCoroutine(Redraw());
-            }, -1);
-            
+            _gameEventBus.SubscribeTo((ref AddComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
+            _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
+
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new RandomTransformComponentDrawer());
             _componentDrawers.Add(new DynamicTransformDrawer());
@@ -56,20 +54,20 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
             _componentDrawers.Add(new EdgeCollider2DDrawer());
             _componentDrawers.Add(new PressEventDrawer());
             _componentDrawers.Add(new ShakeDrawer());
+            _componentDrawers.Add(new PolygonCollider2DDrawer());
         }
 
         internal IEnumerator Redraw()
         {
             yield return new WaitForEndOfFrame();
-            print("Redraw".ToUpper());
-            if(_selectedObject != null)
+            if (_selectedObject != null)
                 Draw(_selectedObject);
         }
-        
+
         private void Draw(GameObject target)
         {
             _selectedObject = target;
-            
+
             Clear();
 
             var components = target.GetComponents<Component>();
@@ -80,14 +78,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
                 {
                     if (drawer.GetComponent(component))
                     {
-                        drawer.Setup(inspectorDrawer, keyframeCreator);
+                        drawer.Setup(inspectorDrawer, _selectedTransform, keyframeCreator);
                         drawer.Draw(component, target);
                     }
                 }
             }
-            
-            inspectorDrawer.CreateAddComponentButton(target);
 
+            inspectorDrawer.CreateAddComponentButton(target);
         }
 
         private void Clear()

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using EventBus;
+using TimeLine.EventBus.Events.Bezier;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.TimeLine;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine.LevelEditor.SelectBox
@@ -23,30 +25,42 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private M_SelectBoxState _state = new();
         private M_SelectBoxDelta _delta = new();
-
-        private KeyfeameVizualizer _keyfeameVizualizer;
         private M_KeyframeSelectedStorage _keyframeSelectedStorage;
+        private M_KeyframeActiveTypeData _keyframeActiveTypeData;
+
+
+        private KeyframeVizualizer _keyframeVizualizer;
+        private BezierController _bezierController;
         private KeyframeSelectController _keyframeSelectController;
+        private IReadActiveBezierPointsData _activeBezierPoints;
 
 
         [Inject]
         private void Constructor(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
-            DeselectObject deselectObject, SelectObjectController selectObjectController, KeyfeameVizualizer keyfeameVizualizer, M_KeyframeSelectedStorage selectedStorage, KeyframeSelectController keyframeSelectController)
+            DeselectObject deselectObject, SelectObjectController selectObjectController,
+            KeyframeVizualizer keyframeVizualizer, M_KeyframeSelectedStorage selectedStorage,
+            KeyframeSelectController keyframeSelectController, M_KeyframeActiveTypeData keyframeActiveTypeData,
+            BezierController bezierController, IReadActiveBezierPointsData activeBezierPoints)
         {
             _gameEventBus = gameEventBus;
-            _keyfeameVizualizer = keyfeameVizualizer;
+            _keyframeVizualizer = keyframeVizualizer;
             _keyframeSelectedStorage = selectedStorage;
             _keyframeSelectController = keyframeSelectController;
+            _keyframeActiveTypeData = keyframeActiveTypeData;
+            _bezierController = bezierController;
+            _activeBezierPoints = activeBezierPoints;
         }
 
         private void Awake()
         {
             _state = new M_SelectBoxState();
             _delta = new M_SelectBoxDelta();
-            
+
             _gameEventBus.SubscribeTo((ref SelectObjectEvent selectBox) => { _state.IsActive = true; });
+            _gameEventBus.SubscribeTo((ref DeselectAllKeyframeEvent selectBox) => { _state.IsActive = true; });
             _gameEventBus.SubscribeTo((ref SelectKeyframeEvent selectBox) => { _state.IsActive = false; });
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent deselectBox) => {  _state.IsActive = false; });
+            _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) => { _state.IsActive = false; });
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent deselectBox) => { _state.IsActive = false; });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent all) => { _state.IsActive = false; });
         }
 
@@ -67,11 +81,12 @@ namespace TimeLine.LevelEditor.SelectBox
                 EndMove();
             }
 
-            if(!_state.CursorIsInside) return;
+            if (!_state.CursorIsInside) return;
 
-            if (_state.IsDragging)
+            if (_state.IsDragging && _state.CursorIsInside)
             {
-                Vector2 currentMousePos = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
+                Vector2 currentMousePos =
+                    TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
 
                 // Проверка мертвой зоны, если она еще не пройдена
                 if (!_state.HasExceededDeadZone)
@@ -97,7 +112,7 @@ namespace TimeLine.LevelEditor.SelectBox
         private void StartMove()
         {
             // Только инициализируем данные, но рамку пока не включаем
-            _state.CursorIsInside  = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).isInside;
+            _state.CursorIsInside = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).isInside;
             _state.IsDragging = true;
             _state.HasExceededDeadZone = false;
             _state.StartPosition = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
@@ -120,32 +135,57 @@ namespace TimeLine.LevelEditor.SelectBox
             Vector2 mouseStartPositionModified =
                 new Vector2(_state.StartPosition.x + xDelta, _state.StartPosition.y + yDelta);
 
-            Vector2 delta = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position - mouseStartPositionModified;
+            Vector2 delta = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position -
+                            mouseStartPositionModified;
             selectBox.sizeDelta = new Vector2(Mathf.Abs(delta.x), Mathf.Abs(delta.y));
-            selectBox.anchoredPosition = (mouseStartPositionModified + TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position) / 2;
+            selectBox.anchoredPosition = (mouseStartPositionModified +
+                                          TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera)
+                                              .position) / 2;
         }
 
         private void UpdateSelection() //Логика подсчёта выделенных объектов
         {
             int couter = 0;
 
-            foreach (var keyfrmae in _keyfeameVizualizer.GetAllKeyframesObjectData())
+            if (_keyframeActiveTypeData.ActiveType == M_KeyframeType.Keyframe)
             {
-                if (CheckIsSelected(keyfrmae.RectTransform, selectBox))
+                foreach (var keyfrmae in _keyframeVizualizer.GetAllKeyframesObjectData())
                 {
-                    if (!_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.KeyframeDrag._keyframe))
+                    if (CheckIsSelected(keyfrmae.RectTransform, selectBox))
                     {
-                        _keyframeSelectController.SelectKeyframe(keyfrmae.KeyframeDrag._keyframe);
+                        if (!_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.KeyframeDrag._keyframe))
+                        {
+                            _keyframeSelectController.SelectNoClear(keyfrmae.KeyframeDrag._keyframe);
+                        }
+                    }
+                    else
+                    {
+                        if (_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.KeyframeDrag._keyframe))
+                        {
+                            _keyframeSelectController.DeselectKeyframe(keyfrmae.KeyframeDrag._keyframe);
+                        }
                     }
                 }
-                else
+            }
+            else
+            {
+                foreach (var keyfrmae in _activeBezierPoints.Get())
                 {
-                    if (_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.KeyframeDrag._keyframe))
+                    if (CheckIsSelected(keyfrmae.RectTransform, selectBox))
                     {
-                        _keyframeSelectController.DeselectKeyframe(keyfrmae.KeyframeDrag._keyframe);
+                        if (!_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.BezierDragPoint._keyframe))
+                        {
+                            _keyframeSelectController.SelectNoClear(keyfrmae.BezierDragPoint._keyframe);
+                        }
+                    }
+                    else
+                    {
+                        if (_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.BezierDragPoint._keyframe))
+                        {
+                            _keyframeSelectController.DeselectKeyframe(keyfrmae.BezierDragPoint._keyframe);
+                        }
                     }
                 }
-                
             }
         }
 

@@ -1,4 +1,8 @@
-﻿using TimeLine.TimeLine;
+﻿using System;
+using TimeLine.LevelEditor.GeneralServices;
+using TimeLine.LevelEditor.MaxObjectIndex.Controller;
+using TimeLine.LevelEditor.TrackObjectSize.Data;
+using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -15,6 +19,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private TrackStorage _trackStorage;
         private BranchCollection _branchCollection;
         private TrackObjectStorage _trackObjectStorage;
+        private ITrackObjectSizeReader _trackObjectSizeReader;
+        private IMaxObjectIndexDataReading _maxObjectIndexDataReading;
         
         public ObjectFactory(
             Main main,
@@ -24,7 +30,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             GameObject sceneObjectPrefab,
             GameObject trackObjectPrefab,
             BranchCollection branchCollection,
-            TrackObjectStorage trackObjectStorage)
+            TrackObjectStorage trackObjectStorage,
+            ITrackObjectSizeReader trackObjectSizeReader,
+            IMaxObjectIndexDataReading maxObjectIndexDataReading)
         {
             _main = main;
             _container = container;
@@ -34,6 +42,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _trackStorage = trackStorage;
             _branchCollection = branchCollection;
             _trackObjectStorage = trackObjectStorage;
+            _trackObjectSizeReader = trackObjectSizeReader;
+            _maxObjectIndexDataReading = maxObjectIndexDataReading;
         }
         
         /// <summary>
@@ -49,19 +59,22 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             var component = sceneObject.AddComponent<SpriteRendererComponent>();
             _container.Inject(component);
             component.Sprite.Value = sprite;
+
+            string name = $"{sprite.name} {_maxObjectIndexDataReading.GetNextIndex()}";
             
-            sceneObject.name = sprite.name;
+            sceneObject.name = name;
 
             // Создаем трек-объект
-            TrackObject trackObject = CreateTrackObject(100, sprite.name, _trackStorage.GetTrackLineByIndex(0));
+            TrackObject trackObject = CreateTrackObject(_trackObjectSizeReader.GetSize(), name, _trackStorage.GetTrackLineByIndex(0), TimeLineConverter.Instance.TicksCurrentTime());
 
             // Создаем ветку
-            Branch branch = _branchCollection.AddBranch(id, sprite.name);
+            Branch branch = _branchCollection.AddBranch(id, name);
 
             // Добавляем в хранилище
             _trackObjectStorage.Add(sceneObject, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
 
-            sceneObject.GetComponent<NameComponent>().Name.Value = sprite.name;
+
+            sceneObject.GetComponent<NameComponent>().Name.Value = name;
         }
         
         /// <summary>
@@ -83,14 +96,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         /// <param name="startTime">Время начала</param>
         /// <returns></returns>
         internal TrackObject CreateTrackObject(double ticksLifeTime, string name, TrackLine trackLine,
-            double startTime = -1)
+            double startTime)
         {
             TrackObject trackObject = _container
                 .InstantiatePrefab(_trackObjectPrefab, trackLine.RectTransform)
                 .GetComponent<TrackObject>();
 
-            double actualStartTime = startTime >= 0 ? startTime : TimeLineConverter.Instance.TicksCurrentTime();
-            trackObject.Setup(ticksLifeTime, name, trackLine, string.Empty,actualStartTime);
+            double actualStartTime = startTime;
+            trackObject.Setup(ticksLifeTime, name, trackLine, string.Empty,actualStartTime,0,0);
 
             return trackObject;
         }

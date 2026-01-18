@@ -28,9 +28,7 @@ namespace TimeLine
         
         private MainObjects _mainObjects;
         private TimeLineConverter _timeLineConverter;
-        private GameEventBus _gameEventBus;
         
-
         [Inject]
         private void Construct(
             MainObjects mainObjects, 
@@ -39,7 +37,6 @@ namespace TimeLine
         {
             _mainObjects = mainObjects;
             _timeLineConverter = timeLineConverter;
-            _gameEventBus = gameEventBus;
         }
 
         private void Start()
@@ -57,14 +54,6 @@ namespace TimeLine
                 new Vector2(_mainObjects.CanvasRectTransform.sizeDelta.x, thicknessTrack);
             trackLines.Add(trackRect);
         }
-        
-        public void RemoveLine()
-        {
-            var go = trackLines[^1];
-            _gameEventBus.Raise(new RemoveTrackLineEvent(go));
-            trackLines.Remove(go);
-            Destroy(go.gameObject);
-        }
 
         internal int GetTrackLineIndex(TrackLine trackLine)
         {
@@ -78,6 +67,23 @@ namespace TimeLine
                 AddLine();
             }
             
+            return trackLines[index];
+        }
+
+        public int GetIndex(TrackLine trackLine)
+        {
+            for (int i = 0; i < trackLines.Count; i++)
+            {
+                if(trackLine == trackLines[i]) return i;
+            }
+
+            return -1;
+        }
+
+        public TrackLine GetTrackLine(int index)
+        {
+            if (index < 0) return trackLines[0];
+            if (index >= trackLines.Count) return trackLines[^1];
             return trackLines[index];
         }
 

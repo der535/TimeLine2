@@ -3,6 +3,7 @@ using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.Bezier;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
 using UnityEngine;
 using Zenject;
 
@@ -10,21 +11,23 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
 {
     public class KeyframeSelectController : MonoBehaviour
     {
-        [SerializeField] private KeyfeameVizualizer keyframeVizualizer;
+        [SerializeField] private KeyframeVizualizer keyframeVizualizer;
 
         private M_KeyframeSelectedStorage _storage;
 
+        private BezierController _bezierController;
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
-        private BezierController bezierController;
+        private IReadActiveBezierPointsData _activeBezierPoints;
         
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, M_KeyframeSelectedStorage storage, BezierController bezierController)
+        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, M_KeyframeSelectedStorage storage, BezierController bezierController, IReadActiveBezierPointsData activeBezierPoints)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
             _storage = storage;
-            this.bezierController = bezierController;
+            this._bezierController = bezierController;
+            _activeBezierPoints = activeBezierPoints;
         }
 
         private void Awake()
@@ -33,14 +36,18 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
             _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) =>
                 SelectKeyframe(data.Keyframe.Keyframe));
             _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
-                SelectKeyframe(data.BezierPoint.BezierDragPoint._keyframe));
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+                SelectKeyframe(data.BezierPoint.BezierDragPoint._original));
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) =>
             {
                 ClearStorage();
             });
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) =>
             {
                 ClearStorage();
+            });
+            _gameEventBus.SubscribeTo((ref DeselectAllKeyframeEvent _) =>
+            {
+                DeselectAllKeyframes();
             });
         }
 
@@ -48,7 +55,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
         {
             _storage.Keyframes.Clear();
         }
-
 
         internal void SelectKeyframe(global::TimeLine.Keyframe.Keyframe Keyframe)
         {
@@ -73,13 +79,29 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
             }
             
             keyframeVizualizer.DisableAll();
-            bezierController.DeselectAll();
+            _bezierController.DeselectAll();
 
             foreach (var keyframe in _storage.Keyframes)
             {
                 keyframeVizualizer.GetKeyframeObjectData(keyframe).KeyframeSelect.SelectColor(true);
-                bezierController.GetBezierPoint(keyframe)?.BezierSelectPoint?.SelectNoEvent();
-                // bezierController.GetBezierPoint(keyframe)?.Select(false);
+                _activeBezierPoints.GetFromKeyframe(keyframe)?.BezierSelectPoint?.SelectNoEvent();
+            }
+        }
+
+        internal void SelectNoClear(global::TimeLine.Keyframe.Keyframe Keyframe)
+        {
+            if (!_storage.Keyframes.Contains(Keyframe))
+            {
+                _storage.Keyframes.Add(Keyframe);
+            }
+            
+            keyframeVizualizer.DisableAll();
+            _bezierController.DeselectAll();
+
+            foreach (var keyframe in _storage.Keyframes)
+            {
+                keyframeVizualizer.GetKeyframeObjectData(keyframe).KeyframeSelect.SelectColor(true);
+                _activeBezierPoints.GetFromKeyframe(keyframe)?.BezierSelectPoint?.SelectNoEvent();
             }
         }
         
@@ -91,14 +113,20 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
             }
             
             keyframeVizualizer.DisableAll();
-            bezierController.DeselectAll();
+            _bezierController.DeselectAll();
 
             foreach (var keyframe in _storage.Keyframes)
             {
                 keyframeVizualizer.GetKeyframeObjectData(keyframe).KeyframeSelect.SelectColor(true);
-                bezierController.GetBezierPoint(keyframe)?.BezierSelectPoint?.SelectNoEvent();
-                // bezierController.GetBezierPoint(keyframe)?.Select(false);
+                _activeBezierPoints.GetFromKeyframe(keyframe)?.BezierSelectPoint?.SelectNoEvent();
             }
+        }
+
+        internal void DeselectAllKeyframes()
+        {
+            keyframeVizualizer.DisableAll();
+            _bezierController.DeselectAll();
+            _storage.Keyframes.Clear();
         }
     }
 }

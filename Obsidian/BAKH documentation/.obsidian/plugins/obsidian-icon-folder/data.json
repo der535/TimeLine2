@@ -1,0 +1,47 @@
+{
+  "settings": {
+    "migrated": 6,
+    "iconPacksPath": ".obsidian/icons",
+    "fontSize": 16,
+    "emojiStyle": "native",
+    "iconColor": null,
+    "recentlyUsedIcons": [
+      "LiScroll",
+      "LiLineHorizontal",
+      "LiBadgeHelp",
+      "LiSlash",
+      "LiNotebookPen"
+    ],
+    "recentlyUsedIconsSize": 5,
+    "rules": [],
+    "extraMargin": {
+      "top": 0,
+      "right": 4,
+      "bottom": 0,
+      "left": 0
+    },
+    "iconInTabsEnabled": false,
+    "iconInTitleEnabled": false,
+    "iconInTitlePosition": "above",
+    "iconInFrontmatterEnabled": false,
+    "iconInFrontmatterFieldName": "icon",
+    "iconColorInFrontmatterFieldName": "iconColor",
+    "iconsBackgroundCheckEnabled": false,
+    "iconsInNotesEnabled": true,
+    "iconsInLinksEnabled": true,
+    "iconIdentifier": ":",
+    "lucideIconPackType": "native",
+    "debugMode": false,
+    "useInternalPlugins": false
+  },
+  "Оглавление.md": "LiMap",
+  "Описание скриптов/Editor": "LiFolder",
+  "Описание скриптов/General": "LiFolder",
+  "Описание скриптов": "LiNotebookPen",
+  "ㅤ.md": "LiLineHorizontal",
+  "Описание скриптов/General/Описание папки.md": "LiBadgeHelp",
+  "Описание скриптов/Editor/Описание папки.md": "LiBadgeHelp",
+  "Описание скриптов/General/FontController": "LiFolder",
+  "Описание скриптов/Editor/AddFontSetterTool.md": "LiScroll",
+  "Описание скриптов/General/FontController/FontSetter.md": "LiScroll"
+}

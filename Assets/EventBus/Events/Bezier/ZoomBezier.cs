@@ -4,13 +4,13 @@ namespace TimeLine.EventBus.Events.KeyframeTimeLine
 {
     public struct ZoomBezier : IEvent
     {
-        public float OldPan { get; }
-        public float Pan { get; }
+        public float OldZoom { get; }
+        public float Zoom { get; }
 
-        public ZoomBezier(float pan, float oldPan)
+        public ZoomBezier(float zoom, float oldZoom)
         {
-            Pan = pan;
-            OldPan = oldPan;
+            Zoom = zoom;
+            OldZoom = oldZoom;
         }
     }
 }

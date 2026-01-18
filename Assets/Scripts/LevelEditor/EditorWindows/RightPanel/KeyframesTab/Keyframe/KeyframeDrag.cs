@@ -1,5 +1,6 @@
 using System;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -13,8 +14,8 @@ namespace TimeLine.Keyframe
         private MainObjects _mainObjects;
         private TimeLineConverter _timeLineConverter;
         private GridUI _gridUI;
-        private TimeLineKeyframeScroll _timeLineKeyframeScroll;
-        private KeyfeameVizualizer _keyframeVizualizer;
+        private TimeLineKeyframeZoom _timeLineKeyframeZoom;
+        private KeyframeVizualizer _keyframeVizualizer;
 
         private Vector2 _startMousePosition;
         private Vector2 _startObjectPosition;
@@ -30,13 +31,13 @@ namespace TimeLine.Keyframe
             MainObjects mainObject, 
             TimeLineConverter timeLineConverter, 
             GridUI gridUI,
-            TimeLineKeyframeScroll timeLineKeyframeScroll,
-            KeyfeameVizualizer keyframeVizualizer)
+            TimeLineKeyframeZoom timeLineKeyframeZoom,
+            KeyframeVizualizer keyframeVizualizer)
         {
             _gridUI = gridUI;
             _mainObjects = mainObject;
             _timeLineConverter = timeLineConverter;
-            _timeLineKeyframeScroll = timeLineKeyframeScroll;
+            _timeLineKeyframeZoom = timeLineKeyframeZoom;
             _keyframeVizualizer = keyframeVizualizer;
         }
 
@@ -81,7 +82,7 @@ namespace TimeLine.Keyframe
                 
                 // float rootOffset = _mainObjects.KeyframeRootRectTransform.offsetMin.x;
                 float relativePosition = newPositionX - rootOffset;
-                float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeScroll.Zoom);
+                float roundedRelativePosition = _gridUI.RoundAnchorPositionToGrid(relativePosition, _timeLineKeyframeZoom.Zoom);
                 float finalPositionX = roundedRelativePosition + rootOffset;
 
                 _rectTransform.anchoredPosition = new Vector2(finalPositionX, _rectTransform.anchoredPosition.y);
@@ -89,7 +90,7 @@ namespace TimeLine.Keyframe
                 // Вычисляем тики на основе относительной позиции
                 var startTick = _keyframe.Ticks;
                 _keyframe.Ticks = MathF.Round((float)_timeLineConverter.SecondsToTicks(
-                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeScroll.Zoom)));
+                    _timeLineConverter.GetTimeFromAnchorPosition(roundedRelativePosition, _timeLineKeyframeZoom.Zoom)));
                 _keyframeVizualizer.MultipleDrag(_keyframe.Ticks - startTick, this);
                     
                 _sortKeyframes.Invoke();

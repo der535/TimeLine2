@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 {
     public class TrackObjectRemover : MonoBehaviour
     {
@@ -37,9 +38,8 @@ namespace TimeLine
         {
             _actionMap.Editor.X.started += _ => Remove();
         }
-
-
-        internal void Remove()
+        
+        private void Remove()
         {
             if(!windowsFocus.IsFocused) return;
             
@@ -60,11 +60,13 @@ namespace TimeLine
 
         internal void SingleRemove(TrackObjectData select)
         {
+            Disassemble(select.sceneObject);
+            
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
-
+            
             Destroy(select.trackObject.gameObject);
             Destroy(select.sceneObject);
 
@@ -73,6 +75,8 @@ namespace TimeLine
         
         internal void SingleRemoveNoStorage(TrackObjectData select)
         {
+            Disassemble(select.sceneObject);
+
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
@@ -81,10 +85,28 @@ namespace TimeLine
             Destroy(select.trackObject.gameObject);
             Destroy(select.sceneObject);
         }
+        
+        void Disassemble(GameObject parentObject)
+        {
+            // Используем ToList() из System.Linq, так как мы будем менять родителя (child.parent = null)
+            // Если менять иерархию внутри обычного foreach, итератор может "сломаться"
+            foreach (Transform child in parentObject.transform.Cast<Transform>().ToList())
+            {
+                // ВАЖНО: вызываем у child!
+                if (child.TryGetComponent(out SceneObjectLink link))
+                {
+                    link.trackObjectData.trackObject._parentID = string.Empty;
+                    child.SetParent(null); // Отцепляем
+                }
+            }
+        }
 
         
-        internal void SingleRemove(TrackObjectGroup select)
+        internal void SingleRemove(TrackObjectGroup select, bool disassemble = true)
         {
+            if(disassemble)
+                Disassemble(select.sceneObject);
+            
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);

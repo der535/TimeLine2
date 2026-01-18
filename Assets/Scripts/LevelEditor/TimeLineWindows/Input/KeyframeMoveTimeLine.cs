@@ -1,5 +1,7 @@
 using System;
+using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -24,16 +26,21 @@ namespace TimeLine.Input
         private Main _main;
         private ActionMap _actionMap;
         private TrackObjectStorage _trackObjectStorage;
-        private TimeLineKeyframeScroll _timeLineKeyframeScroll;
+        private SelectObjectController _selectObjectController;
+        private KeyframeVizualizer _keyframeVizualizer;
+        private TimeLineKeyframeZoom _timeLineKeyframeZoom;
 
         [Inject]
         private void Construct(Main main, MainObjects mainObjects, TimeLineScroll timeLineScroll, ActionMap actionMap,
-            TrackObjectStorage trackObjectStorage, TimeLineKeyframeScroll timeLineKeyframeScroll)
+            TrackObjectStorage trackObjectStorage, TimeLineKeyframeZoom timeLineKeyframeZoom,
+            KeyframeVizualizer keyframeVizualizer, SelectObjectController selectObjectController)
         {
             _main = main;
             _actionMap = actionMap;
+            _keyframeVizualizer = keyframeVizualizer;
+            _timeLineKeyframeZoom = timeLineKeyframeZoom;
             _trackObjectStorage = trackObjectStorage;
-            _timeLineKeyframeScroll = timeLineKeyframeScroll;
+            _selectObjectController = selectObjectController;
         }
 
         public Vector2 GetCursorPosition()
@@ -42,13 +49,14 @@ namespace TimeLine.Input
                 UnityEngine.Input.mousePosition, camera, out var vector2);
             return vector2;
         }
+
         public void ClickArea()
         {
             // 1. Переводим позицию мыши в локальные координаты RectTransform
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    clickArea, 
-                    UnityEngine.Input.mousePosition, 
-                    camera, 
+                    clickArea,
+                    UnityEngine.Input.mousePosition,
+                    camera,
                     out var localPoint))
             {
                 // 2. Проверяем, входит ли локальная точка в границы прямоугольника
@@ -94,13 +102,8 @@ namespace TimeLine.Input
             Vector2 cursorPos = GetCursorPosition();
             float pixelX = cursorPos.x;
             
-            print(cursorPos.x);
-            print(scrollingRecTransform.offsetMin.x);
-
-            double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (_timeLineKeyframeScroll.Zoom);
-            print(ticksPerPixel);
-            double rawTicks = pixelX * ticksPerPixel;
-            print(rawTicks);
+            double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (_timeLineKeyframeZoom.Zoom);
+            double rawTicks = pixelX * ticksPerPixel + _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks;
 
             // 1. Сетка работает всегда (базовое поведение)
             double gridSizeInTicks = gridUI.GetGridSizeInTicks();
@@ -108,18 +111,18 @@ namespace TimeLine.Input
 
             // 2. ПРИВЯЗКА (СНАППИНГ) — добавляем условие зажатой клавиши
             // Используйте KeyCode.LeftControl, KeyCode.LeftShift или любую другую
-            
+
             //todo Заменить на ключевые кадры
             //
-            // if (_actionMap.Editor.LeftShift.IsPressed()) 
-            // {
-            //     double snapThresholdTicks = snapingRange * ticksPerPixel; 
-            //
-            //     if (TryGetSnapTicks(rawTicks, snapThresholdTicks, out double snappedPoint))
-            //     {
-            //         targetTicks = snappedPoint;
-            //     }
-            // }
+            if (_actionMap.Editor.LeftShift.IsPressed())
+            {
+                double snapThresholdTicks = snapingRange * ticksPerPixel;
+
+                if (TryGetSnapTicks(rawTicks, snapThresholdTicks, out double snappedPoint))
+                {
+                    targetTicks = snappedPoint;
+                }
+            }
 
             _main.SetTimeInTicks(targetTicks);
         }
@@ -143,25 +146,9 @@ namespace TimeLine.Input
                 }
             }
 
-            void Process(double start, double duration)
-            {
-                Check(start); // Магнит к началу
-                Check(start + duration - 1); // Магнит к концу (с учетом вычета)
-            }
+            foreach (var wrap in _keyframeVizualizer.GetAllKeyframesObjectData())
+                Check(wrap.Keyframe.Ticks + _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks);
 
-            // Проходим по всем объектам в хранилище
-            if (_trackObjectStorage.TrackObjects != null)
-            {
-                foreach (var wrap in _trackObjectStorage.TrackObjects)
-                    Process(wrap.trackObject.StartTimeInTicks, wrap.trackObject.TimeDuractionInTicks); //
-            }
-
-            // Проходим по всем группам
-            if (_trackObjectStorage.TrackObjectGroups != null)
-            {
-                foreach (var wrap in _trackObjectStorage.TrackObjectGroups)
-                    Process(wrap.trackObject.StartTimeInTicks, wrap.trackObject.TimeDuractionInTicks);
-            }
 
             // Только в самом конце присваиваем результат out параметру
             finalTicks = bestPoint;

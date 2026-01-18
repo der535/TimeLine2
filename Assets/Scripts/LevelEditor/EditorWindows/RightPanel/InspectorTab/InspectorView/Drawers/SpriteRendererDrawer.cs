@@ -8,11 +8,14 @@ namespace TimeLine.CustomInspector.UI.Drawers
     {
         private CustomInspectorDrawer _customInspectorDrawer = null;
         private KeyframeCreator _keyframeCreator = null;
+        private TrackObjectStorage _trackObjectStorage = null;
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, KeyframeCreator keyframeCreator)
+        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
+            _trackObjectStorage = trackObjectStorage;
         }
 
         public bool GetComponent(Component component)
@@ -23,6 +26,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         public void Draw(Component component, GameObject target)
         {
             _customInspectorDrawer.CreateComponent(component, true);
+            string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
 
             if (component is SpriteRendererComponent rendererComponent)
             {
@@ -33,7 +37,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 _customInspectorDrawer.CreateBoolField(rendererComponent.InvertY);
                 _customInspectorDrawer.CreateColorField(rendererComponent.SpriteColor, () =>
                     _keyframeCreator.CreateKeyframe(new ColorData(rendererComponent.SpriteColor.Value), target,
-                        rendererComponent.GetType().Name, rendererComponent.SpriteColor));
+                        rendererComponent.GetType().Name, rendererComponent.SpriteColor), id);
             }
         }
     }

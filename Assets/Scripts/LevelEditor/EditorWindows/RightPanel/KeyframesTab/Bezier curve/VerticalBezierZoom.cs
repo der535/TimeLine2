@@ -43,7 +43,7 @@ namespace TimeLine
             };
         }
 
-        internal void SetPan(float newPan)
+        internal void SetZoom(float newPan)
         {
             _oldZoom = _zoom;
             _zoom = newPan;
