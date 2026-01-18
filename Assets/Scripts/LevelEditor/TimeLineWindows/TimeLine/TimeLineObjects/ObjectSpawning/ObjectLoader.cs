@@ -186,8 +186,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     trackObjectDatas.Add(childTrackObject); //Добовляем в список дочерних объектов
                     
                     ///////////////////////////////
-                    Debug.Log($"childTrackObject StartTimeInTicks{ childTrackObject.trackObject.StartTimeInTicks}");
-                    Debug.Log($"data.reduceLeft{ data.reduceLeft}");
+                    // Debug.Log($"childTrackObject StartTimeInTicks{ childTrackObject.trackObject.StartTimeInTicks}");
+                    // Debug.Log($"data.reduceLeft{ data.reduceLeft}");
                     ////////////////////////////////
                     childTrackObject.trackObject.SetTime(
                         childTrackObject.trackObject.StartTimeInTicks + data.reduceLeft);

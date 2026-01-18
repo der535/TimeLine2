@@ -14,7 +14,7 @@ namespace TimeLine
         [SerializeField] private TMP_InputField yOffset;
         
         private TrackObjectStorage _trackObjectStorage;
-private DiContainer _container;
+        private DiContainer _container;
         private GameEventBus _gameEventBus;
         
         [Inject]

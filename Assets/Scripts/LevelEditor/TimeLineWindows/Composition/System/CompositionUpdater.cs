@@ -54,8 +54,6 @@ namespace TimeLine
                         trackObjectDatas.Add(trackData);
                     }
                 }
-
-                print(data.lastEditID);
                 
                 group.Update(data.duractionTime, trackObjectDatas, trackObjectRemover, _mainObjects,
                     keyframeTrackStorage, data.lastEditID, composition);

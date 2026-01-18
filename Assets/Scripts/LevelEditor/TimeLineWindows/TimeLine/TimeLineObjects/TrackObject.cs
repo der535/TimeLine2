@@ -165,7 +165,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         internal void UpdateDuraction(double newDuractionInTicks)
         {
             var delta = newDuractionInTicks - (TimeDuractionInTicks - _reducedRight - _reducedLeft);
-            print($"update duraction {_reducedRight}");
             _reducedRight -= delta;
             // print(_reducedRight);
         }

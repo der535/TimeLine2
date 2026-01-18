@@ -73,9 +73,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _trackObjectStorage.Remove(select);
         }
         
-        internal void SingleRemoveNoStorage(TrackObjectData select)
+        internal void SingleRemoveNoStorage(TrackObjectData select, bool disassemble = true)
         {
-            Disassemble(select.sceneObject);
+           if(disassemble) Disassemble(select.sceneObject);
 
             foreach (var nodes in select.branch.Nodes)
             {

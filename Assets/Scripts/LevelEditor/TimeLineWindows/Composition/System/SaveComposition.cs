@@ -141,7 +141,6 @@ namespace TimeLine
             if (HasCompositionWithId(group.compositionID)) return;
 
             var data = saveLevel.SaveGroup(group);
-            print(JsonConvert.SerializeObject(data, Formatting.Indented));
             data.compositionID = group.compositionID;
             _compositionData.Add(data);
 
@@ -223,7 +222,6 @@ namespace TimeLine
 
         public void EditComposition(GroupGameObjectSaveData compositionData, string compositionID)
         {
-            print(compositionID);
             if (string.IsNullOrEmpty(compositionID))
                 return;
 
@@ -237,8 +235,6 @@ namespace TimeLine
                     RemoveIDFromComposition(editedComposition);
                     RemoveIDFromComposition(existing);
                     
-                    print(JsonConvert.SerializeObject(editedComposition, Formatting.Indented));
-                    print(JsonConvert.SerializeObject(existing, Formatting.Indented));
                     if (JsonConvert.SerializeObject(editedComposition, Formatting.Indented) !=
                         JsonConvert.SerializeObject(existing, Formatting.Indented))
                     {

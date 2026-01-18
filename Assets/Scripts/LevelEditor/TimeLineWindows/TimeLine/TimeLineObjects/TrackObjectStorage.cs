@@ -202,7 +202,7 @@ namespace TimeLine
             double groupStart = group.trackObject.StartTimeInTicks;
             double groupEnd = groupStart + group.trackObject.TimeDuractionInTicks;
             bool isGroupActive = time >= groupStart && time < groupEnd;
-            print(isGroupActive);
+            // print(isGroupActive);
 
 
             foreach (var trackObject in group.TrackObjectDatas)
@@ -222,11 +222,11 @@ namespace TimeLine
                 double objEnd = objStart + trackObject.trackObject.TimeDuractionInTicks;
                 bool isObjectActive = time >= objStart && time < objEnd;
 
-                print(time);
-                print(trackObject.trackObject.StartTimeInTicks);
-                print(trackObject.trackObject.StartTimeInTicks + groupStart);
-                print(objStart);
-                print(objEnd);
+                // print(time);
+                // print(trackObject.trackObject.StartTimeInTicks);
+                // print(trackObject.trackObject.StartTimeInTicks + groupStart);
+                // print(objStart);
+                // print(objEnd);
 
                 bool finalState = group.trackObject.isActive && isObjectActive && isGroupActive; 
 
@@ -640,14 +640,12 @@ namespace TimeLine
             MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID,
             SaveComposition saveComposition)
         {
-            Debug.Log(this.lastEditID);
             this.lastEditID = lastEditID;
-            Debug.Log(this.lastEditID);
 
             trackObject.UpdateDuraction(newDuraction);
             foreach (var data in TrackObjectDatas)
             {
-                remover.SingleRemoveNoStorage(data);
+                remover.SingleRemoveNoStorage(data, false);
             }
 
             TrackObjectDatas = trackObjectDatas;
@@ -696,8 +694,6 @@ namespace TimeLine
                 if (expr is TrackObjectGroup group)
                 {
                     UpdateLastEditID(group.TrackObjectDatas, saveComposition);
-                    Debug.Log("GROUP");
-                    Debug.Log(group.lastEditID);
                     group.lastEditID = saveComposition.FindCompositionDataById(group.compositionID).lastEditID;
                 }
             }
