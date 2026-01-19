@@ -3,22 +3,28 @@ using Zenject;
 
 namespace TimeLine
 {
+    // RequireComponent гарантирует наличие необходимых компонентов - хорошая практика
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerController : MonoBehaviour
     {
+        // Хорошо: сериализованные поля с Range для ограничения значений в Inspector
         [SerializeField, Range(0.1f, 20f)]
-        private float _speed = 5.0f;
+        private float _speed = 5.0f; // Стандартное значение для скорости
 
+        // Опция для плавной остановки - хорошая идея для улучшения геймплея
         [SerializeField]
         private bool _useSmoothStop = false;
 
+        // Коэффициент трения для плавной остановки
         [SerializeField, Range(0.0f, 1.0f)]
         private float _frictionCoefficient = 0.1f;
 
+        // Приватные поля с нижним подчеркиванием - соответствует C# naming conventions
         private Rigidbody2D _rb;
-        private ActionMap _actionMap;
+        private ActionMap _actionMap; // Новый Input System
         private Vector2 _movementInput;
 
+        // Внедрение зависимостей через Zenject
         [Inject]
         private void Constructor(ActionMap actionMap)
         {
@@ -27,10 +33,18 @@ namespace TimeLine
 
         private void Awake()
         {
-            _rb = GetComponent<Rigidbody2D>();
+            _rb = GetComponent<Rigidbody2D>(); // Получение компонента
         }
 
-        private void OnEnable()
+        // ОЖИДАЮТСЯ МЕТОДЫ:
+        // - Start/OnEnable для подписки на события Input System
+        // - OnDisable/OnDestroy для отписки
+        // - FixedUpdate для физического движения
+        // - Метод для обработки плавной остановки
+    }
+}
+
+private void OnEnable()
         {
             // Включаем карту действий и подписываемся на события движения
             _actionMap.Player.Enable();
