@@ -6,11 +6,11 @@
     "emojiStyle": "native",
     "iconColor": null,
     "recentlyUsedIcons": [
+      "LiAlertTriangle",
       "LiScroll",
       "LiLineHorizontal",
       "LiBadgeHelp",
-      "LiSlash",
-      "LiNotebookPen"
+      "LiSlash"
     ],
     "recentlyUsedIconsSize": 5,
     "rules": [],
@@ -43,5 +43,8 @@
   "Описание скриптов/Editor/Описание папки.md": "LiBadgeHelp",
   "Описание скриптов/General/FontController": "LiFolder",
   "Описание скриптов/Editor/AddFontSetterTool.md": "LiScroll",
-  "Описание скриптов/General/FontController/FontSetter.md": "LiScroll"
+  "Описание скриптов/General/FontController/FontSetter.md": "LiScroll",
+  "ПРОЧИТАТЬ.md": "LiAlertTriangle",
+  "Описание скриптов/General/SceneField.md": "LiScroll",
+  "Описание скриптов/General/FontController/FontStorage.md": "LiScroll"
 }
