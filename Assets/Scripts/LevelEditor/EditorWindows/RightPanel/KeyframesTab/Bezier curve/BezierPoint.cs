@@ -19,9 +19,7 @@ namespace TimeLine
         [SerializeField] private RectTransform tangentLineRight;
 
         [SerializeField] private BezierPointTangleLineDrawer bezierPointTangleLineDrawer;
-
-
-        public Action onValueChanged;
+        
         public RectTransform RectTransform => point;
         public BezierDragPoint BezierDragPoint => _bezierDragPoint;
         public BezierSelectPoint BezierSelectPoint => bezierSelectPoint;
@@ -36,7 +34,7 @@ namespace TimeLine
         public Keyframe.Keyframe PrevKey;
         public Keyframe.Keyframe NextKey;
 
-        private bool isSelected;
+        private bool _isSelected;
 
         [Inject]
         private void Construct(Main main, TimeLineSettings timeLineSettings, M_MusicData musicData)
@@ -121,7 +119,7 @@ namespace TimeLine
 
         public void Select(bool select)
         {
-            isSelected = select;
+            _isSelected = select;
             
             tangentLeft.gameObject.SetActive(select && PrevKey != null);
             tangentLineLeft.gameObject.SetActive(select && PrevKey != null);
@@ -142,7 +140,7 @@ namespace TimeLine
             PrevKey = prevKey;
             NextKey = nextKey;
             
-            Select(isSelected);
+            Select(_isSelected);
 
             double currentTime =  TimeLineConverter.Instance.TicksToSeconds(keyframe.Ticks);
             // double currentValue = keyframe.GetData().GetValue() is float val ? val : 0f;

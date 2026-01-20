@@ -31,7 +31,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
         {
             foreach (var keyframe in _selectKeyframe.Keyframes)
             {
-                print(thisKeyframe == keyframe);
                 if (thisKeyframe == keyframe) continue;
 
                 _activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.Ticks += tickDifferent;

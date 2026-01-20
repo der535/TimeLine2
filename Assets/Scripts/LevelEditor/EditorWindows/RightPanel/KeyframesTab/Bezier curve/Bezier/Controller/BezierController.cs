@@ -126,7 +126,7 @@ namespace TimeLine
             {
                 BezierPoint point = _activeBezierPoints.Value.Find(x => x.BezierDragPoint._original == keyframe);
                 point.Select(true);
-                point.BezierSelectPoint.Select();
+                point.BezierSelectPoint.SelectNoEvent();
             }
         }
 

@@ -26,7 +26,7 @@ namespace TimeLine.Keyframe
             _gameEventBus = gameEventBus;
         }
 
-        private void Start()
+        private void Awake()
         {
             _eventBinder.Add(_gameEventBus, (ref ThemeChangedEvent data) =>
             {
@@ -43,7 +43,9 @@ namespace TimeLine.Keyframe
 
         public void SelectColor(bool selected)
         {
+            Debug.Log(selected);
             image.color = selected ? _themeStorage.value.selectedKeyframeColor : _themeStorage.value.keyframeColor;
+            print(image.color);
         }
 
         private void OnDestroy()

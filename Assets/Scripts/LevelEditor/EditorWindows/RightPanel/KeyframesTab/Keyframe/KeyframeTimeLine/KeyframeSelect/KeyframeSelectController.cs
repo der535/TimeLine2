@@ -83,7 +83,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
 
             foreach (var keyframe in _storage.Keyframes)
             {
-                keyframeVizualizer.GetKeyframeObjectData(keyframe).KeyframeSelect.SelectColor(true);
+                keyframeVizualizer.GetKeyframeObjectData(keyframe)?.KeyframeSelect.SelectColor(true);
                 _activeBezierPoints.GetFromKeyframe(keyframe)?.BezierSelectPoint?.SelectNoEvent();
             }
         }

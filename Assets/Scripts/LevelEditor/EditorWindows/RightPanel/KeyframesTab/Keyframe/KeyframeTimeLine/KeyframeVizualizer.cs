@@ -22,7 +22,10 @@ namespace TimeLine
         [SerializeField] private TimeLineSettings timeLineSettings;
         [Space] [SerializeField] private TreeViewUI treeViewUI;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
-        [FormerlySerializedAs("_timeLineKeyframeScroll")] [Space] [SerializeField] private TimeLineKeyframeZoom timeLineKeyframeZoom;
+
+        [FormerlySerializedAs("_timeLineKeyframeScroll")] [Space] [SerializeField]
+        private TimeLineKeyframeZoom timeLineKeyframeZoom;
+
         [SerializeField] private RectTransform _content;
 
         [FormerlySerializedAs("keframeScrollView")]
@@ -49,7 +52,8 @@ namespace TimeLine
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, DiContainer container,
-            TimeLineConverter timeLineConverter, ActionMap actionMap, M_KeyframeSelectedStorage storage, KeyframeSelectController keyframeTrackStorage)
+            TimeLineConverter timeLineConverter, ActionMap actionMap, M_KeyframeSelectedStorage storage,
+            KeyframeSelectController keyframeTrackStorage)
         {
             _container = container;
             _gameEventBus = gameEventBus;
@@ -113,15 +117,17 @@ namespace TimeLine
         {
             _active = active;
             Build();
-            // print(_keyframes);
             foreach (var keyframe in _keyframes)
             {
                 keyframe.RectTransform.gameObject.SetActive(active);
-                if (_selectedKeyframesStorage.Keyframes.Contains(keyframe.Keyframe))
+                if (_selectedKeyframesStorage.Keyframes.Contains(keyframe.KeyframeDrag._keyframe))
                 {
+                    Debug.Log(keyframe.Keyframe.Ticks, keyframe.KeyframeDrag.gameObject);
+
                     keyframe.KeyframeSelect.SelectColor(true);
                 }
             }
+            
         }
 
 
@@ -180,7 +186,7 @@ namespace TimeLine
         {
             // print(_active);
             if (!_active) return;
-            
+
             foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
 
@@ -203,9 +209,13 @@ namespace TimeLine
                     keyframeObjectData.Keyframe = keyframe;
                     keyframeObjectData.Track = track;
 
+
                     _keyframes.Add(keyframeObjectData);
                 }
             }
+
+
+
 
             PoseKeyframes();
         }
