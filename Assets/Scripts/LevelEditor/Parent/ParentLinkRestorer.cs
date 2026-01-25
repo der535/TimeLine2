@@ -24,7 +24,7 @@ namespace TimeLine.Parent
             Restor(trackObjectData);
         }
 
-        public void Restor(List<TrackObjectData> trackObjectData)
+        public static void Restor(List<TrackObjectData> trackObjectData)
         {
             // print("=== НАЧАЛО ВОССТАНОВЛЕНИЯ ===");
             // print($"Получено объектов для восстановления: {trackObjectData.Count}");
@@ -65,7 +65,7 @@ namespace TimeLine.Parent
                 {
                     if (objectsById.ContainsKey(item.sceneObjectID))
                     {
-                        // Debug.LogWarning($"Дубликат ID {item.sceneObjectID} уже в словаре. Пропускаем.");
+                        Debug.LogWarning($"Дубликат ID {item.sceneObjectID} уже в словаре. Пропускаем.");
                     }
                     else
                     {
@@ -82,7 +82,7 @@ namespace TimeLine.Parent
 
                 if (item == null)
                 {
-                    // Debug.LogWarning($"Элемент #{processedCount} в списке равен null. Пропускаем.");
+                    Debug.LogWarning($"Элемент #{processedCount} в списке равен null. Пропускаем.");
                     nullItemsSkipped++;
                     continue;
                 }
@@ -93,7 +93,7 @@ namespace TimeLine.Parent
 
                 if (item.sceneObject == null)
                 {
-                    // Debug.LogWarning($"  SceneObject равен null для ветки: {item.branch?.Name ?? "Неизвестно"}");
+                    Debug.LogWarning($"  SceneObject равен null для ветки: {item.branch?.Name ?? "Неизвестно"}");
                     nullSceneObjectsSkipped++;
                     continue;
                 }
@@ -103,7 +103,7 @@ namespace TimeLine.Parent
                 // Проверяем trackObject на null
                 if (item.trackObject == null)
                 {
-                    // Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
+                    Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
                     continue;
                 }
 
@@ -115,10 +115,10 @@ namespace TimeLine.Parent
                     // Проверка на циклическую ссылку (объект ссылается сам на себя)
                     if (parentId == item.sceneObjectID)
                     {
-                        // Debug.LogError(
-                            // $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
+                        Debug.LogError(
+                            $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
                         selfParentAttempts++;
-                        // print($"  Очистка некорректного parentID...");
+                        print($"  Очистка некорректного parentID...");
                         item.trackObject._parentID = string.Empty;
                         continue;
                     }
@@ -147,7 +147,7 @@ namespace TimeLine.Parent
                                 }
                                 else
                                 {
-                                    // Debug.LogError($"  ОШИБКА: Родитель не был установлен!");
+                                    Debug.LogError($"  ОШИБКА: Родитель не был установлен!");
                                 }
                             }
                             else
@@ -157,9 +157,9 @@ namespace TimeLine.Parent
                         }
                         else
                         {
-                            // Debug.LogWarning($"  Найден родительский item, но его sceneObject равен null!");
+                            Debug.LogWarning($"  Найден родительский item, но его sceneObject равен null!");
                             // print($"  Очистка поля _parentID...");
-                            item.trackObject._parentID = string.Empty;
+                            // item.trackObject._parentID = string.Empty;
                             parentNotFoundCount++;
                         }
                     }
@@ -177,7 +177,7 @@ namespace TimeLine.Parent
                         }
                         else
                         {
-                            // Debug.LogWarning($"  Родительский объект с ID '{parentId}' не найден!");
+                            Debug.LogWarning($"  Родительский объект с ID '{parentId}' не найден!");
                             // print($"  Объект: {item.branch?.Name ?? "Неизвестно"} (ID: {item.sceneObjectID})");
                             // print($"  Очистка поля _parentID...");
                             item.trackObject._parentID = string.Empty;

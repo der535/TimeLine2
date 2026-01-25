@@ -63,10 +63,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         }
         
         internal (TrackObjectData, GameObject, Branch) LoadComposition(GroupGameObjectSaveData data,
-            string compositionID,
+            string compositionID, bool generateNewSceneID,
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null)
         {
-            return _loader.LoadComposition(data, compositionID, compositionData, addToStorage, lastEditID);
+            return _loader.LoadComposition(data, compositionID, compositionData, addToStorage, lastEditID, generateNewSceneID: generateNewSceneID);
         }
     }
 }

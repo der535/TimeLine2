@@ -145,8 +145,6 @@ namespace TimeLine
 
         public TrackObjectGroup Create(List<TrackObjectData> trackObjects, string compositionID = null)
         {
-            string id = UniqueIDGenerator.GenerateUniqueID();
-
             TrackObject trackObject = _container
                 .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
 
@@ -187,6 +185,7 @@ namespace TimeLine
             trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], string.Empty, minTime, 
                 0,0,true);
 
+            string id = UniqueIDGenerator.GenerateUniqueID();
             Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
 
             if (string.IsNullOrEmpty(compositionID))

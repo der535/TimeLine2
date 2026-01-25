@@ -6,33 +6,33 @@ namespace TimeLine
 {
     public class PlayerHitAnimation : MonoBehaviour
     {
-        [SerializeField] private SpriteRenderer playerSprite; // Спрайт игрока
-        [SerializeField] private float countCycle; // Количество циклов мигания
-        [SerializeField] private float transparent; // Прозрачность при мигании
+        [SerializeField] private SpriteRenderer playerSprite; // РЎРїСЂР°Р№С‚ РёРіСЂРѕРєР°
+        [SerializeField] private float countCycle; // РљРѕР»РёС‡РµСЃС‚РІРѕ С†РёРєР»РѕРІ РјРёРіР°РЅРёСЏ
+        [SerializeField] private float transparent; // РџСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ РїСЂРё РјРёРіР°РЅРёРё
 
-        // Метод запуска анимации с колбэком завершения
+        // РњРµС‚РѕРґ Р·Р°РїСѓСЃРєР° Р°РЅРёРјР°С†РёРё СЃ РєРѕР»Р±СЌРєРѕРј Р·Р°РІРµСЂС€РµРЅРёСЏ
         internal void Play(float duration, Action onFinish)
         {
             StartCoroutine(Animation(duration, onFinish));
         }
 
-        // Корутина анимации мигания
+        // РљРѕСЂСѓС‚РёРЅР° Р°РЅРёРјР°С†РёРё РјРёРіР°РЅРёСЏ
         IEnumerator Animation(float duration, Action onFinish)
         {
             float durationHalfCycle = duration / countCycle / 2;
 
             for (int i = 0; i < countCycle; i++)
             {
-                // Устанавливаем прозрачность
+                // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РїСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ
                 playerSprite.color = new Color(playerSprite.color.r, playerSprite.color.g, playerSprite.color.b, transparent);
                 yield return new WaitForSeconds(durationHalfCycle);
 
-                // Возвращаем полную непрозрачность
+                // Р’РѕР·РІСЂР°С‰Р°РµРј РїРѕР»РЅСѓСЋ РЅРµРїСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ
                 playerSprite.color = new Color(playerSprite.color.r, playerSprite.color.g, playerSprite.color.b, 1);
                 yield return new WaitForSeconds(durationHalfCycle);
             }
 
-            onFinish.Invoke(); // Вызываем колбэк завершения
+            onFinish.Invoke(); // Р’С‹Р·С‹РІР°РµРј РєРѕР»Р±СЌРє Р·Р°РІРµСЂС€РµРЅРёСЏ
         }
     }
 }

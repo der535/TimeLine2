@@ -122,7 +122,8 @@ namespace TimeLine.LevelEditor.SelectBox
         {
             // Кэшируем данные, чтобы не обращаться к свойствам в каждой итерации
             var currentSelection = _selectObjectController.SelectObjects; 
-            var allObjects = _trackObjectStorage.TrackObjects;
+            var allObjects = new List<TrackObjectData>(_trackObjectStorage.TrackObjects);
+            allObjects.AddRange(_trackObjectStorage.TrackObjectGroups);
     
             // Если selectBox вычисляется динамически, лучше сохранить его в переменную
             var box = selectBox; 

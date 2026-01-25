@@ -29,8 +29,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _InnerCutoff: 0.897
-    - _OutlineThickness: 1.24
+    - _InnerCutoff: 0.595
+    - _OutlineThickness: 0.03
     - _Softness: 10
     - _Threshold: 0.384
     m_Colors:

@@ -15,6 +15,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
         private void Construct(BezierVerticalPosition bezierVerticalPosition, GameEventBus eventBus,
             KeyframeReferences keyframeReferences, BezierLineDrawer bezierLineDrawer, BezierCursorValue bezierCursorValue)
         {
+            Debug.Log("BezierVerticalPositionController");
             eventBus.SubscribeTo((ref ScrollBezier scrollEvent) =>
             {
                 keyframeReferences.rootPoints.offsetMax += new Vector2(0, scrollEvent.ScrollOffset);

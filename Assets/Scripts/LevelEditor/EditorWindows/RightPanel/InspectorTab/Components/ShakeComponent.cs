@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.LevelEffects;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
@@ -17,7 +19,7 @@ namespace TimeLine
         public IntParameter Vibrato = new("Vibrato", 10, Color.white);
         public FloatParameter Randomness = new("Randomness", 90, Color.magenta);
 
-        private ShakeCamera _shakeCamera;
+        private ShakeCameraController _shakeCameraController;
         private TrackObjectStorage _trackObjectStorage;
         private Main _main;
         
@@ -27,9 +29,9 @@ namespace TimeLine
         private bool isShakeActive;
         
         [Inject]
-        private void Construct(ShakeCamera shakeCamera, TrackObjectStorage trackObjectStorage, Main main, InitializedComponentController initializedComponentController)
+        private void Construct(ShakeCameraController shakeCameraController, TrackObjectStorage trackObjectStorage, Main main, InitializedComponentController initializedComponentController)
         {
-            _shakeCamera = shakeCamera;
+            _shakeCameraController = shakeCameraController;
             _trackObjectStorage = trackObjectStorage;
             _main = main;
             _initializedComponentController = initializedComponentController;
@@ -38,19 +40,20 @@ namespace TimeLine
         private void Start()
         {
             _sceneObjectLink = gameObject.GetComponent<SceneObjectLink>();
+            print("Add");
             _initializedComponentController.Add(this, _sceneObjectLink.trackObjectData.trackObject);
         }
 
         private void Update()
         {
-            if (TimeLineConverter.Instance.TicksCurrentTime() > _sceneObjectLink.trackObjectData.trackObject.StartTimeInTicks && isShakeActive == false)
+            if (TimeLineConverter.Instance.TicksCurrentTime() > _sceneObjectLink.trackObjectData.trackObject.GetGlobalTime() && isShakeActive == false)
             {
                 isShakeActive = true;
-                print(isShakeActive);
                 
-                _shakeCamera.Shake(ShakeStrength.Value, Duration.Value, Vibrato.Value, Randomness.Value);
+                _shakeCameraController.Shake(ShakeStrength.Value, Duration.Value, Vibrato.Value, Randomness.Value);
             }
         }
+
 
         protected override IEnumerable<InspectableParameter> GetParameters()
         {
@@ -63,8 +66,14 @@ namespace TimeLine
 
         public void Initialized()
         {
+            print("Initialized");
+
             isShakeActive = false;
-            print(isShakeActive);
+        }
+
+        public void OnDestroy()
+        {
+            _initializedComponentController.Remove(this);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace TimeLine
                 playerInvulnerable.SetActive(true); // Включаем неуязвимость
                 playerHitAnimation.Play(timeOfInvulnerability, () => playerInvulnerable.SetActive(false)); // Запускаем анимацию с колбэком
             });
-            // НЕТ ОТПИСКИ ОТ СОБЫТИЙ!
+            // todo НЕТ ОТПИСКИ ОТ СОБЫТИЙ!
         }
     }
 }

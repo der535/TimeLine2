@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ПРОЧИТАТЬ.md",
+                "file": "Описание скриптов/Editor/AddFontSetterTool.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ПРОЧИТАТЬ"
+              "title": "AddFontSetterTool"
             }
           }
         ],
@@ -200,6 +200,7 @@
   },
   "active": "631df1f2eb1e9318",
   "lastOpenFiles": [
+    "ПРОЧИТАТЬ.md",
     "Оглавление.md",
     "Описание скриптов/Editor/Описание папки.md",
     "Описание скриптов/ШАБЛОН.md",
@@ -207,7 +208,6 @@
     "Описание скриптов/General/FontController/FontStorage.md",
     "Описание скриптов/General/SceneField.md",
     "Описание скриптов/Editor/AddFontSetterTool.md",
-    "ПРОЧИТАТЬ.md",
     "Описание скриптов/General/Описание папки.md",
     "Архив/539 (2026.01.19) (18.08.26) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",
     "Архив/543 (2026.01.19) (18.29.22) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",

@@ -51,12 +51,12 @@ namespace TimeLine
         {
             foreach (var componentData in _initializedComponentData)
             {
-                if (time < componentData.TrackObject.StartTimeInTicks && componentData.Initialized == false)
+                if (time < componentData.TrackObject.GetGlobalTime() && componentData.Initialized == false)
                 {
                     componentData.IInitializedComponent?.Initialized();
                     componentData.Initialized = true;
                 }
-                else if (time > componentData.TrackObject.StartTimeInTicks)
+                else if (time > componentData.TrackObject.GetGlobalTime())
                 {
                     componentData.Initialized = false;
                 }

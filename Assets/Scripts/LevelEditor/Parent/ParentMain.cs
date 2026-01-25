@@ -141,6 +141,7 @@ public class ParentMain : MonoBehaviour
             Debug.Log($"Родитель изменен на: {selectedData.sceneObject.name}");
             foreach (var track in _selectObjectController.SelectObjects)
             {
+                print(selectedData.sceneObjectID);
                 track.sceneObject.transform.SetParent(selectedData.sceneObject.transform);
                 track.trackObject._parentID = selectedData.sceneObjectID;
             }

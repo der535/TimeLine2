@@ -63,7 +63,7 @@ namespace TimeLine.LevelEditor.SelectBox
             }
 
 
-            if (_state.IsDragging&& _state.CursorIsInside)
+            if (_state.IsDragging && _state.CursorIsInside)
             {
                 Vector2 currentMousePos =
                     TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
@@ -127,21 +127,37 @@ namespace TimeLine.LevelEditor.SelectBox
         private void UpdateSelection() //Логика подсчёта выделенных объектов
         {
             int couter = 0;
+            Check(_trackObjectStorage.GetAllActiveSceneObjects());
+        }
 
-            foreach (var trackObject in _trackObjectStorage.GetAllActiveSceneObjects())
+        private void Check(List<TrackObjectData> list, TrackObjectData parentGroup = null)
+        {
+            foreach (var data in list)
             {
-                if (CheckIsSelected(trackObject.sceneObject, selectBox))
+                if (data is TrackObjectGroup group)
                 {
-                    if (!_selectObjectController.SelectObjects.Contains(trackObject))
-                    {
-                        _selectObjectController.SelectNoClear(trackObject);
-                    }
+                    Check(group.TrackObjectDatas, parentGroup ?? group);
                 }
                 else
                 {
-                    if (_selectObjectController.SelectObjects.Contains(trackObject))
+                    var targetObject = parentGroup ?? data;
+                    if (CheckIsSelected(data.sceneObject, selectBox))
                     {
-                        _selectObjectController.Deselect(trackObject);
+                        if (!_selectObjectController.SelectObjects.Contains(targetObject))
+                        {
+                            // print("group S");
+
+                            _selectObjectController.SelectNoClear(targetObject);
+                            if(parentGroup != null) break;
+                        }
+                    }
+                    else
+                    {
+                        if (_selectObjectController.SelectObjects.Contains(targetObject))
+                        {
+                            // print("group D");
+                            _selectObjectController.Deselect(targetObject);
+                        }
                     }
                 }
             }
@@ -150,7 +166,12 @@ namespace TimeLine.LevelEditor.SelectBox
         private bool CheckIsSelected(GameObject target, RectTransform selectionBox)
         {
             // 1. Получаем Renderer объекта (SpriteRenderer для 2D)
-            if (!target.TryGetComponent<Renderer>(out var renderer)) return false;
+            if (!target.TryGetComponent<SpriteRenderer>(out var renderer))
+            {
+                print(false);
+                return false;
+            }
+
             Renderer targetRenderer = renderer;
 
             // 2. Получаем границы объекта в мировом 3D/2D пространстве
@@ -195,9 +216,10 @@ namespace TimeLine.LevelEditor.SelectBox
 
             // 5. Проверяем пересечение двух прямоугольников (Overlaps)
             // Это вернет true, если рамка хотя бы краем задела объект
+            // print(selectionRect.Overlaps(objectRectInUI));
             return selectionRect.Overlaps(objectRectInUI);
         }
-        
+
 
 // Вспомогательный метод для создания границ рамки в координатах Viewport
         private Bounds GetViewportBounds(RectTransform selectionBox, Camera cam)

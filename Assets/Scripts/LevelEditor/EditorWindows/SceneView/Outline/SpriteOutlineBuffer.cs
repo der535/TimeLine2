@@ -38,6 +38,11 @@ namespace TimeLine.LevelEditor.outline
             });
         }
 
+        public void UpdateOutline(Sprite newSprite)
+        {
+            _cachedSprites[newSprite.name] = SpritePaddingAdjuster.AdjustSpritePaddingPercent(newSprite, 0.1f);
+        }
+
         public Sprite GetSprite(string spriteID)
         {
             var containsKey = _cachedSprites.ContainsKey(spriteID);

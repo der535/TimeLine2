@@ -1,20 +1,16 @@
-﻿Shader "Custom/URP_SpriteOutlineSmooth_Hollow"
+﻿Shader "Custom/URP_SpriteOutline_WorldSpace"
 {
     Properties
     {
         [MainTexture] _MainTex ("Sprite Texture", 2D) = "white" {}
         _OutlineColor ("Outline Color", Color) = (1,1,1,1)
-        _OutlineThickness ("Max Thickness", Float) = 5
-        _Softness ("Softness", Range(0.1, 10)) = 1.0
+        _OutlineThickness ("Thickness (World Units)", Float) = 0.05
         _InnerCutoff ("Inner Cutoff", Range(0, 1)) = 0.05
     }
 
     SubShader
     {
-        Tags
-        {
-            "RenderType"="Transparent" "Queue"="Transparent" "RenderPipeline"="UniversalPipeline"
-        }
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" "RenderPipeline"="UniversalPipeline" }
 
         Blend SrcAlpha OneMinusSrcAlpha
         Cull Off
@@ -31,83 +27,66 @@
             {
                 float4 positionOS : POSITION;
                 float2 uv : TEXCOORD0;
-                float4 color : COLOR;
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float4 color : COLOR;
+                float3 positionWS : TEXCOORD1;
             };
 
             sampler2D _MainTex;
-            float4 _MainTex_TexelSize;
+            float4 _MainTex_ST;
             float4 _OutlineColor;
             float _OutlineThickness;
-            float _Softness;
             float _InnerCutoff;
 
             Varyings vert(Attributes input)
             {
                 Varyings output;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.uv = input.uv;
-                output.color = input.color;
+                output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.positionCS = TransformWorldToHClip(output.positionWS);
+                output.uv = TRANSFORM_TEX(input.uv, _MainTex);
                 return output;
-            }
-
-            float InterleavedGradientNoise(float2 position_screen)
-            {
-                float3 magic = float3(0.06711056, 0.00583715, 52.9829189);
-                return frac(magic.z * frac(dot(position_screen, magic.xy)));
             }
 
             float4 frag(Varyings input) : SV_Target
             {
-                // 1. Проверяем альфу текущего пикселя.
-                // Если тут есть спрайт — СРАЗУ выходим, рисуя прозрачность.
                 float4 baseTex = tex2D(_MainTex, input.uv);
-                if (baseTex.a > _InnerCutoff)
-                {
-                    discard; // Вырезаем внутренность полностью
-                }
+                
+                // Рисуем только там, где прозрачно (внутри вырезаем)
+                if (baseTex.a > _InnerCutoff) discard;
 
-                // 2. Если мы здесь, значит пиксель прозрачный, и тут может быть обводка.
+                // Векторы осей объекта в мировом пространстве
+                // Позволяют перевести "мировое смещение" обратно в локальные UV
+                float3 worldRight = normalize(float3(GetObjectToWorldMatrix()[0].xyz));
+                float3 worldUp = normalize(float3(GetObjectToWorldMatrix()[1].xyz));
+                
+                // Масштаб объекта (чтобы понять размер 1 юнита в UV)
+                float scaleX = length(float3(GetObjectToWorldMatrix()[0].xyz));
+                float scaleY = length(float3(GetObjectToWorldMatrix()[1].xyz));
+
                 float totalAlpha = 0;
-                float maxAlpha = 0;
-                const int samples = 32; // Увеличил для плавности
-                const float goldenAngle = 2.39996323;
-
-                float noise = InterleavedGradientNoise(input.positionCS.xy);
-                float randomRotation = noise * 6.28;
-
-                float2 texelSize = _MainTex_TexelSize.xy;
-                float radiusScale = _OutlineThickness * _Softness;
+                const int samples = 12; // Для мирового пространства 12 точек обычно хватает
+                const float PI2 = 6.283185;
 
                 for (int i = 0; i < samples; i++)
                 {
-                    float r = sqrt((float)i + 0.5) / sqrt((float)samples);
-                    float theta = i * goldenAngle + randomRotation;
-                    float2 offset = float2(cos(theta), sin(theta)) * r * radiusScale * texelSize;
-
-                    float a = tex2D(_MainTex, input.uv + offset).a;
-
-                    // Ослабляем влияние сэмплов по мере удаления от края
-                    float weight = smoothstep(1.0, 0.0, r);
-                    totalAlpha += a * weight;
-                    maxAlpha += weight;
+                    float angle = (float)i / samples * PI2;
+                    float2 dir = float2(cos(angle), sin(angle));
+                    
+                    // Вычисляем смещение в UV координатах
+                    // Толщина делится на масштаб: если объект в 2 раза больше, 
+                    // нужно пройти в 2 раза меньше "пути" в UV, чтобы получить тот же метр.
+                    float2 uvOffset = float2(dir.x / scaleX, dir.y / scaleY) * _OutlineThickness;
+                    
+                    totalAlpha += tex2D(_MainTex, input.uv + uvOffset).a;
                 }
 
-                float glow = totalAlpha / maxAlpha;
+                float alpha = saturate(totalAlpha / samples * _OutlineColor.a * 10.0);
 
-                // Настройка интенсивности
-                glow = saturate(glow * _OutlineColor.a * 5.0);
-
-                // Плавное затухание внешнего края
-                glow = pow(glow, 1.5);
-
-                return float4(_OutlineColor.rgb, glow);
+                return float4(_OutlineColor.rgb, alpha);
             }
             ENDHLSL
         }

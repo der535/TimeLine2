@@ -40,23 +40,14 @@ namespace TimeLine
             _savedName = compositionData.gameObjectName;
             trackObjectStorage.HideAll();
             var (_, game, _) =
-                facadeObjectSpawner.LoadComposition(compositionData, compositionData.compositionID);
+                facadeObjectSpawner.LoadComposition(compositionData, compositionData.compositionID, false);
             groupSeparate.SeparateSingle((TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game));
         }
 
         public void EndEdit()
         {
-            foreach (var VARIABLE in trackObjectStorage.GetAllActiveTrackData())
-            {
-                Debug.Log(VARIABLE.sceneObject.name, VARIABLE.sceneObject);
-            }
-
             TrackObjectGroup trackObjectGroup =
                 groupCreater.Create(trackObjectStorage.GetAllActiveTrackData(), _compositionID);
-            foreach (var VARIABLE in trackObjectStorage.GetAllActiveTrackData())
-            {
-                Debug.Log(VARIABLE.sceneObject.name, VARIABLE.sceneObject);
-            }
             trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
             trackObjectStorage.ShowAll();
             composition.EditComposition(saveLevel.SaveGroup(trackObjectGroup), trackObjectGroup.compositionID);

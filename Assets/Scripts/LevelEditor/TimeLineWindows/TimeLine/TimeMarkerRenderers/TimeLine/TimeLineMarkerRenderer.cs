@@ -49,6 +49,11 @@ private ThemeStorage _themeStorage;
         {
             PoseLines();
         });
+        _gameEventBus.SubscribeTo((ref MusicLoadedEvent musicLoadedEvent) =>
+        {
+            CalculateDistance();
+            PoseLines();
+        });
 
         for (int i = 0; i < countBeatLines; i++)
         {

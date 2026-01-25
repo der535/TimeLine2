@@ -67,17 +67,33 @@ namespace TimeLine
         {
             _lineDrawer?.ClearLines();
 
-            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build(), -1);
+            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) =>
+            {
+                print("AddKeyframeEvent");
+                Build();
+            }, -1);
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) =>
+            {
+                _activeBezierPoints.Value.Clear();
+                Build();
+            });
             _gameEventBus.SubscribeTo((ref SelectFieldLineEvent _) => Build(), -1);
-            _gameEventBus.SubscribeTo((ref DeselectFieldLineEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref DeselectFieldLineEvent _) =>
+            {
+                _activeBezierPoints.Value.Clear();
+                Build();
+            });
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollBezier _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ZoomBezier _) => UpdatePositions());
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => Clear());
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) =>
+            {
+                
+                Clear();
+            });
             _gameEventBus.SubscribeTo((ref KeyframeTypeChangeEvent data) =>
             {
                 ActiveKeyframes(data.ActiveType == M_KeyframeType.Bezier);
@@ -155,7 +171,7 @@ namespace TimeLine
         private void Build()
         {
             // selectPointsController.Deselect();
-
+            
             if (!_active || !gameObject.activeInHierarchy)
             {
                 return;
@@ -166,6 +182,7 @@ namespace TimeLine
                 // Освобождаем старые объекты
                 foreach (var point in group)
                 {
+                    Debug.Log(point.gameObject,point.gameObject);
                     Destroy(point.gameObject);
                 }
             }
@@ -279,6 +296,8 @@ namespace TimeLine
 
         private void Clear()
         {
+            _activeBezierPoints.Value.Clear();
+            
             foreach (var group in groupPoints)
             {
                 foreach (var point in group)

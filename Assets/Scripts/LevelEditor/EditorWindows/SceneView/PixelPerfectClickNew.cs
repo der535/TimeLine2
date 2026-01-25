@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using EventBus;
 using EventBus.Events;
 using TimeLine;
@@ -37,9 +38,9 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 
     public void OnMapClick(PointerEventData eventData)
     {
-        if(selectBoxScene.gameObject.activeSelf) return;
-        if(_cEditColliderState.GetState() == true) return;
-        
+        if (selectBoxScene.gameObject.activeSelf) return;
+        if (_cEditColliderState.GetState() == true) return;
+
         _emptyClick = true;
         // 1. Получить локальную точку на RawImage (в его RectTransform)
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -58,15 +59,16 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         Vector3 worldPos = mapCamera.ViewportToWorldPoint(viewportPos);
 
 
-        foreach (var active in _trackObjectStorage.GetAllActiveTrackData())
-        {
-            OnMouseLeftStarted(worldPos, active.sceneObject.GetComponent<SpriteRenderer>(),
-                active.sceneObject);
-        }
-        
-        if (eventData.button != PointerEventData.InputButton.Left) 
+        OnMouseLeftStarted(worldPos, _trackObjectStorage.GetAllActiveTrackData());
+        // foreach (var active in _trackObjectStorage.GetAllActiveTrackData())
+        // {
+        //     OnMouseLeftStarted(worldPos, active.sceneObject.GetComponent<SpriteRenderer>(),
+        //         active.sceneObject);
+        // }
+
+        if (eventData.button != PointerEventData.InputButton.Left)
             return;
-        
+
         if (_emptyClick)
         {
             _emptyClick = false;
@@ -74,36 +76,41 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    private void OnMouseLeftStarted(Vector3 mousePosition, SpriteRenderer spriteRenderer, GameObject sceneObject)
+
+    private void OnMouseLeftStarted(Vector3 mousePosition, List<TrackObjectData> list,
+        TrackObjectData parentGroup = null)
     {
-        if (IsPixelOpaque(mousePosition, spriteRenderer, sceneObject.transform))
+        foreach (var trackObjectData in list)
         {
-            _emptyClick = false;
-            _gameEventBus.Raise(new ObjectUnderCursorEvent());
-            TransformComponent transformComponent = FindTopmostParentWithComponent.Find<TransformComponent>(sceneObject.transform);
-            TrackObjectData data;
-            if (transformComponent != null)
+            if (trackObjectData is TrackObjectGroup group)
             {
-                if (sceneObject.gameObject.activeSelf == false) return;
-                Debug.Log(sceneObject.gameObject, sceneObject.gameObject);
-                data = _trackObjectStorage.GetTrackObjectData(transformComponent.gameObject);
+                OnMouseLeftStarted(mousePosition, group.TrackObjectDatas, parentGroup ?? group);
             }
             else
             {
-                if (sceneObject.gameObject.activeSelf == false) return;
-                Debug.Log(sceneObject, sceneObject);
-                data = _trackObjectStorage.GetTrackObjectData(sceneObject);
-            }
+                var targetObject = parentGroup ?? trackObjectData;
+                if (IsPixelOpaque(mousePosition, trackObjectData.sceneObject.GetComponent<SpriteRenderer>(),
+                        trackObjectData.sceneObject.transform))
+                {
+                    _emptyClick = false;
+                    _gameEventBus.Raise(new ObjectUnderCursorEvent());
 
-            print(data);
-            _selectObjectController.SelectMultiple(data);
+                    if (trackObjectData.sceneObject.gameObject.activeSelf == false) return;
+                    var data = _trackObjectStorage.GetTrackObjectData(trackObjectData.sceneObject);
+
+
+                    print(data);
+                    _selectObjectController.SelectMultiple(targetObject);
+                    if (parentGroup != null) break;
+                }
+            }
         }
     }
 
 
     bool IsPixelOpaque(Vector2 worldPos, SpriteRenderer spriteRenderer, Transform objectTransform)
     {
-        if (spriteRenderer == null) return false;
+        if (spriteRenderer == null || spriteRenderer.enabled == false) return false;
 
         // 1. Проверка попадания в bounds
         if (!spriteRenderer.bounds.Contains(worldPos))

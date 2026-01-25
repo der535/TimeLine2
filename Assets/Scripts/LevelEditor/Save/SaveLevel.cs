@@ -11,6 +11,7 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.LoadingScreen.Controllers;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using TimeLine.LevelEditor.UIAnimation;
@@ -83,7 +84,7 @@ namespace TimeLine
         public void Save()
         {
             _saveButtonAnimation.Saving();
-            M_BackupManager.CreateRollingBackup($"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}",
+            BackupManager.CreateRollingBackup($"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}",
                 maxBackups: 5);
 
             editorSettings.Save();
@@ -164,7 +165,7 @@ namespace TimeLine
                 var group = groupBase;
                 GroupGameObjectSaveData groupGameObjectSaveData =
                     composition.FindCompositionDataById(group.compositionID);
-                facadeObjectSpawner.LoadComposition(group, group.compositionID, groupGameObjectSaveData);
+                facadeObjectSpawner.LoadComposition(group, group.compositionID, false, groupGameObjectSaveData);
                 // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
             }
 
@@ -258,11 +259,15 @@ namespace TimeLine
                 {
                     if (child is TrackObjectGroup childGroup)
                     {
-                        groupData.children.Add(SaveGroup(childGroup, true));
+                        var data = SaveGroup(childGroup, true);
+                        print(data.sceneObjectID);
+                        groupData.children.Add(data);
                     }
                     else
                     {
-                        groupData.children.Add(SaveGameObject(child, ""));
+                        var data = SaveGameObject(child, "");
+                        print(data.sceneObjectID);
+                        groupData.children.Add(data);
                     }
                 }
             }
@@ -352,13 +357,29 @@ namespace TimeLine
         public BranchSaveData branch;
         public List<ComponentData> Components = new();
         public List<TrackSaveData> tracks = new();
+
+        public GameObjectSaveData Dublicate()
+        {
+            return new GameObjectSaveData()
+            {
+                lineIndex = lineIndex,
+                sceneObjectID = sceneObjectID,
+                parentObjectID = parentObjectID,
+                gameObjectName = gameObjectName,
+                startTime = startTime,
+                duractionTime = duractionTime,
+                branch = branch.Duplicate(),
+                Components = new List<ComponentData>(Components) ,
+                tracks = new List<TrackSaveData>(tracks) 
+            };
+        }
     }
 
     [System.Serializable]
     public class GroupGameObjectSaveData : GameObjectSaveData
     {
         public string compositionID;
-        public string lastEditID;
+        public string lastEditID { get; set; }
         public double reduceLeft;
         public double reduceRight;
 
@@ -367,6 +388,11 @@ namespace TimeLine
 
         internal GroupGameObjectSaveData DuplicateComposition()
         {
+            List<GameObjectSaveData> newList = new List<GameObjectSaveData>();
+            foreach (var data in children)
+            {
+                newList.Add(data.Dublicate());
+            }
             return new GroupGameObjectSaveData()
             {
                 gameObjectName = gameObjectName,
@@ -377,7 +403,7 @@ namespace TimeLine
                 tracks = new List<TrackSaveData>(tracks),
                 compositionID = Guid.NewGuid().ToString(),
                 lastEditID = lastEditID,
-                children = new List<GameObjectSaveData>(children),
+                children = newList,
                 reduceLeft = reduceLeft,
                 reduceRight = reduceRight
             };

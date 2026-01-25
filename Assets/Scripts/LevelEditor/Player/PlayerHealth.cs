@@ -8,25 +8,24 @@ namespace TimeLine
 {
     public class PlayerHealth : MonoBehaviour
     {
-        // Хорошая группировка полей с Space для читаемости в Inspector
-        [SerializeField] private AudioSource hit; // Звук получения урона
-        [SerializeField] private Slider healthSlider; // UI отображение здоровья
-        [SerializeField] private PlayerDeath playerDeath; // Контроллер смерти
-        [SerializeField] private PlayModeController playModeController; // Контроллер режима игры
+        [SerializeField] private AudioSource hit; // Р—РІСѓРє РїРѕР»СѓС‡РµРЅРёСЏ СѓСЂРѕРЅР°
+        [SerializeField] private Slider healthSlider; // UI РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ Р·РґРѕСЂРѕРІСЊСЏ
+        [SerializeField] private PlayerDeath playerDeath; // РљРѕРЅС‚СЂРѕР»Р»РµСЂ СЃРјРµСЂС‚Рё
+        [SerializeField] private PlayModeController playModeController; // РљРѕРЅС‚СЂРѕР»Р»РµСЂ СЂРµР¶РёРјР° РёРіСЂС‹
         [Space]
-        [SerializeField] private int maxHealth = 3; // Максимальное здоровье
+        [SerializeField] private int maxHealth = 3; // РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РґРѕСЂРѕРІСЊРµ
 
-        private int _currentHealth; // Текущее здоровье
+        private int _currentHealth; // РўРµРєСѓС‰РµРµ Р·РґРѕСЂРѕРІСЊРµ
         private GameEventBus _gameEventBus;
 
-        // Внедрение зависимостей через Zenject
+        // Р’РЅРµРґСЂРµРЅРёРµ Р·Р°РІРёСЃРёРјРѕСЃС‚РµР№ С‡РµСЂРµР· Zenject
         [Inject]
         private void Constructor(GameEventBus gameEventBus)
         {
             _gameEventBus = gameEventBus;
         }
 
-        // Метод восстановления здоровья
+        // РњРµС‚РѕРґ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ Р·РґРѕСЂРѕРІСЊСЏ
         private void RestoreHealth()
         {
             _currentHealth = maxHealth;
@@ -35,13 +34,13 @@ namespace TimeLine
 
         private void Start()
         {
-            // Инициализация слайдера
+            // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЃР»Р°Р№РґРµСЂР°
             healthSlider.minValue = 0;
             healthSlider.maxValue = maxHealth;
             healthSlider.value = maxHealth;
             _currentHealth = maxHealth;
 
-            // Подписка на события
+            // РџРѕРґРїРёСЃРєР° РЅР° СЃРѕР±С‹С‚РёСЏ
             _gameEventBus.SubscribeTo((ref PlayerTakeDamageEvent _) =>
             {
                 TakeDamage();
@@ -51,27 +50,27 @@ namespace TimeLine
                 RestoreHealth();
             });
             _gameEventBus.SubscribeTo((ref RestartGameEvent data) => { RestoreHealth(); });
-            // НЕТ ОТПИСКИ ОТ СОБЫТИЙ!
+            // todo РќР•Рў РћРўРџРРЎРљР РћРў РЎРћР‘Р«РўРР™!
         }
 
         private void TakeDamage()
         {
-            // Проверка на смерть игрока
+            // РџСЂРѕРІРµСЂРєР° РЅР° СЃРјРµСЂС‚СЊ РёРіСЂРѕРєР°
             if (playerDeath.IsPlayerDeath) return;
 
-            hit.Play(); // Проигрываем звук
+            hit.Play(); // РџСЂРѕРёРіСЂС‹РІР°РµРј Р·РІСѓРє
 
-            // Проверка режима игры
+            // РџСЂРѕРІРµСЂРєР° СЂРµР¶РёРјР° РёРіСЂС‹
             if (!playModeController.IsPlaying) return;
 
-            // Уменьшение здоровья
+            // РЈРјРµРЅСЊС€РµРЅРёРµ Р·РґРѕСЂРѕРІСЊСЏ
             _currentHealth--;
             if (_currentHealth <= 0)
             {
                 _currentHealth = 0;
-                _gameEventBus.Raise(new PlayerDeathEvent()); // Вызываем событие смерти
+                _gameEventBus.Raise(new PlayerDeathEvent()); // Р’С‹Р·С‹РІР°РµРј СЃРѕР±С‹С‚РёРµ СЃРјРµСЂС‚Рё
             }
-            healthSlider.value = _currentHealth; // Обновляем UI
+            healthSlider.value = _currentHealth; // РћР±РЅРѕРІР»СЏРµРј UI
         }
     }
 }

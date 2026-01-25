@@ -9,7 +9,9 @@ using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.Parent;
 using TimeLine.TimeLine;
+using UnityEditor.ShaderGraph.Drawing;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -95,13 +97,23 @@ namespace TimeLine
             List<TrackObjectData> trackObjectData = new List<TrackObjectData>();
             foreach (var track in _trackObjects)
             {
-                if (track.sceneObject.activeSelf) trackObjectData.Add(track);
+                if (track.sceneObject.GetComponent<ActiveObjectControllerComponent>().IsActive)
+                {
+                    trackObjectData.Add(track);
+                    // Debug.Log(track, track.sceneObject);
+                }
             }
 
             foreach (var group in _trackObjectGroups)
             {
-                if (group.sceneObject.activeSelf) trackObjectData.Add(group);
+                if (group.sceneObject.GetComponent<ActiveObjectControllerComponent>().IsActive)
+                {
+                    trackObjectData.Add(group);
+                    // Debug.Log(group, group.sceneObject);
+                }
             }
+
+
 
             return trackObjectData;
         }
@@ -182,28 +194,29 @@ namespace TimeLine
         private void CheckActiveGroup(TrackObjectGroup group, double time, bool enchanted = false,
             bool activeGroup = true)
         {
+            double groupStart = group.trackObject.StartTimeInTicks;
+            double groupEnd = groupStart + group.trackObject.TimeDuractionInTicks;
+            bool isGroupActive = time >= groupStart && time < groupEnd;
+            
             if ((!enchanted && !group.trackObject.gameObject.activeSelf) || activeGroup == false)
             {
-                group.activeObjectController?.Turn(false);
+                group.activeObjectController.Turn(false);
 
                 foreach (var trackObject in group.TrackObjectDatas)
                 {
-                    trackObject.activeObjectController?.Turn(false);
+                    if (trackObject is TrackObjectGroup nestedGroup)
+                    {
+                        CheckActiveGroup(nestedGroup, time - groupStart, true, false);
+                        continue;
+                    }
+                    trackObject.activeObjectController.Turn(false);
                 }
 
                 return;
             }
-
-            bool targetState = group.trackObject.isActive;
-            group.activeObjectController?.Turn(targetState);
             
 
-
-            double groupStart = group.trackObject.StartTimeInTicks;
-            double groupEnd = groupStart + group.trackObject.TimeDuractionInTicks;
-            bool isGroupActive = time >= groupStart && time < groupEnd;
-            // print(isGroupActive);
-
+            group.activeObjectController.Turn(isGroupActive);
 
             foreach (var trackObject in group.TrackObjectDatas)
             {
@@ -222,15 +235,14 @@ namespace TimeLine
                 double objEnd = objStart + trackObject.trackObject.TimeDuractionInTicks;
                 bool isObjectActive = time >= objStart && time < objEnd;
 
-                // print(time);
-                // print(trackObject.trackObject.StartTimeInTicks);
-                // print(trackObject.trackObject.StartTimeInTicks + groupStart);
-                // print(objStart);
-                // print(objEnd);
+                // print(group.trackObject.isActive);
+                // print(isObjectActive);
+                // print(isGroupActive);
+                // Debug.Log(trackObject.sceneObject.name, trackObject.sceneObject);
 
-                bool finalState = group.trackObject.isActive && isObjectActive && isGroupActive; 
+                bool finalState = group.trackObject.isActive && isObjectActive && isGroupActive;
 
-                trackObject.activeObjectController?.Turn(finalState);
+                trackObject.activeObjectController.Turn(finalState);
             }
 
             // REMOVE TEMP OBJECTS
@@ -685,6 +697,8 @@ namespace TimeLine
                     }
                 }
             }
+
+            ParentLinkRestorer.Restor(TrackObjectDatas);
         }
 
         private void UpdateLastEditID(List<TrackObjectData> trackObjectDatas, SaveComposition saveComposition)

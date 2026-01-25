@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using TimeLine.TimeLine;
+using UnityEngine;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning
 {
@@ -64,7 +65,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 data.startTime = data.startTime - minTime + TimeLineConverter.Instance.TicksCurrentTime();
                 if (data is GroupGameObjectSaveData group)
                 {
-                    PasteGroup(group, generateNewSceneID: true, addToTitleCloneText: true);
+                    PasteGroup(group,  addToTitleCloneText: true);
                 }
                 else
                 {
@@ -75,13 +76,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             // dataCopy = new List<GameObjectSaveData>();
         }
         
-        private void PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true, bool generateNewSceneID = false, bool addToTitleCloneText = false)
+        private void PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true, bool addToTitleCloneText = false)
         {
             foreach (var child in data.children)
             {
                 if (child is GroupGameObjectSaveData childGroup)
                 {
-                    PasteGroup(childGroup, false, generateNewSceneID, addToTitleCloneText);
+                    PasteGroup(childGroup, false,  addToTitleCloneText);
                 }
             }
 
@@ -99,6 +100,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 if (data.lastEditID != composition.lastEditID)
                 {
+                    Debug.Log(data.lastEditID);
+                    Debug.Log(composition.lastEditID);
                     data.compositionID = Guid.NewGuid().ToString();
                     dataCopyComposition.compositionID = data.compositionID;
                     _saveComposition.AddComposition(dataCopyComposition);
@@ -108,7 +111,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
 
             if (addToStorage)
-                _objectLoader.LoadComposition(data, data.compositionID,  generateNewSceneID:generateNewSceneID, addToTitleCloneText:addToTitleCloneText);
+                _objectLoader.LoadComposition(data, data.compositionID,  generateNewSceneID:true, addToTitleCloneText:addToTitleCloneText);
         }
         
         internal bool PasteValidCheck(string past)

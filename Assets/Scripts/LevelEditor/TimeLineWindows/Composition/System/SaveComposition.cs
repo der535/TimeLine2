@@ -152,7 +152,7 @@ namespace TimeLine
             CompositionCard card = Instantiate(compositionCard, cardContainer);
 
             card.Setup(this,
-                () => { spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID); },
+                () => { spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID, true); },
                 () => { compositionEdit.Edit(FindCompositionDataById(data.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
@@ -195,7 +195,7 @@ namespace TimeLine
             CompositionCard card = Instantiate(compositionCard, cardContainer);
 
             card.Setup(this,
-                () => { spawner.LoadComposition(FindCompositionDataById(group.compositionID), group.compositionID); },
+                () => { spawner.LoadComposition(FindCompositionDataById(group.compositionID), group.compositionID, true); },
                 () => { compositionEdit.Edit(FindCompositionDataById(group.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
@@ -232,6 +232,8 @@ namespace TimeLine
                     var editedComposition = compositionData.DuplicateComposition();
                     var existing = _compositionData[i].DuplicateComposition();
 
+                    print(JsonConvert.SerializeObject(editedComposition, Formatting.Indented));
+                    
                     RemoveIDFromComposition(editedComposition);
                     RemoveIDFromComposition(existing);
                     
@@ -252,6 +254,7 @@ namespace TimeLine
                     // Обновляем только нужные поля, сохраняя ID
                     _compositionData[i] = compositionData;
                     _compositionData[i].compositionID = compositionID; // на случай, если он был перезаписан
+                    print(JsonConvert.SerializeObject( _compositionData[i], Formatting.Indented));
                     return;
                 }
             }

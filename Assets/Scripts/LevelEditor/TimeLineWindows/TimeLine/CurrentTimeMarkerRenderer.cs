@@ -1,5 +1,7 @@
+using System;
 using EventBus;
 using TimeLine;
+using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.TimeLine;
@@ -37,13 +39,22 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
         _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(OnTimeChangedSmooth);
         _gameEventBus.SubscribeTo<PanEvent>(OnScrollPan);
     }
-
+    
     public void OnTimeChangedSmooth(ref TickSmoothTimeEvent timeEvent)
     {
-        // Конвертируем тики в позицию на таймлайне
-        double beats = timeEvent.Time / TimeLineConverter.TICKS_PER_BEAT;
-        double seconds = beats * (60.0 / _musicData.bpm);
+        Build(timeEvent.Time);
+    }
 
+    private void Build(double ticks)
+    {
+        if (double.IsNaN(ticks)) ticks = 0;
+        // Конвертируем тики в позицию на таймлайне
+        double beats = ticks / TimeLineConverter.TICKS_PER_BEAT;
+        
+        
+        double seconds = beats * (60.0 / _musicData.bpm);
+        
+        
         float positionX = (float)(seconds * _timeLineScroll.Zoom *
                                   (_musicData.bpm / 60.0));
 
@@ -53,7 +64,7 @@ public class CurrentTimeMarkerRenderer : MonoBehaviour
             marker.transform.localPosition.z
         );
 
-        _ticksSaved = timeEvent.Time;
+        _ticksSaved = ticks;
     }
 
     public double GetTime()

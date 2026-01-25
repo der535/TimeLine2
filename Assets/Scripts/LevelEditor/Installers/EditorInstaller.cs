@@ -12,16 +12,20 @@ using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.Core.MusicOffset;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspector;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Controller;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Service;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.View;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.GeneralEditor;
+using TimeLine.LevelEditor.LevelEffects;
 using TimeLine.LevelEditor.LoadingScreen.Controllers;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
 using TimeLine.LevelEditor.outline;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.Select_composition;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
@@ -37,7 +41,7 @@ using Zenject;
 
 namespace TimeLine.LevelEditor.Core
 {
-    public class TimeLineInstaller2 : MonoInstaller
+    public class EditorInstaller : MonoInstaller
     {
         // --- Groups for Inspector Organization ---
 
@@ -88,6 +92,9 @@ namespace TimeLine.LevelEditor.Core
             
             Container.BindInstance(keyframeReferences).AsSingle();
             Container.Bind<BezierVerticalPosition>().AsSingle();
+            Container.Bind<BezierCursorValue>().AsSingle().NonLazy();;
+            Container.Bind<BezierVerticalPositionController>().AsSingle().NonLazy();;
+
         }
 
         private void InstallCore()
@@ -100,7 +107,7 @@ namespace TimeLine.LevelEditor.Core
 
             Container.Bind<M_KeyframeActiveTypeData>().AsSingle();
             Container.Bind<M_KeyframeSelectedStorage>().AsSingle();
-
+            
             Container.BindInstance(core.musicDataController).AsSingle();
             Container.BindInstance(core.musicLoaderController).AsSingle();
             Container.BindInstance(core.musicOffsetController).AsSingle();
@@ -180,6 +187,7 @@ namespace TimeLine.LevelEditor.Core
         private void InstallTools()
         {
             Container.BindInstance(tools.PolygonColliderEditor).AsSingle();
+            Container.BindInstance(tools.OutlineController).AsSingle();
             Container.BindInstance(tools.EdgeColliderEditor).AsSingle();
             Container.BindInstance(tools.SelectObjectController).AsSingle();
             Container.BindInstance(tools.DeselectObject).AsSingle();
@@ -269,7 +277,7 @@ namespace TimeLine.LevelEditor.Core
         [FormerlySerializedAs("KeyfeameVizualizer")] public KeyframeVizualizer keyframeVizualizer;
         public TimeLineMarkersController TimeLineMarkersController;
         public SpriteOutlineBuffer SpriteOutlineBuffer;
-        public ShakeCamera ShakeComponent;
+        public ShakeCameraController ShakeComponent;
         public VerticalBezierScroll VerticalBezierScroll;
     }
 
@@ -296,6 +304,7 @@ namespace TimeLine.LevelEditor.Core
     [Serializable]
     public class ToolReferences
     {
+        public OutlineController OutlineController;
         public EdgeColliderEditorHost EdgeColliderEditor;
         public PolygonColliderEditorHost PolygonColliderEditor;
         public SelectObjectController SelectObjectController;

@@ -125,6 +125,74 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             return (trackObjectData, sceneObject, branch);
         }
 
+        internal void GenerateNewSceneIDs(GroupGameObjectSaveData rootData)
+        {
+            var idMap = new Dictionary<string, string>();
+            // var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            // Debug.Log($"[SceneIDGen] Начало генерации новых ID для корня: {rootData.sceneObjectID}");
+
+            // Шаг 1: Генерация
+            BuildIdMap(rootData, idMap);
+
+            // Шаг 2: Обновление ссылок
+            UpdateParentReferences(rootData, idMap);
+
+            // stopwatch.Stop();
+            // Debug.Log(
+                // $"[SceneIDGen] Успешно завершено. Обработано объектов: {idMap.Count}. Время: {stopwatch.ElapsedMilliseconds}ms");
+        }
+
+        private void BuildIdMap(GameObjectSaveData data, Dictionary<string, string> idMap)
+        {
+            string oldId = data.sceneObjectID;
+            string newId = UniqueIDGenerator.GenerateUniqueID();
+
+            if (idMap.ContainsKey(oldId))
+            {
+                Debug.LogWarning($"[SceneIDGen] Обнаружен дубликат ID: {oldId}! Объект будет перезаписан в карте.");
+            }
+
+            idMap[oldId] = newId;
+            data.sceneObjectID = newId;
+
+            // Опционально: детальный лог для дебага (лучше закомментировать в продакшене)
+            // Debug.Log($"[SceneIDGen] Переназначение: {oldId} -> {newId}");
+
+            if (data is GroupGameObjectSaveData group && group.children != null)
+            {
+                foreach (var child in group.children)
+                {
+                    BuildIdMap(child, idMap);
+                }
+            }
+        }
+
+        private void UpdateParentReferences(GameObjectSaveData data, Dictionary<string, string> idMap)
+        {
+            if (!string.IsNullOrEmpty(data.parentObjectID))
+            {
+                if (idMap.TryGetValue(data.parentObjectID, out var newParentId))
+                {
+                    data.parentObjectID = newParentId;
+                }
+                else
+                {
+                    // Это важный момент: если родителя нет в карте, значит он вне текущей иерархии
+                    Debug.LogWarning(
+                        $"[SceneIDGen] Родительский ID {data.parentObjectID} для объекта {data.sceneObjectID} не найден в текущей сессии генерации.");
+                }
+            }
+
+            if (data is GroupGameObjectSaveData group && group.children != null)
+            {
+                foreach (var child in group.children)
+                {
+                    UpdateParentReferences(child, idMap);
+                }
+            }
+        }
+
         /// <summary>
         /// Позволяет загружать композицию из сохранения
         /// </summary>
@@ -148,9 +216,15 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
             List<GameObjectSaveData> children; //Создаём список дочерных обьъектов
             if (compositionData == null)
+            {
+                if (generateNewSceneID) GenerateNewSceneIDs(data);
                 children = data.children; //Если один объект сохранения то загружаем из основного
+            }
             else
+            {
+                if (generateNewSceneID) GenerateNewSceneIDs(compositionData);
                 children = compositionData.children; //Если нет то загружаем из файла композиции
+            }
 
             List<TrackObjectData>
                 trackObjectDatas = new List<TrackObjectData>(); //Пустой список дочерних объектов композиции
@@ -170,21 +244,21 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     {
                         (childTrackObject, childSceneObject, childBranch) = LoadComposition(childGroupData,
                             childGroupData.compositionID,
-                            groupChildData, generateNewSceneID: generateNewSceneID,
+                            groupChildData, generateNewSceneID: false,
                             addToTitleCloneText: addToTitleCloneText); //Рекурсивная загружка
                     }
                 }
                 else //Если дочерний объект не композиция
                 {
                     (childTrackObject, childSceneObject, childBranch) =
-                        LoadObject(childData, generateNewSceneID: generateNewSceneID,
+                        LoadObject(childData, generateNewSceneID: false,
                             addToTitleCloneText: addToTitleCloneText); //Загружаем обычный объект
                 }
 
                 if (childTrackObject != null) //Если дочерний объект не пустой
                 {
                     trackObjectDatas.Add(childTrackObject); //Добовляем в список дочерних объектов
-                    
+
                     ///////////////////////////////
                     // Debug.Log($"childTrackObject StartTimeInTicks{ childTrackObject.trackObject.StartTimeInTicks}");
                     // Debug.Log($"data.reduceLeft{ data.reduceLeft}");
@@ -192,8 +266,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     childTrackObject.trackObject.SetTime(
                         childTrackObject.trackObject.StartTimeInTicks + data.reduceLeft);
                     ////////////////////////////////
-                    
-                    
+
 
                     //Сохраняем трансформ дочернего объекта
                     Vector3 pos = childSceneObject.transform.localPosition;
@@ -218,7 +291,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 }
             }
 
-            _parentLinkRestorer.Restor(trackObjectDatas);
+            ParentLinkRestorer.Restor(trackObjectDatas);
             // foreach (var track in trackObjectDatas)
             // {
             //     if(!string.IsNullOrEmpty(track.trackObject._parentID))
@@ -243,10 +316,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
             string sceneObjectID = UniqueIDGenerator.GenerateUniqueID(); //
 
+            
             TrackObjectGroup trackObjectGroup =
                 _trackObjectStorage.AddGroup(groupGameObject.gameObject, groupTrackObject.trackObject,
                     groupTrackObject.branch, trackObjectDatas,
-                    sceneObjectID, compositionID, data.lastEditID, addToStorage); // ???????
+                    sceneObjectID, compositionID,  string.IsNullOrEmpty(data.lastEditID) ? compositionData?.lastEditID : data.lastEditID, addToStorage); // ???????
 
             groupGameObject.GetComponent<NameComponent>().Name.Value = groupTrackObject.branch.Name;
 
@@ -255,6 +329,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _main.SetTimeInTicks(currentTime);
 
             groupGameObject.GetComponent<SceneObjectLink>().trackObjectData = trackObjectGroup;
+            
+            // Debug.Log(trackObjectGroup.lastEditID);
 
             return (trackObjectGroup, groupGameObject, groupTrackObject.branch);
         }

@@ -18,6 +18,7 @@ namespace TimeLine
         [Space] [SerializeField] private PositionController positionController;
         [SerializeField] private RotationController rotationController;
         [SerializeField] private ScaleController scaleController;
+        [SerializeField] private SelectLock selectLock;
 
         public ActiveTool _activeTool;
         private GameEventBus _gameEventBus;
@@ -52,15 +53,14 @@ namespace TimeLine
             scaleButton.onClick.AddListener(() => ChangeTool(ActiveTool.Scale));
 
             _activeTool = ActiveTool.Position;
-            _gameEventBus.SubscribeTo((ref  SelectObjectEvent _) => { SetActiveTool(); });
-                _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => { SetActiveTool(); });
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
+            {
+                if (data.SelectedObjects.Count <= 0)
                 {
-                    if (data.SelectedObjects.Count <= 0)
-                    {
-                        DisableTool();
-                    }
-                    
-                });
+                    DisableTool();
+                }
+            });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => { DisableTool(); });
             _gameEventBus.SubscribeTo((ref TurnEditColliderEvent data) =>
             {
@@ -98,6 +98,7 @@ namespace TimeLine
             positionTool.SetActive(false);
             rotateTool.SetActive(false);
             scaleTool.SetActive(false);
+            selectLock.IsLocked = false;
         }
     }
 }

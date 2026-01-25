@@ -100,13 +100,23 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) =>
+            {
+
+                Build();
+            });
             // _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Build());
             _gameEventBus.SubscribeTo((ref KeyframeZoomEvent _) => PoseKeyframes());
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) =>
                 PoseKeyframes());
 
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+            {
+                foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
+                    Destroy(keyframe.gameObject);
+                _keyframes = new List<KeyframeObjectData>();
+                Clear();
+            });
             _gameEventBus.SubscribeTo((ref KeyframeTypeChangeEvent data) =>
             {
                 ActiveKeyframes(data.ActiveType == M_KeyframeType.Keyframe);
@@ -116,6 +126,9 @@ namespace TimeLine
         public void ActiveKeyframes(bool active)
         {
             _active = active;
+            foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
+                Destroy(keyframe.gameObject);
+            _keyframes = new List<KeyframeObjectData>();
             Build();
             foreach (var keyframe in _keyframes)
             {
@@ -184,12 +197,12 @@ namespace TimeLine
         [Button]
         private void Build()
         {
-            // print(_active);
-            if (!_active) return;
-
             foreach (var keyframe in _keyframes.Where(keyframe => keyframe))
                 Destroy(keyframe.gameObject);
-
+            _keyframes = new List<KeyframeObjectData>();
+            
+            if (!_active) return;
+            
             _keyframes = new List<KeyframeObjectData>();
 
             foreach (var tree in treeViewUI.AnimationLineController.Lines)

@@ -14,6 +14,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components
         /// true - enabled
         /// </summary>
         public Action<bool> IsActiveChanged;
+        public bool IsActive = false;
 
         protected override IEnumerable<InspectableParameter> GetParameters()
         {
@@ -29,15 +30,15 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components
         [Button]
         private void TurnOff()
         {
-            // Debug.Log(false, gameObject);
             IsActiveChanged?.Invoke(false);
+            IsActive = false;
         }
 
         [Button]
         private void TurnOn()
         {
-            // Debug.Log(true, gameObject);
             IsActiveChanged?.Invoke(true);
+            IsActive = true;
         }
     }
 }

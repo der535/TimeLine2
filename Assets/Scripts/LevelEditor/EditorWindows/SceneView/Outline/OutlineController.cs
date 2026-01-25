@@ -70,6 +70,15 @@ namespace TimeLine
             CheckSpriteRenderer(selectedObject);
         }
 
+        internal void ReDrawOutline()
+        {
+            Clear();
+            foreach (var track in _selectObjectController.SelectObjects)
+            {
+                DrawOutline(track.sceneObject);
+            }
+        }
+
         private void CheckGroup(TrackObjectGroup trackObjectGroup)
         {
             foreach (var trackObject in trackObjectGroup.TrackObjectDatas)

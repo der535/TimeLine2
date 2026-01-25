@@ -67,7 +67,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components
             {
                 if (_trackObjectDataPerfect != null) _trackObjectRemover.SingleRemove(_trackObjectDataPerfect);
                 _trackObjectDataPerfect = _facadeObjectSpawner
-                    .LoadComposition(prefabPerfect.Value, prefabPerfect.Value.compositionID).Item1;
+                    .LoadComposition(prefabPerfect.Value, prefabPerfect.Value.compositionID, true).Item1;
                 _trackObjectDataPerfect.sceneObject.transform.position = prefabPerfectPosition.Value;
                 _trackObjectDataPerfect.trackObject.Visual.SetActive(false);
                 _trackObjectDataPerfect.trackObject.isActive = false;
@@ -77,7 +77,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components
             {
                 if (_trackObjectDataMiddel != null) _trackObjectRemover.SingleRemove(_trackObjectDataMiddel);
                 _trackObjectDataMiddel = _facadeObjectSpawner
-                    .LoadComposition(prefabMiddel.Value, prefabMiddel.Value.compositionID).Item1;
+                    .LoadComposition(prefabMiddel.Value, prefabMiddel.Value.compositionID, true).Item1;
                 _trackObjectDataMiddel.sceneObject.transform.position = prefabMiddelPosition.Value;
                 _trackObjectDataMiddel.trackObject.Visual.SetActive(false);
                 _trackObjectDataMiddel.trackObject.isActive = false;
@@ -87,7 +87,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components
             {
                 if (_trackObjectDataMiss != null) _trackObjectRemover.SingleRemove(_trackObjectDataMiss);
                 _trackObjectDataMiss = _facadeObjectSpawner
-                    .LoadComposition(prefabMiss.Value, prefabMiss.Value.compositionID).Item1;
+                    .LoadComposition(prefabMiss.Value, prefabMiss.Value.compositionID, true).Item1;
                 _trackObjectDataMiss.sceneObject.transform.position = prefabMissPosition.Value;
                 _trackObjectDataMiss.trackObject.Visual.SetActive(false);
                 _trackObjectDataMiss.trackObject.isActive = false;

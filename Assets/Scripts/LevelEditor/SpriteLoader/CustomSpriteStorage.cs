@@ -6,6 +6,7 @@ using NaughtyAttributes;
 using Newtonsoft.Json;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.outline;
 using UnityEngine;
 using Zenject;
 
@@ -16,7 +17,9 @@ namespace TimeLine.LevelEditor.SpriteLoader
         private SaveLevel _saveLevel;
         private Main _main;
         private SpriteLoadController _spriteLoadController;
-        public GameEventBus _eventBus; 
+        private GameEventBus _eventBus; 
+        private SpriteOutlineBuffer _outlineBuffer;
+        private OutlineController _outlineController;
         
         // Теперь словарь хранит СПИСОК параметров для каждого TextureData
         private Dictionary<TextureData, List<SpriteParameter>> _spriteRenderers = new();
@@ -41,12 +44,14 @@ namespace TimeLine.LevelEditor.SpriteLoader
         }
 
         [Inject]
-        private void Constructor(SaveLevel saveLevel, GameEventBus eventBus, Main main, SpriteLoadController spriteLoadController)
+        private void Constructor(SaveLevel saveLevel, GameEventBus eventBus, Main main, SpriteLoadController spriteLoadController, SpriteOutlineBuffer spriteOutlineBuffer, OutlineController outlineController)
         {
             _saveLevel = saveLevel;
             _main = main;
             _eventBus = eventBus;
             _spriteLoadController = spriteLoadController;
+            _outlineBuffer = spriteOutlineBuffer;
+            _outlineController = outlineController;
         }
 
         private void Awake()
@@ -200,6 +205,8 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
                 // Обновляем все зарегистрированные SpriteRenderers
                 UpdateAllRenderersForKey(textureData, newSprite);
+                _outlineBuffer.UpdateOutline(newSprite);
+                _outlineController.ReDrawOutline();
             }));
         }
     }

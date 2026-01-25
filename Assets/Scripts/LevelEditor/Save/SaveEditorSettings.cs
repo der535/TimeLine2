@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.Save
 {
     public class SaveEditorSettings : MonoBehaviour
     {
@@ -25,13 +25,11 @@ namespace TimeLine
 
         void Start()
         {
-            _gameEventBus.SubscribeTo<ChangeEditorSettingsEvent>((ref ChangeEditorSettingsEvent data) =>
+            _gameEventBus.SubscribeTo((ref ChangeEditorSettingsEvent _) =>
             {
                 Save();
             });
         }
-        
-
         
         internal void Save()
         {

@@ -157,6 +157,26 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             rect.gameObject.SetActive(true);
         }
 
+        internal double GetGlobalTime()
+        {
+            return GetGlobalTime(this);
+        }
+
+        private double GetGlobalTime(TrackObject trackObject)
+        {
+            var realTime = 0d;
+            if (trackObject.offsetObject != null)
+            {
+                realTime = trackObject.StartTimeInTicks + GetGlobalTime(trackObject.offsetObject);
+            }
+            else
+            {
+                realTime = trackObject.StartTimeInTicks;
+            }
+            return realTime;
+        }
+
+        
         internal void Rename(string name)
         {
             nameText.text = name;

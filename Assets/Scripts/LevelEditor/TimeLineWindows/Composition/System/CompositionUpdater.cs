@@ -44,7 +44,7 @@ namespace TimeLine
                         if (groupChildData != null)
                         {
                             var (trackData, _, _) = facadeObjectSpawner.LoadComposition(groupChild, groupChild.compositionID,
-                                groupChildData, false, lastEditID:data.lastEditID);
+                              false,  groupChildData, false, lastEditID:data.lastEditID);
                             trackObjectDatas.Add(trackData);
                         }
                     }
