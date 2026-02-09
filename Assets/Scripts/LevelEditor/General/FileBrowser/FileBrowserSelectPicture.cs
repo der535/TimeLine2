@@ -20,7 +20,7 @@ public class FileBrowserSelectPicture : MonoBehaviour
 
 	IEnumerator ShowLoadDialogCoroutine(Action<List<string>> onComplete)
 	{
-		yield return FileBrowser.WaitForLoadDialog( FileBrowser.PickMode.Files, false, null, null, "Select Files", "Load" );
+		yield return FileBrowser.WaitForLoadDialog( FileBrowser.PickMode.Files, true, null, null, "Select Files", "Load" );
 		if( FileBrowser.Success )
 			onComplete.Invoke(FileBrowser.Result.ToList());
 	}

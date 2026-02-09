@@ -161,7 +161,6 @@ namespace TimeLine
             // 2. Загружаем корневые ГРУППЫ в правильном порядке
             foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
             {
-                //
                 var group = groupBase;
                 GroupGameObjectSaveData groupGameObjectSaveData =
                     composition.FindCompositionDataById(group.compositionID);
@@ -202,7 +201,8 @@ namespace TimeLine
                 var compData = new ComponentData
                 {
                     ComponentType = component.GetComponentTypeName(),
-                    Parameters = component.GetParameterData()
+                    Parameters = component.GetParameterData(),
+                    id = component.GetID()
                 };
                 saveData.Components.Add(compData);
             }
@@ -414,6 +414,7 @@ namespace TimeLine
     public class ComponentData
     {
         public string ComponentType;
+        public string id;
         public Dictionary<string, ParameterPacket> Parameters;
     }
 

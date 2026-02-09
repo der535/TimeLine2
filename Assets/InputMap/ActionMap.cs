@@ -217,6 +217,15 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Delete"",
+                    ""type"": ""Button"",
+                    ""id"": ""42f57ca6-15ec-45a3-b055-9117e72ae07d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -395,6 +404,17 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""action"": ""S"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f4092483-ab05-4dc3-a1d8-75416dc53cc8"",
+                    ""path"": ""<Keyboard>/delete"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Delete"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -406,6 +426,15 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""name"": ""PlayerMove"",
                     ""type"": ""PassThrough"",
                     ""id"": ""46ccad50-a116-44f1-bc76-9a338743012e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Space"",
+                    ""type"": ""Button"",
+                    ""id"": ""eaf60c78-4a46-4335-a08a-75555b7a3850"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -467,6 +496,17 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""action"": ""PlayerMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f3a1e5a1-1056-4685-a5c2-a25a084c16b1"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Space"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -523,9 +563,11 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         m_Editor_V = m_Editor.FindAction("V", throwIfNotFound: true);
         m_Editor_ESC = m_Editor.FindAction("ESC", throwIfNotFound: true);
         m_Editor_S = m_Editor.FindAction("S", throwIfNotFound: true);
+        m_Editor_Delete = m_Editor.FindAction("Delete", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_PlayerMove = m_Player.FindAction("PlayerMove", throwIfNotFound: true);
+        m_Player_Space = m_Player.FindAction("Space", throwIfNotFound: true);
         // LevelFinished
         m_LevelFinished = asset.FindActionMap("LevelFinished", throwIfNotFound: true);
         m_LevelFinished_CloseFinishScreen = m_LevelFinished.FindAction("CloseFinishScreen", throwIfNotFound: true);
@@ -625,6 +667,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     private readonly InputAction m_Editor_V;
     private readonly InputAction m_Editor_ESC;
     private readonly InputAction m_Editor_S;
+    private readonly InputAction m_Editor_Delete;
     /// <summary>
     /// Provides access to input actions defined in input action map "Editor".
     /// </summary>
@@ -693,6 +736,10 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @S => m_Wrapper.m_Editor_S;
         /// <summary>
+        /// Provides access to the underlying input action "Editor/Delete".
+        /// </summary>
+        public InputAction @Delete => m_Wrapper.m_Editor_Delete;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Editor; }
@@ -760,6 +807,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @S.started += instance.OnS;
             @S.performed += instance.OnS;
             @S.canceled += instance.OnS;
+            @Delete.started += instance.OnDelete;
+            @Delete.performed += instance.OnDelete;
+            @Delete.canceled += instance.OnDelete;
         }
 
         /// <summary>
@@ -813,6 +863,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @S.started -= instance.OnS;
             @S.performed -= instance.OnS;
             @S.canceled -= instance.OnS;
+            @Delete.started -= instance.OnDelete;
+            @Delete.performed -= instance.OnDelete;
+            @Delete.canceled -= instance.OnDelete;
         }
 
         /// <summary>
@@ -851,6 +904,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_PlayerMove;
+    private readonly InputAction m_Player_Space;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -866,6 +920,10 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/PlayerMove".
         /// </summary>
         public InputAction @PlayerMove => m_Wrapper.m_Player_PlayerMove;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Space".
+        /// </summary>
+        public InputAction @Space => m_Wrapper.m_Player_Space;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -895,6 +953,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @PlayerMove.started += instance.OnPlayerMove;
             @PlayerMove.performed += instance.OnPlayerMove;
             @PlayerMove.canceled += instance.OnPlayerMove;
+            @Space.started += instance.OnSpace;
+            @Space.performed += instance.OnSpace;
+            @Space.canceled += instance.OnSpace;
         }
 
         /// <summary>
@@ -909,6 +970,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @PlayerMove.started -= instance.OnPlayerMove;
             @PlayerMove.performed -= instance.OnPlayerMove;
             @PlayerMove.canceled -= instance.OnPlayerMove;
+            @Space.started -= instance.OnSpace;
+            @Space.performed -= instance.OnSpace;
+            @Space.canceled -= instance.OnSpace;
         }
 
         /// <summary>
@@ -1156,6 +1220,13 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnS(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Delete" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDelete(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Player" which allows adding and removing callbacks.
@@ -1171,6 +1242,13 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPlayerMove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Space" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSpace(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "LevelFinished" which allows adding and removing callbacks.

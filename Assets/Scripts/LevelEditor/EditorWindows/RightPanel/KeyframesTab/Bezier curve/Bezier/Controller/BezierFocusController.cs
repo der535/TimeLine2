@@ -25,11 +25,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
         private KeyframeReferences _keyframeReferences;
         private ActionMap _actionMap;
         private IReadActiveBezierPointsData _activeBezierPoints;
+        private M_KeyframeSelectedStorage _keyframeSelectController;
 
         [Inject]
         private void Construct(M_KeyframeSelectedStorage storage, BezierVerticalPosition bezierVerticalPosition,
             VerticalBezierZoom verticalBezierZoom, ScrollTimeLineKeyframe scrollTimeLineKeyframe,
-            TimeLineKeyframeZoom timeLineKeyframeZoom, KeyframeReferences keyframeReferences, ActionMap actionMap, IReadActiveBezierPointsData readActiveBezierPointsData)
+            TimeLineKeyframeZoom timeLineKeyframeZoom, ActionMap actionMap,
+            M_KeyframeSelectedStorage keyframeSelectController, KeyframeReferences keyframeReferences)
         {
             _storage = storage;
             _bezierVerticalPosition = bezierVerticalPosition;
@@ -37,14 +39,16 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
             _scrollTimeLineKeyframe = scrollTimeLineKeyframe;
             _timeLineKeyframeZoom = timeLineKeyframeZoom;
             _actionMap = actionMap;
+            _keyframeSelectController = keyframeSelectController;
+            _keyframeReferences = keyframeReferences;
         }
 
         private void Start()
         {
-            _actionMap.Editor.F.started += _ => Focus(_activeBezierPoints.Get());
+            _actionMap.Editor.F.started += _ => Focus(_keyframeSelectController.Keyframes);
         }
 
-        internal void Focus(List<BezierPoint> activePoints)
+        internal void Focus(List<global::TimeLine.Keyframe.Keyframe> activePoints)
         {
             // Список ключевых кадров, на которых будет производиться фокусировка
             List<global::TimeLine.Keyframe.Keyframe> focusPoints = new();
@@ -58,7 +62,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
             else if (activePoints.Count > 1)
             {
                 // Иначе, если активно более одной точки Безье — берём их ключевые кадры
-                focusPoints = activePoints.Select(x => x.BezierDragPoint._keyframe).ToList();
+                focusPoints = activePoints;
             }
             else
             {

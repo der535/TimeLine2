@@ -24,8 +24,13 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) =>
             {
-                _keyframe = data.Keyframe.Keyframe;
-                text.text = $"Time: {data.Keyframe.Keyframe.Ticks.ToString()}, Value: {data.Keyframe.Keyframe.GetData().GetValue()}";
+                _keyframe = data.Keyframe;
+                text.text = $"Time: {data.Keyframe.Ticks.ToString()}, Value: {data.Keyframe.GetData().GetValue()}";
+            });
+            
+            _gameEventBus.SubscribeTo((ref DeselectAllKeyframeEvent data) =>
+            {
+                text.text = string.Empty;
             });
         }
     }

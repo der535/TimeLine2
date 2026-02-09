@@ -99,6 +99,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     (IParameterComponent)ComponentRules.GetOrAddComponentSafely(component.ComponentType, sceneObject,
                         _container);
                 parameterComponent.SetParameterData(component.Parameters);
+                if(!string.IsNullOrEmpty(component.id) )parameterComponent.SetID(component.id);
             }
 
             // Добавляем трек и ключевые кадры
@@ -193,6 +194,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             }
         }
 
+        private double savedCurrentTime;
+
         /// <summary>
         /// Позволяет загружать композицию из сохранения
         /// </summary>
@@ -205,9 +208,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         internal (TrackObjectData, GameObject, Branch) LoadComposition(GroupGameObjectSaveData data,
             string compositionID,
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null,
-            bool generateNewSceneID = false, bool addToTitleCloneText = false)
+            bool generateNewSceneID = false, bool addToTitleCloneText = false, bool currentTimeSaved = false)
         {
             var (groupTrackObject, groupGameObject, groupBranch) = LoadObject(data, false); //Загружаем объект группы
+            
+            if(currentTimeSaved == false) savedCurrentTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(groupTrackObject.trackObject
                 .StartTimeInTicks); //Ставим время тамйлайна на старт группы что бы ничего не сьехало
 
@@ -239,13 +244,21 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 {
                     GroupGameObjectSaveData groupChildData = _saveComposition.FindCompositionDataById(childGroupData
                         .compositionID); //Ищем по Id в галереии композиций файл сохранения где лежат сохраннёные дочерние объекты
+                    
+                    // Debug.Log(childGroupData.compositionID);
+                    // Debug.Log(childGroupData.branch.Name);
+                    // Debug.Log(groupChildData.compositionID);
+                    // Debug.Log(groupChildData.lastEditID);
+                    // Debug.Log("--------------------------");
+                    childGroupData.lastEditID = groupChildData.lastEditID;
+                    
 
-                    if (groupChildData != null) //Если ничего не нашли, загружаем из основного файла
+                    if (groupChildData != null) //Если нашли, загружаем
                     {
                         (childTrackObject, childSceneObject, childBranch) = LoadComposition(childGroupData,
                             childGroupData.compositionID,
                             groupChildData, generateNewSceneID: false,
-                            addToTitleCloneText: addToTitleCloneText); //Рекурсивная загружка
+                            addToTitleCloneText: addToTitleCloneText, currentTimeSaved: true); //Рекурсивная загружка
                     }
                 }
                 else //Если дочерний объект не композиция
@@ -325,8 +338,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             groupGameObject.GetComponent<NameComponent>().Name.Value = groupTrackObject.branch.Name;
 
 
-            var currentTime = TimeLineConverter.Instance.TicksCurrentTime();
-            _main.SetTimeInTicks(currentTime);
+            
+            _main.SetTimeInTicks(savedCurrentTime);
 
             groupGameObject.GetComponent<SceneObjectLink>().trackObjectData = trackObjectGroup;
             

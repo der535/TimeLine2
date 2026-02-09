@@ -27,37 +27,43 @@ namespace TimeLine.LevelEditor.SpriteLoader
             fileBrowser.OpenFilePanel((value) =>
             {
                 if (value.Count == 0) return;
+                foreach (var VARIABLE in value)
+                {
+                    var sourcePath = VARIABLE;
+                    print(VARIABLE);
+                    string fileName = Path.GetFileNameWithoutExtension(VARIABLE);
+                    
+                    var id = System.Guid.NewGuid().ToString("N");
+                    var pngFileName = $"{id}.png";
+                    var destinationDir = Path.Combine(Application.persistentDataPath, "Levels", _saveLevel.LevelBaseInfo.levelName, "Pictures");
+                    Directory.CreateDirectory(destinationDir);
+                    var destinationPath = Path.Combine(destinationDir, pngFileName);
 
-                var sourcePath = value[0];
-                var id = System.Guid.NewGuid().ToString("N");
-                var pngFileName = $"{id}.png";
-                var destinationDir = Path.Combine(Application.persistentDataPath, "Levels", _saveLevel.LevelBaseInfo.levelName, "Pictures");
-                Directory.CreateDirectory(destinationDir);
-                var destinationPath = Path.Combine(destinationDir, pngFileName);
+                    // Загружаем изображение как байты
+                    var fileData = File.ReadAllBytes(sourcePath);
 
-                // Загружаем изображение как байты
-                var fileData = File.ReadAllBytes(sourcePath);
+                    // Создаём временный Texture2D
+                    var texture = new Texture2D(2, 2);
+                    texture.LoadImage(fileData); // автоматически обрабатывает jpg, png и др.
 
-                // Создаём временный Texture2D
-                var texture = new Texture2D(2, 2);
-                texture.LoadImage(fileData); // автоматически обрабатывает jpg, png и др.
+                    // Конвертируем в PNG
+                    var pngData = texture.EncodeToPNG();
 
-                // Конвертируем в PNG
-                var pngData = texture.EncodeToPNG();
+                    // Сохраняем
+                    File.WriteAllBytes(destinationPath, pngData);
 
-                // Сохраняем
-                File.WriteAllBytes(destinationPath, pngData);
+                    // // Очищаем текстуру (опционально)
+                    // DestroyImmediate(texture);
 
-                // // Очищаем текстуру (опционально)
-                // DestroyImmediate(texture);
-
-                CreateTexture(destinationPath, id);
+                    CreateTexture(destinationPath, id, fileName);
+                }
+             
             });
         }
 
-        public void CreateTexture(string filePath, string fileId)
+        public void CreateTexture(string filePath, string fileId, string fileName)
         {
-            TextureData textureData = new TextureData(fileId, "Sprite", FilterMode.Bilinear, 100f);
+            TextureData textureData = new TextureData(fileId, fileName, FilterMode.Bilinear, 100f);
             
             StartCoroutine(SpriteLoad.LoadSpriteFromPath(filePath, textureData, (sprite) =>
             {

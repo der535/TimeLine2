@@ -3,6 +3,9 @@ using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.RadialSunburstDrawer;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
 using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position;
 
 namespace TimeLine.Keyframe
@@ -19,11 +22,11 @@ namespace TimeLine.Keyframe
         public double OutWeight { get; set; }
         public InterpolationType Interpolation  { get; set; }
 
-        public enum InterpolationType
+        public enum InterpolationType : int
         {
-            Linear,
-            Bezier,
-            Hold
+            Linear = 0,
+            Bezier = 1,
+            Hold = 2
         }
         
         private AnimationData animationData;
@@ -46,11 +49,9 @@ namespace TimeLine.Keyframe
             animationData = data;
         }
 
-        public void Apply(GameObject target)
+        public void Apply(Component target)
         {
-            // Debug.Log(target);
-            // Debug.Log(animationData);
-            animationData.Apply(target);
+            animationData.Apply(target, animationData.GetValue());
         }
         
         public AnimationData GetData() => animationData;
@@ -62,22 +63,22 @@ namespace TimeLine.Keyframe
             return clone;
         }
 
-        public void Interpolate(Keyframe next, GameObject target, double t)
+        public void Interpolate(Keyframe next, Component target, double t)
         {
             AnimationData currentData = animationData;
             AnimationData nextData = next.animationData;
 
             if (currentData != null && nextData != null)
             {
-                currentData.Interpolate(nextData, t, this,next, Interpolation).Apply(target);
+                currentData.Interpolate(nextData, t, this,next, Interpolation, target);
             }
             else if (currentData != null)
             {
-                currentData.Apply(target);
+                currentData.Apply(target, currentData.GetValue());
             }
             else if (nextData != null)
             {
-                nextData.Apply(target);
+                nextData.Apply(target, nextData.GetValue());
             }
         }
         
@@ -147,6 +148,10 @@ namespace TimeLine.Keyframe
                 nameof(YSizeData) => new YSizeData(0),
                 nameof(XOffsetData) => new XOffsetData(0),
                 nameof(YOffsetData) => new YOffsetData(0),
+                nameof(RadialSunburstMaterial) => new RadialSunburstMaterialColor1(Color.black),
+                nameof(RadialSunburstMaterialColor1) => new RadialSunburstMaterialColor1(Color.black),
+                nameof(RadialSunburstMaterialColor2) => new RadialSunburstMaterialColor2(Color.black),
+                nameof(RadialSunburstMaterialRotationSpeed) => new RadialSunburstMaterialRotationSpeed(0),
                 _ => null
             };
         }

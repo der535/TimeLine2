@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "ActionMap",
     "maps": [
         {
@@ -126,6 +127,15 @@
                     "name": "S",
                     "type": "Button",
                     "id": "716090f6-ca0c-4b5f-9da5-166ac676b66f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Delete",
+                    "type": "Button",
+                    "id": "42f57ca6-15ec-45a3-b055-9117e72ae07d",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -308,6 +318,17 @@
                     "action": "S",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f4092483-ab05-4dc3-a1d8-75416dc53cc8",
+                    "path": "<Keyboard>/delete",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Delete",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -319,6 +340,15 @@
                     "name": "PlayerMove",
                     "type": "PassThrough",
                     "id": "46ccad50-a116-44f1-bc76-9a338743012e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Space",
+                    "type": "Button",
+                    "id": "eaf60c78-4a46-4335-a08a-75555b7a3850",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -380,6 +410,17 @@
                     "action": "PlayerMove",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "f3a1e5a1-1056-4685-a5c2-a25a084c16b1",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Space",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

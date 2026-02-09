@@ -238,6 +238,7 @@ GameObject:
   - component: {fileID: 5950031187223328306}
   - component: {fileID: 6356357988638457978}
   - component: {fileID: 1053793322350848052}
+  - component: {fileID: 4877640684043357140}
   m_Layer: 5
   m_Name: Object
   m_TagString: Untagged
@@ -363,3 +364,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4877640684043357140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7626721252778974719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b64570443dfa487eb71179f261499d3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ActiveObjectControllerComponent
+  IsActive: 0

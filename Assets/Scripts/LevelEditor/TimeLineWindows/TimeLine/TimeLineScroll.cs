@@ -74,9 +74,9 @@ namespace TimeLine
                 float newSpacing = currentSpacing * factor;
 
                 newSpacing = Mathf.Clamp(newSpacing, panMin, panMax);
-                Zoom = newSpacing - timeLineSettings.DistanceBetweenBeatLines;
+                Zoom = newSpacing;
 
-                _eventBus.Raise(new PanEvent(Zoom));
+                _eventBus.Raise(new TimeLineZoomEvent(Zoom));
             }
         }
     }

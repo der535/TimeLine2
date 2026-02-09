@@ -49,7 +49,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         /// <summary>
         /// Создаёт объект на сцене с компонентам спрайта
         /// </summary>
-        internal void CreateSceneObjectAndAddSprite(Sprite sprite)
+        internal TrackObjectData CreateSceneObjectAndAddSprite(Sprite sprite)
         {
             string id = UniqueIDGenerator.GenerateUniqueID();
 
@@ -71,10 +71,33 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             Branch branch = _branchCollection.AddBranch(id, name);
 
             // Добавляем в хранилище
-            _trackObjectStorage.Add(sceneObject, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
+            var TrackObjectData = _trackObjectStorage.Add(sceneObject, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
 
 
             sceneObject.GetComponent<NameComponent>().Name.Value = name;
+
+            return TrackObjectData;
+        }
+        
+        internal TrackObjectData CreateFullObject(string name)
+        {
+            string id = UniqueIDGenerator.GenerateUniqueID();
+
+            // Создаем сценный объект
+            GameObject sceneObject = CreateSceneObject();
+
+            // Создаем трек-объект
+            TrackObject trackObject = CreateTrackObject(_trackObjectSizeReader.GetSize(), name, _trackStorage.GetTrackLineByIndex(0), TimeLineConverter.Instance.TicksCurrentTime());
+
+            // Создаем ветку
+            Branch branch = _branchCollection.AddBranch(id, name);
+
+            // Добавляем в хранилище
+            var TrackObjectData = _trackObjectStorage.Add(sceneObject, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
+            
+            sceneObject.GetComponent<NameComponent>().Name.Value = name;
+
+            return TrackObjectData;
         }
         
         /// <summary>

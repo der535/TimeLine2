@@ -6,7 +6,9 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Input;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.ContextMenu;
 using TimeLine.LevelEditor.Controllers;
+using TimeLine.LevelEditor.CopyComponent;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.Core.MusicOffset;
@@ -94,6 +96,7 @@ namespace TimeLine.LevelEditor.Core
             Container.Bind<BezierVerticalPosition>().AsSingle();
             Container.Bind<BezierCursorValue>().AsSingle().NonLazy();;
             Container.Bind<BezierVerticalPositionController>().AsSingle().NonLazy();;
+            Container.Bind<SetPositionInTimeline>().AsSingle().NonLazy();;
 
         }
 
@@ -107,13 +110,17 @@ namespace TimeLine.LevelEditor.Core
 
             Container.Bind<M_KeyframeActiveTypeData>().AsSingle();
             Container.Bind<M_KeyframeSelectedStorage>().AsSingle();
+            Container.Bind<CopyComponentController>().AsSingle();
             
             Container.BindInstance(core.musicDataController).AsSingle();
             Container.BindInstance(core.musicLoaderController).AsSingle();
             Container.BindInstance(core.musicOffsetController).AsSingle();
             Container.BindInstance(core.SpeedController).AsSingle();
+            Container.BindInstance(core.PlayModeController).AsSingle();
             Container.BindInstance(core.playAndStopButton).AsSingle();
 
+            Container.BindInstance(core.contextMenuController).AsSingle();
+            
             Container.BindInstance(core.Main).AsSingle();
             Container.BindInstance(core.ParentMain).AsSingle();
             Container.BindInstance(core.Settings).AsSingle();
@@ -230,12 +237,15 @@ namespace TimeLine.LevelEditor.Core
 
         public PlayAndStopButton playAndStopButton;
 
+        public ContextMenuController contextMenuController;
+
         public Main Main;
         public ParentMain ParentMain;
         public TimeLineSettings Settings;
         public TimeLineConverter TimeLineConverter;
         public BarBeatCounter BarBeatCounter;
         public TimeLineSpeedController SpeedController;
+        public PlayModeController PlayModeController;
 
         [FormerlySerializedAs("objectSpawner")] [FormerlySerializedAs("TrackObjectSpawner")]
         public FacadeObjectSpawner facadeObjectSpawner;

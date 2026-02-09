@@ -84,6 +84,24 @@ namespace TimeLine
         {
             return _keyframes;
         }
+        
+        public List<Keyframe.Keyframe> GetAllKeyframesList()
+        {
+            List<Keyframe.Keyframe> _allKeyframes = new List<Keyframe.Keyframe>();
+            foreach (var tree in treeViewUI.AnimationLineController.Lines)
+            {
+                Track track = keyframeTrackStorage.GetTrack(tree.LogicalNode);
+
+                if (track == null) continue;
+
+                foreach (var keyframe in track.Keyframes)
+                {
+                    _allKeyframes.Add(keyframe);
+                }
+            }
+
+            return _allKeyframes;
+        }
 
         public void DisableAll()
         {
@@ -135,8 +153,6 @@ namespace TimeLine
                 keyframe.RectTransform.gameObject.SetActive(active);
                 if (_selectedKeyframesStorage.Keyframes.Contains(keyframe.KeyframeDrag._keyframe))
                 {
-                    Debug.Log(keyframe.Keyframe.Ticks, keyframe.KeyframeDrag.gameObject);
-
                     keyframe.KeyframeSelect.SelectColor(true);
                 }
             }
@@ -221,7 +237,6 @@ namespace TimeLine
                     keyframeDrag.Setup(keyframe, track.SortKeyframes);
                     keyframeObjectData.Keyframe = keyframe;
                     keyframeObjectData.Track = track;
-
 
                     _keyframes.Add(keyframeObjectData);
                 }

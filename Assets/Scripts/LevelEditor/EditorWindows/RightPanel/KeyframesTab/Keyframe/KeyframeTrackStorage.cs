@@ -7,6 +7,10 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using Zenject;
 
@@ -17,21 +21,31 @@ namespace TimeLine.Keyframe
         private List<TrackData> tracks = new();
 
         private GameEventBus _gameEventBus;
-        
+
         [SerializeField] private AnimationCurve curve;
         private BranchCollection _branchCollection;
+        private PlayAndStopButton _playAndStopButton;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, BranchCollection branchCollection)
+        private void Construct(GameEventBus gameEventBus, BranchCollection branchCollection, PlayAndStopButton playModeController)
         {
             _gameEventBus = gameEventBus;
             _branchCollection = branchCollection;
+            _playAndStopButton = playModeController;
         }
 
         void Awake()
         {
-            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) => Evaluate(data.Time));
+            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) =>
+            {
+                if (!_playAndStopButton._isPlaying)
+                {
+                    Evaluate(data.Time);
+                }
+            });
         }
+
+        internal List<TrackData> GetTracks() => tracks;
 
         [Button]
         void PrintTracks()
@@ -82,7 +96,7 @@ namespace TimeLine.Keyframe
                 branch.RemoveNode(track.TreeNode);
                 // _branchCollection.AddNodeToBranch()
                 // track.TreeNode
-                    
+
                 tracks.Remove(track);
             }
         }
@@ -117,21 +131,23 @@ namespace TimeLine.Keyframe
             _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));
         }
 
-        class TrackData
+       
+    }
+    
+    public class TrackData
+    {
+        public TrackData(TreeNode treeNode, Track track, TrackObject trackObject, string branchId)
         {
-            public TrackData(TreeNode treeNode, Track track, TrackObject trackObject, string branchId)
-            {
-                BranchId = branchId;
-                TreeNode = treeNode;
-                Track = track;
-                TrackObject = trackObject;
-            }
-
-            public string BranchId;
-            public TreeNode TreeNode;
-            public Track Track;
-            public TrackObject TrackObject;
-            public bool Active = true;
+            BranchId = branchId;
+            TreeNode = treeNode;
+            Track = track;
+            TrackObject = trackObject;
         }
+
+        public string BranchId;
+        public TreeNode TreeNode;
+        public Track Track;
+        public TrackObject TrackObject;
+        public bool Active = true;
     }
 }

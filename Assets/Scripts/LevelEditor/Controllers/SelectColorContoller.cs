@@ -16,6 +16,8 @@ namespace TimeLine
         private Color _previousValue;
         private string _gameObjectID;
 
+        private bool _ignorFirstChange = true;
+
         private void Construct(TrackObjectStorage trackObjectStorage)
         {
             _trackObjectStorage = trackObjectStorage;
@@ -24,6 +26,12 @@ namespace TimeLine
         {
             flexibleColorPicker.onColorChange.AddListener((value) =>
             {
+                if (_ignorFirstChange)
+                {
+                    _ignorFirstChange = false;
+                    return;
+                }
+                print("onColorChange");
                 CommandHistory.ExecuteCommand(new ColorParameterChangeCommand(_trackObjectStorage, _colorParameter,
                     _colorParameter.Name, _gameObjectID, _previousValue, value));
                 _previousValue = _colorParameter.Value;
@@ -37,11 +45,12 @@ namespace TimeLine
             _gameObjectID = gameObjectId;
             _colorParameter = colorParameter;
             rectTransform.gameObject.SetActive(true);
-            flexibleColorPicker.color = colorParameter.Value;
+            flexibleColorPicker.color = colorParameter.Value;            
         }
 
         public void Close()
         {
+            _ignorFirstChange = true;
             rectTransform.gameObject.SetActive(false);
         }
 

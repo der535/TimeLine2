@@ -49,7 +49,8 @@ namespace TimeLine.TimeLine
         [Inject]
         private void Construct(MainObjects mainObjects, Main main, TimeLineScroll timeLineScroll,
             TimeLineSettings timeLineSettings, M_MusicData mMusicData, M_MusicOffsetData mMusicOffsetData,
-            M_PlaybackState state, CurrentTimeMarkerRenderer currentTimeMarkerRenderer, M_AudioPlaybackService audioPlaybackService)
+            M_PlaybackState state, CurrentTimeMarkerRenderer currentTimeMarkerRenderer,
+            M_AudioPlaybackService audioPlaybackService)
         {
             _mainObjects = mainObjects;
             _main = main;
@@ -144,16 +145,17 @@ namespace TimeLine.TimeLine
             return (CursorPosition().x - offset - _mainObjects.ContentRectTransform.offsetMin.x) /
                    (_timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
         }
-        
-        internal (Vector2 position, bool isInside) GetMousePosition(RectTransform rectTransformParentObject, Camera camera)
+
+        internal (Vector2 position, bool isInside) GetMousePosition(RectTransform rectTransformParentObject,
+            Camera camera)
         {
             Vector2 mousePos = UnityEngine.Input.mousePosition;
 
             // 1. Конвертируем экранную точку в локальную
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rectTransformParentObject, 
-                mousePos, 
-                camera, 
+                rectTransformParentObject,
+                mousePos,
+                camera,
                 out Vector2 localPoint
             );
 
@@ -206,18 +208,26 @@ namespace TimeLine.TimeLine
 
         public float GetAnchorPositionFromTime(float time)
         {
+            // print(time / (60 / _mMusicData.bpm));
+            // print(_mainObjects.ContentRectTransform.offsetMin.x);
+            // print(time / (60 / _mMusicData.bpm) + _mainObjects.ContentRectTransform.offsetMin.x);
             return GetAnchorPositionFromBeatPosition(time / (60 / _mMusicData.bpm)) +
                    _mainObjects.ContentRectTransform.offsetMin.x;
         }
 
+        public float GetAnchorPositionFromTime2(float time)
+        {
+            return GetAnchorPositionFromBeatPosition(time / (60 / _mMusicData.bpm));
+        }
+
         public float GetAnchorPositionFromBeatPosition(float time)
         {
-            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, _timeLineScroll.Zoom);
+            return GetAnchorPosition(time, _timeLineScroll.Zoom);
         }
 
         public float GetAnchorPositionFromBeatPosition(float time, float pan)
         {
-            return GetAnchorPosition(time, _timeLineSettings.DistanceBetweenBeatLines, pan);
+            return GetAnchorPosition(time, pan);
         }
 
         // public float Interpolate(
@@ -260,41 +270,73 @@ namespace TimeLine.TimeLine
             switch (interpolationType)
             {
                 case Keyframe.Keyframe.InterpolationType.Hold:
-                    return start; // или end при t == 1f, если нужно "ступенчатое" поведение на границе
+                    return start;
 
                 case Keyframe.Keyframe.InterpolationType.Linear:
-                    return Mathf.Lerp(start, end, t);
+                    return start + (end - start) * t;
 
                 case Keyframe.Keyframe.InterpolationType.Bezier:
-                    // Используем AnimationCurve только для Bezier
-                    float time1 = (float)TicksToSeconds(current.Ticks);
-                    float time2 = (float)TicksToSeconds(next.Ticks);
-                    float evalTime = time1 + t * (time2 - time1);
+                    float dt = (float)TicksToSeconds(next.Ticks) - (float)TicksToSeconds(current.Ticks);
 
-                    var key1 = new UnityEngine.Keyframe(
-                        time: time1,
-                        value: start,
-                        inTangent: 0f,
-                        outTangent: (float)current.OutTangent,
-                        inWeight: 0f,
-                        outWeight: (float)current.OutWeight
-                    ) { weightedMode = WeightedMode.Out };
+                    // 1. Определяем контрольные точки для Безье
+                    // Веса (Weight) определяют "длину" касательной по горизонтали
+                    float wOut = (float)current.OutWeight;
+                    float wIn = (float)next.InWeight;
 
-                    var key2 = new UnityEngine.Keyframe(
-                        time: time2,
-                        value: end,
-                        inTangent: (float)next.InTangent,
-                        outTangent: 0f,
-                        inWeight: (float)next.InWeight,
-                        outWeight: 0f
-                    ) { weightedMode = WeightedMode.In };
+                    // Тангенсы (Tangent) - это производные (dy/dx)
+                    float tanOut = (float)current.OutTangent;
+                    float tanIn = (float)next.InTangent;
 
-                    var curve = new AnimationCurve(key1, key2);
-                    return curve.Evaluate(evalTime);
+                    // Контрольные точки для X (времени)
+                    float x0 = 0f;
+                    float x1 = wOut;
+                    float x2 = 1f - wIn;
+                    float x3 = 1f;
+
+                    // Контрольные точки для Y (значения)
+                    float y0 = start;
+                    float y1 = start + (tanOut * (wOut * dt));
+                    float y2 = end - (tanIn * (wIn * dt));
+                    float y3 = end;
+
+                    // 2. Решаем кубическое уравнение, чтобы найти 's' (параметр кривой) для нашего 't'
+                    float s = SolveCubicForT(x0, x1, x2, x3, t);
+
+                    // 3. Вычисляем итоговое значение по формуле Безье для Y
+                    return CalculateBezier(y0, y1, y2, y3, s);
 
                 default:
-                    return Mathf.Lerp(start, end, t);
+                    return start + (end - start) * t;
             }
+        }
+
+// Стандартная формула кубического Безье
+        private float CalculateBezier(float p0, float p1, float p2, float p3, float s)
+        {
+            float u = 1f - s;
+            return u * u * u * p0 +
+                   3f * u * u * s * p1 +
+                   3f * u * s * s * p2 +
+                   s * s * s * p3;
+        }
+
+// Поиск параметра s через итерации (т.к. время нелинейно при весах)
+        private float SolveCubicForT(float x0, float x1, float x2, float x3, float t)
+        {
+            float s = t; // Начальное приближение
+            for (int i = 0; i < 8; i++) // 8 итераций метода Ньютона обычно достаточно для float
+            {
+                float x = CalculateBezier(x0, x1, x2, x3, s);
+                float slope = (3f * (1f - s) * (1f - s) * (x1 - x0) +
+                               6f * (1f - s) * s * (x2 - x1) +
+                               3f * s * s * (x3 - x2));
+
+                if (Mathf.Abs(slope) < 1e-6) break;
+                s -= (x - t) / slope;
+                s = Mathf.Clamp01(s);
+            }
+
+            return s;
         }
 
         private void SafeInitializeCurve(float startValue = 0f, float endValue = 0f)
@@ -389,9 +431,9 @@ namespace TimeLine.TimeLine
             };
         }
 
-        public float GetAnchorPosition(float time, float distanceBetweenBeats, float pan)
+        public float GetAnchorPosition(float time, float pan)
         {
-            return time * (distanceBetweenBeats + pan);
+            return time * pan;
         }
 
         public static Vector3 GetPointBezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)

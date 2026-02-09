@@ -17,7 +17,7 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
         }
 
-        private void Start()
+        private void Awake()
         {
             SetActive(true);
             _actionMap.Editor.Disable();

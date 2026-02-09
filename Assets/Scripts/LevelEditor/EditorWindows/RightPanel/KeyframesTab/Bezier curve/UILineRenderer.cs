@@ -24,6 +24,8 @@ namespace Radishmouse
             }
         }
 
+        internal Vector2[] GetPoints() => points;
+
         public void SetPoints(Vector2[] newPoints)
         {
             points = newPoints ?? new Vector2[0];

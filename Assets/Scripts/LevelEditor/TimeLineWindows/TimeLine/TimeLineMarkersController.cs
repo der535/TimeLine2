@@ -26,7 +26,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine
 
         private void Start()
         {
-            _eventBus.SubscribeTo((ref PanEvent panEvent) => UpdatePosition());
+            _eventBus.SubscribeTo((ref TimeLineZoomEvent panEvent) => UpdatePosition());
             _eventBus.SubscribeTo((ref ScrollTimeLineEvent panEvent) => UpdatePosition());
         }
 

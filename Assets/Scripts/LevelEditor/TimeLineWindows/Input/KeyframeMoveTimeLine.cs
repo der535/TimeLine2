@@ -110,10 +110,7 @@ namespace TimeLine.Input
             double targetTicks = Math.Round(rawTicks / gridSizeInTicks) * gridSizeInTicks;
 
             // 2. ПРИВЯЗКА (СНАППИНГ) — добавляем условие зажатой клавиши
-            // Используйте KeyCode.LeftControl, KeyCode.LeftShift или любую другую
 
-            //todo Заменить на ключевые кадры
-            //
             if (_actionMap.Editor.LeftShift.IsPressed())
             {
                 double snapThresholdTicks = snapingRange * ticksPerPixel;
@@ -146,8 +143,8 @@ namespace TimeLine.Input
                 }
             }
 
-            foreach (var wrap in _keyframeVizualizer.GetAllKeyframesObjectData())
-                Check(wrap.Keyframe.Ticks + _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks);
+            foreach (var wrap in _keyframeVizualizer.GetAllKeyframesList())
+                Check(wrap.Ticks + _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks);
 
 
             // Только в самом конце присваиваем результат out параметру

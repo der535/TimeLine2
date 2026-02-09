@@ -134,14 +134,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         internal void Awake()
         {
             _gameEventBus.SubscribeTo<ScrollTimeLineEvent>(OnScroll);
-            _gameEventBus.SubscribeTo<PanEvent>(OnScrollPan);
+            _gameEventBus.SubscribeTo<TimeLineZoomEvent>(OnScrollPan);
             _gameEventBus.SubscribeTo((ref OpenEditorEvent _) => UpdateVisuals());
         }
 
         private void OnDestroy()
         {
             _gameEventBus.UnsubscribeFrom<ScrollTimeLineEvent>(OnScroll);
-            _gameEventBus.UnsubscribeFrom<PanEvent>(OnScrollPan);
+            _gameEventBus.UnsubscribeFrom<TimeLineZoomEvent>(OnScrollPan);
         }
 
         internal bool GetActive() => rect.gameObject.activeSelf;
@@ -230,7 +230,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
             while (current != null && depth < maxDepth)
             {
-                // print($"offsetObject[{depth}] = {current}");
                 current = current.offsetObject;
                 depth++;
             }
@@ -438,7 +437,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             UpdateVisuals();
         }
 
-        public void OnScrollPan(ref PanEvent panEvent)
+        public void OnScrollPan(ref TimeLineZoomEvent timeLineZoomEvent)
         {
             UpdateVisuals();
         }

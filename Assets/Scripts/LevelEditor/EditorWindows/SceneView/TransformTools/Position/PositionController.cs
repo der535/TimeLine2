@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
@@ -32,8 +33,11 @@ namespace TimeLine
 
         private bool _isUpdatingFromObject = false;
         
-        private List<TransformComponent> _otherObjects;
-        private List<TransformComponent> _allObjects;
+        private List<TransformComponent> _otherObjects = new();
+        private List<TransformComponent> _allObjects = new();
+        
+        private Action _toolFollowingObject;
+        private bool _updateFromObject;
 
         [Inject]
         private void Construct(GameEventBus eventBus, MainObjects mainObjects)
@@ -45,12 +49,22 @@ namespace TimeLine
 
         private void Start()
         {
+            _toolFollowingObject += () =>
+            {
+                _updateFromObject = true;
+                UpdateToolPosition();
+            };
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Tracks)));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
             {
                 SelectObject(data.SelectedObjects);
             });
             _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent sceneCameraUpdateViewEvent) =>  UpdateToolPosition());
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+            {
+                _allObjects = new List<TransformComponent>();
+                _otherObjects = new List<TransformComponent>();
+            });
 
             _gameEventBus.SubscribeTo(((ref GridPositionEvent data) => OnGridPositionChanged(data.StepSize)));
 
@@ -80,12 +94,10 @@ namespace TimeLine
             {
                 _rectTransformPositionTool.rotation = Quaternion.identity;
             }
+
+            _updateFromObject = false;
         }
         
-        public void EnableTool()
-        {
-            
-        }
 
         private void OnGridPositionChanged(float newStepSize)
         {
@@ -121,8 +133,21 @@ namespace TimeLine
             }
         }
 
+        public void EnableTool()
+        {
+            
+        }
+
         private void SelectObject(List<TrackObjectData> data)
         {
+            foreach (var VARIABLE in _allObjects)
+            {
+                if(VARIABLE == null || VARIABLE.XPosition == null) return;
+                VARIABLE.XPosition.OnValueChanged -= _toolFollowingObject;
+                VARIABLE.YPosition.OnValueChanged -= _toolFollowingObject;
+            }
+
+            
             //Собираем все остальные объекты
             _otherObjects = data
                 .Select(i => i.sceneObject.GetComponent<TransformComponent>())
@@ -140,6 +165,12 @@ namespace TimeLine
                 return;
             }
 
+            foreach (var VARIABLE in _allObjects)
+            {
+                VARIABLE.XPosition.OnValueChanged += _toolFollowingObject;
+                VARIABLE.YPosition.OnValueChanged += _toolFollowingObject;
+            }
+
             // ⭐ Получаем ЛОКАЛЬНУЮ позицию для GridScene
             Vector2 localPositionForGrid =
                 new Vector2(_transformComponent.XPosition.Value, _transformComponent.YPosition.Value);
@@ -155,11 +186,7 @@ namespace TimeLine
             gridScene.SetCurrentObjectPosition(localPositionForGrid);
 
             // Кэшируем последнюю снапнутую позицию (локальную, для гистерезиса)
-
-            // Назначаем локальную позицию обратно в компонент (без снапа, как и требовалось)
-            // _transformComponent.XPosition.Value = localPositionForGrid.x;
-            // _transformComponent.YPosition.Value = localPositionForGrid.y;
-
+            
             // --- Обновление UI инструмента с использованием ГЛОБАЛЬНОЙ позиции ---
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _mainObjects.ToolRectTransform,
@@ -169,34 +196,6 @@ namespace TimeLine
             {
                 return;
             }
-
-
-            //------------------------------- НОВАЯ ЛОГИКА ОТ СЮДА --------------------------------------
-            // _rectTransformPositionTool.anchoredPosition = localPoint; СТАРЫЙЙЙЙ
-
-            //
-            // // 1. Получаем вьюпорт-координаты объекта (от 0 до 1)
-            // // (0.5, 0.5) — это центр кадра камеры
-            // print(data[^1].sceneObject.transform.position);
-            // Vector3 viewportPoint = mapCamera.WorldToViewportPoint(data[^1].sceneObject.transform.position);
-            //
-            //
-            // // 2. Считаем локальную позицию внутри RawImage
-            // RectTransform rawRect = rawImage.rectTransform;
-            //
-            // // Переводим Viewport Point в координаты Rect, учитывая Pivot (точку опоры) RawImage
-            // float localX = (viewportPoint.x - rawRect.pivot.x) * rawRect.rect.width;
-            // float localY = (viewportPoint.y - rawRect.pivot.y) * rawRect.rect.height;
-            // Vector2 localPos = new Vector2(localX, localY);
-            //
-            // // 3. САМОЕ ВАЖНОЕ: Переводим локальную точку RawImage в мировое пространство
-            // // Это учитывает, где именно на экране находится сам RawImage, его масштаб и наклон
-            // Vector3 worldPoint = rawRect.TransformPoint(localPos);
-            //
-            // // 4. Устанавливаем позицию маркеру
-            // // Теперь маркеру все равно, какая у него иерархия, он привязан к позиции в мире экрана
-            // _rectTransformPositionTool.position = worldPoint;
-            //-----------------------------------------------------------------
             
            
             _rectTransformPositionTool.position =
@@ -215,38 +214,8 @@ namespace TimeLine
 
         private void UpdateObjectFromTool(RectTransform toolTransform)
         {
-            if (_isUpdatingFromObject || _transformComponent == null) return;
-
-
-// --------------------------------------------
-            // // 1. ПЕРЕВОДИМ ПОЗИЦИЮ ИНСТРУМЕНТА В VIEWPORT (0...1) РЕНДЕР-ТЕКСТУРЫ
-            // // Сначала получаем локальную точку внутри RawImage
-            // RectTransform rawRect = rawImage.rectTransform;
-            //
-            // // Используем позицию инструмента в мировом пространстве UI
-            // Vector3 toolWorldPos = toolTransform.position;
-            //
-            // if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rawRect, toolWorldPos, null,
-            //         out Vector2 localInRaw))
-            // {
-            //     _isUpdatingFromTool = false;
-            //     return;
-            // }
-            //
-            // // Конвертируем локальные координаты в нормализованные Viewport координаты (от 0 до 1)
-            // // Учитываем размеры Rect и его Pivot
-            // float viewportX = (localInRaw.x / rawRect.rect.width) + rawRect.pivot.x;
-            // float viewportY = (localInRaw.y / rawRect.rect.height) + rawRect.pivot.y;
-            //
-            // // 2. КОНВЕРТИРУЕМ VIEWPORT В МИРОВЫЕ КООРДИНАТЫ СЦЕНЫ
-            // // Для ViewportToWorldPoint нужно указать расстояние (Z), на котором находится объект от камеры
-            // float distanceToPlane =
-            //     Mathf.Abs(mapCamera.transform.position.z - _transformComponent.transform.position.z);
-            // Vector3 viewportPoint = new Vector3(viewportX, viewportY, distanceToPlane);
-            //
-            // Vector3 smoothWorldPosition3D = mapCamera.ViewportToWorldPoint(viewportPoint);
-            // ------------------------------------------------
-
+            if (_isUpdatingFromObject || _transformComponent == null || _updateFromObject ) return;
+            
 
             var smoothWorldPosition = sceneToRawImageConverter.UIToWorldPosition(toolTransform.position);
             // print(smoothWorldPosition);
@@ -281,25 +250,8 @@ namespace TimeLine
                 otherObject.YPosition.Value += differentPosition.y;
             }
 
-
-            //-------------------------------------
-            //
-            // // 5. СИНХРОНИЗИРУЕМ ИНСТРУМЕНТ (чтобы он "прилип" к заснапленной позиции объекта)
-            // // Повторяем логику из SelectObject: Мир -> Viewport -> RawImage -> World UI
-            // Vector3 finalViewport = mapCamera.WorldToViewportPoint(new Vector3(candidateSnappedPosition.x,
-            //     candidateSnappedPosition.y, _transformComponent.transform.position.z));
-            //
-            // float finalLocalX = (finalViewport.x - rawRect.pivot.x) * rawRect.rect.width;
-            // float finalLocalY = (finalViewport.y - rawRect.pivot.y) * rawRect.rect.height;
-            //
-            // // Устанавливаем итоговую позицию инструменту через TransformPoint
-            // _rectTransformPositionTool.position = rawRect.TransformPoint(new Vector2(finalLocalX, finalLocalY));
-            //-------------------------------------
-
             _rectTransformPositionTool.position =
                 sceneToRawImageConverter.WorldToUIPosition( GetCenter.GetSelectionCenter(_allObjects.Select(i => i.transform).ToList()));
-
-            
         }
     }
 }

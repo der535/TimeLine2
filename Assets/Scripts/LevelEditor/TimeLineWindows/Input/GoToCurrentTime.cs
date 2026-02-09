@@ -1,23 +1,25 @@
+using EventBus;
 using NaughtyAttributes;
 using UnityEngine;
 using Zenject;
 
 public class GoToCurrentTime : MonoBehaviour
 {
-    private TimeLineRenderer _timeLineRenderer;
+    private GameEventBus _eventBus;
+    private SetPositionInTimeline _setPositionInTimeline;
     private CurrentTimeMarkerRenderer _currentTimeMarkerRenderer;
 
     [Inject]
-    private void Construct(TimeLineRenderer timeLineRenderer,
-        CurrentTimeMarkerRenderer currentTimeMarkerRenderer)
+    private void Construct(GameEventBus eventBus, SetPositionInTimeline setPositionInTimeline, CurrentTimeMarkerRenderer timeLineMarkerRenderer)
     {
-        this._timeLineRenderer = timeLineRenderer;
-        this._currentTimeMarkerRenderer = currentTimeMarkerRenderer;
+        this._eventBus = eventBus;
+        _setPositionInTimeline  = setPositionInTimeline;
+        _currentTimeMarkerRenderer = timeLineMarkerRenderer;
     }
     
     [Button]
     public void Go()
     {
-        _timeLineRenderer.SetPosition(-_currentTimeMarkerRenderer.TimeLineAnchoredPosition);
+        _setPositionInTimeline.SetAnchorPosition(-_currentTimeMarkerRenderer.TimeLineAnchoredPosition);
     }
 }

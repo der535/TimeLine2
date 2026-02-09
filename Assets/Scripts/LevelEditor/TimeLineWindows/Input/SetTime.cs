@@ -24,8 +24,7 @@ namespace TimeLine.Input
         {
             inputField.onEndEdit.AddListener(time =>
             {
-                print((float)settingDisplayCurrentTime.ConvertFromFormatToTicks(time));
-                _main.SetTimeInTicks((float)settingDisplayCurrentTime.ConvertFromFormatToTicks(time));
+                _main.SetTimeInTicks((float)settingDisplayCurrentTime.ConvertFromFormatToTicks(time), true);
             });
         }
     }

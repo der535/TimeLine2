@@ -50,7 +50,7 @@ namespace TimeLine.Waveform
         private void Start()
         {
             _gameEventBus.SubscribeTo((ref OldPanEvent data) => BuildWaveForm(), -2);
-            _gameEventBus.SubscribeTo((ref PanEvent data) => BuildWaveForm(), -2);
+            _gameEventBus.SubscribeTo((ref TimeLineZoomEvent data) => BuildWaveForm(), -2);
             _gameEventBus.SubscribeTo((ref ScrollTimeLineEvent data) => BuildWaveForm(), -2);
             
             _gameEventBus.SubscribeTo(((ref MusicLoadedEvent data) =>

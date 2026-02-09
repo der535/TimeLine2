@@ -105,7 +105,8 @@ namespace TimeLine
                 // print(spriteRenderer.sprite.name);
                 outlinePart.sprite = _outlineBuffer.GetSprite(spriteRenderer.sprite.name) ?? spriteRenderer.sprite;
                 outlinePart.material = outlineMaterial;
-                outlinePart.color = new Color(1,1,1,0);
+                outlinePart.sortingOrder = 99;
+                outlinePart.color = new Color(1,1,1,1);
                 outlinePart.maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
                 outlines.Add(outlinePart);
 

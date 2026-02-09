@@ -25,16 +25,18 @@ namespace TimeLine.Input
         private TimeLineScroll _timeLineScroll;
         private ActionMap _actionMap;
         private TrackObjectStorage _trackObjectStorage;
+        private M_AudioPlaybackService _audioPlaybackService;
 
         [Inject]
         private void Construct(Main main, MainObjects mainObjects, TimeLineScroll timeLineScroll, ActionMap actionMap,
-            TrackObjectStorage trackObjectStorage)
+            TrackObjectStorage trackObjectStorage, M_AudioPlaybackService audioPlaybackService)
         {
             _main = main;
             _timeLineScroll = timeLineScroll;
             _mainObjects = mainObjects;
             _actionMap = actionMap;
             _trackObjectStorage = trackObjectStorage;
+            _audioPlaybackService = audioPlaybackService;
         }
 
         public void SetActive(bool isActive)
@@ -49,13 +51,14 @@ namespace TimeLine.Input
                 UnityEngine.Input.mousePosition, _mainObjects.MainCamera, out var vector2);
             return vector2;
         }
+
         public void ClickArea()
         {
             // 1. Переводим позицию мыши в локальные координаты RectTransform
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    clickArea, 
-                    UnityEngine.Input.mousePosition, 
-                    _mainObjects.MainCamera, 
+                    clickArea,
+                    UnityEngine.Input.mousePosition,
+                    _mainObjects.MainCamera,
                     out var localPoint))
             {
                 // 2. Проверяем, входит ли локальная точка в границы прямоугольника
@@ -85,11 +88,16 @@ namespace TimeLine.Input
                 // Перетаскивание уже начато — обновляем, пока мышь удерживается
                 if (isMouseHeld)
                 {
+                    if (_actionMap.Editor.LeftCtrl.IsPressed())
+                        _audioPlaybackService.Play();
+                    else
+                        _audioPlaybackService.Pause();
                     UpdateCursorPosition();
                 }
                 else
                 {
                     // Мышь отпущена — сбрасываем флаг, возвращаемся к строгому режиму
+                    _audioPlaybackService.Pause();
                     _dragStarted = false;
                     _isActive = false;
                 }
@@ -101,7 +109,8 @@ namespace TimeLine.Input
             Vector2 cursorPos = GetCursorPosition();
             float pixelX = cursorPos.x - _mainObjects.ContentRectTransform.offsetMin.x;
 
-            double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
+            double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT /
+                                   (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
             double rawTicks = pixelX * ticksPerPixel;
 
             // 1. Сетка работает всегда (базовое поведение)
@@ -110,17 +119,17 @@ namespace TimeLine.Input
 
             // 2. ПРИВЯЗКА (СНАППИНГ) — добавляем условие зажатой клавиши
             // Используйте KeyCode.LeftControl, KeyCode.LeftShift или любую другую
-            if (_actionMap.Editor.LeftShift.IsPressed()) 
+            if (_actionMap.Editor.LeftShift.IsPressed())
             {
-                double snapThresholdTicks = snapingRange * ticksPerPixel; 
-        
+                double snapThresholdTicks = snapingRange * ticksPerPixel;
+
                 if (TryGetSnapTicks(rawTicks, snapThresholdTicks, out double snappedPoint))
                 {
                     targetTicks = snappedPoint;
                 }
             }
 
-            _main.SetTimeInTicks(targetTicks);
+            _main.SetTimeInTicks(targetTicks, true);
         }
 
         private bool TryGetSnapTicks(double currentTicks, double threshold, out double finalTicks)

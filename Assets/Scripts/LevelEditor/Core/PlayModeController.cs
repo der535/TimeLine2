@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.LevelEditor.Player;
+using TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
 {
     public class PlayModeController : MonoBehaviour
     {
-        [SerializeField] private PlayerController player;
+        [FormerlySerializedAs("player")] [SerializeField] private PlayerFreeMoveController playerFreeMove;
         [Space]
         [SerializeField] private float startDelay;
         [SerializeField] private TrackObjectStorage trackObjectStorage;

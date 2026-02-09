@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using Newtonsoft.Json;
+using TimeLine.LevelEditor.ActionHistory;
 using TimeLine.TimeLine;
 using UnityEngine;
 
@@ -16,6 +18,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private SaveComposition _saveComposition;
         private ObjectFactory _objectFactory;
         private ObjectLoader _objectLoader;
+
         
         
         public TrackObjectClipboard(
@@ -58,6 +61,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         
         internal void PasteObjects()
         {
+            CommandHistory.IsRecording = false;
             if(dataCopy == null) return;
             var minTime = GetMinTime(dataCopy);
             foreach (var data in dataCopy)
@@ -72,7 +76,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     _objectLoader.LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true);
                 }
             }
-
+            CommandHistory.IsRecording = true;
             // dataCopy = new List<GameObjectSaveData>();
         }
         
@@ -100,8 +104,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 if (data.lastEditID != composition.lastEditID)
                 {
-                    Debug.Log(data.lastEditID);
+                    Debug.Log(composition.compositionID);
                     Debug.Log(composition.lastEditID);
+                    Debug.Log(data.lastEditID);
                     data.compositionID = Guid.NewGuid().ToString();
                     dataCopyComposition.compositionID = data.compositionID;
                     _saveComposition.AddComposition(dataCopyComposition);

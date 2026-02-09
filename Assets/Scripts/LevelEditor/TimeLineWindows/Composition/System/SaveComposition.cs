@@ -184,7 +184,7 @@ namespace TimeLine
                 }
             }
 
-            compositionUpdater.UpdateCompositions();
+            compositionUpdater.UpdateCompositions(group.compositionID);
         }
 
         public void AddComposition(GroupGameObjectSaveData group)

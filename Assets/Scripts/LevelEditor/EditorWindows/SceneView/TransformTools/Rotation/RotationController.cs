@@ -48,6 +48,10 @@ namespace TimeLine
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Tracks)));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Select(data.SelectedObjects));
             _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) => UpdataPosition());
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+            {
+                _selectedObjects = new List<RotationData>();
+            });
 
             // Логика перемещения инструмента за объектами
             _toolFollowingObject = UpdateToolUI;
@@ -60,10 +64,6 @@ namespace TimeLine
                 {
                     // Одиночный объект: просто меняем ZRotation
                     var obj = _selectedObjects[0];
-                    print(obj.StartRotation );
-                    print(deltaAngle );
-                    print(obj.StartRotation + deltaAngle);
-                    print(_gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle));
                     obj.Transform.ZRotation.Value = _gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle);
                 }
                 else
@@ -78,15 +78,10 @@ namespace TimeLine
                 // Перед началом вращения фиксируем текущие данные и центр
                 _groupCenter = GetCenter.GetSelectionCenter(_selectedObjects.Select(x => x.Transform).ToList());
                 
-                print(_selectedObjects.Count);
-                
                 foreach (var item in _selectedObjects)
                 {
-                    print(item.Transform);
                     item.StartPosition = new Vector2(item.Transform.XPosition.Value, item.Transform.YPosition.Value);
                     item.StartRotation = item.Transform.ZRotation.Value;
-                    print(item.StartPosition);
-                    print(item.StartRotation);
                 }
             };
 
@@ -235,7 +230,6 @@ namespace TimeLine
 
         private void OnDestroy()
         {
-            // Чистим подписки при уничтожении контроллера
             foreach (var item in _selectedObjects)
             {
                 if (item.Transform == null) continue;

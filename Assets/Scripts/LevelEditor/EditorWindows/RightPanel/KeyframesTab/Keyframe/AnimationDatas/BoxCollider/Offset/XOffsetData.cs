@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 using TimeLine.TimeLine;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
@@ -14,6 +16,17 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
             this.value = value;
         }
 
+        public override Type GetComponentType()
+        {
+            return typeof(BoxCollider2DComponent);
+        }
+
+        public override float4 PackDataToFloat4()
+        {
+           return new float4(value,0,0,0);
+        }
+
+
         public override AnimationData Clone()
         {
             return new XOffsetData(value);
@@ -26,7 +39,7 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
 
         public override void SetValue(object value)
         {
-            if(value is float f) this.value = f;
+            if (value is float f) this.value = f;
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
@@ -35,7 +48,7 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
 
         public override string GetDataType()
         {
-           return nameof(XOffsetData);
+            return nameof(XOffsetData);
         }
 
         public override JObject SerializeData()
@@ -54,11 +67,20 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
             }
         }
 
-        public override AnimationData Interpolate(
-            AnimationData other, 
-            double t, 
-            Keyframe current, 
-            Keyframe next, Keyframe.InterpolationType interpolationType)
+        public override void Apply(Component target, float4 value)
+        {
+            // Пытаемся привести target к нужному типу
+            if (target is BoxCollider2DComponent component)
+            {
+                component.OffsetX.Value = value.x; 
+            }
+        }
+
+        public override void Interpolate(
+            AnimationData other,
+            double t,
+            Keyframe current,
+            Keyframe next, Keyframe.InterpolationType interpolationType, Component target)
         {
             if (other is not XOffsetData otherPos)
                 throw new System.ArgumentException($"Interpolation requires another {GetType()}.");
@@ -73,14 +95,17 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
                 interpolationType
             );
 
-            return new XOffsetData(interpolatedValue);
+            Apply(target, interpolatedValue);
         }
         
-        
-        public override void Apply(GameObject target)
+        public override void Apply(Component target, object o)
         {
-            BoxCollider2DComponent transformComponent = target.GetComponent<BoxCollider2DComponent>();
-            transformComponent.OffsetX.Value = value;
+            // Пытаемся привести target к нужному типу
+            if (target is BoxCollider2DComponent component)
+            {
+                component.OffsetX.Value = (float)o; 
+            }
         }
+        
     }
 }

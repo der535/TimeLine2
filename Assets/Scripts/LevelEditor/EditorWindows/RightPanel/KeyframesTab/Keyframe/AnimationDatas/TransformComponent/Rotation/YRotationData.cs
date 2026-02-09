@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 using TimeLine.TimeLine;
+using Unity.Mathematics;
 
 namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 {
@@ -13,6 +15,12 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
         public YRotationData(float value)
         {
             this.value = value;
+        }
+
+
+        public override float4 PackDataToFloat4()
+        {
+            return new float4(value, 0, 0, 0);
         }
 
         public override AnimationData Clone()
@@ -54,7 +62,13 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
             }
         }
 
-        public override AnimationData Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType)
+        public override void Apply(Component target, float4 value)
+        {
+            if(target is global::TimeLine.TransformComponent component)
+                component.YRotation.Value = value.x;
+        }
+
+        public override void Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target)
         {
             if (other is not YRotationData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
@@ -69,13 +83,17 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
                 interpolationType
             );
 
-            return new YRotationData(interpolatedValue);
+            Apply(target, interpolatedValue);
         }
 
-        public override void Apply(GameObject target)
+        public override Type GetComponentType()
         {
-            global::TimeLine.TransformComponent transformComponent = target.GetComponent<global::TimeLine.TransformComponent>();
-            transformComponent.YRotation.Value = value;
+            return typeof(global::TimeLine.TransformComponent);
+        }
+        public override void Apply(Component target, object o)
+        {
+            if(target is global::TimeLine.TransformComponent component)
+                component.YRotation.Value = (float)o;
         }
     }
 }

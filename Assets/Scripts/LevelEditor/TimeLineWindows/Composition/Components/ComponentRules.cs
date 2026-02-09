@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components;
-using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
 using Zenject;
 
@@ -10,10 +9,8 @@ namespace TimeLine.Components
 {
     public static class ComponentRules
     {
-        private static readonly Dictionary<Type, Rule> _rules = new Dictionary<Type, Rule>
+        private static readonly Dictionary<Type, Rule> Rules = new()
         {
-            { typeof(RandomTransformComponent), new Rule(typeof(RandomTransformComponent), maxInstances: 1) },
-            { typeof(DynamicTransformСomponent), new Rule(typeof(DynamicTransformСomponent), maxInstances: 1) },
             { typeof(SpriteRendererComponent), new Rule(typeof(SpriteRendererComponent), maxInstances: 1) },
             { typeof(NameComponent), new Rule(typeof(NameComponent), maxInstances: 1) },
             { typeof(TransformComponent), new Rule(typeof(TransformComponent), maxInstances: 1) },
@@ -26,12 +23,13 @@ namespace TimeLine.Components
             { typeof(ShakeComponent), new Rule(typeof(ShakeComponent), maxInstances: 1) },
             { typeof(PolygonCollider2DComponent), new Rule(typeof(PolygonCollider2DComponent), maxInstances: 1) },
             { typeof(ActiveObjectControllerComponent), new Rule(typeof(ActiveObjectControllerComponent), maxInstances: 1) },
+            { typeof(RadialSunburstMaterial), new Rule(typeof(RadialSunburstMaterial), maxInstances: 1, requiredComponent: typeof(SpriteRendererComponent)) },
         };
 
         public static Dictionary<string, Type> GetAllComponents(GameObject gameObject)
         {
             Dictionary<string, Type> components = new Dictionary<string, Type>();
-            foreach (var rule in _rules)
+            foreach (var rule in Rules)
             {
                 if (CanAdd(rule.Key, gameObject))
                     components.Add(rule.Key.Name, rule.Key);
@@ -45,7 +43,7 @@ namespace TimeLine.Components
             if (string.IsNullOrWhiteSpace(componentName))
                 return null;
 
-            foreach (var rule in _rules)
+            foreach (var rule in Rules)
             {
                 if (string.Equals(rule.Key.Name, componentName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -60,8 +58,9 @@ namespace TimeLine.Components
         public static bool CanAdd(Type componentType, GameObject target)
         {
             // Debug.Log(componentType.Name);
+            if (componentType == null || target == null) return false;
             
-            if (!_rules.TryGetValue(componentType, out var rule))
+            if (!Rules.TryGetValue(componentType, out var rule))
             {
                 Debug.LogWarning($"No rule defined for component: {componentType.Name}");
                 return false;
@@ -96,7 +95,7 @@ namespace TimeLine.Components
             }
         }
 
-        public static Component AddComponentSafely(string componentName, GameObject target)
+        public static Component AddComponentSafely(string componentName, GameObject target, DiContainer container)
         {
             Type componentType = GetComponentType(componentName);
 
@@ -105,6 +104,7 @@ namespace TimeLine.Components
             if (CanAdd(componentType, target))
             {
                 var comp = target.AddComponent(componentType); // AddComponent с Type
+                container.Inject(comp); 
                 Debug.Log($"✅ Added {componentType.Name} to {target.name}");
                 return comp;
             }

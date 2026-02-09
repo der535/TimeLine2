@@ -9,7 +9,6 @@ using TimeLine.Installers;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
-using PanEvent = TimeLine.PanEvent;
 
 public class TimeLineMarkerRenderer : MonoBehaviour
 {
@@ -43,7 +42,7 @@ private ThemeStorage _themeStorage;
 
     private void Awake()
     {
-        _gameEventBus.SubscribeTo<PanEvent>((ref PanEvent f) => CalculateDistance());
+        _gameEventBus.SubscribeTo<TimeLineZoomEvent>((ref TimeLineZoomEvent f) => CalculateDistance());
         _gameEventBus.SubscribeTo<ScrollTimeLineEvent>((ref ScrollTimeLineEvent data) => CalculateDistance());
         _gameEventBus.SubscribeTo((ref ThemeChangedEvent data) =>
         {

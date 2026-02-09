@@ -1,92 +1,91 @@
-﻿Shader "Custom/URP_SpriteOutline_WorldSpace"
+﻿Shader "Custom/InvertedDiagonalLines"
 {
     Properties
     {
-        [MainTexture] _MainTex ("Sprite Texture", 2D) = "white" {}
-        _OutlineColor ("Outline Color", Color) = (1,1,1,1)
-        _OutlineThickness ("Thickness (World Units)", Float) = 0.05
-        _InnerCutoff ("Inner Cutoff", Range(0, 1)) = 0.05
+        _MainTex ("Sprite Texture", 2D) = "white" {}
+        _LineSpacing ("Line Spacing", Float) = 10
+        _LineWidth ("Line Width", Range(0, 1)) = 0.5
+        _Speed ("Animation Speed", Float) = 1
     }
 
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" "RenderPipeline"="UniversalPipeline" }
+        Tags 
+        { 
+            "Queue"="Transparent" 
+            "RenderType"="Transparent" 
+            "IgnoreProjector"="True" 
+            "PreviewType"="Plane"
+            "CanUseSpriteAtlas"="True"
+        }
 
-        Blend SrcAlpha OneMinusSrcAlpha
         Cull Off
+        Lighting Off
         ZWrite Off
+        Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
         {
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "UnityCG.cginc"
 
-            struct Attributes
+            struct appdata_t
             {
-                float4 positionOS : POSITION;
-                float2 uv : TEXCOORD0;
+                float4 vertex   : POSITION;
+                float4 color    : COLOR;
+                float2 texcoord : TEXCOORD0;
             };
 
-            struct Varyings
+            struct v2f
             {
-                float4 positionCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float3 positionWS : TEXCOORD1;
+                float4 vertex   : SV_POSITION;
+                fixed4 color    : COLOR;
+                float2 texcoord : TEXCOORD0;
+                float4 screenPos : TEXCOORD1;
             };
 
             sampler2D _MainTex;
-            float4 _MainTex_ST;
-            float4 _OutlineColor;
-            float _OutlineThickness;
-            float _InnerCutoff;
+            float _LineSpacing;
+            float _LineWidth;
+            float _Speed;
 
-            Varyings vert(Attributes input)
+            v2f vert(appdata_t v)
             {
-                Varyings output;
-                output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
-                output.positionCS = TransformWorldToHClip(output.positionWS);
-                output.uv = TRANSFORM_TEX(input.uv, _MainTex);
-                return output;
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.texcoord = v.texcoord;
+                o.color = v.color;
+                // Получаем экранные координаты для стабильности полос при движении
+                o.screenPos = ComputeScreenPos(o.vertex);
+                return o;
             }
 
-            float4 frag(Varyings input) : SV_Target
+            fixed4 frag(v2f i) : SV_Target
             {
-                float4 baseTex = tex2D(_MainTex, input.uv);
+                // Получаем исходный цвет и альфу спрайта
+                fixed4 texColor = tex2D(_MainTex, i.texcoord) * i.color;
                 
-                // Рисуем только там, где прозрачно (внутри вырезаем)
-                if (baseTex.a > _InnerCutoff) discard;
+                // Рассчитываем положение полос (экранные координаты для стабильности)
+                float2 pos = i.screenPos.xy / i.screenPos.w;
+                float aspect = _ScreenParams.x / _ScreenParams.y;
+                pos.x *= aspect; 
 
-                // Векторы осей объекта в мировом пространстве
-                // Позволяют перевести "мировое смещение" обратно в локальные UV
-                float3 worldRight = normalize(float3(GetObjectToWorldMatrix()[0].xyz));
-                float3 worldUp = normalize(float3(GetObjectToWorldMatrix()[1].xyz));
+                // Создаем маску полос
+                float lineValue = frac((pos.x + pos.y) * _LineSpacing + _Time.y * _Speed);
+                float lineMask = step(lineValue, _LineWidth);
+
+                // Инвертируем исходный цвет спрайта
+                fixed3 invertedRGB = fixed3(1.0, 1.0, 1.0) - texColor.rgb;
                 
-                // Масштаб объекта (чтобы понять размер 1 юнита в UV)
-                float scaleX = length(float3(GetObjectToWorldMatrix()[0].xyz));
-                float scaleY = length(float3(GetObjectToWorldMatrix()[1].xyz));
+                // Итоговая альфа: она должна быть только там, где есть и спрайт, и полоса
+                float finalAlpha = texColor.a * lineMask;
 
-                float totalAlpha = 0;
-                const int samples = 12; // Для мирового пространства 12 точек обычно хватает
-                const float PI2 = 6.283185;
+                // Если альфа нулевая, отсекаем пиксель для оптимизации
+                if (finalAlpha < 0.01) discard;
 
-                for (int i = 0; i < samples; i++)
-                {
-                    float angle = (float)i / samples * PI2;
-                    float2 dir = float2(cos(angle), sin(angle));
-                    
-                    // Вычисляем смещение в UV координатах
-                    // Толщина делится на масштаб: если объект в 2 раза больше, 
-                    // нужно пройти в 2 раза меньше "пути" в UV, чтобы получить тот же метр.
-                    float2 uvOffset = float2(dir.x / scaleX, dir.y / scaleY) * _OutlineThickness;
-                    
-                    totalAlpha += tex2D(_MainTex, input.uv + uvOffset).a;
-                }
-
-                float alpha = saturate(totalAlpha / samples * _OutlineColor.a * 10.0);
-
-                return float4(_OutlineColor.rgb, alpha);
+                return fixed4(invertedRGB, finalAlpha);
             }
             ENDHLSL
         }

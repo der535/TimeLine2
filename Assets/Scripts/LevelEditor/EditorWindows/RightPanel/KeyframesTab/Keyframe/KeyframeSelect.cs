@@ -38,7 +38,7 @@ namespace TimeLine.Keyframe
         public void Selected(bool selected)
         {
             if(selected) 
-                _gameEventBus.Raise(new SelectKeyframeEvent(keyframeObjectData));
+                _gameEventBus.Raise(new SelectKeyframeEvent(keyframeObjectData.Keyframe));
         }
 
         public void SelectColor(bool selected)

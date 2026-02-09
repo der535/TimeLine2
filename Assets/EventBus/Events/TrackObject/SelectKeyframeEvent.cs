@@ -4,9 +4,9 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public struct SelectKeyframeEvent : IEvent
     {
-        public KeyframeObjectData Keyframe { get; }
+        public Keyframe.Keyframe Keyframe { get; }
 
-        public SelectKeyframeEvent(KeyframeObjectData keyframe)
+        public SelectKeyframeEvent(Keyframe.Keyframe keyframe)
         {
             Keyframe = keyframe;
         }

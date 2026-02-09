@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 using TimeLine.TimeLine;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
@@ -14,6 +16,16 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
             this.value = value;
         }
 
+        public override Type GetComponentType()
+        {
+            return typeof(SpriteRendererComponent);
+        }
+
+        public override float4 PackDataToFloat4()
+        {
+            return new float4(value.r, value.g, value.b, value.a);
+        }
+
         public override AnimationData Clone()
         {
             return new ColorData(value);
@@ -26,7 +38,7 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
 
         public override void SetValue(object value)
         {
-            if(value is Color f) this.value = f;
+            if (value is Color f) this.value = f;
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
@@ -35,7 +47,7 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
 
         public override string GetDataType()
         {
-           return nameof(ColorData);
+            return nameof(ColorData);
         }
 
         public override JObject SerializeData()
@@ -54,18 +66,24 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
             }
         }
 
-        public override AnimationData Interpolate(
-            AnimationData other, 
-            double t, 
-            Keyframe current, 
+        public override void Apply(Component target, float4 value)
+        {
+            if (target is SpriteRendererComponent component)
+                component.SpriteColor.Value = new Color(value.x, value.y, value.z, value.w);
+        }
+
+        public override void Interpolate(
+            AnimationData other,
+            double t,
+            Keyframe current,
             Keyframe next,
-            Keyframe.InterpolationType interpolationType)
+            Keyframe.InterpolationType interpolationType, Component target)
         {
             if (other is not ColorData otherPos)
                 throw new System.ArgumentException($"Interpolation requires another {GetType()}.");
 
             float localT = (float)t;
-            
+
             float interpolatedAlpha = TimeLineConverter.Instance.Interpolate(
                 value.a,
                 otherPos.value.a,
@@ -98,19 +116,16 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
                 localT,
                 interpolationType
             );
-            
+
             Color result = new Color(interpolatedRed, interpolatedGreen, interpolatedBlue, interpolatedAlpha);
 
-            return new ColorData(result);
+            Apply(target, result);
         }
-        
-        
-        public override void Apply(GameObject target)
+
+        public override void Apply(Component target, object o)
         {
-            SpriteRendererComponent component = target.GetComponent<SpriteRendererComponent>();
-            // Debug.Log(target);
-            // Debug.Log(component);
-            component.SpriteColor.Value = value;
+            if (target is SpriteRendererComponent component)
+                component.SpriteColor.Value = (Color)o;
         }
     }
 }

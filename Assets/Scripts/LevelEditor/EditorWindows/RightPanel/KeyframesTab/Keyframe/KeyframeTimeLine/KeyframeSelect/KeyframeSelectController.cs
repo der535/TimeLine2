@@ -26,7 +26,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
             _storage = storage;
-            this._bezierController = bezierController;
+            _bezierController = bezierController;
             _activeBezierPoints = activeBezierPoints;
         }
 
@@ -34,9 +34,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
         {
             _storage.Keyframes = new List<global::TimeLine.Keyframe.Keyframe>();
             _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) =>
-                SelectKeyframe(data.Keyframe.Keyframe));
-            _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
-                SelectKeyframe(data.BezierPoint.BezierDragPoint._original));
+            {
+                SelectKeyframe(data.Keyframe);
+            });
+            // _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
+            // {
+            //     SelectKeyframe(data.BezierPoint.BezierDragPoint._original);
+            // });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) =>
             {
                 ClearStorage();

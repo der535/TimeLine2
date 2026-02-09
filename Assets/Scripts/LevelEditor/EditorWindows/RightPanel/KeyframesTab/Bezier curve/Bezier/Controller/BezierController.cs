@@ -182,7 +182,6 @@ namespace TimeLine
                 // Освобождаем старые объекты
                 foreach (var point in group)
                 {
-                    Debug.Log(point.gameObject,point.gameObject);
                     Destroy(point.gameObject);
                 }
             }

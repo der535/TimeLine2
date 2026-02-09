@@ -72,8 +72,10 @@ namespace TimeLine
             }
         }
 
-        internal void SetTimeInTicks(double ticks)
+        internal void SetTimeInTicks(double ticks, bool ignoreLastTime = false)
         {
+            if(ignoreLastTime == false) 
+                if(Math.Abs(_state.LastSetTime - _state.SmoothTimeInTicks) < 0.1f) return;
             double timeInSeconds = TimeLineConverter.Instance.TicksToSeconds(ticks);
             timeInSeconds += _musicOffsetData.Value;
 

@@ -34,6 +34,8 @@ namespace TimeLine.LevelEditor.SelectBox
         private KeyframeSelectController _keyframeSelectController;
         private IReadActiveBezierPointsData _activeBezierPoints;
 
+        private bool _ignoreSelfRaiseEvent = false;
+
 
         [Inject]
         private void Constructor(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
@@ -57,9 +59,36 @@ namespace TimeLine.LevelEditor.SelectBox
             _delta = new M_SelectBoxDelta();
 
             _gameEventBus.SubscribeTo((ref SelectObjectEvent selectBox) => { _state.IsActive = true; });
-            _gameEventBus.SubscribeTo((ref DeselectAllKeyframeEvent selectBox) => { _state.IsActive = true; });
-            _gameEventBus.SubscribeTo((ref SelectKeyframeEvent selectBox) => { _state.IsActive = false; });
-            _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) => { _state.IsActive = false; });
+            _gameEventBus.SubscribeTo((ref DeselectAllKeyframeEvent selectBox) =>
+            {
+                if (_ignoreSelfRaiseEvent)
+                {
+                    _ignoreSelfRaiseEvent = false;
+                    return;
+                }
+
+                _state.IsActive = true;
+            });
+            _gameEventBus.SubscribeTo((ref SelectKeyframeEvent selectBox) =>
+            {
+                if (_ignoreSelfRaiseEvent)
+                {
+                    _ignoreSelfRaiseEvent = false;
+                    return;
+                }
+
+                _state.IsActive = false;
+            });
+            _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
+            {
+                if (_ignoreSelfRaiseEvent)
+                {
+                    _ignoreSelfRaiseEvent = false;
+                    return;
+                }
+
+                _state.IsActive = false;
+            });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent deselectBox) => { _state.IsActive = false; });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent all) => { _state.IsActive = false; });
         }
@@ -145,8 +174,6 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private void UpdateSelection() //Логика подсчёта выделенных объектов
         {
-            int couter = 0;
-
             if (_keyframeActiveTypeData.ActiveType == M_KeyframeType.Keyframe)
             {
                 foreach (var keyfrmae in _keyframeVizualizer.GetAllKeyframesObjectData())
@@ -156,6 +183,8 @@ namespace TimeLine.LevelEditor.SelectBox
                         if (!_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.KeyframeDrag._keyframe))
                         {
                             _keyframeSelectController.SelectNoClear(keyfrmae.KeyframeDrag._keyframe);
+                            _ignoreSelfRaiseEvent = true;
+                            _gameEventBus.Raise(new SelectKeyframeEvent(keyfrmae.KeyframeDrag._keyframe));
                         }
                     }
                     else
@@ -163,6 +192,11 @@ namespace TimeLine.LevelEditor.SelectBox
                         if (_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.KeyframeDrag._keyframe))
                         {
                             _keyframeSelectController.DeselectKeyframe(keyfrmae.KeyframeDrag._keyframe);
+                            _ignoreSelfRaiseEvent = true;
+                            if (_keyframeSelectedStorage.Keyframes.Count > 0)
+                                _gameEventBus.Raise(new SelectKeyframeEvent(_keyframeSelectedStorage.Keyframes[^1]));
+                            else
+                                _gameEventBus.Raise(new DeselectAllKeyframeEvent());
                         }
                     }
                 }
@@ -173,16 +207,24 @@ namespace TimeLine.LevelEditor.SelectBox
                 {
                     if (CheckIsSelected(keyfrmae.RectTransform, selectBox))
                     {
-                        if (!_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.BezierDragPoint._keyframe))
+                        if (!_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.BezierDragPoint._original))
                         {
-                            _keyframeSelectController.SelectNoClear(keyfrmae.BezierDragPoint._keyframe);
+                            _keyframeSelectController.SelectNoClear(keyfrmae.BezierDragPoint._original);
+                            _ignoreSelfRaiseEvent = true;
+                            print(keyfrmae.BezierDragPoint._original);
+                            _gameEventBus.Raise(new SelectKeyframeEvent(keyfrmae.BezierDragPoint._original));
                         }
                     }
                     else
                     {
-                        if (_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.BezierDragPoint._keyframe))
+                        if (_keyframeSelectedStorage.Keyframes.Contains(keyfrmae.BezierDragPoint._original))
                         {
-                            _keyframeSelectController.DeselectKeyframe(keyfrmae.BezierDragPoint._keyframe);
+                            _keyframeSelectController.DeselectKeyframe(keyfrmae.BezierDragPoint._original);
+                            _ignoreSelfRaiseEvent = true;
+                            if (_keyframeSelectedStorage.Keyframes.Count > 0)
+                                _gameEventBus.Raise(new SelectKeyframeEvent(_keyframeSelectedStorage.Keyframes[^1]));
+                            else
+                                _gameEventBus.Raise(new DeselectAllKeyframeEvent());
                         }
                     }
                 }

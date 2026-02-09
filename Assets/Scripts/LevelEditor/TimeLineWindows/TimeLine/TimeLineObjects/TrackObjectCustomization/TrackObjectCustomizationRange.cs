@@ -1,4 +1,5 @@
 using EventBus;
+using TimeLine.EventBus.Events.Input;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -19,7 +20,7 @@ namespace TimeLine
         private void Constructor(GameEventBus gameEventBus)
         {
             _gameEventBus = gameEventBus;
-            _gameEventBus.SubscribeTo((ref PanEvent data) =>
+            _gameEventBus.SubscribeTo((ref TimeLineZoomEvent data) =>
             {
                 UpdateImage();
                 print("pan update");

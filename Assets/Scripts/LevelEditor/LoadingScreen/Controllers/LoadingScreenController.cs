@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using EventBus;
 using TimeLine.LevelEditor.LoadingScreen.Model;
 using TimeLine.LevelEditor.LoadingScreen.View;
 using UnityEngine;
+using Zenject;
 
 namespace TimeLine.LevelEditor.LoadingScreen.Controllers
 {
@@ -11,10 +13,18 @@ namespace TimeLine.LevelEditor.LoadingScreen.Controllers
         [SerializeField] private LoadingViewBase _viewBase;
         [SerializeField] private LoadingStepsStorage storage = new();
 
+        private GameEventBus _eventBus;
+        
         internal void Clear()
         {
             _viewBase.UpdateUI(0, String.Empty);
             storage.Value.Clear();
+        }
+
+        [Inject]
+        private void Construct(GameEventBus gameEventBus)
+        {
+            _eventBus = gameEventBus;
         }
 
         internal void AddStep(string desc, Action action) => storage.AddStep(desc, action);
@@ -64,6 +74,9 @@ namespace TimeLine.LevelEditor.LoadingScreen.Controllers
             _viewBase.UpdateUI(1, "Загрузка завершена!");
             
             _viewBase.HideLoadingScreen();
+            _eventBus.Raise(new LevelLoadedEvent());
         }
     }
+
+
 }

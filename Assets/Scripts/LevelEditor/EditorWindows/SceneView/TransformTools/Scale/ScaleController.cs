@@ -50,18 +50,22 @@ namespace TimeLine
             _eventBus.SubscribeTo(((ref SelectObjectEvent data) =>
             {
                 SetPosition(data.Tracks);
-
             }));
             _eventBus.SubscribeTo((ref DeselectObjectEvent data) =>
             {
                 SetPosition(data.SelectedObjects);
-
             });
             _eventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) =>
             {
                 UpdatePosition();
             });
+            _eventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+            {
+                _transformComponent = new List<(TransformComponent transformComponent, Vector2 startScale, Vector2 startPosition)>();
+            });
 
+            _toolFollowingObject += () => UpdatePosition();
+            
             scaleTool.HorizontalDeltaStart += SetStartScale;
             scaleTool.VerticalDeltaStart += SetStartScale;
 
@@ -193,14 +197,10 @@ namespace TimeLine
 
         private void SetPosition(List<TrackObjectData> listObjects)
         {
-            // print("SetPosition");
-            // print(_transformComponent.Count);
             foreach (var VARIABLE in _transformComponent)
             {
                 if(VARIABLE.Item1.XPosition == null || VARIABLE.Item1.YPosition == null) continue;
-                // print(VARIABLE.Item1.XPosition);
-                // print(VARIABLE.Item1.YPosition);
-                // print(_toolFollowingObject);
+
                 VARIABLE.Item1.XPosition.OnValueChanged -= _toolFollowingObject;
                 VARIABLE.Item1.YPosition.OnValueChanged -= _toolFollowingObject;
             }

@@ -1,0 +1,181 @@
+﻿using System;
+using System.Collections.Generic;
+using NaughtyAttributes;
+using Newtonsoft.Json;
+using UnityEngine;
+using Zenject;
+
+namespace TimeLine.LevelEditor.ValueEditor.Save
+{
+    public class SaveNodes : MonoBehaviour
+    {
+        private NodeCreator _nodeCreator;
+        private NodeConnector _nodeConnection;
+        
+        private string save;
+
+        [Inject]
+        private void Construct(NodeCreator nodeCreator, NodeConnector nodeConnector)
+        {
+            _nodeCreator = nodeCreator;
+            _nodeConnection = nodeConnector;
+        }
+
+        [Button]
+        private void Save()
+        {
+            save = SaveGraphToJson(_nodeCreator.GetNodes());
+            print(save);
+        }
+
+        [Button]
+        private void Load()
+        {
+            LoadGraph(save, DataType.Float);
+        }
+
+
+        public string SaveGraphToJson(List<Node> activeNodes)
+        {
+            var graphData = new GraphSaveData();
+
+            foreach (var node in activeNodes)
+            {
+                // 1. Формируем запись о ноде
+                var nEntry = new NodeSaveEntry
+                {
+                    Id = node.Logic.Id,
+                    TypeFullName = node.Logic.GetType().AssemblyQualifiedName,
+                    Position = node.GetComponent<RectTransform>().anchoredPosition,
+                    // Просто копируем словарь. Newtonsoft сам разберется с object (float, Color и т.д.)
+                    ManualValues = new Dictionary<int, object>(node.Logic.ManualValues)
+                };
+                graphData.Nodes.Add(nEntry);
+
+                // 2. Сохраняем только входящие связи ноды (чтобы не дублировать их)
+                foreach (var connPair in node.Logic.ConnectedInputs)
+                {
+                    graphData.Connections.Add(new ConnectionSaveEntry
+                    {
+                        InNodeId = node.Logic.Id,
+                        InIndex = connPair.Key,
+                        OutNodeId = connPair.Value.node.Id,
+                        OutIndex = connPair.Value.outputIndex
+                    });
+                }
+            }
+
+            // Настройки для красивого JSON и поддержки типов
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                TypeNameHandling = TypeNameHandling.Auto // Это сохранит информацию о типах внутри object
+            };
+
+            return JsonConvert.SerializeObject(graphData, settings);
+        }
+        
+        public void LoadGraph(string json, DataType type)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto // Позволяет восстанавливать типы, если они указаны в JSON
+            };
+
+            var data = JsonConvert.DeserializeObject<GraphSaveData>(json, settings);
+            var idToNode = new Dictionary<string, Node>();
+
+            foreach (var nEntry in data.Nodes)
+            {
+                // 1. Создаем логику через Reflection
+                Type logicType = Type.GetType(nEntry.TypeFullName);
+                NodeLogic logic = (NodeLogic)Activator.CreateInstance(logicType);
+                logic.Id = nEntry.Id;
+
+                if (logic is OutputLogic outputLogic)
+                {
+                    outputLogic.Initialize(type);
+                }
+
+                // 2. Исправляем типы в ManualValues
+                FixManualValues(nEntry.ManualValues, logic);
+
+                // 3. Создаем визуальную ноду (через твой Creator)
+                Node newNode = _nodeCreator.CreateNode(logic, logicType.Name, nEntry.Position);
+                idToNode[logic.Id] = newNode;
+            }
+
+            // 4. Восстанавливаем связи (как обсуждали ранее)
+            _nodeConnection.RestoreConnections(data.Connections, idToNode);
+        }
+        
+        public NodeLogic LoadLogicOnly(string json, DataType type)
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+            var data = JsonConvert.DeserializeObject<GraphSaveData>(json, settings);
+    
+            Dictionary<string, NodeLogic> idToLogic = new();
+            NodeLogic finalNode = null;
+
+            // 1. Создаем только объекты логики
+            foreach (var nEntry in data.Nodes)
+            {
+                Type logicType = Type.GetType(nEntry.TypeFullName);
+                NodeLogic logic = (NodeLogic)Activator.CreateInstance(logicType);
+                logic.Id = nEntry.Id;
+
+                // Если это наш Output — запоминаем его как точку входа для вычислений
+                if (logic is OutputLogic output)
+                {
+                    output.Initialize(type); // Тот самый метод инициализации
+                    finalNode = output;
+                }
+
+                // Заполняем ManualValues (не забудь FixManualValues для типов)
+                FixManualValues(nEntry.ManualValues, logic);
+        
+                idToLogic.Add(logic.Id, logic);
+            }
+
+            // 2. Связываем логику (без визуальных линий!)
+            foreach (var cData in data.Connections)
+            {
+                if (idToLogic.TryGetValue(cData.OutNodeId, out var outL) &&
+                    idToLogic.TryGetValue(cData.InNodeId, out var inL))
+                {
+                    inL.ConnectInput(cData.InIndex, outL, cData.OutIndex);
+                }
+            }
+
+            return finalNode; // Возвращаем "голову" графа
+        }
+
+
+        private void FixManualValues(Dictionary<int, object> values, NodeLogic logic)
+        {
+            foreach (var key in new List<int>(values.Keys))
+            {
+                object val = values[key];
+
+                // Newtonsoft часто парсит float как double
+                if (val is double d) val = (float)d;
+                if (val is long l) val = (int)l;
+
+                // Если в JSON это пришло как JObject (например, Color), 
+                // нам нужно вручную конвертировать его обратно в тип Unity
+                if (val is Newtonsoft.Json.Linq.JObject jObject)
+                {
+                    // Определяем, какой тип ожидается в этом порту
+                    var portType = logic.InputDefinitions[key].type; 
+            
+                    if (portType == DataType.Color)
+                        val = jObject.ToObject<Color>();
+                    else if (portType == DataType.Vector2)
+                        val = jObject.ToObject<Vector2>();
+                }
+
+                logic.ManualValues[key] = val;
+            }
+        }
+    }
+}

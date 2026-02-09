@@ -1,5 +1,6 @@
 using EventBus;
 using TimeLine.EventBus.Events.Bezier;
+using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -32,7 +33,8 @@ namespace TimeLine.Bezier_curve
         {
             bezierPoint.Select(true);
             pointImage.color = selectedColor;
-            _gameEventBus.Raise(new BezierSelectPointEvent(bezierPoint));
+            _gameEventBus.Raise(new SelectKeyframeEvent(bezierPoint.BezierDragPoint._original));
+            // _gameEventBus.Raise(new BezierSelectPointEvent(bezierPoint));
         }
         
         public void SelectNoEvent()

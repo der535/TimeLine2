@@ -1,19 +1,37 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.TimeLine;
-using TimeLine;
+using Unity.Mathematics;
 using UnityEngine;
 
-namespace TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position
+namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position
 {
     [System.Serializable]
     public class XPositionData : AnimationData
     {
         public float value;
+        public OutputLogic logic;
+        public string SaveGraph;
+        
 
         public XPositionData(float value)
         {
             this.value = value;
+            logic = new OutputLogic();
+            logic.Initialize(DataType.Float);
+            logic.ManualValues[0] = value;
+        }
+
+        public override Type GetComponentType()
+        {
+            return typeof(global::TimeLine.TransformComponent);
+        }
+
+        public override float4 PackDataToFloat4()
+        {
+            return new float4(value,0,0,0);
         }
 
         public override AnimationData Clone()
@@ -56,12 +74,20 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.Transfo
             }
         }
 
-        public override AnimationData Interpolate(
+        public override void Apply(Component target, float4 value)
+        {
+            if (target is global::TimeLine.TransformComponent component)
+            {
+                component.XPosition.Value = value.x;
+            }
+        }
+
+        public override void Interpolate(
             AnimationData other, 
             double t, 
             global::TimeLine.Keyframe.Keyframe current, 
             global::TimeLine.Keyframe.Keyframe next,
-            global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType)
+            global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target)
         {
             if (other is not XPositionData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
@@ -76,14 +102,15 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.Transfo
                 interpolationType
             );
 
-            return new XPositionData(interpolatedValue);
+            Apply(target, interpolatedValue);
         }
-        
-        
-        public override void Apply(GameObject target)
+
+        public override void Apply(Component target, object o)
         {
-            global::TimeLine.TransformComponent transformComponent = target.GetComponent<global::TimeLine.TransformComponent>();
-            transformComponent.XPosition.Value = value;
+            if (target is global::TimeLine.TransformComponent component)
+            {
+                component.XPosition.Value = (float)o;
+            }
         }
     }
 }

@@ -1,0 +1,143 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using EventBus;
+using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.EdgeColliderEditor;
+using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.Core;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using UnityEngine;
+using Zenject;
+
+namespace TimeLine
+{
+    public class PolygonCollider2DComponent : BaseParameterComponent
+    {
+        public BoolParameter isActive = new("isActive", true, Color.red);
+
+        public ListVector2Parameter Points = new("Points", new List<Vector2>(), Color.yellow);
+
+        public BoolParameter isDamageable = new("isDamageable", false, Color.red);
+        public BoolParameter isObstacle = new("isObstacle", false, Color.red);
+
+        private GameEventBus _eventBus;
+        private PolygonColliderEditorHost _cEdgeColliderEditor;
+        private GameObject _edgeColliderObject;
+
+        private bool _isUpdatingFromParameter;
+        private PolygonCollider2D _colliderObject;
+        private PhysicsAnchor _physicsAnchor;
+        private ActiveObjectControllerComponent _activeObjectControllerComponent;
+        
+        private Action<bool> _isActiveChanged;
+
+        
+        // Методы управления флагом
+        public void BeginParameterUpdate() => _isUpdatingFromParameter = true;
+        public void EndParameterUpdate() => _isUpdatingFromParameter = false;
+
+        [Inject]
+        private void Construct(DiContainer container, CollidersPrefab collidersPrefab, GameEventBus eventBus,
+            PolygonColliderEditorHost cEdgeColliderEditor)
+        {
+            _eventBus = eventBus;
+            _cEdgeColliderEditor = cEdgeColliderEditor;
+            _edgeColliderObject = container.InstantiatePrefab(collidersPrefab.polygonCollider2DPrefab);
+
+            _colliderObject = _edgeColliderObject.GetComponent<PolygonCollider2D>();
+            _physicsAnchor = _edgeColliderObject.GetComponent<PhysicsAnchor>();
+            
+            _isActiveChanged = (bool data) =>
+            {
+                _colliderObject.enabled = isActive.Value && data;
+            };
+
+           _cEdgeColliderEditor.Init(Points, this, _edgeColliderObject);
+           
+           _cEdgeColliderEditor.SetActiveLineRenderer(false);
+           
+           _activeObjectControllerComponent = gameObject.GetComponent<ActiveObjectControllerComponent>();
+           _activeObjectControllerComponent.IsActiveChanged += _isActiveChanged;
+
+            TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
+            transformComponent.ChangeTransform += _cEdgeColliderEditor.UpdateOutline;
+            
+            _eventBus.SubscribeTo<SelectObjectEvent>(HandleSelectObjectEvent);
+            _eventBus.SubscribeTo<DeselectAllObjectEvent>(HandleDeselectObjectEvent);
+            _eventBus.SubscribeTo<DeselectObjectEvent>(HandleDeselectObjectEvent);
+
+            isActive.OnValueChanged += () => { _colliderObject.enabled = isActive.Value; };
+            isDamageable.OnValueChanged += () =>
+            {
+                if (isDamageable.Value) _colliderObject.gameObject.tag = TagsStorage.IsDamageable;
+                else _colliderObject.gameObject.tag = "Untagged";
+            };
+            isObstacle.OnValueChanged += () =>
+            {
+                _colliderObject.isTrigger = !isObstacle.Value;
+            };
+
+            _colliderObject.isTrigger = !isObstacle.Value;
+
+            Points.Value = _colliderObject.points.ToList();
+
+            Points.OnValueChanged += () =>
+            {
+                if (!_isUpdatingFromParameter)
+                {
+                    _cEdgeColliderEditor.ReplaceAllPoints(Points.Value);
+                    _cEdgeColliderEditor.UpdateOutline();
+                }
+            };
+            
+            _physicsAnchor.Setup(_activeObjectControllerComponent, transformComponent);
+        }
+
+        protected override IEnumerable<InspectableParameter> GetParameters()
+        {
+            yield return Points;
+            yield return isActive;
+            yield return isDamageable;
+            yield return isObstacle;
+        }
+
+        private void HandleSelectObjectEvent(ref SelectObjectEvent selectObjectEvent)
+        {
+            _cEdgeColliderEditor.SetActiveLineRenderer(
+                selectObjectEvent.Tracks.Any(i => i.sceneObject == gameObject));
+            _cEdgeColliderEditor.UpdateOutline();
+        }
+
+        private void HandleDeselectObjectEvent(ref DeselectAllObjectEvent _)
+        {
+            _cEdgeColliderEditor.SetActiveLineRenderer(false);
+        }
+
+        private void HandleDeselectObjectEvent(ref DeselectObjectEvent _)
+        {
+            _cEdgeColliderEditor.SetActiveLineRenderer(false);
+        }
+
+        public void OnDestroy()
+        {
+            _cEdgeColliderEditor.Clear();
+            _activeObjectControllerComponent.IsActiveChanged -= _isActiveChanged;
+            TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
+            if (transformComponent.ChangeTransform != null)
+            {
+                transformComponent.ChangeTransform -= _cEdgeColliderEditor.UpdateOutline;
+
+
+            }
+
+            _eventBus.UnsubscribeFrom<SelectObjectEvent>(HandleSelectObjectEvent);
+            _eventBus.UnsubscribeFrom<DeselectAllObjectEvent>(HandleDeselectObjectEvent);
+            _eventBus.UnsubscribeFrom<DeselectObjectEvent>(HandleDeselectObjectEvent);
+
+            if(_colliderObject != null)
+                Destroy(_colliderObject?.gameObject);
+        }
+    }
+}

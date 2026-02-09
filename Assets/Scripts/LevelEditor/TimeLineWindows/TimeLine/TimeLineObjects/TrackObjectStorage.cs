@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using EventBus;
-using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
@@ -11,10 +11,10 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
-using UnityEditor.ShaderGraph.Drawing;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
+using Debug = UnityEngine.Debug;
 
 namespace TimeLine
 {
@@ -30,16 +30,18 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
         private SaveComposition _composition;
         private ActionMap _actionMap;
+        private M_PlaybackState playbackState;
 
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController,
-            SaveComposition saveComposition, ActionMap actionMap, TrackObjectRemover trackObjectRemover, Main main)
+            SaveComposition saveComposition, ActionMap actionMap, TrackObjectRemover trackObjectRemover, M_PlaybackState _playbackState)
         {
             _gameEventBus = gameEventBus;
             _selectObjectController = selectObjectController;
             _composition = saveComposition;
             _actionMap = actionMap;
+            playbackState = _playbackState;
         }
 
         public List<TrackObjectData> TrackObjects => _trackObjects;
@@ -47,7 +49,8 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(ActiveSceneObject);
+            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>((ref TickSmoothTimeEvent x) => ActiveSceneObject(x.Time));
+            _gameEventBus.SubscribeTo<LevelLoadedEvent>((ref LevelLoadedEvent _) => ActiveSceneObject(playbackState.SmoothTimeInTicks));
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
@@ -114,22 +117,27 @@ namespace TimeLine
             }
 
 
-
             return trackObjectData;
         }
 
 
-        private void ActiveSceneObject(ref TickSmoothTimeEvent smoothTimeEvent)
+        private void ActiveSceneObject(double time)
         {
+            // Stopwatch sw = Stopwatch.StartNew();
             foreach (var trackObject in _trackObjects.ToList())
             {
-                CheckActiveTrackObjects(trackObject, smoothTimeEvent.Time);
+                CheckActiveTrackObjects(trackObject, time);
             }
 
             foreach (var group in _trackObjectGroups.ToList())
             {
-                CheckActiveGroup(group, smoothTimeEvent.Time);
+                CheckActiveGroup(group, time);
             }
+
+            // sw.Stop();
+
+            // Выводим время в миллисекундах или тиках
+            // UnityEngine.Debug.Log($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms ({sw.ElapsedTicks} ticks)");
         }
 
         internal TrackObjectData FindObjectByID(string id)
@@ -197,7 +205,7 @@ namespace TimeLine
             double groupStart = group.trackObject.StartTimeInTicks;
             double groupEnd = groupStart + group.trackObject.TimeDuractionInTicks;
             bool isGroupActive = time >= groupStart && time < groupEnd;
-            
+
             if ((!enchanted && !group.trackObject.gameObject.activeSelf) || activeGroup == false)
             {
                 group.activeObjectController.Turn(false);
@@ -209,12 +217,13 @@ namespace TimeLine
                         CheckActiveGroup(nestedGroup, time - groupStart, true, false);
                         continue;
                     }
+
                     trackObject.activeObjectController.Turn(false);
                 }
 
                 return;
             }
-            
+
 
             group.activeObjectController.Turn(isGroupActive);
 
@@ -648,25 +657,67 @@ namespace TimeLine
             this.sceneObjectID = sceneObjectID;
         }
 
+        /// <summary>
+        /// Обновляет содержимое композиций в таймлайне
+        /// </summary>
+        /// <param name="newDuraction">Новая продолжительность композиции</param>
+        /// <param name="trackObjectDatas">Обновляемые объекты</param>
+        /// <param name="remover"></param>
+        /// <param name="_mainObjects"></param>
+        /// <param name="_keyframeTrackStorage"></param>
+        /// <param name="lastEditID"></param>
+        /// <param name="saveComposition"></param>
+        /// <param name="compositionUpdateID">ID композиции который обновился</param>
         public void Update(double newDuraction, List<TrackObjectData> trackObjectDatas, TrackObjectRemover remover,
             MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID,
-            SaveComposition saveComposition)
+            SaveComposition saveComposition, string compositionUpdateID, bool updateSelf)
         {
             this.lastEditID = lastEditID;
 
             trackObject.UpdateDuraction(newDuraction);
-            foreach (var data in TrackObjectDatas)
+
+            List<TrackObjectData> updateTrackObjectDatas = new List<TrackObjectData>();
+
+            //Если композиция не полностью обновляется
+            if (updateSelf == false)
             {
-                remover.SingleRemoveNoStorage(data, false);
+                // Ищем композиции которые надо обновить и удаляем старые версии
+                foreach (var VARIABLE in TrackObjectDatas.ToList())
+                {
+                    if (VARIABLE is TrackObjectGroup group)
+                    {
+                        if (group.compositionID == compositionUpdateID)
+                        {
+                            Debug.Log(group.compositionID == compositionUpdateID);
+                            remover.SingleRemoveNoStorage(VARIABLE, false);
+                            TrackObjectDatas.Remove(VARIABLE);
+                        }
+                    }
+                }
+
+                TrackObjectDatas.AddRange(trackObjectDatas);
+
+                updateTrackObjectDatas = trackObjectDatas;
+            }
+            else
+            {
+                foreach (var data in TrackObjectDatas)
+                {
+                    remover.SingleRemoveNoStorage(data, false);
+                }
+
+                TrackObjectDatas = trackObjectDatas;
+                updateTrackObjectDatas = TrackObjectDatas;
+                //Обновляем ID У всех
             }
 
-            TrackObjectDatas = trackObjectDatas;
 
-            UpdateLastEditID(TrackObjectDatas, saveComposition);
+            UpdateLastEditID(updateTrackObjectDatas, saveComposition);
 
-            foreach (var track in TrackObjectDatas)
+
+            foreach (var track in updateTrackObjectDatas)
             {
-                track.trackObject.GroupOffsetTrack(trackObject);////
+                track.trackObject.GroupOffsetTrack(trackObject); ////
                 track.trackObject.SetTime(track.trackObject.StartTimeInTicks + trackObject._reducedLeft);
 
                 trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
@@ -674,7 +725,7 @@ namespace TimeLine
                 track.trackObject.Hide();
             }
 
-            foreach (var selectObject in TrackObjectDatas)
+            foreach (var selectObject in updateTrackObjectDatas)
             {
                 if (selectObject.sceneObject.transform.parent == null ||
                     selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
@@ -698,7 +749,7 @@ namespace TimeLine
                 }
             }
 
-            ParentLinkRestorer.Restor(TrackObjectDatas);
+            ParentLinkRestorer.Restor(updateTrackObjectDatas);
         }
 
         private void UpdateLastEditID(List<TrackObjectData> trackObjectDatas, SaveComposition saveComposition)

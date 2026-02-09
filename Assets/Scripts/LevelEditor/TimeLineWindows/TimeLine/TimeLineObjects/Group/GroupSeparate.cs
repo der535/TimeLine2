@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
@@ -72,8 +73,10 @@ namespace TimeLine
             }
         }
 
-        internal void SeparateSingle(TrackObjectGroup group)
+        internal List<TrackObjectData> SeparateSingle(TrackObjectGroup group)
         {
+            List<TrackObjectData> trackObjects = new List<TrackObjectData>();
+            
             foreach (var trackObject in group.TrackObjectDatas)
             {
                 trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
@@ -92,10 +95,12 @@ namespace TimeLine
 
                 trackObject.trackObject.Show();
                 trackObject.trackObject.CalculatePosition();
+                trackObjects.Add(trackObject);
             }
 
             _trackObjectStorage.SeparetaGroup(group);
             _trackObjectRemover.SingleRemove(group);
+            return trackObjects;
         }
 
         public void Separate(TrackObjectGroup trackObjectGroup)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace TimeLine.Keyframe
@@ -13,6 +14,8 @@ namespace TimeLine.Keyframe
         public Color AnimationColor;
         public List<Keyframe> Keyframes = new();
         public TrackObject groupObject;
+        public Component cachedComponent;
+
 
         public Track(GameObject target, string trackName, Color animationColor)
         {
@@ -21,17 +24,27 @@ namespace TimeLine.Keyframe
             AnimationColor = animationColor;
         }
 
-        public Keyframe AddKeyframe(double time, AnimationData adata = null)
+        public Keyframe AddKeyframe(double time, AnimationData adata)
         {
             // Debug.Log(time);
             // Удаляем существующий ключевой кадр с таким же временем
-            RemoveKeyframeAtTime(time);
-            
-            Keyframe newKeyframe = new Keyframe(time, Keyframe.InterpolationType.Linear);
+            var type = RemoveKeyframeAtTime(time);
+
+            Keyframe newKeyframe;
+            if (type is { } typ2e)
+                newKeyframe = new Keyframe(time, typ2e);
+            else
+                newKeyframe = new Keyframe(time, Keyframe.InterpolationType.Linear);
             newKeyframe.AddData(adata);
-            
+
             Keyframes.Add(newKeyframe);
             SortKeyframes();
+            if (cachedComponent == null)
+            {
+                Type t = adata.GetComponentType();
+                cachedComponent = TargetObject.GetComponent(t);
+            }
+            
             return newKeyframe;
         }
 
@@ -40,55 +53,94 @@ namespace TimeLine.Keyframe
             groupObject = trackObject;
         }
 
+        public (IAnimationApplyer, Component) GetApplyer()
+        {
+            return (Keyframes[0].GetData(), cachedComponent);
+        }
+
         public void RemoveKeyframe(Keyframe keyframe)
         {
             Keyframes.Remove(keyframe);
             SortKeyframes();
         }
-        
+
         public void AddKeyframe(Keyframe newKeyframe)
         {
             // Удаляем существующий ключевой кадр с таким же временем
-            RemoveKeyframeAtTime(newKeyframe.Ticks);
-            
+            var type = RemoveKeyframeAtTime(newKeyframe.Ticks);
+            // Debug.Log(type);
+            if (type is { } typ2e)
+                newKeyframe.Interpolation = typ2e;
+            // Debug.Log(newKeyframe.Interpolation);
+            if (cachedComponent == null)
+            {
+                Type t = newKeyframe.GetData().GetComponentType();
+                cachedComponent = TargetObject.GetComponent(t);
+            }
             Keyframes.Add(newKeyframe);
             SortKeyframes();
         }
 
         // Новый метод для удаления ключевых кадров по времени
-        private void RemoveKeyframeAtTime(double time)
+        private Keyframe.InterpolationType? RemoveKeyframeAtTime(double time)
         {
-            Keyframes.RemoveAll(k => Math.Abs(k.Ticks - time) < 0.1f);
+            // Ищем последний кадр, попадающий в диапазон погрешности
+            var target = Keyframes.FindLast(k => Math.Abs(k.Ticks - time) < 0.1);
+
+            if (target == null)
+            {
+                // Если кадр не найден, возвращаем значение по умолчанию
+                return null;
+            }
+
+            // Запоминаем тип интерполяции найденного кадра
+            Keyframe.InterpolationType lastType = target.Interpolation;
+
+            // Удаляем все кадры в этой временной точке
+            Keyframes.RemoveAll(k => Math.Abs(k.Ticks - time) < 0.1);
+
+            return lastType;
         }
 
+        public double GetOffset()
+        {
+            if (groupObject == null)
+               return 0;
+            else
+            {
+                return groupObject.GetKeyframeTrackOffset();
+            }
+        }
+        
         public void Evaluate(double time)
         {
+            
             if (Keyframes.Count == 0 || TargetObject == null) return;
+            
 
             double offset;
-            
+
             if (groupObject == null)
                 offset = 0;
             else
             {
                 offset = groupObject.GetKeyframeTrackOffset();
             }
-            
-            // Debug.Log(groupObject);
-            // Debug.Log(offset);
+
 
             Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks + offset <= time);
             Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks + offset >= time);
+            
 
             if (prev == null && next == null) return;
 
             if (prev == null)
             {
-                next.Apply(TargetObject);
+                next.Apply(cachedComponent);
             }
             else if (next == null)
             {
-                prev.Apply(TargetObject);
+                prev.Apply(cachedComponent);
             }
             else if (prev != next)
             {
@@ -98,17 +150,17 @@ namespace TimeLine.Keyframe
                 // Защита от деления на ноль
                 if (start == end)
                 {
-                    prev.Apply(TargetObject);
+                    prev.Apply(cachedComponent);
                 }
                 else
                 {
                     double t = (time - start) / (end - start);
-                    prev.Interpolate(next, TargetObject, t);
+                    prev.Interpolate(next, cachedComponent, t);
                 }
             }
             else
             {
-                prev.Apply(TargetObject);
+                prev.Apply(cachedComponent);
             }
         }
 
@@ -116,7 +168,7 @@ namespace TimeLine.Keyframe
         {
             foreach (var keyframe in Keyframes)
             {
-                keyframe.Ticks += Math.Round(ticks);
+                keyframe.Ticks += ticks;
             }
         }
 
@@ -127,8 +179,11 @@ namespace TimeLine.Keyframe
             {
                 keyframes.Add(keyframe.ToSaveData());
             }
+
             return keyframes;
         }
+
+        public AnimationData GetAnimationData() => Keyframes[0].GetData();
         
         public Track Copy(GameObject target)
         {
@@ -140,6 +195,11 @@ namespace TimeLine.Keyframe
         public void SortKeyframes()
         {
             Keyframes = Keyframes.OrderBy(k => k.Ticks).ToList();
+        }
+        
+        public void Apply(float4 value)
+        {
+            Keyframes[0].GetData().Apply(cachedComponent, value);
         }
     }
 }

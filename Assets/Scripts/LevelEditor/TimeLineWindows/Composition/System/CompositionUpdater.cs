@@ -28,17 +28,23 @@ namespace TimeLine
         }
 
         [Button]
-        public void UpdateCompositions()
+        public void UpdateCompositions(string compositionID)
         {
             foreach (var group in trackObjectStorage.TrackObjectGroups.ToList())
             {
+                bool updateSelf = compositionID == group.compositionID;
+                
                 GroupGameObjectSaveData data = composition.FindCompositionDataById(group.compositionID);
                 List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
-
+                
                 foreach (var child in data.children)
                 {
                     if (child is GroupGameObjectSaveData groupChild)
                     {
+                        if (updateSelf == false && compositionID != groupChild.compositionID)
+                        {
+                            continue;
+                        }
                         GroupGameObjectSaveData groupChildData =
                             composition.FindCompositionDataById(groupChild.compositionID);
                         if (groupChildData != null)
@@ -50,13 +56,17 @@ namespace TimeLine
                     }
                     else
                     {
-                        var (trackData, _, _) = facadeObjectSpawner.LoadObject(child, false);
-                        trackObjectDatas.Add(trackData);
+                        if (updateSelf)
+                        {
+                            var (trackData, _, _) = facadeObjectSpawner.LoadObject(child, false);
+                            trackObjectDatas.Add(trackData);
+                        }
+
                     }
                 }
                 
                 group.Update(data.duractionTime, trackObjectDatas, trackObjectRemover, _mainObjects,
-                    keyframeTrackStorage, data.lastEditID, composition);
+                    keyframeTrackStorage, data.lastEditID, composition,compositionID, updateSelf);
             }
         }
     }

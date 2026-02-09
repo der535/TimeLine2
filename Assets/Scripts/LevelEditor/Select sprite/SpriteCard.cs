@@ -58,7 +58,7 @@ namespace TimeLine
 
         private void OnDestroy()
         {
-            SpriteParameter.OnValueChanged -= onValueChanged;
+            if(SpriteParameter != null) SpriteParameter.OnValueChanged -= onValueChanged;
         }
     }
 }
