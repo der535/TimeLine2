@@ -77,7 +77,7 @@ namespace TimeLine
             Destroy(_spriteRenderer);
         }
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return Sprite;
             yield return OrderInLayer;

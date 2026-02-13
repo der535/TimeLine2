@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
 using Newtonsoft.Json;
+using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.ActionHistory;
 using TimeLine.TimeLine;
 using UnityEngine;
@@ -18,21 +19,23 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private SaveComposition _saveComposition;
         private ObjectFactory _objectFactory;
         private ObjectLoader _objectLoader;
+        private SelectObjectController _selectObjectController;
 
-        
-        
+
         public TrackObjectClipboard(
-            SaveLevel saveLevel, 
-            Main main, 
-            SaveComposition saveComposition, 
+            SaveLevel saveLevel,
+            Main main,
+            SaveComposition saveComposition,
             ObjectFactory objectFactory,
-            ObjectLoader objectLoader)
+            ObjectLoader objectLoader,
+            SelectObjectController selectObjectController)
         {
             _saveLevel = saveLevel;
             _main = main;
             _saveComposition = saveComposition;
             _objectFactory = objectFactory;
             _objectLoader = objectLoader;
+            _selectObjectController = selectObjectController;
         }
 
         internal void CopyObjects(List<TrackObjectData> selectedObjects)
@@ -55,38 +58,47 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     dataCopy.Add(data);
                 }
             }
-            _main.SetTimeInTicks(savedTime);
 
+            _main.SetTimeInTicks(savedTime);
         }
-        
+
         internal void PasteObjects()
         {
             CommandHistory.IsRecording = false;
-            if(dataCopy == null) return;
+            if (dataCopy == null) return;
             var minTime = GetMinTime(dataCopy);
+
+            List<TrackObjectData> pastedObjects = new();
+
             foreach (var data in dataCopy)
             {
                 data.startTime = data.startTime - minTime + TimeLineConverter.Instance.TicksCurrentTime();
                 if (data is GroupGameObjectSaveData group)
                 {
-                    PasteGroup(group,  addToTitleCloneText: true);
+                    pastedObjects.Add(PasteGroup(group, addToTitleCloneText: true));
                 }
                 else
                 {
-                    _objectLoader.LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true);
+                    pastedObjects.Add(_objectLoader.LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true).Item1);
                 }
             }
+
+            _selectObjectController.DeselectAll();
+            _selectObjectController.SelectMultiple(pastedObjects);
+
             CommandHistory.IsRecording = true;
-            // dataCopy = new List<GameObjectSaveData>();
         }
-        
-        private void PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true, bool addToTitleCloneText = false)
+
+        private TrackObjectData PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true,
+            bool addToTitleCloneText = false)
         {
+            Debug.Log(data.tracks.Count);
+
             foreach (var child in data.children)
             {
                 if (child is GroupGameObjectSaveData childGroup)
                 {
-                    PasteGroup(childGroup, false,  addToTitleCloneText);
+                    PasteGroup(childGroup, false, addToTitleCloneText);
                 }
             }
 
@@ -99,7 +111,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             dataCopyComposition.Components =
                 new List<ComponentData>(); // В сохраняемую композицию запихать стандартные компонеты из префаба
 
-            
+
             if (!string.IsNullOrEmpty(data.lastEditID) || !string.IsNullOrEmpty(composition.lastEditID))
             {
                 if (data.lastEditID != composition.lastEditID)
@@ -112,13 +124,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     _saveComposition.AddComposition(dataCopyComposition);
                 }
             }
-            
 
 
             if (addToStorage)
-                _objectLoader.LoadComposition(data, data.compositionID,  generateNewSceneID:true, addToTitleCloneText:addToTitleCloneText);
+                return _objectLoader.LoadComposition(data, data.compositionID, generateNewSceneID: true,
+                    addToTitleCloneText: addToTitleCloneText).Item1;
+            return null;
         }
-        
+
         internal bool PasteValidCheck(string past)
         {
             foreach (var copyTrackObject in dataCopy)
@@ -132,7 +145,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
             return true;
         }
-        
+
         internal bool PasteValidCheckGroup(GroupGameObjectSaveData copyGroup, string past)
         {
             foreach (var group in copyGroup.children)
@@ -140,13 +153,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 if (group is GroupGameObjectSaveData groupGroup)
                 {
                     if (groupGroup.compositionID == past) return true;
-                    else if(PasteValidCheckGroup(groupGroup, past)) return true;
+                    else if (PasteValidCheckGroup(groupGroup, past)) return true;
                 }
             }
 
             return false;
         }
-        
+
         internal double GetMinTime(List<GameObjectSaveData> list)
         {
             return list.Min(item => item.startTime);

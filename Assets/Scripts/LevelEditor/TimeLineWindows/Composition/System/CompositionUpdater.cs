@@ -5,6 +5,8 @@ using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.LevelEditor.ValueEditor.Save;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -14,17 +16,23 @@ namespace TimeLine
     public class CompositionUpdater : MonoBehaviour
     {
         [SerializeField] private TrackObjectStorage trackObjectStorage;
-        [FormerlySerializedAs("objectSpawner")] [FormerlySerializedAs("trackObjectSpawner")] [SerializeField] private FacadeObjectSpawner facadeObjectSpawner;
+
+        [FormerlySerializedAs("objectSpawner")] [FormerlySerializedAs("trackObjectSpawner")] [SerializeField]
+        private FacadeObjectSpawner facadeObjectSpawner;
+
         [SerializeField] private SaveComposition composition;
         [SerializeField] private TrackObjectRemover trackObjectRemover;
         [SerializeField] private KeyframeTrackStorage keyframeTrackStorage;
-
+        private LoadGraphLogic _loadGraphLogic;
+        private SaveNodes _saveNodes;
         private MainObjects _mainObjects;
 
         [Inject]
-        private void Construct(MainObjects mainObjects)
+        private void Construct(MainObjects mainObjects, SaveNodes saveNodes, LoadGraphLogic loadGraphLogic)
         {
             _mainObjects = mainObjects;
+            _saveNodes = saveNodes;
+            _loadGraphLogic = loadGraphLogic;
         }
 
         [Button]
@@ -33,10 +41,11 @@ namespace TimeLine
             foreach (var group in trackObjectStorage.TrackObjectGroups.ToList())
             {
                 bool updateSelf = compositionID == group.compositionID;
-                
+
                 GroupGameObjectSaveData data = composition.FindCompositionDataById(group.compositionID);
                 List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
-                
+                List<Track> tracks = new List<Track>();
+
                 foreach (var child in data.children)
                 {
                     if (child is GroupGameObjectSaveData groupChild)
@@ -45,12 +54,14 @@ namespace TimeLine
                         {
                             continue;
                         }
+
                         GroupGameObjectSaveData groupChildData =
                             composition.FindCompositionDataById(groupChild.compositionID);
                         if (groupChildData != null)
                         {
-                            var (trackData, _, _) = facadeObjectSpawner.LoadComposition(groupChild, groupChild.compositionID,
-                              false,  groupChildData, false, lastEditID:data.lastEditID);
+                            var (trackData, _, _) = facadeObjectSpawner.LoadComposition(groupChild,
+                                groupChild.compositionID,
+                                false, groupChildData, false, lastEditID: data.lastEditID);
                             trackObjectDatas.Add(trackData);
                         }
                     }
@@ -58,15 +69,28 @@ namespace TimeLine
                     {
                         if (updateSelf)
                         {
-                            var (trackData, _, _) = facadeObjectSpawner.LoadObject(child, false);
+                            var (trackData, _, _, tra) = facadeObjectSpawner.LoadObject(child, false);
+                            tracks.AddRange(tra);
                             trackObjectDatas.Add(trackData);
                         }
-
                     }
                 }
-                
+
+                foreach (var track in tracks)
+                {
+                    foreach (var keyframe in track.Keyframes)
+                    {
+                        if (!string.IsNullOrEmpty(keyframe.GetData().Graph))
+                        {
+                            keyframe.GetData().Logic = _saveNodes.LoadGraph(keyframe.GetData().Graph,
+                                TypeToDataType.Convert(keyframe.GetData().GetType()),
+                                keyframe.GetData().initializedNodes, trackObjectDatas);
+                        }
+                    }
+                }
+
                 group.Update(data.duractionTime, trackObjectDatas, trackObjectRemover, _mainObjects,
-                    keyframeTrackStorage, data.lastEditID, composition,compositionID, updateSelf);
+                    keyframeTrackStorage, data.lastEditID, composition, compositionID, updateSelf, _loadGraphLogic);
             }
         }
     }

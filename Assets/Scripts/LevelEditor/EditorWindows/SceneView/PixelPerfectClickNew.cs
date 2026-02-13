@@ -42,6 +42,8 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         if (selectBoxScene.gameObject.activeSelf || _cEditColliderState.GetState()) return;
         if (eventData.button != PointerEventData.InputButton.Left) return;
 
+        if (IsOverlaidByOtherUI(eventData)) return;
+        
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 mapImage.rectTransform, eventData.position, eventData.pressEventCamera, out Vector2 localPoint))
             return;
@@ -57,7 +59,36 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 
         ProcessClickSelection(worldPos);
     }
+    private bool IsOverlaidByOtherUI(PointerEventData eventData)
+    {
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
 
+        // ВЫВОДИМ СПИСОК ВСЕХ, КТО ПОД МЫШКОЙ
+        foreach (var res in results)
+        {
+            Debug.Log($"Под курсором: {res.gameObject.name} (Layer: {res.gameObject.layer})");
+        }
+
+        if (results.Count > 0)
+        {
+            // Ищем индекс нашего mapImage в списке попаданий
+            int myIndex = results.FindIndex(r => r.gameObject == mapImage.gameObject);
+        
+            // Если индекс 0 — мы сверху. 
+            // Если индекс > 0 — значит перед нами есть кто-то еще (results[0])
+            if (myIndex > 0) 
+            {
+                Debug.LogWarning($"Клик заблокирован объектом: {results[0].gameObject.name}");
+                return true; 
+            }
+        
+            // Если вообще не нашли mapImage в списке (индекс -1)
+            if (myIndex == -1) return true;
+        }
+
+        return false;
+    }
     private void ProcessClickSelection(Vector3 worldPos)
     {
         // 1. Находим все объекты под курсором

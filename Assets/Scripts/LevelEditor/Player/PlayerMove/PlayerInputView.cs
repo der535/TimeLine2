@@ -48,13 +48,11 @@ namespace TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove
         
         private void HandleSpace(InputAction.CallbackContext context) 
         {
-            Debug.Log("<color=yellow>[Space]</color> Performed");
             OnSpacePerformed?.Invoke();
         }
         
         private void HandleCancelSpace(InputAction.CallbackContext context) 
         {
-            Debug.Log("<color=white>[Space]</color> Canceled");
             OnSpaceCanceled?.Invoke();
         }
     }

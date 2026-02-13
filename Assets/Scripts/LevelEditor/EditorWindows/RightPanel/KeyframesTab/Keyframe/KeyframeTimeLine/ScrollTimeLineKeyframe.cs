@@ -14,6 +14,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
     {
         [SerializeField] private RectTransform panel;
         [SerializeField] private RectTransform content;
+        [SerializeField] private WindowsFocus focus;
         [FormerlySerializedAs("scroll")] [SerializeField] private TimeLineKeyframeZoom zoom;
 
         private GameEventBus _gameEventBus;

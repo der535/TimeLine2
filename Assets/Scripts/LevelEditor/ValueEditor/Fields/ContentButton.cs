@@ -17,5 +17,10 @@ namespace TimeLine.LevelEditor.ValueEditor
             buttonText.text = text;
             button.onClick.AddListener(onPress.Invoke);
         }
+
+        internal void SetActiveButton(bool active)
+        {
+            button.interactable = active;
+        }
     }
 }

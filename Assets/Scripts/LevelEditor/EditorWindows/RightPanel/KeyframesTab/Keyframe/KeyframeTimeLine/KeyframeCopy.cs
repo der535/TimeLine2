@@ -7,6 +7,9 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.ValueEditor.NodeLogic;
+using TimeLine.LevelEditor.ValueEditor.Save;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -21,33 +24,36 @@ namespace TimeLine
         [FormerlySerializedAs("keyframeSelectStorage")] [SerializeField]
         private KeyframeSelectController keyframeSelectController;
 
-        [SerializeField] private TrackObjectStorage trackObjectStorage;
         [SerializeField] private KeyframeTrackStorage trackStorage;
         [SerializeField] private WindowsFocus windowsFocus;
 
         [SerializeField] private BezierSelectPointsController bezierSelectPointsController;
 
-        private Main _main;
+        private TrackObjectStorage _trackObjectStorage;
         private ActionMap _actionMap;
         private GameEventBus _gameEventBus;
-        private M_KeyframeSelectedStorage _selectedKeyframesStorage;
+        private KeyframeSelectedStorage _selectedKeyframesStorage;
         private KeyframeVizualizer _selectedKeyframeVizualizer;
         private M_KeyframeActiveTypeData _mKeyframeActiveTypeData;
+        private SaveNodes _saveNodes;
+        private SelectObjectController _selectObjectController;
 
         private List<(KeyframeSaveData, Track)> copyKeyframes = new();
         private double minTime;
 
         [Inject]
         private void Construct(Main main, GameEventBus eventBus, ActionMap actionMap,
-            M_KeyframeSelectedStorage selectedKeyframesStorage, KeyframeVizualizer keyframeVizualizer,
-            M_KeyframeActiveTypeData mKeyframeActiveTypeData)
+            KeyframeSelectedStorage selectedKeyframesStorage, KeyframeVizualizer keyframeVizualizer,
+            M_KeyframeActiveTypeData mKeyframeActiveTypeData, SaveNodes saveNodes, TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController)
         {
             _mKeyframeActiveTypeData = mKeyframeActiveTypeData;
             _gameEventBus = eventBus;
-            _main = main;
             _actionMap = actionMap;
             _selectedKeyframesStorage = selectedKeyframesStorage;
             _selectedKeyframeVizualizer = keyframeVizualizer;
+            _saveNodes = saveNodes;
+            _trackObjectStorage = trackObjectStorage;
+            _selectObjectController = selectObjectController;
         }
 
         private void Start()
@@ -90,13 +96,13 @@ namespace TimeLine
             {
                 if (_actionMap.Editor.LeftCtrl.IsPressed() &&
                     windowsFocus.IsFocused &&
-                    trackObjectStorage.selectedObject != null &&
+                    _trackObjectStorage.selectedObject != null &&
                     copyKeyframes != null &&
                     copyKeyframes.Count > 0)
                 {
                     foreach (var keyframe in copyKeyframes)
                     {
-                        Paste(keyframe.Item1, keyframe.Item2, trackObjectStorage.selectedObject.trackObject, minTime);
+                        Paste(keyframe.Item1, keyframe.Item2, _trackObjectStorage.selectedObject.trackObject, minTime);
                     }
                 }
             };
@@ -110,7 +116,8 @@ namespace TimeLine
 
         private void Paste(KeyframeSaveData keyframe, Track track, TrackObject trackObject, double minTimeSelected)
         {
-            Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe);
+            (OutputLogic item1, List<IInitializedNode> item2) = _saveNodes.LoadLogicOnly(keyframe.Graph, TypeToDataType.Convert(keyframe.DataType));
+            Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe,item1,item2);
             var difference = keyframe.Ticks - minTimeSelected;
             loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.StartTimeInTicks +
                                    difference;

@@ -1,4 +1,5 @@
-﻿using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
+﻿using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
 
 namespace TimeLine.CustomInspector.UI.Drawers
@@ -26,13 +27,15 @@ namespace TimeLine.CustomInspector.UI.Drawers
         {
             _customInspectorDrawer.CreateComponent(component, true);
             string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
-
+            SceneObjectLink link = target.GetComponent<SceneObjectLink>();
             if (component is ShakeComponent shakeComponent)
             {
                 _customInspectorDrawer.CreateVector2Field(shakeComponent.ShakeStrength);
-                _customInspectorDrawer.CreateFloatField(shakeComponent.Duration, id,null);
+                _customInspectorDrawer.CreateFloatField(shakeComponent.Duration,                    link.trackObjectData,
+                    (BaseParameterComponent)component, id,null);
                 _customInspectorDrawer.CreateIntField(shakeComponent.Vibrato, null);
-                _customInspectorDrawer.CreateFloatField(shakeComponent.Randomness, id,null);
+                _customInspectorDrawer.CreateFloatField(shakeComponent.Randomness,                    link.trackObjectData,
+                    (BaseParameterComponent)component, id,null);
             }
         }
     }

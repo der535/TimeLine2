@@ -15,6 +15,7 @@ using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using TimeLine.LevelEditor.UIAnimation;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -47,13 +48,14 @@ namespace TimeLine
         private LoadingScreenController _loadingScreenController;
         private MaxObjectIndexController _maxObjectIndexController;
         private SaveButtonAnimation _saveButtonAnimation;
+        private LoadGraphLogic _loadGraphLogic;
         public LevelBaseInfo LevelBaseInfo => _levelBaseInfo;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, MainObjects mainObjects,
             CustomSpriteStorage customSpriteStorage, ParentLinkRestorer parentLinkRestorer,
             LoadingScreenController loadingScreenController, MaxObjectIndexController maxObjectIndexController,
-            SaveButtonAnimation saveButtonAnimation)
+            SaveButtonAnimation saveButtonAnimation, LoadGraphLogic loadGraphLogic)
         {
             _gameEventBus = gameEventBus;
             _mainObjects = mainObjects;
@@ -62,6 +64,7 @@ namespace TimeLine
             _loadingScreenController = loadingScreenController;
             _maxObjectIndexController = maxObjectIndexController;
             _saveButtonAnimation = saveButtonAnimation;
+            _loadGraphLogic = loadGraphLogic;
         }
 
         // === Unity Lifecycle ===
@@ -167,7 +170,9 @@ namespace TimeLine
                 facadeObjectSpawner.LoadComposition(group, group.compositionID, false, groupGameObjectSaveData);
                 // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
             }
-
+            
+            
+            _loadGraphLogic.LoadGraph();
             _parentLinkRestorer.Restor();
         }
 
@@ -464,6 +469,7 @@ namespace TimeLine
     [System.Serializable]
     public class KeyframeSaveData
     {
+        public string Graph;
         public double Ticks;
         public Keyframe.Keyframe.InterpolationType InterpolationType;
         public double OutTangent;

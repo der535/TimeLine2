@@ -54,7 +54,7 @@ namespace TimeLine
         }
 
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return ShakeStrength;
             yield return Duration;

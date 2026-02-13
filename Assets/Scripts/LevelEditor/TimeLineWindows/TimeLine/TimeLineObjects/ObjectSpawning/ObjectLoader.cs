@@ -1,11 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using NUnit.Framework;
 using TimeLine.Components;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
+using TimeLine.LevelEditor.ValueEditor.NodeLogic;
+using TimeLine.LevelEditor.ValueEditor.Save;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
 using UnityEngine;
@@ -25,12 +30,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private SaveComposition _saveComposition;
         private ParentLinkRestorer _parentLinkRestorer;
         private IMaxObjectIndexDataReading _maxObjectIndexDataReading;
+        private SaveNodes _saveNodes;
 
         public ObjectLoader(ObjectFactory objectFactory, TrackStorage trackStorage,
             BranchCollection branchCollection, TrackObjectStorage trackObjectStorage,
             KeyframeTrackStorage keyframeTrackStorage, Main main, SaveComposition saveComposition,
             DiContainer container, ParentLinkRestorer parentLinkRestorer,
-            IMaxObjectIndexDataReading maxObjectIndexDataReading)
+            IMaxObjectIndexDataReading maxObjectIndexDataReading, SaveNodes saveNodes)
         {
             _objectFactory = objectFactory;
             _trackStorage = trackStorage;
@@ -42,11 +48,17 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _container = container;
             _parentLinkRestorer = parentLinkRestorer;
             _maxObjectIndexDataReading = maxObjectIndexDataReading;
+            _saveNodes = saveNodes;
         }
 
-        public (TrackObjectData, GameObject, Branch) LoadObject(GameObjectSaveData data,
-            bool addToStorage = true, bool generateNewSceneID = false, bool addToTitleCloneText = false)
+        public (TrackObjectData, GameObject, Branch, List<Track>) LoadObject(GameObjectSaveData data,
+            bool addToStorage = true, bool generateNewSceneID = false, bool addToTitleCloneText = false,
+            bool loadGraph = true)
         {
+            List<Track> tracks = new List<Track>();
+
+            var oldId = data.sceneObjectID;
+
             string id = UniqueIDGenerator.GenerateUniqueID();
             string sceneId;
             if (generateNewSceneID == false) sceneId = data.sceneObjectID;
@@ -99,7 +111,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     (IParameterComponent)ComponentRules.GetOrAddComponentSafely(component.ComponentType, sceneObject,
                         _container);
                 parameterComponent.SetParameterData(component.Parameters);
-                if(!string.IsNullOrEmpty(component.id) )parameterComponent.SetID(component.id);
+                if (!string.IsNullOrEmpty(component.id)) parameterComponent.SetID(component.id);
             }
 
             // Добавляем трек и ключевые кадры
@@ -109,10 +121,41 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 _keyframeTrackStorage.AddTrack(branch.FindNode(track.branchPath).node, trackm,
                     trackObjectData.trackObject,
                     branch.ID);
+                tracks.Add(trackm);
+
 
                 foreach (var saveData in track.keyframeSaveData)
                 {
-                    Keyframe.Keyframe keyframe = Keyframe.Keyframe.FromSaveData(saveData);
+                    if (!string.IsNullOrEmpty(saveData.Graph))
+                    {
+                        var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+                        var graph = JsonConvert.DeserializeObject<GraphSaveData>(saveData.Graph, settings);
+                        foreach (var nodes in graph.Nodes)
+                        {
+                            foreach (var VARIABLE in nodes.AdditionalData)
+                            {
+                                if (VARIABLE.Value is MapParameterComponen map)
+                                {
+                                    if (map.SceneObjectID == oldId)
+                                    {
+                                        map.SceneObjectID = sceneId;
+                                    }
+                                }
+                            }
+                        }
+
+                        saveData.Graph = JsonConvert.SerializeObject(graph, settings);
+                    }
+
+                    OutputLogic item1 = null;
+                    List<IInitializedNode> item2 = null;
+                    if (loadGraph)
+                    {
+                        (item1, item2) = _saveNodes.LoadLogicOnly(saveData.Graph,
+                            TypeToDataType.Convert(saveData.DataType));
+                    }
+
+                    Keyframe.Keyframe keyframe = Keyframe.Keyframe.FromSaveData(saveData, item1, item2);
                     trackm.AddKeyframe(keyframe);
                 }
             }
@@ -123,7 +166,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             sceneObject.GetComponent<SceneObjectLink>().trackObjectData = trackObjectData;
 
 
-            return (trackObjectData, sceneObject, branch);
+            return (trackObjectData, sceneObject, branch, tracks);
         }
 
         internal void GenerateNewSceneIDs(GroupGameObjectSaveData rootData)
@@ -139,9 +182,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             // Шаг 2: Обновление ссылок
             UpdateParentReferences(rootData, idMap);
 
+            //Шаг 3: Обновление карты
+            UpdateMap(rootData, idMap);
+
             // stopwatch.Stop();
             // Debug.Log(
-                // $"[SceneIDGen] Успешно завершено. Обработано объектов: {idMap.Count}. Время: {stopwatch.ElapsedMilliseconds}ms");
+            // $"[SceneIDGen] Успешно завершено. Обработано объектов: {idMap.Count}. Время: {stopwatch.ElapsedMilliseconds}ms");
         }
 
         private void BuildIdMap(GameObjectSaveData data, Dictionary<string, string> idMap)
@@ -194,7 +240,83 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             }
         }
 
-        private double savedCurrentTime;
+        private void UpdateMap(GroupGameObjectSaveData data, Dictionary<string, string> idMap)
+        {
+            Debug.Log("UpdateMap");
+            Debug.Log(data.tracks.Count);
+            Debug.Log(JsonConvert.SerializeObject(data, Formatting.Indented));
+
+            foreach (var VARIABLE in data.children)
+            {
+                foreach (var track in VARIABLE.tracks)
+                {
+                    Debug.Log(data.tracks.Count);
+                    foreach (var kdata in track.keyframeSaveData)
+                    {
+                        Debug.Log(kdata);
+
+                        if (!string.IsNullOrEmpty(kdata.Graph))
+                        {
+                            GraphSaveData graph = JsonConvert.DeserializeObject<GraphSaveData>(kdata.Graph);
+                            foreach (var node in graph.Nodes)
+                            {
+                                Debug.Log(graph.Nodes.Count);
+
+                                foreach (var keypair in node.AdditionalData)
+                                {
+                                    Debug.Log("AdditionalData");
+                                    if (keypair.Value is MapParameterComponen map)
+                                    {
+                                        if (idMap.TryGetValue(map.SceneObjectID, out var newParentId))
+                                        {
+                                            Debug.Log("TryGetValue");
+                                            map.SceneObjectID = newParentId;
+                                        }
+                                    }
+                                }
+                            }
+
+                            kdata.Graph = JsonConvert.SerializeObject(graph, Formatting.Indented);
+                        }
+                    }
+                }
+            }
+
+            foreach (var track in data.tracks)
+            {
+                Debug.Log(data.tracks.Count);
+                foreach (var kdata in track.keyframeSaveData)
+                {
+                    Debug.Log(kdata);
+
+                    if (!string.IsNullOrEmpty(kdata.Graph))
+                    {
+                        GraphSaveData graph = JsonConvert.DeserializeObject<GraphSaveData>(kdata.Graph);
+                        foreach (var node in graph.Nodes)
+                        {
+                            Debug.Log(graph.Nodes.Count);
+
+                            foreach (var keypair in node.AdditionalData)
+                            {
+                                Debug.Log("AdditionalData");
+                                if (keypair.Value is MapParameterComponen map)
+                                {
+                                    if (idMap.TryGetValue(map.SceneObjectID, out var newParentId))
+                                    {
+                                        Debug.Log("TryGetValue");
+                                        map.SceneObjectID = newParentId;
+                                    }
+                                }
+                            }
+                        }
+
+                        kdata.Graph = JsonConvert.SerializeObject(graph, Formatting.Indented);
+                    }
+                }
+            }
+        }
+
+        private double _savedCurrentTime;
 
         /// <summary>
         /// Позволяет загружать композицию из сохранения
@@ -210,9 +332,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null,
             bool generateNewSceneID = false, bool addToTitleCloneText = false, bool currentTimeSaved = false)
         {
-            var (groupTrackObject, groupGameObject, groupBranch) = LoadObject(data, false); //Загружаем объект группы
+            var (groupTrackObject, groupGameObject, groupBranch, _) = LoadObject(data, false); //Загружаем объект группы
             
-            if(currentTimeSaved == false) savedCurrentTime = TimeLineConverter.Instance.TicksCurrentTime();
+            // Debug.Log(groupTrackObject.sceneObjectID);
+            
+            if (currentTimeSaved == false) _savedCurrentTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(groupTrackObject.trackObject
                 .StartTimeInTicks); //Ставим время тамйлайна на старт группы что бы ничего не сьехало
 
@@ -222,36 +346,41 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             List<GameObjectSaveData> children; //Создаём список дочерных обьъектов
             if (compositionData == null)
             {
-                if (generateNewSceneID) GenerateNewSceneIDs(data);
                 children = data.children; //Если один объект сохранения то загружаем из основного
+                Debug.Log(children.Count);
+                if (generateNewSceneID) GenerateNewSceneIDs(data);
             }
             else
             {
-                if (generateNewSceneID) GenerateNewSceneIDs(compositionData);
                 children = compositionData.children; //Если нет то загружаем из файла композиции
+                if (generateNewSceneID) GenerateNewSceneIDs(compositionData);
             }
 
             List<TrackObjectData>
                 trackObjectDatas = new List<TrackObjectData>(); //Пустой список дочерних объектов композиции
+            List<Track> childAllTracks = new List<Track>();
             foreach (var childData in children.ToList()) //Перебираем детей из списка в сохранении
             {
                 //Инициализируем пустые поля
                 TrackObjectData childTrackObject = null;
                 GameObject childSceneObject = null;
                 Branch childBranch = null;
+                List<Track> childTracks = new List<Track>();
 
                 if (childData is GroupGameObjectSaveData childGroupData) //Если дочерний объект тоже композиция
                 {
+                    // Debug.Log("first");
+
                     GroupGameObjectSaveData groupChildData = _saveComposition.FindCompositionDataById(childGroupData
                         .compositionID); //Ищем по Id в галереии композиций файл сохранения где лежат сохраннёные дочерние объекты
-                    
+
                     // Debug.Log(childGroupData.compositionID);
                     // Debug.Log(childGroupData.branch.Name);
                     // Debug.Log(groupChildData.compositionID);
                     // Debug.Log(groupChildData.lastEditID);
                     // Debug.Log("--------------------------");
                     childGroupData.lastEditID = groupChildData.lastEditID;
-                    
+
 
                     if (groupChildData != null) //Если нашли, загружаем
                     {
@@ -263,9 +392,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 }
                 else //Если дочерний объект не композиция
                 {
-                    (childTrackObject, childSceneObject, childBranch) =
+                    (childTrackObject, childSceneObject, childBranch, childTracks) =
                         LoadObject(childData, generateNewSceneID: false,
-                            addToTitleCloneText: addToTitleCloneText); //Загружаем обычный объект
+                            addToTitleCloneText: addToTitleCloneText, loadGraph: false); //Загружаем обычный объект
                 }
 
                 if (childTrackObject != null) //Если дочерний объект не пустой
@@ -302,6 +431,21 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                         }
                     }
                 }
+
+                childAllTracks.AddRange(childTracks);
+            }
+
+
+            foreach (var track in childAllTracks)
+            {
+                foreach (var saveData in track.Keyframes)
+                {
+                    (OutputLogic item1, List<IInitializedNode> item2) = _saveNodes.LoadLogicOnly(
+                        saveData.GetData().Graph,
+                        TypeToDataType.Convert(saveData.GetData().GetType()), trackObjectDatas);
+                    saveData.GetData().Logic = item1;
+                    saveData.GetData().initializedNodes = item2;
+                }
             }
 
             ParentLinkRestorer.Restor(trackObjectDatas);
@@ -327,24 +471,29 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             }
 
 
-            string sceneObjectID = UniqueIDGenerator.GenerateUniqueID(); //
+            // string sceneObjectID = UniqueIDGenerator.GenerateUniqueID(); //
 
-            
+
             TrackObjectGroup trackObjectGroup =
                 _trackObjectStorage.AddGroup(groupGameObject.gameObject, groupTrackObject.trackObject,
                     groupTrackObject.branch, trackObjectDatas,
-                    sceneObjectID, compositionID,  string.IsNullOrEmpty(data.lastEditID) ? compositionData?.lastEditID : data.lastEditID, addToStorage); // ???????
+                    groupTrackObject.sceneObjectID, compositionID,
+                    string.IsNullOrEmpty(data.lastEditID) ? compositionData?.lastEditID : data.lastEditID,
+                    addToStorage); // ???????
 
             groupGameObject.GetComponent<NameComponent>().Name.Value = groupTrackObject.branch.Name;
 
 
-            
-            _main.SetTimeInTicks(savedCurrentTime);
+            _main.SetTimeInTicks(_savedCurrentTime);
 
             groupGameObject.GetComponent<SceneObjectLink>().trackObjectData = trackObjectGroup;
-            
+
             // Debug.Log(trackObjectGroup.lastEditID);
 
+            // Debug.Log(groupTrackObject.sceneObjectID);
+            // Debug.Log(trackObjectGroup.sceneObjectID);
+
+            
             return (trackObjectGroup, groupGameObject, groupTrackObject.branch);
         }
     }

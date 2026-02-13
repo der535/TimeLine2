@@ -30,6 +30,8 @@ public class NodeConnector : MonoBehaviour
             CheckConnection();
         }
     }
+    
+    public List<NodeConnection> GetConnections() => _allConnections;
 
     public void OnPortClick(Port clickedPort)
     {

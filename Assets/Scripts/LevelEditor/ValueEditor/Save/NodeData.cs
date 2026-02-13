@@ -15,6 +15,7 @@ public class NodeSaveEntry
     public string TypeFullName; // Для рефлексии
     public Vector2 Position;
     public Dictionary<int, object> ManualValues; 
+    public Dictionary<string, object> AdditionalData = new();
 }
 
 [System.Serializable]

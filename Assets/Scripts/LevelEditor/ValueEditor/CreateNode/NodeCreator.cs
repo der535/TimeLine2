@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using EventBus;
 using NaughtyAttributes;
+using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using UnityEngine;
 using Zenject;
 
@@ -16,32 +19,33 @@ namespace TimeLine.LevelEditor.ValueEditor
         [SerializeField] private DataType dataType;
 
         private DiContainer _container;
-        
+
         private List<Node> _nodes = new();
         private OutputLogic _outputLogic; //OutputLogic Что бы получать конечное значение
+        private GameEventBus _gameEventBus;
 
+        private List<IInitializedNode> _initializedNodes = new();
+        
         [Inject]
-        private void Construct(DiContainer container)
+        private void Construct(DiContainer container, GameEventBus eventBus)
         {
             _container = container;
+            _gameEventBus = eventBus;
         }
 
         internal List<Node> GetNodes() => _nodes;
-
-        [Button]
-        private void CreateNode()
+        internal List<IInitializedNode> GetInitializedNodes() => _initializedNodes;
+        
+        
+        public OutputLogic CreateNode(OutputLogic outputLogic)
         {
-            //Со старту создаёт 2 тестовые ноды
-            OutputLogic outputLogic = new OutputLogic();
-            outputLogic.Initialize(dataType);
-            CreateNode(outputLogic, "Output", new Vector2(0, 0), false);
+           return (OutputLogic)CreateNode(outputLogic, outputLogic.GetType().ToString(),
+                Vector2.zero, false).Logic;
         }
-
-        //Метод для вывода конечного значение
-        [Button]
-        private void GetValue()
+        
+        public void SetListIInitializedNodes(List<IInitializedNode> initializedNodes)
         {
-           print(_outputLogic.GetValue()); 
+            _initializedNodes = initializedNodes;
         }
 
         internal void RemoveNode(Node node)
@@ -55,8 +59,9 @@ namespace TimeLine.LevelEditor.ValueEditor
         /// <param name="nodeLogic">Класс логики ноды</param>
         /// <param name="nodeName">Название ноды</param>
         /// <param name="position">Начальная позиция</param>
-        internal Node CreateNode(NodeLogic nodeLogic, string nodeName, Vector2 position, bool isDeleted = true)
+        internal Node CreateNode(global::NodeLogic nodeLogic, string nodeName, Vector2 position, bool isDeleted = true)
         {
+            _container.Inject(nodeLogic);
             Node component = _container.InstantiatePrefab(_nodePrefab, root).GetComponent<Node>();
             RectTransform rect = (RectTransform)component.gameObject.transform;
             rect.anchoredPosition = position;
@@ -66,6 +71,10 @@ namespace TimeLine.LevelEditor.ValueEditor
             {
                 _outputLogic = outputLogic;
             }
+            
+            if(nodeLogic is IInitializedNode initializedNode)
+                _initializedNodes.Add(initializedNode);
+
             return component;
         }
     }

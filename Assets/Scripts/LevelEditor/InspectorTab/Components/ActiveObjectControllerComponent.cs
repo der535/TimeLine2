@@ -16,7 +16,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components
         public Action<bool> IsActiveChanged;
         public bool IsActive = false;
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return new StringParameter(string.Empty, string.Empty);
         }

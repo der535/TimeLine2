@@ -18,20 +18,20 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
         [SerializeField] private float focusBorderSpacing = 30;
 
         private TimeLineKeyframeZoom _timeLineKeyframeZoom;
-        private M_KeyframeSelectedStorage _storage;
+        private KeyframeSelectedStorage _storage;
         private BezierVerticalPosition _bezierVerticalPosition;
         private VerticalBezierZoom _verticalBezierZoom;
         private ScrollTimeLineKeyframe _scrollTimeLineKeyframe;
         private KeyframeReferences _keyframeReferences;
         private ActionMap _actionMap;
         private IReadActiveBezierPointsData _activeBezierPoints;
-        private M_KeyframeSelectedStorage _keyframeSelectController;
+        private KeyframeSelectedStorage _keyframeSelectController;
 
         [Inject]
-        private void Construct(M_KeyframeSelectedStorage storage, BezierVerticalPosition bezierVerticalPosition,
+        private void Construct(KeyframeSelectedStorage storage, BezierVerticalPosition bezierVerticalPosition,
             VerticalBezierZoom verticalBezierZoom, ScrollTimeLineKeyframe scrollTimeLineKeyframe,
             TimeLineKeyframeZoom timeLineKeyframeZoom, ActionMap actionMap,
-            M_KeyframeSelectedStorage keyframeSelectController, KeyframeReferences keyframeReferences)
+            KeyframeSelectedStorage keyframeSelectController, KeyframeReferences keyframeReferences)
         {
             _storage = storage;
             _bezierVerticalPosition = bezierVerticalPosition;

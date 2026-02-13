@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Keyframe;
 using UnityEngine;
 using Zenject;
 
@@ -51,10 +53,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             };
         }
 
-        internal (TrackObjectData, GameObject, Branch) LoadObject(GameObjectSaveData data,
+        internal (TrackObjectData, GameObject, Branch, List<Track>) LoadObject(GameObjectSaveData data,
             bool addToStorage = true)
         {
-            return _loader.LoadObject(data, addToStorage);
+            return _loader.LoadObject(data, addToStorage, loadGraph: false);
         }
 
         internal void CreateSceneObjectAndAddSprite(Sprite sprite)

@@ -115,7 +115,7 @@ namespace TimeLine
             };
             _capsuleCollider2DOutline.Setup(_activeObjectControllerComponent, transformComponent);
         }
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return OffsetX;
             yield return OffsetY;

@@ -105,7 +105,7 @@ namespace TimeLine
             _physicsAnchor.Setup(_activeObjectControllerComponent, transformComponent);
         }
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return Points;
             yield return isActive;

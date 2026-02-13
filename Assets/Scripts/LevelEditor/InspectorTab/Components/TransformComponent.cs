@@ -56,7 +56,7 @@ namespace TimeLine
         }
 
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return IsActiveTrackObject;
             yield return XPosition;
@@ -214,7 +214,23 @@ namespace TimeLine
             ZRotation.OnValueChanged += ChangeTransform;
             XScale.OnValueChanged += ChangeTransform;
             YScale.OnValueChanged += ChangeTransform;
-            
+
+            ChangeTransform += () =>
+            {
+                // Используем localEulerAngles вместо localRotation
+                Vector3 euler = this.transform.localEulerAngles;
+                
+                XPosition.Value = this.transform.localPosition.x;
+                YPosition.Value = this.transform.localPosition.y;
+    
+                XRotation.Value = euler.x;
+                YRotation.Value = euler.y;
+                ZRotation.Value = euler.z;
+    
+                XScale.Value = this.transform.localScale.x;
+                YScale.Value = this.transform.localScale.y;
+            };
+
             TransformComponentStorage.AddComponent(this);
         }
 

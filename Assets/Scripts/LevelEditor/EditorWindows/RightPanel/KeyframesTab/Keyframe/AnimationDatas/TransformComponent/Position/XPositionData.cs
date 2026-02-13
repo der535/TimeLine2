@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.ValueEditor;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.TimeLine;
 using Unity.Mathematics;
 using UnityEngine;
@@ -11,18 +14,16 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
     [System.Serializable]
     public class XPositionData : AnimationData
     {
-        public float value;
-        public OutputLogic logic;
-        public string SaveGraph;
-        
-
         public XPositionData(float value)
         {
-            this.value = value;
-            logic = new OutputLogic();
-            logic.Initialize(DataType.Float);
-            logic.ManualValues[0] = value;
+            // this.value = value;
+            Logic = new OutputLogic();
+            Logic.Initialize(DataType.Float);
+            Logic.ManualValues[0] = value;
+            Graph = SaveGraph.ToJson(Logic);
         }
+        
+      
 
         public override Type GetComponentType()
         {
@@ -31,22 +32,23 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
         public override float4 PackDataToFloat4()
         {
-            return new float4(value,0,0,0);
+            return new float4((float)Logic.GetValue(), 0, 0, 0);
         }
 
         public override AnimationData Clone()
         {
-            return new XPositionData(value);
+            return new XPositionData((float)Logic.GetValue());
         }
 
         public override object GetValue()
         {
-            return value;
+            
+            return (float)Logic.GetValue();
         }
 
         public override void SetValue(object value)
         {
-            if(value is float f) this.value = f;
+            if (value is float f) Logic.ManualValues[0] = f;
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
@@ -55,14 +57,14 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
         public override string GetDataType()
         {
-           return nameof(XPositionData);
+            return nameof(XPositionData);
         }
 
         public override JObject SerializeData()
         {
             return new JObject
             {
-                ["transform-position-x"] = JToken.FromObject(value)
+                ["transform-position-x"] = JToken.FromObject((float)Logic.GetValue())
             };
         }
 
@@ -70,7 +72,9 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
         {
             if (data.TryGetValue("transform-position-x", out JToken token))
             {
-                value = token.ToObject<float>();
+                Logic.Initialize(DataType.Float);
+                Logic.ManualValues[0] = token.ToObject<float>();
+                Graph = SaveGraph.ToJson(Logic);
             }
         }
 
@@ -83,9 +87,9 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
         }
 
         public override void Interpolate(
-            AnimationData other, 
-            double t, 
-            global::TimeLine.Keyframe.Keyframe current, 
+            AnimationData other,
+            double t,
+            global::TimeLine.Keyframe.Keyframe current,
             global::TimeLine.Keyframe.Keyframe next,
             global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target)
         {
@@ -94,8 +98,8 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
             float localT = (float)t;
             float interpolatedValue = TimeLineConverter.Instance.Interpolate(
-                value,
-                otherPos.value,
+                (float)Logic.GetValue(),
+                (float)otherPos.Logic.GetValue(),
                 current,
                 next,
                 localT,

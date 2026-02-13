@@ -1,5 +1,8 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
+using TimeLine.LevelEditor.ValueEditor;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.TimeLine;
 using Unity.Mathematics;
 using UnityEngine;
@@ -9,30 +12,34 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
     [System.Serializable]
     public class ZRotationData : AnimationData
     {
-        public float value;
-
         public ZRotationData(float value)
         {
-            this.value = value;
+            Logic = new OutputLogic();
+            Logic.Initialize(DataType.Float);
+            Logic.ManualValues[0] = value;
+            Graph = SaveGraph.ToJson(Logic);
         }
 
         public override float4 PackDataToFloat4()
         {
-            return new float4(value,0,0,0);
+            return new float4((float)Logic.GetValue(),0,0,0);
         }
 
         public override AnimationData Clone()
         {
-            return new ZRotationData(value);
+            return new ZRotationData((float)Logic.GetValue());
+            
+            // todo не всё копируется
         }
+        
 
         public override object GetValue()
         {
-            return value;
+            return (float)Logic.GetValue();
         }
         public override void SetValue(object value)
         {
-            if(value is float f) this.value = f;
+            if(value is float f) Logic.ManualValues[0] = f;
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
@@ -48,7 +55,7 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
         {
             return new JObject
             {
-                ["transform-rotation-z"] = JToken.FromObject(value)
+                ["transform-rotation-z"] =  JToken.FromObject((float)Logic.GetValue())
             };
         }
 
@@ -56,7 +63,9 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
         {
             if (data.TryGetValue("transform-rotation-z", out JToken token))
             {
-                value = token.ToObject<float>();
+                Logic.Initialize(DataType.Float);
+                Logic.ManualValues[0] = token.ToObject<float>();
+                Graph = SaveGraph.ToJson(Logic);
             }
         }
 
@@ -73,8 +82,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation
 
             float localT = (float)t;
             float interpolatedValue = TimeLineConverter.Instance.Interpolate(
-                value,
-                otherPos.value,
+                (float)Logic.GetValue(),
+                (float)otherPos.Logic.GetValue(),
                 current,
                 next,
                 localT,

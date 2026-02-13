@@ -13,12 +13,12 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
 
         private GameEventBus _gameEventBus;
         private global::TimeLine.BezierController _bezierController;
-        private M_KeyframeSelectedStorage _selectKeyframe;
+        private KeyframeSelectedStorage _selectKeyframe;
         private IReadActiveBezierPointsData _activeBezierPoints;
 
         [Inject]
         private void Constructor(GameEventBus gameEventBus, global::TimeLine.BezierController bezierController,
-            M_KeyframeSelectedStorage selectedStorage, IReadActiveBezierPointsData activeBezierPoints)
+            KeyframeSelectedStorage selectedStorage, IReadActiveBezierPointsData activeBezierPoints)
         {
             _gameEventBus = gameEventBus;
             _bezierController = bezierController;

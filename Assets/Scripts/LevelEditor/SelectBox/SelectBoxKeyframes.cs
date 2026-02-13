@@ -25,7 +25,7 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private M_SelectBoxState _state = new();
         private M_SelectBoxDelta _delta = new();
-        private M_KeyframeSelectedStorage _keyframeSelectedStorage;
+        private KeyframeSelectedStorage _keyframeSelectedStorage;
         private M_KeyframeActiveTypeData _keyframeActiveTypeData;
 
 
@@ -40,7 +40,7 @@ namespace TimeLine.LevelEditor.SelectBox
         [Inject]
         private void Constructor(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
             DeselectObject deselectObject, SelectObjectController selectObjectController,
-            KeyframeVizualizer keyframeVizualizer, M_KeyframeSelectedStorage selectedStorage,
+            KeyframeVizualizer keyframeVizualizer, KeyframeSelectedStorage selectedStorage,
             KeyframeSelectController keyframeSelectController, M_KeyframeActiveTypeData keyframeActiveTypeData,
             BezierController bezierController, IReadActiveBezierPointsData activeBezierPoints)
         {

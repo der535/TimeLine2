@@ -14,10 +14,10 @@ namespace TimeLine.LevelEditor.KeyframeEdit
 
         private GameEventBus _gameEventBus;
         private FloatInputValidator _floatInputValidators;
-        private M_KeyframeSelectedStorage _selectedKeyframesStorage;
+        private KeyframeSelectedStorage _selectedKeyframesStorage;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, M_KeyframeSelectedStorage selectedKeyframesStorage)
+        private void Construct(GameEventBus gameEventBus, KeyframeSelectedStorage selectedKeyframesStorage)
         {
             _gameEventBus = gameEventBus;
             _selectedKeyframesStorage = selectedKeyframesStorage;
@@ -37,11 +37,9 @@ namespace TimeLine.LevelEditor.KeyframeEdit
 
         private void Setup(ref SelectKeyframeEvent _)
         {
-            print("Setup");
             if (_selectedKeyframesStorage.Keyframes == null || _selectedKeyframesStorage.Keyframes.Count == 0)
             {
                 keyframeEditView.SetInteractable(false);
-                print("SetInteractable");
                 return;
             }
 
@@ -51,21 +49,21 @@ namespace TimeLine.LevelEditor.KeyframeEdit
             // --- 1. Логика проверки идентичности данных ---
             var firstKey = _selectedKeyframesStorage.Keyframes[0];
             double sameTime = firstKey.Ticks;
-            var sameValue = firstKey.GetData().GetValue();
-            var sameTypeValue = firstKey.GetData().GetValue().GetType();
+            // var sameValue = firstKey.GetData().GetValue();
+            // var sameTypeValue = firstKey.GetData().GetValue().GetType();
             var sameInterpolation = firstKey.Interpolation;
 
             bool isSameTime = true;
-            bool isSameValue = true;
-            bool isSameType = true;
+            // bool isSameValue = true;
+            // bool isSameType = true;
             bool isSameInterpolation = true;
 
             foreach (var wrapper in _selectedKeyframesStorage.Keyframes)
             {
                 var k = wrapper;
                 if (Math.Abs(sameTime - k.Ticks) > 0.001) isSameTime = false;
-                if (sameValue != k.GetData().GetValue()) isSameValue = false;
-                if (sameTypeValue != k.GetData().GetValue().GetType()) isSameType = false;
+                // if (sameValue != k.GetData().GetValue()) isSameValue = false;
+                // if (sameTypeValue != k.GetData().GetValue().GetType()) isSameType = false;
                 if (sameInterpolation != k.Interpolation) isSameInterpolation = false;
             }
 

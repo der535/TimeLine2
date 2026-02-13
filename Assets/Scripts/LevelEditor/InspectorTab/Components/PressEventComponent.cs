@@ -154,7 +154,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components
             }
         }
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return perfectArea;
         }

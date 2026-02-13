@@ -13,6 +13,7 @@ public abstract class NodeLogic
     public List<(string name, DataType type)> OutputDefinitions = new(); //Выходы
     
     public Dictionary<int, object> ManualValues = new();
+    
 
     //Хранит все подключенные ноды к этой
     // Храним: Индекс нашего входа -> (Нода-источник, Индекс её выхода)
@@ -21,6 +22,9 @@ public abstract class NodeLogic
     // Сигнатуру GetValue тоже нужно обновить, чтобы она знала, какой выход запрашивают
     public abstract object GetValue(int outputIndex = 0);
 
+    public virtual void OnSave(Dictionary<string, object> data) { }
+    public virtual void OnLoad(Dictionary<string, object> data) { }
+    
     //Подключаем ноду
     public virtual void ConnectInput(int inputIndex, NodeLogic sourceNode, int outputIndex)
     {
@@ -48,10 +52,29 @@ public abstract class NodeLogic
         // ManualValues.Clear();
     }
     
+    /// <summary>
+    /// Добовляе новый инпут в логику
+    /// </summary>
     public void AddInputDefinition()
     {
         // Добавляем новое описание входа, чтобы GetValue видел его в цикле
         InputDefinitions.Add(($"Input {InputDefinitions.Count}", DataType.Float));
+    }
+    
+    /// <summary>
+    /// Добовляет новый аутпут в логику
+    /// </summary>
+    /// <param name="label"></param>
+    /// <param name="type"></param>
+    public void AddOutputDefinition(string label, DataType type)
+    {
+        // Добавляем новое описание входа, чтобы GetValue видел его в цикле
+        OutputDefinitions.Add((label, type));
+    }
+
+    public void RemoveOutputDefinition(int index)
+    {
+        OutputDefinitions.RemoveAt(index);
     }
 
     /// <summary>

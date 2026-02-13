@@ -53,7 +53,7 @@ namespace TimeLine
             _material.SetFloat("_Angle", _currentAngle);
         }
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return Color1;
             yield return Color2;

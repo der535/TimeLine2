@@ -1,6 +1,7 @@
 ﻿using TimeLine.LevelEditor.ValueEditor;
 using UnityEngine;
 
+
 public class RandomRangeLogic : NodeLogic
 {
     public RandomRangeLogic()
@@ -8,9 +9,9 @@ public class RandomRangeLogic : NodeLogic
         InputDefinitions = new()
         {
             ("Min", DataType.Float), // Индекс 0
-            ("Max", DataType.Float)  // Индекс 1
+            ("Max", DataType.Float) // Индекс 1
         };
-        
+
         OutputDefinitions = new()
         {
             ("Result", DataType.Float) // Индекс 0
@@ -24,6 +25,7 @@ public class RandomRangeLogic : NodeLogic
 
         // 2. Пытаемся получить Max.
         float max = (float)GetInputValue(1, 0);
+
 
         // 3. Возвращаем случайное число в этом диапазоне
         return Random.Range(min, max);

@@ -76,10 +76,10 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
-        public void CreateFloatField(FloatParameter floatParameter, string gameObjectID, Action createKeyframe)
+        public void CreateFloatField(FloatParameter floatParameter, TrackObjectData trackObjectData, BaseParameterComponent component, string gameObjectID, Action createKeyframe)
         {
-            var parameter = Instantiate(floatFieldUIPrefab, _currentComponent.RootObject);
-            parameter.Setup(floatParameter, gameObjectID, createKeyframe);
+            var parameter = _container.InstantiatePrefab(floatFieldUIPrefab, _currentComponent.RootObject).GetComponent<FloatFieldUI>();
+            parameter.Setup(trackObjectData, component, floatParameter, gameObjectID, createKeyframe);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         

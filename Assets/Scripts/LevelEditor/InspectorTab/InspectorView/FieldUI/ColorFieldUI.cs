@@ -40,7 +40,6 @@ namespace TimeLine.CustomInspector.UI.FieldUI
             _button.onClick.AddListener(() => OnButtonClick(gameObjectId));
             _currentParameter.OnValueChanged += OnParameterValueChange;
             
-            Debug.Log(createKeyframeButton);
             UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, () => createKeyframe?.Invoke());
         }
         

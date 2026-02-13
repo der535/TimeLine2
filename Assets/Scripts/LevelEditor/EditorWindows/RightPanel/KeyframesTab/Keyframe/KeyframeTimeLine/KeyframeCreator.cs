@@ -1,5 +1,6 @@
 using TimeLine.CustomInspector.Logic;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
 using TimeLine.TimeLine;
 using UnityEngine;

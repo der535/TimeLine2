@@ -9,46 +9,48 @@ namespace TimeLine.LevelEditor.ValueEditor
     // Добавляем интерфейсы событий
     public class Node : MonoBehaviour, IDragHandler, IPointerDownHandler
     {
-        [Header("UI Containers")] 
-        [SerializeField] private SelectNode selectNode;
+        [Header("UI Containers")] [SerializeField]
+        private SelectNode selectNode;
+
         [SerializeField] private TextMeshProUGUI textMeshProUGUI;
-        [Space] 
-        [SerializeField] private RectTransform inputContainer;
+        [Space] [SerializeField] private RectTransform inputContainer;
         [SerializeField] private RectTransform outputContainer;
         [SerializeField] private RectTransform contentContainer;
 
-        [Header("Prefabs")] 
-        [SerializeField] private Port inputPortPrefab;
+        [Header("Prefabs")] [SerializeField] private Port inputPortPrefab;
         [SerializeField] private Port outputPortPrefab;
 
         public List<Port> inputPorts = new();
         public List<Port> outputPorts = new();
 
-        public NodeLogic Logic { get; private set; }
+        public global::NodeLogic Logic { get; private set; }
 
         private ContentConstructor _contentConstructor;
+        private ValueEditorReferences _references;
         private DiContainer _container;
         private bool _isDeleted;
-        
+
         // Кэшируем компоненты для перемещения
         private RectTransform _rectTransform;
         private Canvas _canvas;
 
         [Inject]
-        private void Constructor(ContentConstructor contentConstructor, DiContainer container)
+        private void Constructor(ContentConstructor contentConstructor, DiContainer container,
+            ValueEditorReferences references)
         {
             _contentConstructor = contentConstructor;
             _container = container;
+            _references = references;
         }
 
         internal SelectNode GetSelectNode() => selectNode;
-        
+
         private void Awake()
         {
             _rectTransform = GetComponent<RectTransform>();
             _canvas = GetComponentInParent<Canvas>();
         }
-        
+
         public bool GetIsDeleted() => _isDeleted;
 
         // Вызывается при клике по ноде
@@ -57,13 +59,14 @@ namespace TimeLine.LevelEditor.ValueEditor
             // Выносим ноду на передний план среди соседей
             _rectTransform.SetAsLastSibling();
         }
-        
+
         // Вызывается при зажатии ЛКМ и движении
         public void OnDrag(PointerEventData eventData)
         {
             // Перемещаем ноду. Делим на scaleFactor, чтобы скорость была 
             // одинаковой при любом масштабе интерфейса или зуме
-            _rectTransform.anchoredPosition += eventData.delta / _canvas.scaleFactor;
+            _rectTransform.anchoredPosition +=
+                (eventData.delta / _canvas.scaleFactor) / _references.nodesRootContainer.localScale.x;
         }
 
         /// <summary>
@@ -83,7 +86,12 @@ namespace TimeLine.LevelEditor.ValueEditor
             if (isInput) inputPorts.Add(port);
             else outputPorts.Add(port);
         }
-        
+
+        private void RemovePort(bool isInput, int index)
+        {
+            
+        }
+
         /// <summary>
         /// Динамическое добовляет новый инпут порт
         /// </summary>
@@ -93,22 +101,48 @@ namespace TimeLine.LevelEditor.ValueEditor
         {
             // Добовляет в логику порт
             Logic.AddInputDefinition();
-            
+
             //Создаем визуальный порт
-            AddPort(label, true, type); 
-    
+            AddPort(label, true, type);
+
             //Получаем индекс только что созданного порта
             int newIndex = inputPorts.Count - 1;
-    
+
             // Настраиваем только этот конкретный порт
             _contentConstructor.SetupManualInputFloat(Logic, inputPorts[newIndex], newIndex);
         }
 
+        /// <summary>
+        /// Динамическое добовляет новый инпут порт
+        /// </summary>
+        /// <param name="label"></param>
+        /// <param name="type"></param>
+        public void AddOutPutDynamic(string label, DataType type)
+        {
+            // Добовляет в логику порт
+            Logic.AddOutputDefinition(label, type);
+
+            //Создаем визуальный порт
+            AddPort(label, false, type);
+        }
+
+        public void RemoveOutputDynamic(int id)
+        {
+            foreach (var connection in outputPorts[id].Connections.ToArray())
+            {
+                connection.Disconnect();
+            }
+            
+            Destroy(outputPorts[id].gameObject);
+            
+            Logic.RemoveOutputDefinition(id);
+        }
         
+
         /// <summary>
         /// Инициализатор записывает логику ноды, название ноды и инициализирует поля
         /// </summary>
-        public void Initialize(NodeLogic logic, string title, bool isDeleted)
+        public void Initialize(global::NodeLogic logic, string title, bool isDeleted)
         {
             _isDeleted = isDeleted;
             Logic = logic;
@@ -122,15 +156,19 @@ namespace TimeLine.LevelEditor.ValueEditor
         /// </summary>
         private void SetupPorts()
         {
-            foreach (var p in inputPorts) if(p != null) Destroy(p.gameObject);
+            foreach (var p in inputPorts)
+                if (p != null)
+                    Destroy(p.gameObject);
             inputPorts.Clear();
 
-            foreach (var p in outputPorts) if(p != null) Destroy(p.gameObject);
+            foreach (var p in outputPorts)
+                if (p != null)
+                    Destroy(p.gameObject);
             outputPorts.Clear();
 
             foreach (var def in Logic.InputDefinitions)
                 AddPort(def.name, true, def.type);
-            
+
             foreach (var def in Logic.OutputDefinitions)
                 AddPort(def.name, false, def.type);
         }

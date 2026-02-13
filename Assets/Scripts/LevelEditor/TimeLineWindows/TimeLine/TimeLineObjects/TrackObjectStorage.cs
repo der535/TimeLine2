@@ -7,8 +7,10 @@ using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
 using UnityEngine;
@@ -32,10 +34,10 @@ namespace TimeLine
         private ActionMap _actionMap;
         private M_PlaybackState playbackState;
 
-
         [Inject]
         private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController,
-            SaveComposition saveComposition, ActionMap actionMap, TrackObjectRemover trackObjectRemover, M_PlaybackState _playbackState)
+            SaveComposition saveComposition, ActionMap actionMap, TrackObjectRemover trackObjectRemover,
+            M_PlaybackState _playbackState)
         {
             _gameEventBus = gameEventBus;
             _selectObjectController = selectObjectController;
@@ -50,7 +52,8 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>((ref TickSmoothTimeEvent x) => ActiveSceneObject(x.Time));
-            _gameEventBus.SubscribeTo<LevelLoadedEvent>((ref LevelLoadedEvent _) => ActiveSceneObject(playbackState.SmoothTimeInTicks));
+            _gameEventBus.SubscribeTo<LevelLoadedEvent>((ref LevelLoadedEvent _) =>
+                ActiveSceneObject(playbackState.SmoothTimeInTicks));
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
@@ -670,12 +673,13 @@ namespace TimeLine
         /// <param name="compositionUpdateID">ID композиции который обновился</param>
         public void Update(double newDuraction, List<TrackObjectData> trackObjectDatas, TrackObjectRemover remover,
             MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID,
-            SaveComposition saveComposition, string compositionUpdateID, bool updateSelf)
+            SaveComposition saveComposition, string compositionUpdateID, bool updateSelf, LoadGraphLogic _loadGraphLogic)
         {
             this.lastEditID = lastEditID;
 
             trackObject.UpdateDuraction(newDuraction);
 
+            
             List<TrackObjectData> updateTrackObjectDatas = new List<TrackObjectData>();
 
             //Если композиция не полностью обновляется
@@ -748,6 +752,10 @@ namespace TimeLine
                     }
                 }
             }
+
+            
+            
+            _loadGraphLogic.LoadGraph(TrackObjectDatas);
 
             ParentLinkRestorer.Restor(updateTrackObjectDatas);
         }

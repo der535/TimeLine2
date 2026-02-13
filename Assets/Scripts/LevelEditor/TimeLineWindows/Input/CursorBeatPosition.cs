@@ -11,6 +11,7 @@ namespace TimeLine.Input
     {
         [SerializeField] private TimeLineSettings timeLineSettings;
         [SerializeField] private RectTransform clickArea;
+        [SerializeField] private WindowsFocus timeLineFocus;
 
         [FormerlySerializedAs("gridSystem")] [SerializeField]
         private GridUI gridUI;
@@ -62,7 +63,7 @@ namespace TimeLine.Input
                     out var localPoint))
             {
                 // 2. Проверяем, входит ли локальная точка в границы прямоугольника
-                if (clickArea.rect.Contains(localPoint) && UnityEngine.Input.GetMouseButtonDown(0))
+                if (clickArea.rect.Contains(localPoint)&& timeLineFocus.IsFocused && UnityEngine.Input.GetMouseButtonDown(0))
                 {
                     _isActive = true;
                 }

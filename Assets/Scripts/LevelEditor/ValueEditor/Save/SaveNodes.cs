@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using NaughtyAttributes;
 using Newtonsoft.Json;
+using TimeLine.LevelEditor.ValueEditor.NodeLogic;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using UnityEngine;
 using Zenject;
 
@@ -11,29 +12,18 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
     {
         private NodeCreator _nodeCreator;
         private NodeConnector _nodeConnection;
-        
-        private string save;
+        private DiContainer _container;
+
+        private string _save;
 
         [Inject]
-        private void Construct(NodeCreator nodeCreator, NodeConnector nodeConnector)
+        private void Construct(NodeCreator nodeCreator, NodeConnector nodeConnector, DiContainer container)
         {
             _nodeCreator = nodeCreator;
             _nodeConnection = nodeConnector;
+            _container = container;
         }
-
-        [Button]
-        private void Save()
-        {
-            save = SaveGraphToJson(_nodeCreator.GetNodes());
-            print(save);
-        }
-
-        [Button]
-        private void Load()
-        {
-            LoadGraph(save, DataType.Float);
-        }
-
+        
 
         public string SaveGraphToJson(List<Node> activeNodes)
         {
@@ -48,8 +38,14 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                     TypeFullName = node.Logic.GetType().AssemblyQualifiedName,
                     Position = node.GetComponent<RectTransform>().anchoredPosition,
                     // Просто копируем словарь. Newtonsoft сам разберется с object (float, Color и т.д.)
-                    ManualValues = new Dictionary<int, object>(node.Logic.ManualValues)
+                    ManualValues = new Dictionary<int, object>(node.Logic.ManualValues),
                 };
+
+                if (node.Logic is ComponentFieldLogic componentFieldLogic)
+                {
+                    componentFieldLogic.OnSave(nEntry.AdditionalData);
+                }
+                
                 graphData.Nodes.Add(nEntry);
 
                 // 2. Сохраняем только входящие связи ноды (чтобы не дублировать их)
@@ -74,13 +70,16 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
 
             return JsonConvert.SerializeObject(graphData, settings);
         }
-        
-        public void LoadGraph(string json, DataType type)
+
+        public OutputLogic LoadGraph(string json, DataType type, List<IInitializedNode> initializedNodes, List<TrackObjectData> objects = null)
         {
+            OutputLogic outputLogic = null;
             var settings = new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.Auto // Позволяет восстанавливать типы, если они указаны в JSON
             };
+            
+            _nodeCreator.SetListIInitializedNodes(initializedNodes);
 
             var data = JsonConvert.DeserializeObject<GraphSaveData>(json, settings);
             var idToNode = new Dictionary<string, Node>();
@@ -89,12 +88,23 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
             {
                 // 1. Создаем логику через Reflection
                 Type logicType = Type.GetType(nEntry.TypeFullName);
-                NodeLogic logic = (NodeLogic)Activator.CreateInstance(logicType);
+                global::NodeLogic logic = (global::NodeLogic)Activator.CreateInstance(logicType);
+                _container.Inject(logic);
                 logic.Id = nEntry.Id;
 
-                if (logic is OutputLogic outputLogic)
+                if (logic is OutputLogic output)
                 {
-                    outputLogic.Initialize(type);
+                    output.Initialize(type);
+                    outputLogic = output;
+                }
+
+                if (logic is ComponentFieldLogic fieldLogic)
+                {
+                    fieldLogic.Load(nEntry.AdditionalData, objects);
+                    var parameter = fieldLogic.GetField();
+                    print(parameter == null);
+                    if(parameter!=null)
+                        fieldLogic.AddOutputDefinition(parameter.Name, TypeToDataType.Convert(parameter.ValueType));
                 }
 
                 // 2. Исправляем типы в ManualValues
@@ -104,24 +114,38 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 Node newNode = _nodeCreator.CreateNode(logic, logicType.Name, nEntry.Position);
                 idToNode[logic.Id] = newNode;
             }
-
+            
             // 4. Восстанавливаем связи (как обсуждали ранее)
             _nodeConnection.RestoreConnections(data.Connections, idToNode);
+            return outputLogic;
         }
-        
-        public NodeLogic LoadLogicOnly(string json, DataType type)
+
+        public (OutputLogic, List<IInitializedNode>) LoadLogicOnly(string json, DataType type, List<TrackObjectData> objects = null)
         {
+            if (string.IsNullOrEmpty(json))
+            {
+                var outputLogic = new OutputLogic();
+                outputLogic.Initialize(type);
+                return (_nodeCreator.CreateNode(outputLogic), null);
+            }
+            
+            
+            
+            List<IInitializedNode> listNodes = new List<IInitializedNode>();
             var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
             var data = JsonConvert.DeserializeObject<GraphSaveData>(json, settings);
-    
-            Dictionary<string, NodeLogic> idToLogic = new();
-            NodeLogic finalNode = null;
+
+            Dictionary<string, global::NodeLogic> idToLogic = new();
+            OutputLogic finalNode = null;
 
             // 1. Создаем только объекты логики
             foreach (var nEntry in data.Nodes)
             {
                 Type logicType = Type.GetType(nEntry.TypeFullName);
-                NodeLogic logic = (NodeLogic)Activator.CreateInstance(logicType);
+                global::NodeLogic logic = (global::NodeLogic)Activator.CreateInstance(logicType);
+                _container.Inject(logic);
+
+
                 logic.Id = nEntry.Id;
 
                 // Если это наш Output — запоминаем его как точку входа для вычислений
@@ -131,9 +155,19 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                     finalNode = output;
                 }
 
+                if (logic is ComponentFieldLogic fieldLogic)
+                {
+                    fieldLogic.Load(nEntry.AdditionalData,objects);
+                }
+
+                if (logic is IInitializedNode initialized)
+                {
+                    listNodes.Add(initialized);
+                }
+
                 // Заполняем ManualValues (не забудь FixManualValues для типов)
                 FixManualValues(nEntry.ManualValues, logic);
-        
+
                 idToLogic.Add(logic.Id, logic);
             }
 
@@ -147,11 +181,11 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 }
             }
 
-            return finalNode; // Возвращаем "голову" графа
+            return (finalNode, listNodes); // Возвращаем "голову" графа
         }
 
 
-        private void FixManualValues(Dictionary<int, object> values, NodeLogic logic)
+        private void FixManualValues(Dictionary<int, object> values, global::NodeLogic logic)
         {
             foreach (var key in new List<int>(values.Keys))
             {
@@ -166,8 +200,8 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 if (val is Newtonsoft.Json.Linq.JObject jObject)
                 {
                     // Определяем, какой тип ожидается в этом порту
-                    var portType = logic.InputDefinitions[key].type; 
-            
+                    var portType = logic.InputDefinitions[key].type;
+
                     if (portType == DataType.Color)
                         val = jObject.ToObject<Color>();
                     else if (portType == DataType.Vector2)

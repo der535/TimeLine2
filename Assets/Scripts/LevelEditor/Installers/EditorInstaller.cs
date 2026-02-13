@@ -109,7 +109,7 @@ namespace TimeLine.LevelEditor.Core
             Container.Bind<M_PlaybackState>().AsSingle();
 
             Container.Bind<M_KeyframeActiveTypeData>().AsSingle();
-            Container.Bind<M_KeyframeSelectedStorage>().AsSingle();
+            Container.Bind<KeyframeSelectedStorage>().AsSingle();
             Container.Bind<CopyComponentController>().AsSingle();
             
             Container.BindInstance(core.musicDataController).AsSingle();

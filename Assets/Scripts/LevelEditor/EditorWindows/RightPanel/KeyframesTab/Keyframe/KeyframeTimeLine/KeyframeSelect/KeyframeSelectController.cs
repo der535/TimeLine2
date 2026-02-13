@@ -13,7 +13,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
     {
         [SerializeField] private KeyframeVizualizer keyframeVizualizer;
 
-        private M_KeyframeSelectedStorage _storage;
+        private KeyframeSelectedStorage _storage;
 
         private BezierController _bezierController;
         private GameEventBus _gameEventBus;
@@ -21,7 +21,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
         private IReadActiveBezierPointsData _activeBezierPoints;
         
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, M_KeyframeSelectedStorage storage, BezierController bezierController, IReadActiveBezierPointsData activeBezierPoints)
+        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, KeyframeSelectedStorage storage, BezierController bezierController, IReadActiveBezierPointsData activeBezierPoints)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
@@ -37,10 +37,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
             {
                 SelectKeyframe(data.Keyframe);
             });
-            // _gameEventBus.SubscribeTo((ref BezierSelectPointEvent data) =>
-            // {
-            //     SelectKeyframe(data.BezierPoint.BezierDragPoint._original);
-            // });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) =>
             {
                 ClearStorage();

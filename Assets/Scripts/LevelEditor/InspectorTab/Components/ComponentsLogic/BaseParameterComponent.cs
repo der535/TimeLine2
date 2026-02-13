@@ -5,6 +5,7 @@ using TimeLine.CustomInspector.Logic;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
@@ -65,7 +66,7 @@ public abstract class BaseParameterComponent : MonoBehaviour, IParameterComponen
         _keyframeCreator.CreateKeyframe(data, gameObject, GetType().Name, param);
     }
     
-    protected abstract IEnumerable<InspectableParameter> GetParameters();
+    public abstract IEnumerable<InspectableParameter> GetParameters();
 
     public string GetID() => _componentID;
     public string SetID(string NewId) => _componentID = NewId;

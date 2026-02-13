@@ -143,7 +143,7 @@ namespace TimeLine
             }
         }
 
-        protected override IEnumerable<InspectableParameter> GetParameters()
+        public override IEnumerable<InspectableParameter> GetParameters()
         {
             yield return XOffset;
             yield return YOffset;

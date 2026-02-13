@@ -4,7 +4,7 @@ using TimeLine.TimeLine;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
+namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset
 {
     [System.Serializable]
     public class XOffsetData : AnimationData
@@ -25,8 +25,7 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
         {
            return new float4(value,0,0,0);
         }
-
-
+        
         public override AnimationData Clone()
         {
             return new XOffsetData(value);
@@ -79,8 +78,8 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
         public override void Interpolate(
             AnimationData other,
             double t,
-            Keyframe current,
-            Keyframe next, Keyframe.InterpolationType interpolationType, Component target)
+            global::TimeLine.Keyframe.Keyframe current,
+            global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target)
         {
             if (other is not XOffsetData otherPos)
                 throw new System.ArgumentException($"Interpolation requires another {GetType()}.");
@@ -106,6 +105,5 @@ namespace TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset
                 component.OffsetX.Value = (float)o; 
             }
         }
-        
     }
 }

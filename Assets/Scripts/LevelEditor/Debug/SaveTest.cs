@@ -1,6 +1,7 @@
 using System;
 using Newtonsoft.Json;
 using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
 using UnityEngine;
 
 namespace TimeLine

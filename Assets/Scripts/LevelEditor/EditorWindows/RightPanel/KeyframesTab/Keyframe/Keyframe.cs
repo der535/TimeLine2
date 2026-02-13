@@ -1,12 +1,17 @@
-﻿using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
+﻿using System;
+using System.Collections.Generic;
+using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.RadialSunburstDrawer;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
 using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 
 namespace TimeLine.Keyframe
 {
@@ -14,13 +19,15 @@ namespace TimeLine.Keyframe
 
     public class Keyframe
     {
+        public bool IsInitialized { get; set; }
+        public Action Initialize { get; set; }
         public double Ticks { get; set; }
-        
+
         public double OutTangent { get; set; }
         public double InTangent { get; set; }
         public double InWeight { get; set; }
         public double OutWeight { get; set; }
-        public InterpolationType Interpolation  { get; set; }
+        public InterpolationType Interpolation { get; set; }
 
         public enum InterpolationType : int
         {
@@ -28,19 +35,32 @@ namespace TimeLine.Keyframe
             Bezier = 1,
             Hold = 2
         }
-        
+
         private AnimationData animationData;
 
-        public Keyframe(double ticks, InterpolationType interpolation, double outTangent = 0, double inTangent = 0, double inWeight = 0.5f, double outWeight = 0.5f)
+        public Keyframe(double ticks, InterpolationType interpolation,  double outTangent = 0, double inTangent = 0,
+            double inWeight = 0.5f, double outWeight = 0.5f)
         {
             Ticks = Mathf.Round((float)ticks);
-            
+
             Interpolation = interpolation;
 
             OutTangent = outTangent;
             InTangent = inTangent;
             InWeight = inWeight;
             OutWeight = outWeight;
+
+            Initialize += () =>
+            {
+                if (animationData.initializedNodes != null)
+                {
+                    foreach (var VARIABLE in animationData.initializedNodes)
+                    {
+                        VARIABLE.Initialized();
+                    }
+                }
+
+            };
         }
 
         public void AddData(AnimationData data)
@@ -53,7 +73,7 @@ namespace TimeLine.Keyframe
         {
             animationData.Apply(target, animationData.GetValue());
         }
-        
+
         public AnimationData GetData() => animationData;
 
         public Keyframe Clone()
@@ -70,7 +90,7 @@ namespace TimeLine.Keyframe
 
             if (currentData != null && nextData != null)
             {
-                currentData.Interpolate(nextData, t, this,next, Interpolation, target);
+                currentData.Interpolate(nextData, t, this, next, Interpolation, target);
             }
             else if (currentData != null)
             {
@@ -81,7 +101,7 @@ namespace TimeLine.Keyframe
                 nextData.Apply(target, nextData.GetValue());
             }
         }
-        
+
         public KeyframeSaveData ToSaveData()
         {
             return new KeyframeSaveData
@@ -93,14 +113,15 @@ namespace TimeLine.Keyframe
                 InWeight = InWeight,
                 OutWeight = OutWeight,
                 DataType = animationData?.GetDataType(),
-                Data = animationData?.SerializeData()
+                Data = animationData?.SerializeData(),
+                Graph = animationData?.Graph
             };
         }
-        
-        public static Keyframe FromSaveData(KeyframeSaveData saveData)
+
+        public static Keyframe FromSaveData(KeyframeSaveData saveData, OutputLogic logic, List<IInitializedNode> initializedNodes)
         {
             if (saveData == null) return null;
-            
+
             // Debug.Log($"to save {saveData.InterpolationType}");
 
             var keyframe = new Keyframe(
@@ -119,6 +140,15 @@ namespace TimeLine.Keyframe
                 {
                     data.DeserializeData(saveData.Data);
                     keyframe.AddData(data);
+                    
+                    
+                    if (saveData.Graph != null)
+                    {
+                        data.Graph = saveData.Graph;
+                        data.Logic = logic;
+                        data.initializedNodes = initializedNodes;
+                    }
+
                 }
                 else
                 {
@@ -128,7 +158,7 @@ namespace TimeLine.Keyframe
 
             return keyframe;
         }
-        
+
         // 🔑 Фабрика для создания AnimationData по имени типа
         private static AnimationData CreateAnimationData(string typeName)
         {
@@ -143,7 +173,7 @@ namespace TimeLine.Keyframe
                 nameof(XScaleData) => new XScaleData(0),
                 nameof(YScaleData) => new YScaleData(0),
                 nameof(ColorData) => new ColorData(Color.black),
-                
+
                 nameof(XSizeData) => new XSizeData(0),
                 nameof(YSizeData) => new YSizeData(0),
                 nameof(XOffsetData) => new XOffsetData(0),

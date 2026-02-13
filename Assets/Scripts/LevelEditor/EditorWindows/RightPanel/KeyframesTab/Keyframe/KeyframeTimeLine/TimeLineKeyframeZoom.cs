@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Zenject;
 
 namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine

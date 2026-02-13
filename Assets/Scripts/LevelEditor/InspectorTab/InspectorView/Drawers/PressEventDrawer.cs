@@ -1,4 +1,5 @@
 ﻿using TimeLine.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
@@ -26,7 +27,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         {
             _customInspectorDrawer.CreateComponent(component, true);
             string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
-
+            SceneObjectLink link = target.GetComponent<SceneObjectLink>();
             if (component is PressEventComponent componentComponent)
             {
                 _customInspectorDrawer.CreateKeyCode(componentComponent.KeyCodeParameter);
@@ -36,8 +37,10 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
                 _customInspectorDrawer.CreateSelectComposition(componentComponent.prefabPerfect);
                 _customInspectorDrawer.CreateSelectComposition(componentComponent.prefabMiddel);
                 _customInspectorDrawer.CreateSelectComposition(componentComponent.prefabMiss);
-                _customInspectorDrawer.CreateFloatField(componentComponent.perfectArea, id, null);
-                _customInspectorDrawer.CreateFloatField(componentComponent.middleArea, id, null);
+                _customInspectorDrawer.CreateFloatField(componentComponent.perfectArea,                     link.trackObjectData,
+                    (BaseParameterComponent)component,id, null);
+                _customInspectorDrawer.CreateFloatField(componentComponent.middleArea,                     link.trackObjectData,
+                    (BaseParameterComponent)component,id, null);
             }
         }
     }

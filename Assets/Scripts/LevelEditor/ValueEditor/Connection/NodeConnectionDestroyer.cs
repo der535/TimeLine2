@@ -28,7 +28,6 @@ namespace TimeLine.LevelEditor.ValueEditor.Connection
                     connection.Disconnect();
                 }
             };
-            print(_actionMap);
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using UnityEngine;
 
@@ -29,25 +31,28 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         {
             _customInspectorDrawer.CreateComponent(component, true);
             string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
-
+            SceneObjectLink link = target.GetComponent<SceneObjectLink>();
 
             if (component is CircleCollider2DComponent rendererComponent)
             {
                 _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
                 
                 _customInspectorDrawer.CreateFloatField(
-                        rendererComponent.OffsetX,
+                        rendererComponent.OffsetX,                    link.trackObjectData,
+                        (BaseParameterComponent)component,
                         id,
                     () => _keyframeCreator.CreateKeyframe(new XOffsetData(rendererComponent.OffsetX.Value), target, rendererComponent.GetType().Name,  rendererComponent.OffsetX));
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY, id,() =>
+                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY,                     link.trackObjectData,
+                    (BaseParameterComponent)component,id,() =>
                     _keyframeCreator.CreateKeyframe(new YOffsetData(rendererComponent.OffsetY.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.OffsetY));
                 
                 
                 _customInspectorDrawer.AddSpace(5);
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.Radius, id,() =>
+                _customInspectorDrawer.CreateFloatField(rendererComponent.Radius,                    link.trackObjectData,
+                    (BaseParameterComponent)component, id,() =>
                     _keyframeCreator.CreateKeyframe(new XSizeData(rendererComponent.Radius.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.Radius));
                 

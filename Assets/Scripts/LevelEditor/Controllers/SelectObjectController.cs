@@ -11,9 +11,9 @@ namespace TimeLine.EventBus.Events.TrackObject
         [SerializeField] private SelectLock _selectLock;
         private GameEventBus _gameEventBus;
         private List<TrackObjectData> _trackObjects = new List<TrackObjectData>();
-        
+
         public List<TrackObjectData> SelectObjects => this._trackObjects;
-        
+
         [Inject]
         private void Construct(GameEventBus gameEventBus)
         {
@@ -22,17 +22,15 @@ namespace TimeLine.EventBus.Events.TrackObject
 
         void Start()
         {
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
-            {
-                _trackObjects.Clear();
-            });
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => { _trackObjects.Clear(); });
         }
+
         public void SelectMultiple(TrackObjectData trackObject)
         {
             var isMultiple = UnityEngine.Input.GetKey(KeyCode.LeftShift);
-            
-            if(_selectLock.IsLocked) return;
-            
+
+            if (_selectLock.IsLocked) return;
+
             var changed = false;
 
             if (isMultiple)
@@ -64,9 +62,33 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
+        public void SelectMultiple(List<TrackObjectData> trackObjects)
+        {
+            
+            var changed = false;
+
+            foreach (var trackObject in trackObjects)
+            {
+                if (!_trackObjects.Contains(trackObject))
+                {
+                    _trackObjects.Add(trackObject);
+                    changed = true;
+                }
+                else
+                {
+                    Deselect(trackObject);
+                }
+            }
+
+            if (changed)
+            {
+                _gameEventBus.Raise(new SelectObjectEvent(_trackObjects));
+            }
+        }
+
         public void SelectNoClear(TrackObjectData trackObject)
         {
-            if(_selectLock.IsLocked) return;
+            if (_selectLock.IsLocked) return;
 
             if (!_trackObjects.Contains(trackObject))
             {
@@ -88,7 +110,14 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
-        public void StartMultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self)
+        public void DeselectAll()
+        {
+            _trackObjects.Clear();
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
+        }
+
+        public void StartMultipleMove(
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self)
         {
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {
@@ -96,43 +125,48 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
-        public void MultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
+        public void MultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self,
+            double ticks)
         {
             if (_trackObjects.Count <= 1 || ticks == 0) return;
-            
+
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {
                 trackObjectData.trackObject.AddTicksMove(ticks);
             }
         }
-        
-        public void MultipleChangeTrackLine(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, int deltaIndex)
+
+        public void MultipleChangeTrackLine(
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, int deltaIndex)
         {
             if (_trackObjects.Count <= 1) return;
-            
+
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {
                 trackObjectData.trackObject.AddLineTrackIndex(deltaIndex);
             }
         }
 
-        public void SaveResizingData(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self)
+        public void SaveResizingData(
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self)
         {
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {
                 trackObjectData.trackObject.SaveResizingData();
             }
         }
-        
-        public void MultipleResizingRight(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
+
+        public void MultipleResizingRight(
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
         {
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {
                 trackObjectData.trackObject.MultipleRightResize(ticks);
             }
         }
-        
-        public void MultipleResizingLeft(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
+
+        public void MultipleResizingLeft(
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
         {
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
             {

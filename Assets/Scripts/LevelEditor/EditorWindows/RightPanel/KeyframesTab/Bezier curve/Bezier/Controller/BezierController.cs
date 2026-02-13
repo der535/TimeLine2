@@ -8,6 +8,7 @@ using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.View;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.TimeLine;
@@ -35,7 +36,7 @@ namespace TimeLine
 
         private DiContainer _container;
         private GameEventBus _gameEventBus;
-        private M_KeyframeSelectedStorage _keyframeSelectedStorage;
+        private KeyframeSelectedStorage _keyframeSelectedStorage;
         private ActiveBezierPointsData _activeBezierPoints;
         private TreeViewUI _treeViewUI;
         private KeyframeTrackStorage _keyframeTrackStorage;
@@ -46,7 +47,7 @@ namespace TimeLine
 
         [Inject]
         void Construct(DiContainer container, GameEventBus gameEventBus, TimeLineConverter timeLineConverter,
-            TimeLineSettings timeLineSettings, ActionMap actionMap, M_KeyframeSelectedStorage keyframeSelectedStorage,
+            TimeLineSettings timeLineSettings, ActionMap actionMap, KeyframeSelectedStorage keyframeSelectedStorage,
             BezierVerticalPosition bezierVerticalPosition, ActiveBezierPointsData activeBezierPointsData,
             TreeViewUI treeViewUI, KeyframeTrackStorage keyframeTrackStorag, KeyframeReferences keyframeReferences,
             BezierLineDrawer lineDrawer, VerticalBezierScroll verticalScroll, VerticalBezierZoom verticalZoom)
@@ -69,7 +70,6 @@ namespace TimeLine
 
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) =>
             {
-                print("AddKeyframeEvent");
                 Build();
             }, -1);
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());

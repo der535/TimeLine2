@@ -1,24 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using TimeLine.LevelEditor.ValueEditor;
+using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using Unity.Mathematics;
+using UnityEngine;
 
-namespace TimeLine.Keyframe
+namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe
 {
-    using UnityEngine;
-
     public abstract class AnimationData : IAnimationApplyer
     {
-        public abstract void Interpolate(AnimationData other, double t, Keyframe current, Keyframe next, Keyframe.InterpolationType interpolationType, Component target);
+        public OutputLogic Logic;
+        public List<IInitializedNode> initializedNodes = new();
+        public string Graph;
+        public abstract void Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target);
         public abstract void Apply(Component target, object value);
         public abstract Type GetComponentType();
         public abstract float4 PackDataToFloat4();
-        
-        // Добавленный абстрактный метод для клонирования
         public abstract AnimationData Clone();
         public abstract object GetValue();
         public abstract void SetValue(object value);
-        // public abstract float4 PackDataToFloat4();
-        
         public abstract string GetDataType();
         public virtual JObject SerializeData()
         {

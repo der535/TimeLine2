@@ -46,13 +46,13 @@ namespace TimeLine
         private KeyframeSelect _keyframeObjectSelect;
         private Keyframe.Keyframe _keyframeSelect;
         private TimeLineConverter _timeLineConverter;
-        private M_KeyframeSelectedStorage _selectedKeyframesStorage;
+        private KeyframeSelectedStorage _selectedKeyframesStorage;
 
         private bool _active;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, DiContainer container,
-            TimeLineConverter timeLineConverter, ActionMap actionMap, M_KeyframeSelectedStorage storage,
+            TimeLineConverter timeLineConverter, ActionMap actionMap, KeyframeSelectedStorage storage,
             KeyframeSelectController keyframeTrackStorage)
         {
             _container = container;

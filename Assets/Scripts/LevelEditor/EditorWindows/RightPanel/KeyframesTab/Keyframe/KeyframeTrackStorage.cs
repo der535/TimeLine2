@@ -4,6 +4,7 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
