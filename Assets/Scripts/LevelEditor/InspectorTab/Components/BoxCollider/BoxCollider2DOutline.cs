@@ -1,6 +1,8 @@
+using System;
 using NaughtyAttributes;
 using TimeLine;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using UnityEngine;
 using Zenject;
@@ -8,20 +10,19 @@ using Zenject;
 public class BoxCollider2DOutline : MonoBehaviour
 {
     [SerializeField] private Color color = Color.green;
-    [SerializeField] private float pixelThickness = 1f; // Толщина в пикселях (по умолчанию 1)
+    [SerializeField] private float pixelThickness = 5f; // Толщина в пикселях (по умолчанию 1)
     [Space]
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private BoxCollider2D boxCollider;
     [SerializeField] private PhysicsAnchor physicsAnchor;
     
-    private Camera mainCamera;
-
     public BoxCollider2D BoxCollider => boxCollider;
+    private CameraReferences _cameraReferences;
     
     [Inject]
-    private void Construct(MainObjects mainObjects)
+    private void Construct(CameraReferences cameraReferences)
     {
-        mainCamera = mainObjects.MainCamera;
+        _cameraReferences = cameraReferences;
     }
 
     internal void Setup(ActiveObjectControllerComponent activeObjectControllerComponent, TransformComponent transformComponent)
@@ -34,10 +35,18 @@ public class BoxCollider2DOutline : MonoBehaviour
         lineRenderer.enabled = active;
     }
 
+    private void FixedUpdate()
+    {
+        // Толщина линии в мировых единицах
+        float worldThickness = CalculatePixel.Calculate(5, gameObject.transform, _cameraReferences.editSceneCamera);
+        lineRenderer.startWidth = worldThickness;
+        lineRenderer.endWidth = worldThickness;
+    }
+
     [Button]
     internal void UpdateOutline()
     {
-        if (mainCamera == null || boxCollider == null || lineRenderer == null || lineRenderer.enabled == false)
+        if (_cameraReferences == null || boxCollider == null || lineRenderer == null || lineRenderer.enabled == false)
             return;
 
         // Получаем размеры и смещение коллайдера в локальном пространстве объекта
@@ -63,7 +72,7 @@ public class BoxCollider2DOutline : MonoBehaviour
         // Устанавливаем позиции в LineRenderer
         lineRenderer.positionCount = 4;
         lineRenderer.SetPositions(worldCorners);
-
+        
         // Замыкаем контур
         lineRenderer.loop = true;
 
@@ -71,9 +80,6 @@ public class BoxCollider2DOutline : MonoBehaviour
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
 
-        // Толщина линии в мировых единицах
-        float worldThickness = CalculatePixel.Calculate(pixelThickness, gameObject.transform, mainCamera);
-        lineRenderer.startWidth = worldThickness;
-        lineRenderer.endWidth = worldThickness;
+
     }
 }

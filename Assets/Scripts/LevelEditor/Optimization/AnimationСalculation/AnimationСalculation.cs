@@ -10,6 +10,7 @@ using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
+using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using TimeLine.TimeLine;
 using Unity.Burst;
@@ -34,14 +35,16 @@ namespace TimeLine.LevelEditor.Optimization
         private GameEventBus _gameEventBus;
         private KeyframeTrackStorage _trackStorage;
         private PlayAndStopButton _playAndStopButton;
+        private TimeLineRecorder _timeLineRecorder;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, KeyframeTrackStorage trackStorage,
-            PlayAndStopButton playModeController)
+            PlayAndStopButton playModeController, TimeLineRecorder timeLineRecorder)
         {
             _gameEventBus = gameEventBus;
             _trackStorage = trackStorage;
             _playAndStopButton = playModeController;
+            _timeLineRecorder = timeLineRecorder;
         }
 
         // --- Native Контейнеры (Blittable данные для Jobs) ---
@@ -83,6 +86,12 @@ namespace TimeLine.LevelEditor.Optimization
 
         private void OnDestroy()
         {
+            foreach (var kf in _initializableKeyframes)
+            {
+                kf.IsInitialized = false;
+            }
+
+            _initializableKeyframes.Clear();
             // Старые массивы
             if (_allKeyframes.IsCreated) _allKeyframes.Dispose();
             if (_trackInfos.IsCreated) _trackInfos.Dispose();
@@ -109,36 +118,76 @@ namespace TimeLine.LevelEditor.Optimization
                 var track = _trackInfos[i];
                 double localTime = tick.Time - track.Offset;
 
-                // Инициализируем только если время "зашло" внутрь трека (localTime >= 0)
-                // Если localTime < 0, значит объект еще "не включился" по таймлайну
-                if (localTime < 0) continue;
+                if (track.KeyCount == 0) continue;
 
-                // Поиск текущего ключа (бинарный поиск)
-                int low = track.StartKeyIndex, high = track.StartKeyIndex + track.KeyCount - 1, found = low;
+                // 1. Находим "текущий" или "последний пройденный" кадр
+                int currentIdx = -1;
+                int low = track.StartKeyIndex, high = track.StartKeyIndex + track.KeyCount - 1;
+
                 while (low <= high) {
-                    int mid = (low + high) / 2;
-                    if (_allKeyframes[mid].Ticks <= localTime) { found = mid; low = mid + 1; }
-                    else high = mid - 1;
+                    int mid = low + (high - low) / 2;
+                    if (_allKeyframes[mid].Ticks <= localTime ) {
+                        currentIdx = mid;
+                        low = mid + 1;
+                    } else high = mid - 1;
                 }
 
-                int globalIdx = _allKeyframes[found].KeyframeGlobalIndex;
-                var originalKey = _initializableKeyframes[globalIdx];
+                // --- ЛОГИКА ЦЕПОЧКИ ---
 
-                // Проверка: инициализируем только если localTime находится в зоне действия ключа
-                // И если этот конкретный ключ еще не "вспыхнул"
-                if (!originalKey.IsInitialized)
+                if (currentIdx == -1) 
                 {
-                    // Здесь можно добавить проверку на активность самого GameObject, если нужно:
-                    // if (src.Track.cachedComponent.gameObject.activeInHierarchy) 
+                    // Инитим ПЕРВЫЙ кадр трека только если время уже подошло к 0
+                    // (Это предотвратит активацию всех объектов сразу при старте сцены)
+                    int firstKeyIndex = track.StartKeyIndex;
 
-                    originalKey.Initialize.Invoke();
-                    originalKey.IsInitialized = true;
-            
-                    // Лог для проверки:
+                    // 2. Достаем время этого кадра (в тиках)
+                    double firstKeyTime = _allKeyframes[firstKeyIndex].Ticks;
+                    
+                    if (localTime >= 0)
+                    {
+                        // 1. Получаем индекс первого кадра этого трека
+
+                        InitializeSingleKeyframe(track.StartKeyIndex);
+                
+                        // СРАЗУ ГАТОВИМ СЛЕДУЮЩИЙ (Цепочка: кк1 есть -> готовим кк2)
+
+                    }
+                }
+                else if (localTime >= 0)
+                {
+                    // Сценарий: Мы на кк1 или между кк1 и кк2
+                    // Инитим текущий (кк1)
+                    
+                    InitializeSingleKeyframe(currentIdx);
+
+                    // И тут же инитим следующий (кк2), чтобы он был готов заранее
+                    if (currentIdx + 1 < track.StartKeyIndex + track.KeyCount)
+                    {
+                        InitializeSingleKeyframe(currentIdx + 1);
+                    }
                 }
             }
 
-            Profiler.BeginSample("AnimationSystem.UpdateTime");
+            // Внутри InitializeSingleKeyframe ОБЯЗАТЕЛЬНО должна быть проверка флага
+            void InitializeSingleKeyframe(int index)
+            {
+                if (index < 0 || index >= _allKeyframes.Length) return;
+
+                int globalIdx = _allKeyframes[index].KeyframeGlobalIndex;
+    
+                // Проверка границ списка
+                if (globalIdx < 0 || globalIdx >= _initializableKeyframes.Count) return;
+
+                // ОБРАЩАЕМСЯ НАПРЯМУЮ К ЭЛЕМЕНТУ СПИСКА
+                if (!_initializableKeyframes[globalIdx].IsInitialized) 
+                {
+                    _initializableKeyframes[globalIdx].Initialize?.Invoke();
+        
+                    // Устанавливаем флаг напрямую в объект
+                    _initializableKeyframes[globalIdx].IsInitialized = true; 
+                }
+            }
+            // Внутри цикла по трекам
 
             // 0. Обновляем динамические входы (включая InitializeLogic)
             foreach (var input in _allDynamicInputs)
@@ -178,8 +227,8 @@ namespace TimeLine.LevelEditor.Optimization
 
             finalHandle.Complete();
 
-            Profiler.EndSample();
 
+            _timeLineRecorder.TemporaryChangeRecording(false);
             // Оповещение и ручное применение
             for (int i = 0; i < _manualApplyers.Count; i++)
             {
@@ -187,7 +236,9 @@ namespace TimeLine.LevelEditor.Optimization
                 item.applyer.Apply(item.target, _results[item.resIdx]);
             }
 
-            TransformComponentStorage.InvokeAllComponents();
+
+            // TransformComponentStorage.InvokeAllComponents();
+            _timeLineRecorder.TemporaryChangeRecording(true);
         }
 
         private List<NodeLogic> SortNodes(NodeLogic root)
@@ -213,6 +264,7 @@ namespace TimeLine.LevelEditor.Optimization
         private void Bake()
         {
             var sourceTracks = _trackStorage.GetTracks();
+
             OnDestroy();
             _manualApplyers.Clear();
             _notifyTargets.Clear();
@@ -224,7 +276,6 @@ namespace TimeLine.LevelEditor.Optimization
             {
                 foreach (var key in track.Track.Keyframes)
                 {
-                    
                     totalKeysCount++;
                     if (key.GetData().Logic != null) totalNodesCount += SortNodes(key.GetData().Logic).Count;
                 }
@@ -257,8 +308,6 @@ namespace TimeLine.LevelEditor.Optimization
 
                 for (int j = 0; j < src.Track.Keyframes.Count; j++)
                 {
-                    
-                    
                     var kf = src.Track.Keyframes[j];
                     var data = kf.GetData();
                     var jobKey = new JobKeyframe
@@ -272,10 +321,10 @@ namespace TimeLine.LevelEditor.Optimization
                         GraphStartIndex = -1
                     };
 
-                    
+
                     jobKey.KeyframeGlobalIndex = _initializableKeyframes.Count;
                     _initializableKeyframes.Add(kf);
-                    
+
                     if (!string.IsNullOrEmpty(data.Graph))
                     {
                         var sortedNodes = SortNodes(data.Logic);
@@ -309,25 +358,27 @@ namespace TimeLine.LevelEditor.Optimization
 
                             if (node is RandomRangeLogic rangeLogic)
                             {
-                                _allDynamicInputs.Add(new DynamicInputData { 
-                                    globalOffset = nodeBaseIdx, 
-                                    logic = rangeLogic, 
-                                    outputIndex = 0 
+                                _allDynamicInputs.Add(new DynamicInputData
+                                {
+                                    globalOffset = nodeBaseIdx,
+                                    logic = rangeLogic,
+                                    outputIndex = 0
                                 });
                             }
-                            
+
                             if (node is InitializeLogic initLogic)
                             {
-                                _allDynamicInputs.Add(new DynamicInputData { 
-                                    globalOffset = nodeBaseIdx, 
-                                    logic = initLogic, 
-                                    outputIndex = 0 
+                                _allDynamicInputs.Add(new DynamicInputData
+                                {
+                                    globalOffset = nodeBaseIdx,
+                                    logic = initLogic,
+                                    outputIndex = 0
                                 });
                             }
-                            
-                            if (inst.Op == OpCode.Constant) _globalGraphResults[nodeBaseIdx] = inst.Value;
+
+                            if (inst.Op == OpCode.Constant) _globalGraphResults[nodeBaseIdx] = inst.ValueA;
                             if (inst.Op == OpCode.DirectPass && idxA == -1)
-                                _globalGraphResults[nodeBaseIdx] = inst.Value;
+                                _globalGraphResults[nodeBaseIdx] = inst.ValueA;
 
                             currentNodeIndex++;
                         }
@@ -375,13 +426,55 @@ namespace TimeLine.LevelEditor.Optimization
 
         private void MapLogicToJob(NodeLogic logic, ref JobNode inst)
         {
-            if (logic is FloatLogic fl) { inst.Op = OpCode.Constant; inst.Value = fl.Value; }
-            else if (logic is ComponentFieldLogic) { inst.Op = OpCode.Input; }
-            else if (logic is PlayerPositionLogic) { inst.Op = OpCode.PlayerPos; }
-            else if (logic is RandomRangeLogic){ inst.Op = OpCode.Input;  }
-            else if (logic is InitializeLogic) { inst.Op = OpCode.Input;  } // Просто Input, данные придут извне
-            else if (logic is AddLogic) { inst.Op = OpCode.Add; }
-            else if (logic is OutputLogic outL) { inst.Op = OpCode.DirectPass; inst.Value = (float)outL.ManualValues[0]; }
+            if (logic is FloatLogic fl)
+            {
+                inst.Op = OpCode.Constant;
+                inst.ValueA = fl.Value;
+            }
+            else if (logic is ComponentFieldLogic)
+            {
+                inst.Op = OpCode.Input;
+            }
+            else if (logic is PlayerPositionLogic)
+            {
+                inst.Op = OpCode.PlayerPos;
+            }
+            else if (logic is RandomRangeLogic)
+            {
+                inst.Op = OpCode.Input;
+            }
+            else if (logic is InitializeLogic)
+            {
+                inst.Op = OpCode.Input;
+            } // Просто Input, данные придут извне
+            else if (logic is AddLogic)
+            {
+                inst.Op = OpCode.Add;
+            }           
+            else if (logic is SubtractionLogic)
+            {
+                inst.Op = OpCode.Subtraction;
+                inst.ValueA = (float)logic.ManualValues[0];
+                inst.ValueB = (float)logic.ManualValues[1];
+            }
+            else if (logic is MultiplicationLogic)
+            {
+                inst.Op = OpCode.Multiply;
+            }
+            else if (logic is DivisionLogic)
+            {
+                inst.Op = OpCode.Division;
+            }
+            else if (logic is ModLogic)
+            {
+                inst.Op = OpCode.Mod;
+            }
+            else if (logic is OutputLogic outL)
+            {
+                inst.Op = OpCode.DirectPass;
+                inst.ValueA = (float)outL.ManualValues[0];
+            }
+            
         }
 
 
@@ -529,17 +622,20 @@ namespace TimeLine.LevelEditor.Optimization
                 int resIdx = kf.ResultOffset + (i * 4);
                 float a = (node.InputIdxA != -1)
                     ? GlobalGraphResults[kf.ResultOffset + (node.InputIdxA * 4) + node.InputPortA]
-                    : node.Value;
+                    : node.ValueA;
                 float b = (node.InputIdxB != -1)
                     ? GlobalGraphResults[kf.ResultOffset + (node.InputIdxB * 4) + node.InputPortB]
-                    : 0;
+                    : node.ValueB;
 
                 switch (node.Op)
                 {
-                    case OpCode.Constant: GlobalGraphResults[resIdx] = node.Value; break;
+                    case OpCode.Constant: GlobalGraphResults[resIdx] = node.ValueA; break;
                     case OpCode.Add: GlobalGraphResults[resIdx] = a + b; break;
                     case OpCode.Multiply: GlobalGraphResults[resIdx] = a * b; break;
-                    case OpCode.DirectPass: GlobalGraphResults[resIdx] = (node.InputIdxA != -1) ? a : node.Value; break;
+                    case OpCode.Division: GlobalGraphResults[resIdx] = a / b; break;
+                    case OpCode.Subtraction: GlobalGraphResults[resIdx] = a - b; break;
+                    case OpCode.Mod: GlobalGraphResults[resIdx] = a % b; break;
+                    case OpCode.DirectPass: GlobalGraphResults[resIdx] = (node.InputIdxA != -1) ? a : node.ValueA; break;
                 }
             }
 
@@ -569,6 +665,7 @@ namespace TimeLine.LevelEditor.Optimization
                    (3 * u1 * s * s * (v2 - k2.InTangent * k2.InWeight * dt)) + (s * s * s * v2);
         }
     }
+
     public struct JobKeyframe
     {
         public double Ticks;
@@ -585,7 +682,7 @@ namespace TimeLine.LevelEditor.Optimization
         public float4 InTangent;
         public float OutWeight;
         public float InWeight;
-        
+
         public int KeyframeGlobalIndex; // Индекс ключа в общем списке для обратной связи
     }
 
@@ -602,4 +699,31 @@ public interface IAnimationApplyer
 
 {
     public void Apply(Component target, float4 value);
+}
+
+public enum OpCode
+{
+    Constant,
+    Add,
+    Subtraction,
+    Multiply,
+    DirectPass,
+    PlayerPos,
+    Initialize,
+    Mod,
+    Division,
+    Input // Добавил для ComponentFieldLogic
+}
+public struct JobNode
+{
+    public OpCode Op;
+    public float ValueA;
+    public float ValueB;
+    public int InputIdxA;
+
+    public int InputIdxB;
+
+    // Новые поля: указывают, какой именно выход предыдущей ноды нам нужен
+    public int InputPortA;
+    public int InputPortB;
 }

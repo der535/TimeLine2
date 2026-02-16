@@ -34,7 +34,6 @@ namespace TimeLine.LevelEditor.CopyComponent
         {
             button.onClick.AddListener(() =>
             {
-                print(ComponentRules.CanAdd(_copyComponentController.GetCopyComponent(), component.gameObject));
                 _contextMenuController.Setup(new List<(Action, string, bool)>
                 {
                     (() =>

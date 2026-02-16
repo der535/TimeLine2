@@ -17,15 +17,11 @@ namespace TimeLine.LevelEditor.Misk
 
         public InspectableParameter Find(MapParameterComponen MapParameter, List<TrackObjectData> objects = null)
         {
-            Debug.Log(MapParameter.SceneObjectID);
-            Debug.Log(MapParameter.ComponentID);
-            Debug.Log(MapParameter.ParameterID);
             List<TrackObjectData> researchedObjects = new List<TrackObjectData>();
             
             if (objects == null) researchedObjects = _trackObjectStorage.GetAllActiveTrackData();
             else researchedObjects = objects;
             
-            Debug.Log(researchedObjects.Count);
             
             foreach (var VARIABLE in researchedObjects)
             {
@@ -41,9 +37,6 @@ namespace TimeLine.LevelEditor.Misk
                             {
                                 if (param.Id == MapParameter.ParameterID)
                                 {
-                                    
-                                    Debug.Log(param);
-
                                     return param;
                                 }
                             }

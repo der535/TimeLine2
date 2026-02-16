@@ -2,6 +2,7 @@ using System;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
+using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
@@ -258,6 +259,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             if (_isResizing)
             {
                 _startMousePosition = GetMousePosition();
+
             }
             else
             {
@@ -278,6 +280,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 _wasResizing = true;
             }
 
+            _gameEventBus.Raise(new TrackObjectResizing(isResizing));
             _selectObjectController.SaveResizingData(this);
         }
 
@@ -289,7 +292,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         public void MultipleRightResize(double deltaTicks)
         {
-            ChangeDurationInTicks(RoundTicksToGrid(_startResizingDuractionInTicks + deltaTicks));
+            ChangeDurationInTicks(Math.Max(RoundTicksToGrid(_startResizingDuractionInTicks + deltaTicks), 1));
         }
 
         public void MultipleLeftResize(double deltaTicks)
@@ -309,6 +312,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _startResizingDuractionInTicks = TimeDuractionInTicks;
             _startResizingTimeInTicks = StartTimeInTicks;
             _isRightResizing = false;
+            _gameEventBus.Raise(new TrackObjectResizing(isResizing));
             _isResizing = isResizing;
 
             if (!isResizing)
@@ -352,6 +356,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
             if (_isResizing)
             {
+                print(_deltaticksRight);
+                print(_timeDurationInTicks);
                 float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
 
                 if (_isRightResizing)
@@ -364,7 +370,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                     double proposedDuration = _startResizingDuractionInTicks + deltaTicks;
                     double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
                     double roundedChange = roundedProposedDuration - _startResizingDuractionInTicks;
-
+                    
                     // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
                     if (_enableResizeLimits && _reducedRight + roundedChange > 0)
                     {
@@ -373,12 +379,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                         double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
 
                         _selectObjectController.MultipleResizingRight(this, maxAllowedChange);
-                        ChangeDurationInTicks(roundedClampedDuration);
+                        ChangeDurationInTicks(Math.Max(roundedClampedDuration, 1));
                         return;
                     }
 
                     _selectObjectController.MultipleResizingRight(this, deltaTicks);
-                    ChangeDurationInTicks(roundedProposedDuration);
+                    
+                    ChangeDurationInTicks(Math.Max(roundedProposedDuration, 1));
                 }
                 else
                 {
@@ -465,11 +472,17 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _trackObjectStorage.SelectObjectTrackObject(this);
         }
 
+        /// <summary>
+        /// Устанавливает цвет выделения трек обжекту
+        /// </summary>
         public void SelectColor()
         {
             image.color = Color.yellow;
         }
 
+        /// <summary>
+        /// Устанавливает цвет снятого выделения трек обжекту
+        /// </summary>
         public void Deselect()
         {
             image.color = Color.gray;

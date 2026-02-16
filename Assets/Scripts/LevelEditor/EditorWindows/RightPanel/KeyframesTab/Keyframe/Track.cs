@@ -25,7 +25,8 @@ namespace TimeLine.Keyframe
             this.TrackName = trackName;
             TargetObject = target;
             AnimationColor = animationColor;
-            activeObjectControllerComponent = TargetObject.GetComponent<ActiveObjectControllerComponent>();
+            if(target != null)
+                activeObjectControllerComponent = TargetObject.GetComponent<ActiveObjectControllerComponent>();
         }
 
         public Keyframe AddKeyframe(double time, AnimationData adata)
@@ -121,106 +122,59 @@ namespace TimeLine.Keyframe
         {
             if (Keyframes.Count == 0 || TargetObject == null) return;
 
-            double offset;
+            double offset = groupObject == null ? 0 : groupObject.GetKeyframeTrackOffset();
 
-            if (groupObject == null)
-                offset = 0;
-            else
+            // 1. Сброс всех флагов ТОЛЬКО при выключении объекта
+            // Это позволит кадрам "переинициализироваться" при следующем включении
+            if (!activeObjectControllerComponent.IsActive)
             {
-                offset = groupObject.GetKeyframeTrackOffset();
+                for (int i = 0; i < Keyframes.Count; i++) 
+                    Keyframes[i].IsInitialized = false;
+                return;
             }
 
-
+            // 2. Находим текущую пару кадров
             Keyframe prev = Keyframes.LastOrDefault(k => k.Ticks + offset <= time);
-            Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks + offset >= time);
+            Keyframe next = Keyframes.FirstOrDefault(k => k.Ticks + offset > time);
 
-
-            if (prev == null && next == null) return;
-
-            if (prev == null)
+            // 3. Инициализируем только то, что нужно сейчас
+            // Инициализируем prev (прошлый/текущий)
+            if (prev != null && !prev.IsInitialized)
             {
-                bool preveusValue = next.IsInitialized;
-
-                if (preveusValue == false && activeObjectControllerComponent.IsActive)
-                {
-                    // Debug.Log("Invoke");
-
-                    next.Initialize.Invoke();
-                }
-
-                next.IsInitialized = activeObjectControllerComponent.IsActive;
-
-
-                next.Apply(cachedComponent);
+                prev.Initialize?.Invoke();
+                prev.IsInitialized = true;
             }
-            else if (next == null)
+
+            // Инициализируем next (будущий, для плавной интерполяции)
+            if (next != null && !next.IsInitialized)
             {
-                bool preveusValue = prev.IsInitialized;
-                // Debug.Log(preveusValue);
-
-                if (preveusValue == false && activeObjectControllerComponent.IsActive)
-                {
-                    prev.Initialize.Invoke();
-                }
-
-                prev.IsInitialized = activeObjectControllerComponent.IsActive;
-
-
-                prev.Apply(cachedComponent);
+                next.Initialize?.Invoke();
+                next.IsInitialized = true;
             }
-            else if (prev != next)
+
+            // 4. Применяем значения
+            if (prev != null && next != null)
             {
-                bool preveusValue1 = next.IsInitialized;
-                // Debug.Log(preveusValue1);
-
-                if (preveusValue1 == false && activeObjectControllerComponent.IsActive)
-                {
-                    prev.Initialize.Invoke();
-                }
-
-                prev.IsInitialized = activeObjectControllerComponent.IsActive;
-
-                bool preveusValue2 = next.IsInitialized;
-                // Debug.Log(preveusValue2);
-
-                if (preveusValue2 == false && activeObjectControllerComponent.IsActive)
-                {
-                    next.Initialize.Invoke();
-                }
-
-                next.IsInitialized = activeObjectControllerComponent.IsActive;
-
-
                 double start = prev.Ticks + offset;
                 double end = next.Ticks + offset;
-
-                // Защита от деления на ноль
-                if (start == end)
-                {
+        
+                if (Math.Abs(start - end) < 0.0001)
                     prev.Apply(cachedComponent);
-                }
                 else
                 {
                     double t = (time - start) / (end - start);
                     prev.Interpolate(next, cachedComponent, t);
                 }
             }
-            else
+            else if (prev != null)
             {
-                bool preveusValue = next.IsInitialized;
-                // Debug.Log(preveusValue);
-                if (preveusValue == false && activeObjectControllerComponent.IsActive)
-                {
-                    prev.Initialize.Invoke();
-                }
-
-                prev.IsInitialized = activeObjectControllerComponent.IsActive;
-
-
                 prev.Apply(cachedComponent);
             }
+            else if (next != null)
+            {
+                next.Apply(cachedComponent);
+            }
         }
-
         public void AddOffsetKeyframes(double ticks)
         {
             foreach (var keyframe in Keyframes)

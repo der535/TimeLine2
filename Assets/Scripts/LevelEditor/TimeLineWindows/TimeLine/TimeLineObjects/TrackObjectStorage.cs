@@ -126,21 +126,21 @@ namespace TimeLine
 
         private void ActiveSceneObject(double time)
         {
-            // Stopwatch sw = Stopwatch.StartNew();
-            foreach (var trackObject in _trackObjects.ToList())
+            Stopwatch sw = Stopwatch.StartNew();
+            
+            for (int i = 0; i < _trackObjects.Count; i++)
             {
-                CheckActiveTrackObjects(trackObject, time);
+                CheckActiveTrackObjects(_trackObjects[i], time);
             }
 
-            foreach (var group in _trackObjectGroups.ToList())
+            for (int i = 0; i < _trackObjectGroups.Count; i++)
             {
-                CheckActiveGroup(group, time);
+                CheckActiveGroup(_trackObjectGroups[i], time);
             }
-
-            // sw.Stop();
+            sw.Stop();
 
             // Выводим время в миллисекундах или тиках
-            // UnityEngine.Debug.Log($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms ({sw.ElapsedTicks} ticks)");
+            UnityEngine.Debug.Log($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms ({sw.ElapsedTicks} ticks)");
         }
 
         internal TrackObjectData FindObjectByID(string id)
@@ -165,6 +165,11 @@ namespace TimeLine
             return null;
         }
 
+        
+        /// <summary>
+        /// Проверка одного конкретного трекобжекта
+        /// </summary>
+        /// <param name="trackObject"></param>
         internal void CheckActiveTrackSingle(TrackObjectData trackObject)
         {
             if (trackObject is TrackObjectGroup group)
@@ -194,12 +199,12 @@ namespace TimeLine
 
 
             //REMOVE TEMP OBJECTS
-            if (trackObject.trackObject.isTemp &&
-                time > trackObject.trackObject.TimeDuractionInTicks +
-                trackObject.trackObject.StartTimeInTicks)
-            {
-                trackObject.trackObject.isActive = false;
-            }
+            // if (trackObject.trackObject.isTemp &&
+            //     time > trackObject.trackObject.TimeDuractionInTicks +
+            //     trackObject.trackObject.StartTimeInTicks)
+            // {
+            //     trackObject.trackObject.isActive = false;
+            // }
         }
 
         private void CheckActiveGroup(TrackObjectGroup group, double time, bool enchanted = false,

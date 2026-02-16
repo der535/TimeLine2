@@ -1,6 +1,8 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
+using TimeLine.LevelEditor.ValueEditor;
+using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.TimeLine;
 using Unity.Mathematics;
 
@@ -11,31 +13,32 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
     [System.Serializable]
     public class YRotationData : AnimationData
     {
-        public float value;
-
         public YRotationData(float value)
         {
-            this.value = value;
+            Logic = new OutputLogic();
+            Logic.Initialize(DataType.Float);
+            Logic.ManualValues[0] = value;
+            Graph = SaveGraph.ToJson(Logic);
         }
 
 
         public override float4 PackDataToFloat4()
         {
-            return new float4(value, 0, 0, 0);
+            return new float4((float)Logic.GetValue(), 0, 0, 0);
         }
 
         public override AnimationData Clone()
         {
-            return new YRotationData(value);
+            return new YRotationData((float)Logic.GetValue());
         }
 
         public override object GetValue()
         {
-            return value;
+            return (float)Logic.GetValue();
         }
         public override void SetValue(object value)
         {
-            if(value is float f) this.value = f;
+            if(value is float f) Logic.ManualValues[0] = f;
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");
@@ -51,7 +54,7 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
         {
             return new JObject
             {
-                ["transform-rotation-y"] = JToken.FromObject(value)
+                ["transform-rotation-y"] = JToken.FromObject((float)Logic.GetValue())
             };
         }
 
@@ -59,7 +62,9 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
         {
             if (data.TryGetValue("transform-rotation-y", out JToken token))
             {
-                value = token.ToObject<float>();
+                Logic.Initialize(DataType.Float);
+                Logic.ManualValues[0] = token.ToObject<float>();
+                Graph = SaveGraph.ToJson(Logic);
             }
         }
 
@@ -76,8 +81,8 @@ namespace TimeLine.Keyframe.AnimationDatas.TransformComponent
 
             float localT = (float)t;
             float interpolatedValue = TimeLineConverter.Instance.Interpolate(
-                value,
-                otherPos.value,
+                (float)Logic.GetValue(),
+                (float)otherPos.Logic.GetValue(),
                 current,
                 next,
                 localT,

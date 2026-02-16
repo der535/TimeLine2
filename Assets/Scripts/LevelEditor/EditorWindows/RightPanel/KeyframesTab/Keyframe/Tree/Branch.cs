@@ -213,6 +213,11 @@ public class Branch
         return (currentNode, childCount);
     }
 
+    /// <summary>
+    /// Добовляе ноду, можно указать путь и он создас все недостоющие ноды, если нода уже существует возвращет существующию
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
     public TreeNode AddNode(string path)
     {
         // Объединяем путь и имя, чтобы корректно обработать все '/'

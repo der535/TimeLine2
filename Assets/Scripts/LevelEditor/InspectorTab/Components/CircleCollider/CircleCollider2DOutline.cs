@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using TimeLine;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using UnityEngine;
 using Zenject;
@@ -8,20 +9,20 @@ using Zenject;
 public class CircleCollider2DOutline : MonoBehaviour
 {
     [SerializeField] private Color color = Color.green;
-    [SerializeField] private float pixelThickness = 1f; // Толщина в пикселях
     [Space]
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private PhysicsAnchor physicsAnchor;
     [SerializeField] private CircleCollider2D circleCollider;
 
-    [SerializeField] private Camera mainCamera;
 
+    private CameraReferences _cameraReferences;
+    
     public CircleCollider2D CircleCollider => circleCollider;
 
     [Inject]
-    private void Construct(MainObjects mainObjects)
+    private void Construct(CameraReferences cameraReferences)
     {
-        mainCamera = mainObjects.MainCamera;
+        _cameraReferences = cameraReferences;
     }
 
     internal void SetActiveLineRenderer(bool active)
@@ -33,11 +34,19 @@ public class CircleCollider2DOutline : MonoBehaviour
     {
         physicsAnchor.Setup(activeObjectControllerComponent, transformComponent);
     }
+    
+    private void FixedUpdate()
+    {
+        // Толщина линии в мировых единицах
+        float worldThickness = CalculatePixel.Calculate(5, gameObject.transform, _cameraReferences.editSceneCamera);
+        lineRenderer.startWidth = worldThickness;
+        lineRenderer.endWidth = worldThickness;
+    }
 
     [Button]
     internal void UpdateOutline()
     {
-        if (mainCamera == null || circleCollider == null || lineRenderer == null || !lineRenderer.enabled)
+        if (circleCollider == null || lineRenderer == null || !lineRenderer.enabled)
             return;
 
         Vector2 center = circleCollider.offset;
@@ -64,14 +73,11 @@ public class CircleCollider2DOutline : MonoBehaviour
             positions[i] = worldCenter + worldOffset;
         }
 
+        lineRenderer.sortingOrder = 1000001;
         lineRenderer.positionCount = segments + 1;
         lineRenderer.SetPositions(positions);
         lineRenderer.loop = true;
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
-
-        float worldThickness = CalculatePixel.Calculate(pixelThickness, transform, mainCamera);
-        lineRenderer.startWidth = worldThickness;
-        lineRenderer.endWidth = worldThickness;
     }
 }

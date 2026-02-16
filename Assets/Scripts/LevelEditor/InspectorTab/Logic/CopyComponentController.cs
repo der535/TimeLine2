@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TimeLine.Components;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using UnityEngine;
@@ -75,6 +76,7 @@ namespace TimeLine.LevelEditor.CopyComponent
                 TreeNode newTreeNode = trackObjectData.branch.AddNode(path);
                 Track newTrackData = sourceTrack;
                 newTrackData.TargetObject = targetToPaste;
+                newTrackData.activeObjectControllerComponent = targetToPaste.GetComponent<ActiveObjectControllerComponent>();
                 newTrackData.cachedComponent = component;
 
 
@@ -118,6 +120,8 @@ namespace TimeLine.LevelEditor.CopyComponent
                     Track newTrackData = sourceTrack;
                     newTrackData.TargetObject = targetToPaste;
                     newTrackData.cachedComponent = component;
+                    newTrackData.activeObjectControllerComponent = targetToPaste.GetComponent<ActiveObjectControllerComponent>();
+
 
                     _keyframeTrackStorage.AddTrack(
                         newTreeNode,

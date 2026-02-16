@@ -39,9 +39,7 @@ public class ComponentFieldLogic : NodeLogic
                 _Map = jObj.ToObject<MapParameterComponen>();
             else
                 _Map = (MapParameterComponen)mapObj;
-
-            Debug.Log(_Map.SceneObjectID);
-
+            
             if (_Map != null)
                 _parameter = _FindField.Find(_Map);
         }
@@ -49,7 +47,6 @@ public class ComponentFieldLogic : NodeLogic
 
     public void Load(Dictionary<string, object> data, List<TrackObjectData> objects = null)
     {
-        Debug.Log(objects);
         if (objects == null)
         {
             OnLoad(data);

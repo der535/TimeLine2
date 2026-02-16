@@ -19,8 +19,20 @@ namespace TimeLine.Keyframe
 
     public class Keyframe
     {
-        public bool IsInitialized { get; set; }
-        public Action Initialize { get; set; }
+        private bool _isInitialized; // Это реальное место в памяти
+
+        public bool IsInitialized
+        {
+            get => _isInitialized;
+            set
+            {
+                // Добавляем лог при изменении
+                // UnityEngine.Debug.Log($"[PROPERTY] Смена флага с {Ticks} {_isInitialized} на {value}");
+        
+                _isInitialized = value; // Записываем в поле, а не в свойство!
+            }
+        }
+        public Action Initialize {  get; set; }
         public double Ticks { get; set; }
 
         public double OutTangent { get; set; }
@@ -52,6 +64,7 @@ namespace TimeLine.Keyframe
 
             Initialize += () =>
             {
+                
                 if (animationData.initializedNodes != null)
                 {
                     foreach (var VARIABLE in animationData.initializedNodes)
@@ -60,6 +73,7 @@ namespace TimeLine.Keyframe
                     }
                 }
 
+       
             };
         }
 
@@ -160,7 +174,7 @@ namespace TimeLine.Keyframe
         }
 
         // 🔑 Фабрика для создания AnimationData по имени типа
-        private static AnimationData CreateAnimationData(string typeName)
+        public static AnimationData CreateAnimationData(string typeName)
         {
             return typeName switch
             {

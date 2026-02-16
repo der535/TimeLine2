@@ -31,6 +31,7 @@ namespace TimeLine.EdgeColliderEditor
         {
             ColliderTransform = colliderTransform;
             OutlineRenderer = outlineRenderer;
+            OutlineRenderer.sortingOrder = 1000001;
             
             RedMaterial = new Material(Shader.Find("Sprites/Default")) { color = Color.red };
             CircleMaterial = new Material(Shader.Find("Sprites/Default")) { color = new Color(0, 1, 0, 0.5f) };

@@ -13,8 +13,14 @@ namespace TimeLine.LevelEditor.GeneralEditor
         [SerializeField] private Color inactiveColor;
 
         private bool _isRecording;
-        
-        public bool IsRecording() => _isRecording;
+        private bool _isRecordingTemp;
+
+        public void TemporaryChangeRecording(bool isRecording)
+        {
+            _isRecordingTemp = isRecording;
+        }
+
+        public bool IsRecording() => _isRecordingTemp && _isRecording;
         
         private void Start()
         {

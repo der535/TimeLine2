@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using EventBus;
+using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.TimeLine;
 using UnityEngine;
@@ -41,6 +42,9 @@ namespace TimeLine.LevelEditor.SelectBox
             _gameEventBus.SubscribeTo((ref SelectObjectEvent selectBox) => { _state.IsActive = false; });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent deselectBox) => { _state.IsActive = true; });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent all) => { _state.IsActive = true; });
+            _gameEventBus.SubscribeTo((ref TrackObjectResizing all) =>
+            {
+                _state.IsActive = all.IsResizing == false && _state.IsActive; });
         }
 
         private void Update()
@@ -61,7 +65,7 @@ namespace TimeLine.LevelEditor.SelectBox
             }
 
 
-            if (_state.IsDragging&& _state.CursorIsInside)
+            if (_state.IsDragging && _state.CursorIsInside)
             {
                 Vector2 currentMousePos = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
 
