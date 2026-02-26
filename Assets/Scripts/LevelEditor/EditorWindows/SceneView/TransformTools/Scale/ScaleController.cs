@@ -195,7 +195,7 @@ namespace TimeLine
         }
         
 
-        private void SetPosition(List<TrackObjectData> listObjects)
+        private void SetPosition(List<TrackObjectPacket> listObjects)
         {
             foreach (var VARIABLE in _transformComponent)
             {

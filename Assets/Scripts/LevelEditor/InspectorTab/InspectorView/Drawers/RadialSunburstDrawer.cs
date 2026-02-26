@@ -47,9 +47,9 @@ namespace TimeLine.CustomInspector.UI.Drawers
                         componentComponent.GetType().Name, componentComponent.Color2);
                 }, id);
                 _customInspectorDrawer.CreateIntField(componentComponent.SegmentsCount, null);
-                _customInspectorDrawer.CreateFloatField(componentComponent.TwistIntensity,                    link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(componentComponent.TwistIntensity,                    link.trackObjectPacket,
                     (BaseParameterComponent)component, id, null);
-                _customInspectorDrawer.CreateFloatField(componentComponent.RotationSpeed,                    link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(componentComponent.RotationSpeed,                    link.trackObjectPacket,
                     (BaseParameterComponent)component, id, () =>
                 {
                     _keyframeCreator.CreateKeyframe(new RadialSunburstMaterialRotationSpeed(componentComponent.RotationSpeed.Value),

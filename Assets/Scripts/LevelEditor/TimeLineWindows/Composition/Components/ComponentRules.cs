@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
-using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Components;
 using UnityEngine;
 using Zenject;
 
@@ -19,7 +18,6 @@ namespace TimeLine.Components
             { typeof(CircleCollider2DComponent), new Rule(typeof(CircleCollider2DComponent), maxInstances: 1) },
             { typeof(CapsuleCollider2DComponent), new Rule(typeof(CapsuleCollider2DComponent), maxInstances: 1) },
             { typeof(EdgeCollider2DComponent), new Rule(typeof(EdgeCollider2DComponent), maxInstances: 1) },
-            { typeof(PressEventComponent), new Rule(typeof(PressEventComponent), maxInstances: 1) },
             { typeof(ShakeComponent), new Rule(typeof(ShakeComponent), maxInstances: 1) },
             { typeof(PolygonCollider2DComponent), new Rule(typeof(PolygonCollider2DComponent), maxInstances: 1) },
             { typeof(ActiveObjectControllerComponent), new Rule(typeof(ActiveObjectControllerComponent), maxInstances: 1) },

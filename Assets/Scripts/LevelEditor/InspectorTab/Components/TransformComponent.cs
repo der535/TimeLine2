@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TimeLine.CustomInspector.Logic;
 using TimeLine.Keyframe;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent;
 using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
@@ -9,9 +8,7 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Animat
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
 using TimeLine.LevelEditor.Optimization;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
-using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Zenject;
 using BoolParameter = TimeLine.CustomInspector.Logic.Parameter.BoolParameter;
 using FloatParameter = TimeLine.CustomInspector.Logic.Parameter.FloatParameter;
@@ -132,8 +129,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + XPosition.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + XPosition.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -141,8 +138,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + YPosition.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + YPosition.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -150,8 +147,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + XRotation.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + XRotation.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -159,8 +156,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + YRotation.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + YRotation.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -168,8 +165,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + ZRotation.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + ZRotation.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -177,8 +174,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + XScale.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + XScale.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -186,8 +183,8 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    TreeNode node = data.branch.AddNode(this.GetType().Name + "/" + YScale.Name);
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    TreeNode node = packet.branch.AddNode(this.GetType().Name + "/" + YScale.Name);
                     _keyframeTrackStorage.SetActiveTrack(node, val);
                 });
 
@@ -195,16 +192,15 @@ namespace TimeLine
                 val => null,
                 val =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    data.trackObject.isActive = val;
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
+                    packet.components.Data.IsActive = val;
                 });
 
             Bind<bool, BoolParameter>(IsTempTrackObject,
-                val => null,
-                val =>
+                _ => null,
+                _ =>
                 {
-                    TrackObjectData data = _trackObjectStorage.GetTrackObjectData(gameObject);
-                    data.trackObject.isTemp = val;
+                    TrackObjectPacket packet = _trackObjectStorage.GetTrackObjectData(gameObject);
                 });
 
             XPosition.OnValueChanged += ChangeTransform;
@@ -218,10 +214,10 @@ namespace TimeLine
             ChangeTransform += () =>
             {
                 // Используем localEulerAngles вместо localRotation
-                Vector3 euler = this.transform.localEulerAngles;
+                Vector3 euler = transform.localEulerAngles;
                 
-                XPosition.Value = this.transform.localPosition.x;
-                YPosition.Value = this.transform.localPosition.y;
+                XPosition.Value = transform.localPosition.x;
+                YPosition.Value = transform.localPosition.y;
     
                 XRotation.Value = euler.x;
                 YRotation.Value = euler.y;

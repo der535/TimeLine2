@@ -6,6 +6,7 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using UnityEngine;
 using Zenject;
 
@@ -84,7 +85,7 @@ namespace TimeLine.LevelEditor.CopyComponent
                 _keyframeTrackStorage.AddTrack(
                     newTreeNode,
                     newTrackData,
-                    trackObjectData.trackObject,
+                    trackObjectData.components.Data,
                     trackObjectData.branch.ID
                 );
             }
@@ -126,7 +127,7 @@ namespace TimeLine.LevelEditor.CopyComponent
                     _keyframeTrackStorage.AddTrack(
                         newTreeNode,
                         newTrackData,
-                        trackObjectData.trackObject,
+                        trackObjectData.components.Data,
                         trackObjectData.branch.ID
                     );
                 }

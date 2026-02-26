@@ -29,13 +29,12 @@ namespace TimeLine
         {
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
-                print(_selectObjectController.SelectObjects.Count);
                 if (selectObject is TrackObjectGroup group)
                 {
                     foreach (var trackObject in group.TrackObjectDatas)
                     {
-                        trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
-                        selectObject.trackObject.GroupOffsetTrack(null);
+                        trackObject.components.Data.GroupOffset(-group.components.Data.StartTimeInTicks);
+                        selectObject.components.Data.GroupOffsetTrack(null);
                         
                         if(trackObject.sceneObject.transform.parent == group.sceneObject.transform)
                             trackObject.sceneObject.transform.SetParent(null);
@@ -48,9 +47,9 @@ namespace TimeLine
                             }
                         }
 
-                        trackObject.trackObject.Show();
+                        trackObject.components.View.Show();
 
-                        trackObject.trackObject.CalculatePosition();
+                        trackObject.components.trackObject.CalculatePosition();
                     }
 
                     _trackObjectStorage.SeparetaGroup(group);
@@ -73,14 +72,14 @@ namespace TimeLine
             }
         }
 
-        internal List<TrackObjectData> SeparateSingle(TrackObjectGroup group)
+        internal List<TrackObjectPacket> SeparateSingle(TrackObjectGroup group)
         {
-            List<TrackObjectData> trackObjects = new List<TrackObjectData>();
+            List<TrackObjectPacket> trackObjects = new List<TrackObjectPacket>();
             
             foreach (var trackObject in group.TrackObjectDatas)
             {
-                trackObject.trackObject.GroupOffset(-group.trackObject.StartTimeInTicks);
-                trackObject.trackObject.GroupOffsetTrack(null);
+                trackObject.components.Data.GroupOffset(-group.components.Data.StartTimeInTicks);
+                trackObject.components.Data.GroupOffsetTrack(null);
 
                 if (trackObject.sceneObject.transform.parent == group.sceneObject.transform)
                     trackObject.sceneObject.transform.SetParent(null);
@@ -93,8 +92,8 @@ namespace TimeLine
                     }
                 }
 
-                trackObject.trackObject.Show();
-                trackObject.trackObject.CalculatePosition();
+                trackObject.components.View.Show();
+                trackObject.components.trackObject.CalculatePosition();
                 trackObjects.Add(trackObject);
             }
 
@@ -107,8 +106,8 @@ namespace TimeLine
         {
             foreach (var trackObject in trackObjectGroup.TrackObjectDatas)
             {
-                trackObject.trackObject.GroupOffset(-trackObjectGroup.trackObject.StartTimeInTicks);
-                trackObject.trackObject.GroupOffsetTrack(null);
+                trackObject.components.Data.GroupOffset(-trackObjectGroup.components.Data.StartTimeInTicks);
+                trackObject.components.Data.GroupOffsetTrack(null);
 
                 
                 if(trackObject.sceneObject.transform.parent == trackObject.sceneObject.transform)
@@ -122,9 +121,9 @@ namespace TimeLine
                     }
                 }
 
-                trackObject.trackObject.Show();
+                trackObject.components.View.Show();
 
-                trackObject.trackObject.CalculatePosition();
+                trackObject.components.trackObject.CalculatePosition();
             }
             
 

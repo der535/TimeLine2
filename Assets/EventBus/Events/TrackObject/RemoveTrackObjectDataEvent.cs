@@ -5,11 +5,11 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public struct RemoveTrackObjectDataEvent : IEvent
     {
-        public TrackObjectData TrackObjectData { get; }
+        public TrackObjectPacket TrackObjectPacket { get; }
 
-        public RemoveTrackObjectDataEvent(TrackObjectData trackObjectData)
+        public RemoveTrackObjectDataEvent(TrackObjectPacket trackObjectPacket)
         {
-            TrackObjectData = trackObjectData;
+            TrackObjectPacket = trackObjectPacket;
         }
     }
 }

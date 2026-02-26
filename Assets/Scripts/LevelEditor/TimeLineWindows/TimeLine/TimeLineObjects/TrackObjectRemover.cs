@@ -58,7 +58,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
 
-        internal void SingleRemove(TrackObjectData select)
+        internal void SingleRemove(TrackObjectPacket select)
         {
             Disassemble(select.sceneObject);
             
@@ -66,14 +66,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
-            
-            Destroy(select.trackObject.gameObject);
+
+            select.components.View.Destroy();
             Destroy(select.sceneObject);
 
             _trackObjectStorage.Remove(select);
         }
         
-        internal void SingleRemoveNoStorage(TrackObjectData select, bool disassemble = true)
+        internal void SingleRemoveNoStorage(TrackObjectPacket select, bool disassemble = true)
         {
            if(disassemble) Disassemble(select.sceneObject);
 
@@ -82,7 +82,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
 
-            Destroy(select.trackObject.gameObject);
+            select.components.View.Destroy();
             Destroy(select.sceneObject);
         }
         
@@ -95,7 +95,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 // ВАЖНО: вызываем у child!
                 if (child.TryGetComponent(out SceneObjectLink link))
                 {
-                    link.trackObjectData.trackObject._parentID = string.Empty;
+                    link.trackObjectPacket.components.Data.ParentID = string.Empty;
                     child.SetParent(null); // Отцепляем
                 }
             }
@@ -112,7 +112,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
 
-            Destroy(select.trackObject.gameObject);
+            select.components.View.Destroy();
             Destroy(select.sceneObject);
             
             _trackObjectStorage.Remove(select);

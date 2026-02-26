@@ -26,16 +26,16 @@ namespace TimeLine
         
         public void CreateKeyframe(AnimationData animationData, GameObject target, string componentName, InspectableParameter fieldName)
         {
-            TrackObjectData trackObjectData = _trackObjectStorage.GetTrackObjectData(target);
+            TrackObjectPacket trackObjectPacket = _trackObjectStorage.GetTrackObjectData(target);
         
-            TreeNode node = _branchCollection.AddNodeToBranch(trackObjectData.branch.ID, trackObjectData.branch.Name,
+            TreeNode node = _branchCollection.AddNodeToBranch(trackObjectPacket.branch.ID, trackObjectPacket.branch.Name,
                 componentName+"/"+fieldName.Name);
             
             if (_keyframeTrackStorage.GetTrack(node) == null)
                 _keyframeTrackStorage.AddTrack(node, new Track(target, target.name, fieldName.AnimationColor),
-                    trackObjectData.trackObject, trackObjectData.branch.ID);
+                    trackObjectPacket.components.Data, trackObjectPacket.branch.ID);
             
-            _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectData.trackObject.StartTimeInTicks,
+            _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectPacket.components.Data.StartTimeInTicks,
                 animationData);
         }
     }

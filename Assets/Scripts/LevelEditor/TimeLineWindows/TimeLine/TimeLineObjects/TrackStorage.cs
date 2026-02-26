@@ -4,6 +4,7 @@ using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
@@ -87,18 +88,15 @@ namespace TimeLine
             return trackLines[index];
         }
 
-        public TrackLine CheckTracks(TrackObject trackObject)
+        public int CheckTracks(int index)
         {
-            if (trackLines.Count <= 1) return trackObject.TrackLine;
-
-
+            if (trackLines.Count <= 1) return index;
             
             Vector2 cursorPosition = new Vector2(_timeLineConverter.CursorPosition().x,
                 _timeLineConverter.CursorPosition().y +
                 (_mainObjects.CanvasRectTransform.sizeDelta.y / 2 - scrollViewObject.sizeDelta.y)-trackLinesContent.anchoredPosition.y);
 
             float minDistance = float.MaxValue;
-            TrackLine closestTrack = null;
             int closestIndex = -1;
 
             for (int i = 0; i < trackLines.Count; i++)
@@ -109,12 +107,11 @@ namespace TimeLine
                 if (distance < minDistance)
                 {
                     minDistance = distance;
-                    closestTrack = line;
                     closestIndex = i;
                 }
             }
 
-            return closestTrack;
+            return closestIndex;
         }
     }
 }

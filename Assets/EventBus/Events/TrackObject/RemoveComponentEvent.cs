@@ -6,12 +6,12 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public struct RemoveComponentEvent : IEvent
     {
-        public TrackObjectData TrackObjectData { get; }
+        public TrackObjectPacket TrackObjectPacket { get; }
         public Component Component { get; }
 
-        public RemoveComponentEvent(TrackObjectData trackObjectData, Component component)
+        public RemoveComponentEvent(TrackObjectPacket trackObjectPacket, Component component)
         {
-            TrackObjectData = trackObjectData;
+            TrackObjectPacket = trackObjectPacket;
             Component = component;
         }
     }

@@ -38,10 +38,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _selectObjectController = selectObjectController;
         }
 
-        internal void CopyObjects(List<TrackObjectData> selectedObjects)
+        internal void CopyObjects(List<TrackObjectPacket> selectedObjects)
         {
             dataCopy = new List<GameObjectSaveData>();
-            var minTicks = selectedObjects.Min(x => x.trackObject.StartTimeInTicks);
+            var minTicks = selectedObjects.Min(x => x.components.Data.StartTimeInTicks);
             var savedTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(minTicks);
             foreach (var sObject in selectedObjects)
@@ -68,7 +68,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             if (dataCopy == null) return;
             var minTime = GetMinTime(dataCopy);
 
-            List<TrackObjectData> pastedObjects = new();
+            List<TrackObjectPacket> pastedObjects = new();
 
             foreach (var data in dataCopy)
             {
@@ -89,7 +89,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             CommandHistory.IsRecording = true;
         }
 
-        private TrackObjectData PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true,
+        private TrackObjectPacket PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true,
             bool addToTitleCloneText = false)
         {
             Debug.Log(data.tracks.Count);

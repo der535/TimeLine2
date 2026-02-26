@@ -33,6 +33,7 @@ using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.TrackObjectSize.Data;
 using TimeLine.LevelEditor.UIAnimation;
 using TimeLine.Parent;
@@ -122,7 +123,7 @@ namespace TimeLine.LevelEditor.Core
             Container.BindInstance(core.contextMenuController).AsSingle();
             
             Container.BindInstance(core.Main).AsSingle();
-            Container.BindInstance(core.ParentMain).AsSingle();
+            // Container.BindInstance(core.ParentMain).AsSingle();
             Container.BindInstance(core.Settings).AsSingle();
             Container.BindInstance(core.TimeLineConverter).AsSingle();
             Container.BindInstance(core.BarBeatCounter).AsSingle();
@@ -194,6 +195,7 @@ namespace TimeLine.LevelEditor.Core
         private void InstallTools()
         {
             Container.BindInstance(tools.PolygonColliderEditor).AsSingle();
+            Container.BindInstance(tools.AddAnEntitySprite).AsSingle();
             Container.BindInstance(tools.OutlineController).AsSingle();
             Container.BindInstance(tools.EdgeColliderEditor).AsSingle();
             Container.BindInstance(tools.SelectObjectController).AsSingle();
@@ -240,7 +242,7 @@ namespace TimeLine.LevelEditor.Core
         public ContextMenuController contextMenuController;
 
         public Main Main;
-        public ParentMain ParentMain;
+        // public ParentMain ParentMain;
         public TimeLineSettings Settings;
         public TimeLineConverter TimeLineConverter;
         public BarBeatCounter BarBeatCounter;
@@ -314,6 +316,7 @@ namespace TimeLine.LevelEditor.Core
     [Serializable]
     public class ToolReferences
     {
+        public AddAnEntitySprite AddAnEntitySprite;
         public OutlineController OutlineController;
         public EdgeColliderEditorHost EdgeColliderEditor;
         public PolygonColliderEditorHost PolygonColliderEditor;

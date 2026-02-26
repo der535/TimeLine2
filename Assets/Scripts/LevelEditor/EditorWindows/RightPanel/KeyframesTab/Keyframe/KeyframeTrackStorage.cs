@@ -6,12 +6,8 @@ using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.GeneralEditor;
-using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.TimeLine;
-using Unity.Burst;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine;
 using Zenject;
 
@@ -75,7 +71,7 @@ namespace TimeLine.Keyframe
                 {
                     // print(variable.Track.Keyframes.Count);
                     UpdatingFromAnimation.isUpdatingFromAnimation = true;
-                    variable.Track.Evaluate(time - variable.TrackObject.StartTimeInTicks);
+                    variable.Track.Evaluate(time - variable.TrackObjectData.StartTimeInTicks);
                     UpdatingFromAnimation.isUpdatingFromAnimation = false;
                 }
             }
@@ -110,9 +106,9 @@ namespace TimeLine.Keyframe
             }
         }
 
-        public void AddTrack(TreeNode treeNode, Track track, TrackObject trackObject, string branchId)
+        public void AddTrack(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId)
         {
-            tracks.Add(new TrackData(treeNode, track, trackObject, branchId));
+            tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
             _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
@@ -137,18 +133,18 @@ namespace TimeLine.Keyframe
     
     public class TrackData
     {
-        public TrackData(TreeNode treeNode, Track track, TrackObject trackObject, string branchId)
+        public TrackData(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId)
         {
             BranchId = branchId;
             TreeNode = treeNode;
             Track = track;
-            TrackObject = trackObject;
+            TrackObjectData = trackObjectData;
         }
 
         public string BranchId;
         public TreeNode TreeNode;
         public Track Track;
-        public TrackObject TrackObject;
+        public TrackObjectData TrackObjectData;
         public bool Active = true;
     }
 }

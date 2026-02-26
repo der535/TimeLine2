@@ -21,10 +21,9 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
     private C_EditColliderState _cEditColliderState;
     private GameEventBus _gameEventBus;
 
-    private bool _emptyClick = true;
     
     // Поля для логики циклического выделения
-    private List<TrackObjectData> _hitsAtLastPosition = new List<TrackObjectData>();
+    private List<TrackObjectPacket> _hitsAtLastPosition = new List<TrackObjectPacket>();
     private int _lastSelectedIndex = -1;
 
     [Inject]
@@ -92,7 +91,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
     private void ProcessClickSelection(Vector3 worldPos)
     {
         // 1. Находим все объекты под курсором
-        List<TrackObjectData> currentHits = new List<TrackObjectData>();
+        List<TrackObjectPacket> currentHits = new List<TrackObjectPacket>();
         FindAllObjectsUnderCursor(worldPos, _trackObjectStorage.GetAllActiveTrackData(), currentHits);
 
         // 2. Сортируем: сначала те, у кого SortingOrder выше
@@ -134,7 +133,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         _selectObjectController.SelectMultiple(objectToSelect);
     }
 
-    private void FindAllObjectsUnderCursor(Vector3 mousePosition, List<TrackObjectData> list, List<TrackObjectData> results, TrackObjectData parentGroup = null)
+    private void FindAllObjectsUnderCursor(Vector3 mousePosition, List<TrackObjectPacket> list, List<TrackObjectPacket> results, TrackObjectPacket parentGroup = null)
     {
         foreach (var trackObjectData in list)
         {

@@ -53,7 +53,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             };
         }
 
-        internal (TrackObjectData, GameObject, Branch, List<Track>) LoadObject(GameObjectSaveData data,
+        internal (TrackObjectPacket, GameObject, Branch, List<Track>) LoadObject(GameObjectSaveData data,
             bool addToStorage = true)
         {
             return _loader.LoadObject(data, addToStorage, loadGraph: false);
@@ -64,7 +64,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _factory.CreateSceneObjectAndAddSprite(sprite);
         }
         
-        internal (TrackObjectData, GameObject, Branch) LoadComposition(GroupGameObjectSaveData data,
+        internal (TrackObjectPacket, GameObject, Branch) LoadComposition(GroupGameObjectSaveData data,
             string compositionID, bool generateNewSceneID,
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null)
         {

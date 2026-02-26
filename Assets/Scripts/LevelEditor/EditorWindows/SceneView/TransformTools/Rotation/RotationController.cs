@@ -133,7 +133,7 @@ namespace TimeLine
             }
         }
 
-        private void Select(List<TrackObjectData> data)
+        private void Select(List<TrackObjectPacket> data)
         {
             // 1. Отписываемся от старых объектов
             foreach (var item in _selectedObjects)

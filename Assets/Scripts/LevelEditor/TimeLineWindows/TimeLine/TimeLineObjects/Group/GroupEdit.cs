@@ -15,7 +15,7 @@ namespace TimeLine
         private GroupCreater _groupCreater;
         private GameEventBus _gameEventBus;
 
-        List<TrackObjectData> trackObjects = new();
+        List<TrackObjectPacket> trackObjects = new();
 
         private bool _isEditing;
 
@@ -34,7 +34,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo(((ref AddTrackObjectDataEvent data) =>
             {
                 if(_isEditing)
-                    trackObjects.Add(data.TrackObjectData);
+                    trackObjects.Add(data.TrackObjectPacket);
             }));
         }
 

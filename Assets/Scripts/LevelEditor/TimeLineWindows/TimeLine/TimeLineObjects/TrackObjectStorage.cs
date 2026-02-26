@@ -10,6 +10,7 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
@@ -22,11 +23,11 @@ namespace TimeLine
 {
     public class TrackObjectStorage : MonoBehaviour
     {
-        private List<TrackObjectData> _trackObjects = new();
+        private List<TrackObjectPacket> _trackObjects = new();
         private List<TrackObjectGroup> _trackObjectGroups = new();
 
         [FormerlySerializedAs("_selectedObject")]
-        public TrackObjectData selectedObject;
+        public TrackObjectPacket selectedObject;
 
         private GameEventBus _gameEventBus;
         private SelectObjectController _selectObjectController;
@@ -46,7 +47,7 @@ namespace TimeLine
             playbackState = _playbackState;
         }
 
-        public List<TrackObjectData> TrackObjects => _trackObjects;
+        public List<TrackObjectPacket> TrackObjects => _trackObjects;
         public List<TrackObjectGroup> TrackObjectGroups => _trackObjectGroups;
 
         private void Awake()
@@ -57,7 +58,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
-                var trackObjectData = GetTrackObjectData(data.Tracks[^1].trackObject);
+                var trackObjectData = GetTrackObjectData(data.Tracks[^1].components.trackObject);
                 if (trackObjectData != null)
                 {
                     InternalSelectObject(trackObjectData);
@@ -65,7 +66,7 @@ namespace TimeLine
 
                 foreach (var track in data.Tracks)
                 {
-                    SelectObject(track.trackObject);
+                    SelectObject(track.components.trackObject);
                 }
             });
 
@@ -74,39 +75,38 @@ namespace TimeLine
 
         internal double GetMinTime()
         {
-            var minFromObjects = _trackObjects.Select(f => f.trackObject.StartTimeInTicks);
-            var minFromGroups = _trackObjectGroups.Select(f => f.trackObject.StartTimeInTicks);
+            var minFromObjects = _trackObjects.Select(f => f.components.Data.StartTimeInTicks);
+            var minFromGroups = _trackObjectGroups.Select(f => f.components.Data.StartTimeInTicks);
             var allTimes = minFromObjects.Concat(minFromGroups);
 
             var enumerable = allTimes.ToList();
             return enumerable.Any() ? enumerable.Min() : 0.0;
         }
 
-        internal List<TrackObjectData> GetAllActiveTrackData()
+        internal List<TrackObjectPacket> GetAllActiveTrackData()
         {
-            List<TrackObjectData> trackObjectData = new List<TrackObjectData>();
+            List<TrackObjectPacket> trackObjectData = new List<TrackObjectPacket>();
             foreach (var track in _trackObjects)
             {
-                if (track.trackObject.GetActive()) trackObjectData.Add(track);
+                if (track.components.View.GetActive()) trackObjectData.Add(track);
             }
 
             foreach (var group in _trackObjectGroups)
             {
-                if (group.trackObject.GetActive()) trackObjectData.Add(group);
+                if (group.components.View.GetActive()) trackObjectData.Add(group);
             }
 
             return trackObjectData;
         }
 
-        internal List<TrackObjectData> GetAllActiveSceneObjects()
+        internal List<TrackObjectPacket> GetAllActiveSceneObjects()
         {
-            List<TrackObjectData> trackObjectData = new List<TrackObjectData>();
+            List<TrackObjectPacket> trackObjectData = new List<TrackObjectPacket>();
             foreach (var track in _trackObjects)
             {
                 if (track.sceneObject.GetComponent<ActiveObjectControllerComponent>().IsActive)
                 {
                     trackObjectData.Add(track);
-                    // Debug.Log(track, track.sceneObject);
                 }
             }
 
@@ -115,7 +115,6 @@ namespace TimeLine
                 if (group.sceneObject.GetComponent<ActiveObjectControllerComponent>().IsActive)
                 {
                     trackObjectData.Add(group);
-                    // Debug.Log(group, group.sceneObject);
                 }
             }
 
@@ -140,10 +139,10 @@ namespace TimeLine
             sw.Stop();
 
             // Выводим время в миллисекундах или тиках
-            UnityEngine.Debug.Log($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms ({sw.ElapsedTicks} ticks)");
+            // UnityEngine.Debug.Log($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms ({sw.ElapsedTicks} ticks)");
         }
 
-        internal TrackObjectData FindObjectByID(string id)
+        internal TrackObjectPacket FindObjectByID(string id)
         {
             foreach (var objectData in _trackObjects)
             {
@@ -170,7 +169,7 @@ namespace TimeLine
         /// Проверка одного конкретного трекобжекта
         /// </summary>
         /// <param name="trackObject"></param>
-        internal void CheckActiveTrackSingle(TrackObjectData trackObject)
+        internal void CheckActiveTrackSingle(TrackObjectPacket trackObject)
         {
             if (trackObject is TrackObjectGroup group)
             {
@@ -182,39 +181,30 @@ namespace TimeLine
             }
         }
 
-        private void CheckActiveTrackObjects(TrackObjectData trackObject, double time)
+        private void CheckActiveTrackObjects(TrackObjectPacket trackObject, double time)
         {
-            if (trackObject.trackObject.gameObject.activeSelf)
+            if (trackObject.components.View.GetActive())
             {
-                bool shouldBeActive = trackObject.trackObject.StartTimeInTicks <= time &&
-                                      trackObject.trackObject.TimeDuractionInTicks +
-                                      trackObject.trackObject.StartTimeInTicks > time;
+                bool shouldBeActive = trackObject.components.Data.StartTimeInTicks <= time &&
+                                      trackObject.components.Data.TimeDurationInTicks +
+                                      trackObject.components.Data.StartTimeInTicks > time;
 
-                trackObject.activeObjectController?.Turn(trackObject.trackObject.isActive && shouldBeActive);
+                trackObject.activeObjectController?.Turn(trackObject.components.Data.IsActive && shouldBeActive);
             }
             else
             {
                 trackObject.activeObjectController?.Turn(false);
             }
-
-
-            //REMOVE TEMP OBJECTS
-            // if (trackObject.trackObject.isTemp &&
-            //     time > trackObject.trackObject.TimeDuractionInTicks +
-            //     trackObject.trackObject.StartTimeInTicks)
-            // {
-            //     trackObject.trackObject.isActive = false;
-            // }
         }
 
         private void CheckActiveGroup(TrackObjectGroup group, double time, bool enchanted = false,
             bool activeGroup = true)
         {
-            double groupStart = group.trackObject.StartTimeInTicks;
-            double groupEnd = groupStart + group.trackObject.TimeDuractionInTicks;
+            double groupStart = group.components.Data.StartTimeInTicks;
+            double groupEnd = groupStart + group.components.Data.TimeDurationInTicks;
             bool isGroupActive = time >= groupStart && time < groupEnd;
 
-            if ((!enchanted && !group.trackObject.gameObject.activeSelf) || activeGroup == false)
+            if ((!enchanted && !group.components.View.GetActive()) || activeGroup == false)
             {
                 group.activeObjectController.Turn(false);
 
@@ -248,44 +238,32 @@ namespace TimeLine
                     continue;
                 }
 
-                double objStart = trackObject.trackObject.StartTimeInTicks + groupStart;
-                double objEnd = objStart + trackObject.trackObject.TimeDuractionInTicks;
+                double objStart = trackObject.components.Data.StartTimeInTicks + groupStart;
+                double objEnd = objStart + trackObject.components.Data.TimeDurationInTicks;
                 bool isObjectActive = time >= objStart && time < objEnd;
 
-                // print(group.trackObject.isActive);
-                // print(isObjectActive);
-                // print(isGroupActive);
-                // Debug.Log(trackObject.sceneObject.name, trackObject.sceneObject);
-
-                bool finalState = group.trackObject.isActive && isObjectActive && isGroupActive;
+                bool finalState = group.components.Data.IsActive && isObjectActive && isGroupActive;
 
                 trackObject.activeObjectController.Turn(finalState);
             }
-
-            // REMOVE TEMP OBJECTS
-            if (group.trackObject.isTemp &&
-                time > group.trackObject.StartTimeInTicks + group.trackObject.TimeDuractionInTicks)
-            {
-                group.trackObject.isActive = false;
-            }
         }
 
-        internal TrackObjectData Add(GameObject sceneObject, TrackObject selectedObject, Branch branch, string id)
+        internal TrackObjectPacket Add(GameObject sceneObject, TrackObjectComponents selectedObject, Branch branch, string id)
         {
-            TrackObjectData trackObjectData = new TrackObjectData(sceneObject, selectedObject, branch, id);
-            _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectData));
-            _trackObjects.Add(trackObjectData);
-            sceneObject.GetComponent<SceneObjectLink>().trackObjectData = trackObjectData;
+            TrackObjectPacket trackObjectPacket = new TrackObjectPacket(sceneObject, selectedObject, branch, id);
+            _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectPacket));
+            _trackObjects.Add(trackObjectPacket);
+            sceneObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectPacket;
 
             //Debug.Log($"[Add] TrackObject '{selectedObject.Name}' added to storage.");
-            return trackObjectData;
+            return trackObjectPacket;
         }
 
-        internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObject trackObject, Branch branch,
-            List<TrackObjectData> trackObjectDatas, string sceneObjectID, string compositionID, string lastEditID,
+        internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObjectComponents trackObject, Branch branch,
+            List<TrackObjectPacket> trackObjectDatas, string sceneObjectID, string compositionID, string lastEditID,
             bool addToStorage = true)
         {
-            var objectsForGroup = new List<TrackObjectData>(trackObjectDatas);
+            var objectsForGroup = new List<TrackObjectPacket>(trackObjectDatas);
 
             foreach (var trackObjectData in objectsForGroup)
             {
@@ -294,7 +272,7 @@ namespace TimeLine
                 else
                     _trackObjects.Remove(trackObjectData);
 
-                trackObjectData.trackObject.Hide();
+                trackObjectData.components.View.Hide();
             }
 
             if (compositionID == "")
@@ -313,8 +291,8 @@ namespace TimeLine
             // Подписка на изменение размера
             foreach (var track in trackObjectDatas)
             {
-                track.trackObject.GroupOffsetTrack(trackObject);
-                trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
+                track.components.Data.GroupOffsetTrack(trackObject);
+                trackObject.trackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
             }
 
             _composition.AddComposition(group);
@@ -326,12 +304,12 @@ namespace TimeLine
         {
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.trackObject.Hide();
+                trackObject.components.View.Hide();
             }
 
             foreach (var group in _trackObjectGroups)
             {
-                group.trackObject.Hide();
+                group.components.View.Hide();
             }
             //Debug.Log("[HideAll] All track objects and groups hidden.");
         }
@@ -340,12 +318,12 @@ namespace TimeLine
         {
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.trackObject.Show();
+                trackObject.components.View.Show();
             }
 
             foreach (var group in _trackObjectGroups)
             {
-                group.trackObject.Show();
+                group.components.View.Show();
             }
             //Debug.Log("[ShowAll] All track objects and groups shown.");
         }
@@ -365,37 +343,37 @@ namespace TimeLine
             //Debug.Log($"[SeparetaGroup] Group '{group.trackObject.Name}' separated into {group.TrackObjectDatas.Count} individual objects.");
         }
 
-        internal void Remove(TrackObjectData trackObjectData)
+        internal void Remove(TrackObjectPacket trackObjectPacket)
         {
-            _gameEventBus.Raise(new RemoveTrackObjectDataEvent(trackObjectData));
+            _gameEventBus.Raise(new RemoveTrackObjectDataEvent(trackObjectPacket));
 
-            if (trackObjectData is TrackObjectGroup group)
+            if (trackObjectPacket is TrackObjectGroup group)
             {
                 _trackObjectGroups.Remove(group);
                 //Debug.Log($"[Remove] Group '{group.trackObject.Name}' removed.");
             }
             else
             {
-                _trackObjects.Remove(trackObjectData);
+                _trackObjects.Remove(trackObjectPacket);
                 //Debug.Log($"[Remove] TrackObject '{trackObjectData.trackObject.Name}' removed.");
             }
         }
 
-        internal TrackObjectData GetTrackObjectData(GameObject gObject)
+        internal TrackObjectPacket GetTrackObjectData(GameObject gObject)
         {
-            TrackObjectData data = _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
-            if (data != null) return data;
+            TrackObjectPacket packet = _trackObjects.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+            if (packet != null) return packet;
 
-            data = _trackObjectGroups.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
-            if (data != null) return data;
+            packet = _trackObjectGroups.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+            if (packet != null) return packet;
 
             foreach (var group in _trackObjectGroups)
             {
-                data = group.TrackObjectDatas.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
-                if (data != null)
+                packet = group.TrackObjectDatas.FirstOrDefault(trackObject => trackObject.sceneObject == gObject);
+                if (packet != null)
                 {
                     //Debug.Log($"[GetTrackObjectData] Found object '{gObject.name}' inside group '{group.trackObject.Name}'.");
-                    return data;
+                    return packet;
                 }
             }
 
@@ -434,7 +412,7 @@ namespace TimeLine
         /// </summary>
         /// <param name="sceneObject">Искомый GameObject.</param>
         /// <returns>TrackObjectData (обычный объект или группа), либо null, если не найден.</returns>
-        public TrackObjectData GetTrackObjectDataOrParentGroupBySceneObject(GameObject sceneObject)
+        public TrackObjectPacket GetTrackObjectDataOrParentGroupBySceneObject(GameObject sceneObject)
         {
             if (sceneObject == null)
                 return null;
@@ -465,22 +443,22 @@ namespace TimeLine
             return null;
         }
 
-        internal TrackObjectData GetTrackObjectData(TrackObject trackObject)
+        internal TrackObjectPacket GetTrackObjectData(TrackObject trackObject)
         {
-            TrackObjectData data =
-                _trackObjects.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
-            if (data != null) return data;
+            TrackObjectPacket packet =
+                _trackObjects.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
+            if (packet != null) return packet;
 
-            data = _trackObjectGroups.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
-            if (data != null) return data;
+            packet = _trackObjectGroups.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
+            if (packet != null) return packet;
 
             foreach (var group in _trackObjectGroups)
             {
-                data = group.TrackObjectDatas.FirstOrDefault(trackObject2 => trackObject2.trackObject == trackObject);
-                if (data != null)
+                packet = group.TrackObjectDatas.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
+                if (packet != null)
                 {
                     //Debug.Log($"[GetTrackObjectData] Found TrackObject '{trackObject.Name}' inside group '{group.trackObject.Name}'.");
-                    return data;
+                    return packet;
                 }
             }
 
@@ -499,24 +477,24 @@ namespace TimeLine
             selectedObject = null;
             foreach (var trackObject in _trackObjects)
             {
-                trackObject.trackObject.Deselect();
+                trackObject.components.Select.Deselect();
             }
 
             foreach (var group in _trackObjectGroups)
             {
-                group.trackObject.Deselect();
+                group.components.Select.Deselect();
             }
             //Debug.Log("[DeselectObject] All objects deselected.");
         }
 
-        internal void DeselectObject(TrackObjectData deselectObject)
+        internal void DeselectObject(TrackObjectPacket deselectObject)
         {
             selectedObject = null;
             foreach (var trackObject in _trackObjects)
             {
                 if (deselectObject == trackObject)
                 {
-                    trackObject.trackObject.Deselect();
+                    trackObject.components.Select.Deselect();
                     return;
                 }
             }
@@ -525,7 +503,7 @@ namespace TimeLine
             {
                 if (deselectObject == group)
                 {
-                    group.trackObject.Deselect();
+                    group.components.Select.Deselect();
                     return;
                 }
             }
@@ -573,7 +551,7 @@ namespace TimeLine
         /// </summary>
         /// <param name="sceneObjectID">Уникальный идентификатор объекта.</param>
         /// <returns>Найденный TrackObjectData или null, если не найден.</returns>
-        public TrackObjectData GetTrackObjectDataBySceneObjectID(string sceneObjectID)
+        public TrackObjectPacket GetTrackObjectDataBySceneObjectID(string sceneObjectID)
         {
             if (string.IsNullOrEmpty(sceneObjectID))
                 return null;
@@ -605,31 +583,31 @@ namespace TimeLine
         {
             foreach (var objectData in _selectObjectController.SelectObjects)
             {
-                objectData.trackObject.SelectColor();
+                objectData.components.Select.SelectColor();
             }
             //Debug.Log($"[SelectColor] Applied selection color to {_selectObjectController.SelectObjects.Count} objects.");
         }
 
-        private void InternalSelectObject(TrackObjectData trackObjectData)
+        private void InternalSelectObject(TrackObjectPacket trackObjectPacket)
         {
-            this.selectedObject = trackObjectData;
+            this.selectedObject = trackObjectPacket;
         }
     }
 
     [Serializable]
-    public class TrackObjectData
+    public class TrackObjectPacket
     {
         public GameObject sceneObject;
         public ActiveObjectControllerComponent activeObjectController;
-        public TrackObject trackObject;
+        [FormerlySerializedAs("trackObject")] public TrackObjectComponents components;
         public Branch branch;
 
         public string sceneObjectID;
 
-        public TrackObjectData(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID)
+        public TrackObjectPacket(GameObject sceneObject, TrackObjectComponents components, Branch branch, string sceneObjectID)
         {
             this.sceneObject = sceneObject;
-            this.trackObject = trackObject;
+            this.components = components;
             this.branch = branch;
             this.sceneObjectID = sceneObjectID;
             this.activeObjectController = sceneObject.GetComponent<ActiveObjectControllerComponent>();
@@ -639,27 +617,27 @@ namespace TimeLine
     }
 
     [Serializable]
-    public class TrackObjectGroup : TrackObjectData
+    public class TrackObjectGroup : TrackObjectPacket
     {
         public string compositionID;
         public string lastEditID;
-        private List<TrackObjectData> _trackObjectDatas;
+        private List<TrackObjectPacket> _trackObjectDatas;
 
-        public List<TrackObjectData> TrackObjectDatas
+        public List<TrackObjectPacket> TrackObjectDatas
         {
             get { return _trackObjectDatas; }
             set { _trackObjectDatas = value; }
         }
 
-        public TrackObjectGroup(GameObject sceneObject, TrackObject trackObject, Branch branch, string sceneObjectID,
-            List<TrackObjectData> trackObjectDatas, string compositionID, string lastEditID) : base(sceneObject,
-            trackObject, branch,
+        public TrackObjectGroup(GameObject sceneObject, TrackObjectComponents components, Branch branch, string sceneObjectID,
+            List<TrackObjectPacket> trackObjectDatas, string compositionID, string lastEditID) : base(sceneObject,
+            components, branch,
             sceneObjectID)
         {
             this.compositionID = compositionID;
             this.lastEditID = lastEditID;
             this.sceneObject = sceneObject;
-            this.trackObject = trackObject;
+            this.components = components;
             this.branch = branch;
             this.TrackObjectDatas = trackObjectDatas;
             this.sceneObjectID = sceneObjectID;
@@ -676,16 +654,16 @@ namespace TimeLine
         /// <param name="lastEditID"></param>
         /// <param name="saveComposition"></param>
         /// <param name="compositionUpdateID">ID композиции который обновился</param>
-        public void Update(double newDuraction, List<TrackObjectData> trackObjectDatas, TrackObjectRemover remover,
+        public void Update(double newDuraction, List<TrackObjectPacket> trackObjectDatas, TrackObjectRemover remover,
             MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID,
             SaveComposition saveComposition, string compositionUpdateID, bool updateSelf, LoadGraphLogic _loadGraphLogic)
         {
             this.lastEditID = lastEditID;
 
-            trackObject.UpdateDuraction(newDuraction);
+            components.Data.UpdateDuraction(newDuraction);
 
             
-            List<TrackObjectData> updateTrackObjectDatas = new List<TrackObjectData>();
+            List<TrackObjectPacket> updateTrackObjectDatas = new List<TrackObjectPacket>();
 
             //Если композиция не полностью обновляется
             if (updateSelf == false)
@@ -726,12 +704,12 @@ namespace TimeLine
 
             foreach (var track in updateTrackObjectDatas)
             {
-                track.trackObject.GroupOffsetTrack(trackObject); ////
-                track.trackObject.SetTime(track.trackObject.StartTimeInTicks + trackObject._reducedLeft);
+                track.components.Data.GroupOffsetTrack(components); ////
+                track.components.Data.StartTimeInTicks += components.Data.ReducedLeft;
 
-                trackObject.Rezise += (value) => { track.trackObject.GroupOffset(value); };
+                components.trackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
 
-                track.trackObject.Hide();
+                track.components.View.Hide();
             }
 
             foreach (var selectObject in updateTrackObjectDatas)
@@ -753,7 +731,7 @@ namespace TimeLine
                 {
                     foreach (var node2 in node.Children)
                     {
-                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
+                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(components.Data);
                     }
                 }
             }
@@ -765,7 +743,7 @@ namespace TimeLine
             ParentLinkRestorer.Restor(updateTrackObjectDatas);
         }
 
-        private void UpdateLastEditID(List<TrackObjectData> trackObjectDatas, SaveComposition saveComposition)
+        private void UpdateLastEditID(List<TrackObjectPacket> trackObjectDatas, SaveComposition saveComposition)
         {
             foreach (var expr in trackObjectDatas)
             {

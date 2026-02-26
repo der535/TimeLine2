@@ -168,7 +168,6 @@ namespace TimeLine
                 GroupGameObjectSaveData groupGameObjectSaveData =
                     composition.FindCompositionDataById(group.compositionID);
                 facadeObjectSpawner.LoadComposition(group, group.compositionID, false, groupGameObjectSaveData);
-                // LoadGroup(group, ""); // ← рекурсивная загрузка с сортировкой детей
             }
             
             
@@ -176,25 +175,20 @@ namespace TimeLine
             _parentLinkRestorer.Restor();
         }
 
-        internal GameObjectSaveData SaveGameObject(TrackObjectData trackObject, string groupID)
+        internal GameObjectSaveData SaveGameObject(TrackObjectPacket trackObject, string groupID)
         {
             string parentObjectID = string.Empty;
-            // if (trackObject.sceneObject.transform.parent != null && trackObject.sceneObject.transform.parent != _mainObjects.SceneObjectParent.transform)
-            // {
-            //     parentObjectID = trackObjectStorage
-            //         .GetTrackObjectData(trackObject.sceneObject.transform.parent.gameObject).sceneObjectID;
-            // }
 
             if (groupID == parentObjectID) parentObjectID = string.Empty;
 
             var saveData = new GameObjectSaveData
             {
-                lineIndex = trackStorage.GetTrackLineIndex(trackObject.trackObject.TrackLine),
+                lineIndex = trackObject.components.Data.TrackLineIndex,
                 gameObjectName = trackObject.sceneObject.name,
-                startTime = trackObject.trackObject.StartTimeInTicks,
-                duractionTime = trackObject.trackObject.TimeDuractionInTicks,
+                startTime = trackObject.components.Data.StartTimeInTicks,
+                duractionTime = trackObject.components.Data.TimeDurationInTicks,
                 sceneObjectID = trackObject.sceneObjectID,
-                parentObjectID = trackObject.trackObject._parentID,
+                parentObjectID = trackObject.components.Data.ParentID,
                 branch = trackObject.branch.ToSaveData(),
                 Components = new List<ComponentData>(),
                 tracks = new List<TrackSaveData>()
@@ -224,7 +218,7 @@ namespace TimeLine
             {
                 groupData = new GroupGameObjectSaveData
                 {
-                    lineIndex = trackStorage.GetTrackLineIndex(group.trackObject.TrackLine),
+                    lineIndex = group.components.Data.TrackLineIndex,
                     lastEditID = group.lastEditID,
                     sceneObjectID = baseData.sceneObjectID,
                     parentObjectID = baseData.parentObjectID,
@@ -241,7 +235,7 @@ namespace TimeLine
             {
                 groupData = new GroupGameObjectSaveData
                 {
-                    lineIndex = trackStorage.GetTrackLineIndex(group.trackObject.TrackLine),
+                    lineIndex = group.components.Data.TrackLineIndex,
                     lastEditID = group.lastEditID,
                     compositionID = group.compositionID,
                     sceneObjectID = baseData.sceneObjectID,
@@ -254,8 +248,8 @@ namespace TimeLine
                 };
             }
 
-            groupData.reduceRight = group.trackObject._reducedRight;
-            groupData.reduceLeft = group.trackObject._reducedLeft;
+            groupData.reduceRight = group.components.Data.ReducedRight;
+            groupData.reduceLeft = group.components.Data.ReducedLeft;
 
 
             if (saveGroupID == false)
@@ -288,7 +282,7 @@ namespace TimeLine
 
             groupData = new GroupGameObjectSaveData
             {
-                lineIndex = trackStorage.GetTrackLineIndex(group.trackObject.TrackLine),
+                lineIndex =group.components.Data.TrackLineIndex,
                 sceneObjectID = baseData.sceneObjectID,
                 parentObjectID = baseData.parentObjectID,
                 compositionID = group.compositionID,
@@ -302,8 +296,8 @@ namespace TimeLine
                 children = new List<GameObjectSaveData>(),
             };
 
-            groupData.reduceRight = group.trackObject._reducedRight;
-            groupData.reduceLeft = group.trackObject._reducedLeft;
+            groupData.reduceRight = group.components.Data.ReducedRight;
+            groupData.reduceLeft = group.components.Data.ReducedLeft;
 
             foreach (var child in group.TrackObjectDatas)
             {

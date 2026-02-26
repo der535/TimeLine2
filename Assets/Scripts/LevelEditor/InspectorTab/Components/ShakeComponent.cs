@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
-using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.LevelEffects;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
-using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
@@ -40,12 +37,12 @@ namespace TimeLine
         private void Start()
         {
             _sceneObjectLink = gameObject.GetComponent<SceneObjectLink>();
-            _initializedComponentController.Add(this, _sceneObjectLink.trackObjectData.trackObject);
+            _initializedComponentController.Add(this, _sceneObjectLink.trackObjectPacket.components.GlobalTime);
         }
 
         private void Update()
         {
-            if (TimeLineConverter.Instance.TicksCurrentTime() > _sceneObjectLink.trackObjectData.trackObject.GetGlobalTime() && isShakeActive == false)
+            if (TimeLineConverter.Instance.TicksCurrentTime() > _sceneObjectLink.trackObjectPacket.components.GlobalTime.Get() && isShakeActive == false)
             {
                 isShakeActive = true;
                 

@@ -41,7 +41,7 @@ namespace TimeLine
                 yOffset.onEndEdit.RemoveAllListeners();
                 yOffset.onValueChanged.RemoveAllListeners();
                 
-                if (_trackObjectStorage.GetTrackObjectData(data.Tracks[^1].trackObject) is TrackObjectGroup
+                if (_trackObjectStorage.GetTrackObjectData(data.Tracks[^1].components.trackObject) is TrackObjectGroup
                     trackObjectGroup)
                 {
                     panel.SetActive(true);
@@ -69,7 +69,7 @@ namespace TimeLine
                 yOffset.onEndEdit.RemoveAllListeners();
                 yOffset.onValueChanged.RemoveAllListeners();
                 
-                if (_trackObjectStorage.GetTrackObjectData(eventData.SelectedObjects[^1].trackObject) is TrackObjectGroup
+                if (_trackObjectStorage.GetTrackObjectData(eventData.SelectedObjects[^1].components.trackObject) is TrackObjectGroup
                     trackObjectGroup)
                 {
                     panel.SetActive(true);

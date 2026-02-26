@@ -25,11 +25,11 @@ namespace TimeLine
             Name.OnValueChanged += () =>
             {
                 gameObject.name = Name.Value;
-                TrackObjectData data = _storage.GetTrackObjectData(gameObject);
-                if (data != null)
+                TrackObjectPacket packet = _storage.GetTrackObjectData(gameObject);
+                if (packet != null)
                 {
-                    data.branch.Rename(Name.Value);
-                    data.trackObject.Rename(Name.Value);
+                    packet.branch.Rename(Name.Value);
+                    packet?.components?.View?.Rename(Name.Value);
                 }
             };
         }

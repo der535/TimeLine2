@@ -37,12 +37,12 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
             }
         }
         
-        public void LoadGraph(List<TrackObjectData> trackObjectDatas)
+        public void LoadGraph(List<TrackObjectPacket> trackObjectDatas)
         {
             List<TrackData> findTracks = new List<TrackData>();
             foreach (var trackObject in trackObjectDatas)
             {
-                var trackData = _keyframeTrackStorage.GetTracks().Find(x => x.TrackObject == trackObject.trackObject);
+                var trackData = _keyframeTrackStorage.GetTracks().Find(x => x.TrackObjectData == trackObject.components.Data);
                 findTracks.Add(trackData);
             }
             

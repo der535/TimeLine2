@@ -32,12 +32,12 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
             eventBinder.Add(_gameEventBus, (ref StopListeningParameterEvent _) => button.gameObject.SetActive(false));
         }
 
-        public void Setup(InspectableParameter parameter, TrackObjectData trackObjectData,
+        public void Setup(InspectableParameter parameter, TrackObjectPacket trackObjectPacket,
             BaseParameterComponent component)
         {
             _parameter = parameter;
             _mapParameterComponen =
-                new MapParameterComponen(trackObjectData.sceneObjectID, component.GetID(), parameter.Id);
+                new MapParameterComponen(trackObjectPacket.sceneObjectID, component.GetID(), parameter.Id);
         }
 
         public void Get()

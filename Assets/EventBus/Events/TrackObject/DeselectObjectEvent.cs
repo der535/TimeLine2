@@ -5,10 +5,10 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public class DeselectObjectEvent: IEvent
     {
-        public TrackObjectData DeselectedObject { get; }
-        public List<TrackObjectData> SelectedObjects { get; }
+        public TrackObjectPacket DeselectedObject { get; }
+        public List<TrackObjectPacket> SelectedObjects { get; }
 
-        public DeselectObjectEvent(TrackObjectData deselectedObject, List<TrackObjectData> selectedObjects)
+        public DeselectObjectEvent(TrackObjectPacket deselectedObject, List<TrackObjectPacket> selectedObjects)
         {
             DeselectedObject = deselectedObject;
             SelectedObjects = selectedObjects;

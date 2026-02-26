@@ -302,7 +302,7 @@ namespace TimeLine.LevelEditor.Optimization
                 {
                     StartKeyIndex = currentKeyIndex,
                     KeyCount = src.Track.Keyframes.Count,
-                    Offset = src.Track.GetOffset() + src.TrackObject.StartTimeInTicks,
+                    Offset = src.Track.GetOffset() + src.TrackObjectData.StartTimeInTicks,
                     ResultIndex = i
                 };
 

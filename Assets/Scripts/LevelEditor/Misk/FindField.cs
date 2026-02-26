@@ -15,9 +15,9 @@ namespace TimeLine.LevelEditor.Misk
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public InspectableParameter Find(MapParameterComponen MapParameter, List<TrackObjectData> objects = null)
+        public InspectableParameter Find(MapParameterComponen MapParameter, List<TrackObjectPacket> objects = null)
         {
-            List<TrackObjectData> researchedObjects = new List<TrackObjectData>();
+            List<TrackObjectPacket> researchedObjects = new List<TrackObjectPacket>();
             
             if (objects == null) researchedObjects = _trackObjectStorage.GetAllActiveTrackData();
             else researchedObjects = objects;

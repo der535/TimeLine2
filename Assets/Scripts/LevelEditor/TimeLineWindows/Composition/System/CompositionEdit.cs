@@ -49,13 +49,13 @@ namespace TimeLine
 
             var trackObject = (TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game);
             
-            List<TrackObjectData> datas = groupSeparate.SeparateSingle((TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game));
+            List<TrackObjectPacket> datas = groupSeparate.SeparateSingle((TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game));
 
             double sum = 0;
             
             foreach (var VARIABLE in datas)
             {
-                sum += VARIABLE.trackObject.StartTimeInTicks;
+                sum += VARIABLE.components.Data.StartTimeInTicks;
             }
             sum /= datas.Count;
             

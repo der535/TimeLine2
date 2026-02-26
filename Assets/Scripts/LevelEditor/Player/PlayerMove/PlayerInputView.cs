@@ -9,8 +9,6 @@ namespace TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove
     {
         private ActionMap _actionMap;
         
-        private bool _isMoving = false;
-
         public event Action<Vector2> OnMovePerformed;
         public event Action OnSpacePerformed;
         public event Action OnSpaceCanceled;

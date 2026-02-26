@@ -138,7 +138,7 @@ namespace TimeLine
             
         }
 
-        private void SelectObject(List<TrackObjectData> data)
+        private void SelectObject(List<TrackObjectPacket> data)
         {
             foreach (var VARIABLE in _allObjects)
             {

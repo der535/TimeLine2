@@ -4,6 +4,7 @@ using System.Linq;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ namespace TimeLine.Keyframe
         public string TrackName;
         public Color AnimationColor;
         public List<Keyframe> Keyframes = new();
-        public TrackObject groupObject;
+        public TrackObjectData groupObject;
         public Component cachedComponent;
 
 
@@ -53,7 +54,7 @@ namespace TimeLine.Keyframe
             return newKeyframe;
         }
 
-        public void SetParent(TrackObject trackObject = null)
+        public void SetParent(TrackObjectData trackObject = null)
         {
             groupObject = trackObject;
         }

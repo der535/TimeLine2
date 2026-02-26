@@ -9,6 +9,7 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using TimeLine.LevelEditor.ValueEditor.Save;
 using TimeLine.LevelEditor.ValueEditor.Test;
@@ -149,7 +150,7 @@ namespace TimeLine
                 if (track == null)
                 {
                     track = new Track(_selectObjectController.SelectObjects[^1].sceneObject, trackData.Track.TrackName, trackData.Track.AnimationColor);
-                    _keyframeTrackStorage.AddTrack(node, track, _selectObjectController.SelectObjects[^1].trackObject, _selectObjectController.SelectObjects[^1].branch.ID);
+                    _keyframeTrackStorage.AddTrack(node, track, _selectObjectController.SelectObjects[^1].components.Data, _selectObjectController.SelectObjects[^1].branch.ID);
                 }
 
                 (OutputLogic item1, List<IInitializedNode> item2) =
@@ -158,7 +159,7 @@ namespace TimeLine
                 Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(copykeyframe.Item1, item1, item2);
                 var difference = copykeyframe.Item1.Ticks - minTime;
                 loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() -
-                                       _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks +
+                                       _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks +
                                        difference;
                 track.AddKeyframe(loadedKeyframe);
                 _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
@@ -172,16 +173,16 @@ namespace TimeLine
             copyKeyframes.Add((data, track));
         }
 
-        private void Paste(KeyframeSaveData keyframe, Track track, TrackObject trackObject, double minTimeSelected)
-        {
-            (OutputLogic item1, List<IInitializedNode> item2) =
-                _saveNodes.LoadLogicOnly(keyframe.Graph, TypeToDataType.Convert(keyframe.DataType));
-            Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe, item1, item2);
-            var difference = keyframe.Ticks - minTimeSelected;
-            loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.StartTimeInTicks +
-                                   difference;
-            track.AddKeyframe(loadedKeyframe);
-            _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
-        }
+        // private void Paste(KeyframeSaveData keyframe, Track track, TrackObject trackObject, double minTimeSelected)
+        // {
+        //     (OutputLogic item1, List<IInitializedNode> item2) =
+        //         _saveNodes.LoadLogicOnly(keyframe.Graph, TypeToDataType.Convert(keyframe.DataType));
+        //     Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe, item1, item2);
+        //     var difference = keyframe.Ticks - minTimeSelected;
+        //     loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.StartTimeInTicks +
+        //                            difference;
+        //     track.AddKeyframe(loadedKeyframe);
+        //     _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
+        // }
     }
 }

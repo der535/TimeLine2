@@ -5,9 +5,9 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public struct DragTrackObjectEvent : IEvent
     {
-        public TrackObjectData Track { get; }
+        public TrackObjectPacket Track { get; }
 
-        public DragTrackObjectEvent(TrackObjectData track)
+        public DragTrackObjectEvent(TrackObjectPacket track)
         {
             Track = track;
         }

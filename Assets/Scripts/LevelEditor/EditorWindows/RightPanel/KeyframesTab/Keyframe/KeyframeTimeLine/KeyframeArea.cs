@@ -14,7 +14,7 @@ namespace TimeLine
         [SerializeField] private RectTransform rect;
         [FormerlySerializedAs("_timeLineKeyframeScroll")] [SerializeField] private TimeLineKeyframeZoom timeLineKeyframeZoom;
 
-        private TrackObjectData selectedTrackObjectData;
+        private TrackObjectPacket _selectedTrackObjectPacket;
 
         private TimeLineSettings _settings;
         private GameEventBus _gameEventBus;
@@ -37,22 +37,24 @@ namespace TimeLine
         {
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => OnSelectTrackObject(selectedTrackObjectData));
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => OnSelectTrackObject(_selectedTrackObjectPacket));
             
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
 
         }
 
-        public void OnSelectTrackObject(TrackObjectData trackObjectData)
+        public void OnSelectTrackObject(TrackObjectPacket trackObjectPacket)
         {
-            if (trackObjectData == null) return;
-            selectedTrackObjectData = trackObjectData;
-            UpdateArea((float)trackObjectData.trackObject.BeatDuraction);
+            if (trackObjectPacket == null) return;
+            _selectedTrackObjectPacket = trackObjectPacket;
+          
+
+            UpdateArea((float)(trackObjectPacket.components.Data.TimeDurationInTicks / TimeLineConverter.TICKS_PER_BEAT));
         }
 
         private void Clear()
         {
-            selectedTrackObjectData = null;
+            _selectedTrackObjectPacket = null;
             UpdateArea(0);
         }
 
@@ -60,7 +62,7 @@ namespace TimeLine
         {
             // float rootOffset = _mainObjects.KeyframeScrollView.offsetMin.x - _mainObjects.KeyframeVerticalLayoutGroup.padding.left / 2f;
 
-            rect.sizeDelta = new Vector2(duraction * (_settings.DistanceBetweenBeatLines + timeLineKeyframeZoom.Zoom), rect.sizeDelta.y);
+            rect.sizeDelta = new Vector2(duraction * (timeLineKeyframeZoom.Zoom), rect.sizeDelta.y);
             rect.anchoredPosition = new Vector2((rect.sizeDelta.x / 2), rect.anchoredPosition.y);
         }
     }

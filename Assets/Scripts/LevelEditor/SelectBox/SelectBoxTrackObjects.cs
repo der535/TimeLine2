@@ -126,7 +126,7 @@ namespace TimeLine.LevelEditor.SelectBox
         {
             // Кэшируем данные, чтобы не обращаться к свойствам в каждой итерации
             var currentSelection = _selectObjectController.SelectObjects; 
-            var allObjects = new List<TrackObjectData>(_trackObjectStorage.GetAllActiveTrackData());
+            var allObjects = new List<TrackObjectPacket>(_trackObjectStorage.GetAllActiveTrackData());
             // allObjects.AddRange(_trackObjectStorage.TrackObjectGroups);
     
             // Если selectBox вычисляется динамически, лучше сохранить его в переменную
@@ -134,7 +134,7 @@ namespace TimeLine.LevelEditor.SelectBox
 
             foreach (var trackObject in allObjects)
             {
-                bool isInside = CheckIsSelected(trackObject.trackObject.RectTransform, box);
+                bool isInside = CheckIsSelected(trackObject.components.View.GetRectTransform(), box);
                 bool isAlreadySelected = currentSelection.Contains(trackObject);
 
                 if (isInside && !isAlreadySelected)

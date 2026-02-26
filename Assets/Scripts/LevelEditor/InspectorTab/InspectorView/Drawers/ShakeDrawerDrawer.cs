@@ -31,10 +31,10 @@ namespace TimeLine.CustomInspector.UI.Drawers
             if (component is ShakeComponent shakeComponent)
             {
                 _customInspectorDrawer.CreateVector2Field(shakeComponent.ShakeStrength);
-                _customInspectorDrawer.CreateFloatField(shakeComponent.Duration,                    link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(shakeComponent.Duration,                    link.trackObjectPacket,
                     (BaseParameterComponent)component, id,null);
                 _customInspectorDrawer.CreateIntField(shakeComponent.Vibrato, null);
-                _customInspectorDrawer.CreateFloatField(shakeComponent.Randomness,                    link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(shakeComponent.Randomness,                    link.trackObjectPacket,
                     (BaseParameterComponent)component, id,null);
             }
         }

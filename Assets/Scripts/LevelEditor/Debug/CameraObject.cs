@@ -23,9 +23,9 @@ namespace TimeLine
         [Button]
         private void Create()
         {
-            TrackObjectData trackObjectData = _objectFactory.CreateFullObject("Camera");
-            Destroy(trackObjectData.sceneObject);
-            trackObjectData.sceneObject = _camera.gameObject;
+            TrackObjectPacket trackObjectPacket = _objectFactory.CreateFullObject("Camera");
+            Destroy(trackObjectPacket.sceneObject);
+            trackObjectPacket.sceneObject = _camera.gameObject;
         }
     }
 }

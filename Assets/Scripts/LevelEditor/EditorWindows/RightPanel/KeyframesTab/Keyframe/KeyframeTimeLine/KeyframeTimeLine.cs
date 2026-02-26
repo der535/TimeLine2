@@ -4,6 +4,7 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -14,23 +15,18 @@ namespace TimeLine
     public class KeyframeTimeLine : MonoBehaviour
     {
         [SerializeField] private RectTransform rect;
-        [FormerlySerializedAs("timeLineKeyframeScroll")] [SerializeField] private TimeLineKeyframeZoom timeLineKeyframeZoom;
 
-        private TrackObject _trackObject;
-
-        private Main _main;
+        [FormerlySerializedAs("timeLineKeyframeScroll")] [SerializeField]
+        private TimeLineKeyframeZoom timeLineKeyframeZoom;
+        
         private GameEventBus _gameEventBus;
         private TimeLineSettings _timeLineSettings;
-        private GridUI _gridUI;
-        private TrackObject _trackObjectData;
+        private TrackObjectData _trackObjectData;
         private M_MusicData _musicData;
 
         [Inject]
-        private void Construct(Main main, GameEventBus gameEventBus, TimeLineSettings timeLineSettings,
-            GridUI gridUI, M_MusicData musicData)
+        private void Construct(GameEventBus gameEventBus, TimeLineSettings timeLineSettings, M_MusicData musicData)
         {
-            _gridUI = gridUI;
-            _main = main;
             _gameEventBus = gameEventBus;
             _timeLineSettings = timeLineSettings;
             _musicData = musicData;
@@ -41,12 +37,12 @@ namespace TimeLine
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
-            
+
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
             _gameEventBus.SubscribeTo(
                 (ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent data) =>
                 {
-                    if(_trackObjectData != null)
+                    if (_trackObjectData != null)
                         UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), _trackObjectData);
                 });
         }
@@ -56,23 +52,24 @@ namespace TimeLine
             UpdatePosition(tickEvent.Time);
         }
 
-        public void OnSelectTrackObject(TrackObjectData trackObjectData)
+        public void OnSelectTrackObject(TrackObjectPacket trackObjectPacket)
         {
-            _trackObject = trackObjectData.trackObject;
+            _trackObjectData = trackObjectPacket.components.Data;
             UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime());
         }
 
         public void OnDragTrackObject(ref DragTrackObjectEvent dragTrackObjectEvent)
         {
-            UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), dragTrackObjectEvent.Track.trackObject);
+            UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), dragTrackObjectEvent.Track.components.Data);
         }
 
-        private void UpdatePosition(double ticks, TrackObject trackObject)
+        private void UpdatePosition(double ticks, TrackObjectData trackObject)
         {
             _trackObjectData = trackObject;
+
             // Конвертируем StartTime трек-объекта в тики
             double startTimeTicks = trackObject.StartTimeInTicks;
-            
+
             // Вычисляем разницу во времени в тиках
             double timeDiffTicks = ticks - startTimeTicks;
 
@@ -89,9 +86,9 @@ namespace TimeLine
 
         private void UpdatePosition(double ticks)
         {
-            if (_trackObject)
+            if (_trackObjectData != null)
             {
-                UpdatePosition(ticks, _trackObject);
+                UpdatePosition(ticks, _trackObjectData);
             }
         }
 
@@ -108,7 +105,7 @@ namespace TimeLine
         private void OnDestroy()
         {
             _gameEventBus.UnsubscribeFrom<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
-            _gameEventBus.UnsubscribeFrom<SelectObjectEvent>((ref SelectObjectEvent data) =>
+            _gameEventBus.UnsubscribeFrom((ref SelectObjectEvent data) =>
                 OnSelectTrackObject(data.Tracks[^1]));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
 

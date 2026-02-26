@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.Group
 {
     public class GroupWindows : MonoBehaviour
     {

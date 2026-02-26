@@ -38,7 +38,7 @@ public class BoxCollider2DOutline : MonoBehaviour
     private void FixedUpdate()
     {
         // Толщина линии в мировых единицах
-        float worldThickness = CalculatePixel.Calculate(5, gameObject.transform, _cameraReferences.editSceneCamera);
+        float worldThickness = CalculatePixel.Calculate(pixelThickness, gameObject.transform, _cameraReferences.editSceneCamera);
         lineRenderer.startWidth = worldThickness;
         lineRenderer.endWidth = worldThickness;
     }

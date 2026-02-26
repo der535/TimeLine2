@@ -4,20 +4,32 @@ using GenericEventBus;
 
 public class EventBinder : IDisposable
 {
+    // Храним действия по отписке. 
+    // Замыкание внутри лямбды гарантирует, что мы вызовем отписку именно того экземпляра, 
+    // который был создан при подписке.
     private readonly List<Action> _unsubscribers = new List<Action>();
 
-    // Метод теперь возвращает сам EventBinder, что позволяет строить цепочку
-    public EventBinder Add<TBase, TEvent>(GenericEventBus<TBase> bus, GenericEventBus<TBase>.EventHandler<TEvent> handler) 
+    public EventBinder Add<TBase, TEvent>(
+        GenericEventBus<TBase> bus, 
+        GenericEventBus<TBase>.EventHandler<TEvent> handler) 
         where TEvent : TBase
     {
+        // Подписываем конкретный экземпляр handler
         bus.SubscribeTo(handler);
+
+        // Сохраняем замыкание, которое точно знает, от какой шины и какого хендлера отписываться
         _unsubscribers.Add(() => bus.UnsubscribeFrom(handler));
-        return this; // Возвращаем себя для следующего вызова
+        
+        return this;
     }
 
     public void Dispose()
     {
-        foreach (var unsub in _unsubscribers) unsub?.Invoke();
+        // Вызываем все сохраненные действия отписки
+        foreach (var unsub in _unsubscribers)
+        {
+            unsub?.Invoke();
+        }
         _unsubscribers.Clear();
     }
 }

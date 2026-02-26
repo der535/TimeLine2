@@ -12,8 +12,8 @@ namespace TimeLine.LevelEditor.Parent.New
         private GameEventBus _gameEventBus;
         private ParentView _parentView;
 
-        private TrackObjectData _selectedTrackObject;
-        private TrackObjectData _selectedParent;
+        private TrackObjectPacket _selectedTrackObject;
+        private TrackObjectPacket _selectedParent;
         private TrackObjectStorage _trackObjectStorage;
         
         private bool chooseNewParent = false;
@@ -48,17 +48,17 @@ namespace TimeLine.LevelEditor.Parent.New
             {
                 chooseNewParent = false;
                 _parentView.SetMode_SelectNewParent();
-                _parentView.SelectObject(_selectedTrackObject.trackObject.Name, _selectedParent.trackObject.Name);
-                _selectedTrackObject.trackObject._parentID = _selectedParent.sceneObjectID;
+                _parentView.SelectObject(_selectedTrackObject.components.Data.Name, _selectedParent.components.Data.Name);
+                _selectedTrackObject.components.Data.ParentID = _selectedParent.sceneObjectID;
                 _selectedTrackObject.sceneObject.transform.SetParent(_selectedParent.sceneObject.transform);
                 _selectedParent = null;
             };
 
             _parentView.ClearParent += () =>
             {
-                _selectedTrackObject.trackObject._parentID = string.Empty;
+                _selectedTrackObject.components.Data.ParentID = string.Empty;
                 _selectedTrackObject.sceneObject.transform.SetParent(null);
-                _parentView.SelectObject(_selectedTrackObject.trackObject.Name, "---");
+                _parentView.SelectObject(_selectedTrackObject.components.Data.Name, "---");
             };
             
             
@@ -71,18 +71,18 @@ namespace TimeLine.LevelEditor.Parent.New
                 if (!chooseNewParent)
                 {
                     _selectedTrackObject = data.Tracks[^1];
-                    var parentObject = _trackObjectStorage.FindObjectByID(_selectedTrackObject.trackObject._parentID);
+                    var parentObject = _trackObjectStorage.FindObjectByID(_selectedTrackObject.components.Data.ParentID);
                     preveusParentName = parentObject != null
-                        ? parentObject.trackObject
-                            .Name
+                        ? parentObject.components
+                            .Data.Name
                         : "---";
-                    _parentView.SelectObject(_selectedTrackObject.trackObject.Name, preveusParentName);
+                    _parentView.SelectObject(_selectedTrackObject.components.Data.Name, preveusParentName);
                 }
                 else
                 {
                     if (_selectedTrackObject == data.Tracks[^1]) return;
                     _selectedParent = data.Tracks[^1];
-                    _parentView.NewParent(preveusParentName, _selectedParent.trackObject.Name);
+                    _parentView.NewParent(preveusParentName, _selectedParent.components.Data.Name);
                 }
             });
 
@@ -91,18 +91,18 @@ namespace TimeLine.LevelEditor.Parent.New
                 if (!chooseNewParent)
                 {
                     _selectedTrackObject = data.SelectedObjects[^1];
-                    var parentObject = _trackObjectStorage.FindObjectByID(_selectedTrackObject.trackObject._parentID);
+                    var parentObject = _trackObjectStorage.FindObjectByID(_selectedTrackObject.components.Data.ParentID);
                     preveusParentName = parentObject != null
-                        ? parentObject.trackObject
-                            .Name
+                        ? parentObject.components
+                            .Data.Name
                         : "---";
-                    _parentView.SelectObject(_selectedTrackObject.trackObject.Name, preveusParentName);
+                    _parentView.SelectObject(_selectedTrackObject.components.Data.Name, preveusParentName);
                 }
                 else
                 {
                     if (_selectedTrackObject == data.SelectedObjects[^1]) return;
                     _selectedParent = data.SelectedObjects[^1];
-                    _parentView.NewParent(preveusParentName, _selectedParent.trackObject.Name);
+                    _parentView.NewParent(preveusParentName, _selectedParent.components.Data.Name);
                 }
             });
             

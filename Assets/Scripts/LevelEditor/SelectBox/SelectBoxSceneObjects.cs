@@ -126,11 +126,10 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private void UpdateSelection() //Логика подсчёта выделенных объектов
         {
-            int couter = 0;
             Check(_trackObjectStorage.GetAllActiveSceneObjects());
         }
 
-        private void Check(List<TrackObjectData> list, TrackObjectData parentGroup = null)
+        private void Check(List<TrackObjectPacket> list, TrackObjectPacket parentGroup = null)
         {
             foreach (var data in list)
             {

@@ -18,13 +18,13 @@ namespace TimeLine.Parent
 
         public void Restor()
         {
-            List<TrackObjectData> trackObjectData = new List<TrackObjectData>();
+            List<TrackObjectPacket> trackObjectData = new List<TrackObjectPacket>();
             trackObjectData.AddRange(_trackObjectStorage.TrackObjects);
             trackObjectData.AddRange(_trackObjectStorage.TrackObjectGroups);
             Restor(trackObjectData);
         }
 
-        public static void Restor(List<TrackObjectData> trackObjectData)
+        public static void Restor(List<TrackObjectPacket> trackObjectData)
         {
             // print("=== НАЧАЛО ВОССТАНОВЛЕНИЯ ===");
             // print($"Получено объектов для восстановления: {trackObjectData.Count}");
@@ -58,7 +58,7 @@ namespace TimeLine.Parent
             int selfParentAttempts = 0;
 
             // Создаем словарь для быстрого поиска по ID
-            var objectsById = new Dictionary<string, TrackObjectData>();
+            var objectsById = new Dictionary<string, TrackObjectPacket>();
             foreach (var item in trackObjectData)
             {
                 if (item != null && !string.IsNullOrEmpty(item.sceneObjectID))
@@ -101,13 +101,13 @@ namespace TimeLine.Parent
                 // print($"  Имя объекта на сцене: {item.sceneObject.name}");
 
                 // Проверяем trackObject на null
-                if (item.trackObject == null)
+                if (item.components == null)
                 {
                     Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
                     continue;
                 }
 
-                string parentId = item.trackObject._parentID;
+                string parentId = item.components.Data.ParentID;
                 // print($"  Родительский ID: {parentId ?? "null"}");
 
                 if (!string.IsNullOrEmpty(parentId))
@@ -119,7 +119,7 @@ namespace TimeLine.Parent
                             $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
                         selfParentAttempts++;
                         print($"  Очистка некорректного parentID...");
-                        item.trackObject._parentID = string.Empty;
+                        item.components.Data.ParentID = string.Empty;
                         continue;
                     }
 
@@ -180,7 +180,7 @@ namespace TimeLine.Parent
                             Debug.LogWarning($"  Родительский объект с ID '{parentId}' не найден!");
                             // print($"  Объект: {item.branch?.Name ?? "Неизвестно"} (ID: {item.sceneObjectID})");
                             // print($"  Очистка поля _parentID...");
-                            item.trackObject._parentID = string.Empty;
+                            item.components.Data.ParentID = string.Empty;
                             parentNotFoundCount++;
                         }
                     }

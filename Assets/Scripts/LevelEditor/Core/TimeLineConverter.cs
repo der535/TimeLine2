@@ -208,9 +208,6 @@ namespace TimeLine.TimeLine
 
         public float GetAnchorPositionFromTime(float time)
         {
-            // print(time / (60 / _mMusicData.bpm));
-            // print(_mainObjects.ContentRectTransform.offsetMin.x);
-            // print(time / (60 / _mMusicData.bpm) + _mainObjects.ContentRectTransform.offsetMin.x);
             return GetAnchorPositionFromBeatPosition(time / (60 / _mMusicData.bpm)) +
                    _mainObjects.ContentRectTransform.offsetMin.x;
         }
@@ -230,33 +227,7 @@ namespace TimeLine.TimeLine
             return GetAnchorPosition(time, pan);
         }
 
-        // public float Interpolate(
-        //     float start, 
-        //     float end, 
-        //     Keyframe.Keyframe current, 
-        //     Keyframe.Keyframe next, 
-        //     float t)
-        // {
-        //     // Создаем AnimationCurve с двумя ключевыми кадрами
-        //     AnimationCurve curve = new AnimationCurve();
-        //
-        //     // Устанавливаем ключевые кадры с их тангенсами и весами
-        //     UnityEngine.Keyframe startKeyframe = new  UnityEngine.Keyframe(0f, start, (float)current.OutTangent, (float)current.OutTangent, (float)current.OutWeight, (float)current.OutWeight);
-        //     UnityEngine.Keyframe endKeyframe = new  UnityEngine.Keyframe(1f, end, (float)next.InTangent, (float)next.InTangent, (float)next.InWeight, (float)next.InWeight);
-        //
-        //     // Добавляем ключевые кадры в кривую
-        //     curve.AddKey(startKeyframe);
-        //     curve.AddKey(endKeyframe);
-        //
-        //     // Устанавливаем режимы тангенсов
-        //     curve.keys[0].weightedMode = WeightedMode.Both;
-        //     curve.keys[1].weightedMode = WeightedMode.Both;
-        //
-        //     // Вычисляем значение на кривой
-        //     return curve.Evaluate(Mathf.Clamp01(t));
-        // }
 
-        //----------------------------------------------
         [SerializeField] private AnimationCurve _curve;
 
         public float Interpolate(

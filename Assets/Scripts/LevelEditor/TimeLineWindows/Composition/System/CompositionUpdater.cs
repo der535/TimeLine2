@@ -43,7 +43,7 @@ namespace TimeLine
                 bool updateSelf = compositionID == group.compositionID;
 
                 GroupGameObjectSaveData data = composition.FindCompositionDataById(group.compositionID);
-                List<TrackObjectData> trackObjectDatas = new List<TrackObjectData>();
+                List<TrackObjectPacket> trackObjectDatas = new List<TrackObjectPacket>();
                 List<Track> tracks = new List<Track>();
 
                 foreach (var child in data.children)

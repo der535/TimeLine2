@@ -56,7 +56,7 @@ namespace TimeLine
 
         private void Start()
         {
-            activeObjectController = gameObject.GetComponent<SceneObjectLink>().trackObjectData.activeObjectController;
+            activeObjectController = gameObject.GetComponent<SceneObjectLink>().trackObjectPacket.activeObjectController;
             Active += active =>
             {
                 _spriteRenderer.enabled = active;

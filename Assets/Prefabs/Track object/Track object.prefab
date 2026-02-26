@@ -93,8 +93,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
           m_MethodName: SetResizeLeft
           m_Mode: 6
           m_Arguments:
@@ -109,8 +110,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
           m_MethodName: SetResizeLeft
           m_Mode: 6
           m_Arguments:
@@ -214,8 +216,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
           m_MethodName: SetResizeRight
           m_Mode: 6
           m_Arguments:
@@ -230,8 +233,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
           m_MethodName: SetResizeRight
           m_Mode: 6
           m_Arguments:
@@ -335,9 +339,10 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
-          m_MethodName: Select
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
+          m_MethodName: OnMouseDown
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -347,9 +352,10 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
-          m_MethodName: OnMouseDown
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
+          m_MethodName: Select
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -363,8 +369,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7904441491098853310}
-          m_TargetAssemblyTypeName: TimeLine.TrackObject, Assembly-CSharp
+        - m_Target: {fileID: 4687613316509498901}
+          m_TargetAssemblyTypeName: TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect,
+            Assembly-CSharp
           m_MethodName: OnMouseUp
           m_Mode: 1
           m_Arguments:
@@ -385,10 +392,11 @@ GameObject:
   m_Component:
   - component: {fileID: 632330435956980517}
   - component: {fileID: 114146358208695500}
-  - component: {fileID: 7904441491098853310}
   - component: {fileID: 891881881006371073}
   - component: {fileID: 44788961498572395}
   - component: {fileID: 3871431382332990931}
+  - component: {fileID: 9117178994587654193}
+  - component: {fileID: 4687613316509498901}
   m_Layer: 5
   m_Name: Track object
   m_TagString: Untagged
@@ -429,27 +437,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3538405965141009809}
   m_CullTransparentMesh: 1
---- !u!114 &7904441491098853310
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3538405965141009809}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4c45a4958aa43a08cf4f6fc91394cdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  image: {fileID: 4868117351938256020}
-  nameText: {fileID: 4206961575465642762}
-  rect: {fileID: 632330435956980517}
-  customizationController: {fileID: 44788961498572395}
-  trackObjectVisual: {fileID: 3871431382332990931}
-  deathZone: 5
-  offsetObject: {fileID: 0}
-  _reducedLeft: 0
-  _reducedRight: 0
 --- !u!114 &891881881006371073
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -496,6 +483,33 @@ MonoBehaviour:
   - {fileID: 7422259474525804369}
   - {fileID: 104832095702625668}
   - {fileID: 799506805387788229}
+--- !u!114 &9117178994587654193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3538405965141009809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0724dd1175941da878eeed520dea668, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectView
+  image: {fileID: 4868117351938256020}
+  nameText: {fileID: 4206961575465642762}
+  rect: {fileID: 632330435956980517}
+--- !u!114 &4687613316509498901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3538405965141009809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a9ce0d0ab304455ac39b27a437ef0d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObjectSelect
 --- !u!1 &4013224602474110455
 GameObject:
   m_ObjectHideFlags: 0

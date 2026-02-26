@@ -35,9 +35,9 @@ namespace TimeLine
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public void Setup(TrackObjectData trackObjectData, BaseParameterComponent component, FloatParameter floatParameter, string gameObjectID, Action createKeyframe)
+        public void Setup(TrackObjectPacket trackObjectPacket, BaseParameterComponent component, FloatParameter floatParameter, string gameObjectID, Action createKeyframe)
         {
-            _parameter.Setup(floatParameter, trackObjectData, component);
+            _parameter.Setup(floatParameter, trackObjectPacket, component);
             _floatParameter = floatParameter;
             parameterName.text = floatParameter.Name;
             inputField.text = floatParameter.Value.ToString(CultureInfo.InvariantCulture);

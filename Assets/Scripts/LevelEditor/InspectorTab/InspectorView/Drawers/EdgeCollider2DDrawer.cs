@@ -29,7 +29,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
             {
                 _customInspectorDrawer.CreateEditColliderButton();
                 _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
-                _customInspectorDrawer.CreateFloatField(rendererComponent.edgeRadius,                     link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(rendererComponent.edgeRadius,                     link.trackObjectPacket,
                     (BaseParameterComponent)component,"0", null);
                 
                 _customInspectorDrawer.AddSpace(5);

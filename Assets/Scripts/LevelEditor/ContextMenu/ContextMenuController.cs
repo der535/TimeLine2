@@ -16,7 +16,7 @@ namespace TimeLine.LevelEditor.ContextMenu
         private RectTransform rootContent;
 
         [SerializeField] private CanvasScaler canvas;
-        [SerializeField] private Camera camera;
+        [FormerlySerializedAs("camera")] [SerializeField] private Camera _camera;
         [SerializeField] private ContextMenuItemData contextMenuButton;
 
         private List<ContextMenuItemData> _buttons = new();
@@ -39,7 +39,7 @@ namespace TimeLine.LevelEditor.ContextMenu
             if (!panel.gameObject.activeSelf) return;
 
             // Проверяем, находится ли мышь в момент клика над RectTransform нашей панели
-            if (!RectTransformUtility.RectangleContainsScreenPoint(panel, Mouse.current.position.ReadValue(), camera))
+            if (!RectTransformUtility.RectangleContainsScreenPoint(panel, Mouse.current.position.ReadValue(), _camera))
             {
                 panel.gameObject.SetActive(false);
             }
@@ -63,7 +63,7 @@ namespace TimeLine.LevelEditor.ContextMenu
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 canvasRect,
                 UnityEngine.Input.mousePosition,
-                camera,
+                _camera,
                 out localMousePos
             );
 

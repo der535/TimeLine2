@@ -5,9 +5,9 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public class SelectObjectEvent: IEvent
     {
-        public List<TrackObjectData> Tracks { get; }
+        public List<TrackObjectPacket> Tracks { get; }
 
-        public SelectObjectEvent(List<TrackObjectData> tracks)
+        public SelectObjectEvent(List<TrackObjectPacket> tracks)
         {
             Tracks = tracks;
         }

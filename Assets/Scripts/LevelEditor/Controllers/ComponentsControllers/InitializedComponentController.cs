@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
-using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.Services;
 using UnityEngine;
 using Zenject;
 
@@ -31,7 +30,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref TickExactTimeEvent data) => { CheckInitialized(data.Time); });
         }
 
-        internal void Add(IInitializedComponent component, TrackObject trackObject)
+        internal void Add(IInitializedComponent component, TrackObjectGlobalTime trackObject)
         {
             _initializedComponentData.Add(new InitializedComponentData(trackObject, component));
         }
@@ -51,12 +50,12 @@ namespace TimeLine
         {
             foreach (var componentData in _initializedComponentData)
             {
-                if (time < componentData.TrackObject.GetGlobalTime() && componentData.Initialized == false)
+                if (time < componentData.TrackObjectGlobalTime.Get() && componentData.Initialized == false)
                 {
                     componentData.IInitializedComponent?.Initialized();
                     componentData.Initialized = true;
                 }
-                else if (time > componentData.TrackObject.GetGlobalTime())
+                else if (time > componentData.TrackObjectGlobalTime.Get())
                 {
                     componentData.Initialized = false;
                 }
@@ -65,13 +64,13 @@ namespace TimeLine
 
         class InitializedComponentData
         {
-            public InitializedComponentData(TrackObject trackObject, IInitializedComponent iInitializedComponent)
+            public InitializedComponentData(TrackObjectGlobalTime trackObjectGlobalTime, IInitializedComponent iInitializedComponent)
             {
-                TrackObject = trackObject;
+                TrackObjectGlobalTime = trackObjectGlobalTime;
                 IInitializedComponent = iInitializedComponent;
             }
 
-            public TrackObject TrackObject;
+            public TrackObjectGlobalTime TrackObjectGlobalTime;
             public IInitializedComponent IInitializedComponent;
             public bool Initialized;
         }

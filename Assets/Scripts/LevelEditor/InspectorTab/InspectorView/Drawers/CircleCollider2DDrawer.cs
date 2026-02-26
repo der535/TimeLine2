@@ -38,12 +38,12 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
                 _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
                 
                 _customInspectorDrawer.CreateFloatField(
-                        rendererComponent.OffsetX,                    link.trackObjectData,
+                        rendererComponent.OffsetX,                    link.trackObjectPacket,
                         (BaseParameterComponent)component,
                         id,
                     () => _keyframeCreator.CreateKeyframe(new XOffsetData(rendererComponent.OffsetX.Value), target, rendererComponent.GetType().Name,  rendererComponent.OffsetX));
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY,                     link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY,                     link.trackObjectPacket,
                     (BaseParameterComponent)component,id,() =>
                     _keyframeCreator.CreateKeyframe(new YOffsetData(rendererComponent.OffsetY.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.OffsetY));
@@ -51,7 +51,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
                 
                 _customInspectorDrawer.AddSpace(5);
                 
-                _customInspectorDrawer.CreateFloatField(rendererComponent.Radius,                    link.trackObjectData,
+                _customInspectorDrawer.CreateFloatField(rendererComponent.Radius,                    link.trackObjectPacket,
                     (BaseParameterComponent)component, id,() =>
                     _keyframeCreator.CreateKeyframe(new XSizeData(rendererComponent.Radius.Value), target,
                         rendererComponent.GetType().Name, rendererComponent.Radius));

@@ -13,7 +13,7 @@ namespace TimeLine.Input
     {
         [SerializeField] private RectTransform clickArea;
         [SerializeField] private RectTransform scrollingRecTransform;
-        [SerializeField] private Camera camera;
+        [FormerlySerializedAs("camera")] [SerializeField] private Camera _camera;
 
         [FormerlySerializedAs("gridSystem")] [SerializeField]
         private GridUI gridUI;
@@ -46,7 +46,7 @@ namespace TimeLine.Input
         public Vector2 GetCursorPosition()
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(scrollingRecTransform,
-                UnityEngine.Input.mousePosition, camera, out var vector2);
+                UnityEngine.Input.mousePosition, _camera, out var vector2);
             return vector2;
         }
 
@@ -56,7 +56,7 @@ namespace TimeLine.Input
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     clickArea,
                     UnityEngine.Input.mousePosition,
-                    camera,
+                    _camera,
                     out var localPoint))
             {
                 // 2. Проверяем, входит ли локальная точка в границы прямоугольника
@@ -103,7 +103,7 @@ namespace TimeLine.Input
             float pixelX = cursorPos.x;
             
             double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (_timeLineKeyframeZoom.Zoom);
-            double rawTicks = pixelX * ticksPerPixel + _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks;
+            double rawTicks = pixelX * ticksPerPixel + _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks;
 
             // 1. Сетка работает всегда (базовое поведение)
             double gridSizeInTicks = gridUI.GetGridSizeInTicks();
@@ -144,7 +144,7 @@ namespace TimeLine.Input
             }
 
             foreach (var wrap in _keyframeVizualizer.GetAllKeyframesList())
-                Check(wrap.Ticks + _selectObjectController.SelectObjects[^1].trackObject.StartTimeInTicks);
+                Check(wrap.Ticks + _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks);
 
 
             // Только в самом конце присваиваем результат out параметру

@@ -71,7 +71,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
             return JsonConvert.SerializeObject(graphData, settings);
         }
 
-        public OutputLogic LoadGraph(string json, DataType type, List<IInitializedNode> initializedNodes, List<TrackObjectData> objects = null)
+        public OutputLogic LoadGraph(string json, DataType type, List<IInitializedNode> initializedNodes, List<TrackObjectPacket> objects = null)
         {
             OutputLogic outputLogic = null;
             var settings = new JsonSerializerSettings
@@ -120,7 +120,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
             return outputLogic;
         }
 
-        public (OutputLogic, List<IInitializedNode>) LoadLogicOnly(string json, DataType type, List<TrackObjectData> objects = null)
+        public (OutputLogic, List<IInitializedNode>) LoadLogicOnly(string json, DataType type, List<TrackObjectPacket> objects = null)
         {
             if (string.IsNullOrEmpty(json))
             {

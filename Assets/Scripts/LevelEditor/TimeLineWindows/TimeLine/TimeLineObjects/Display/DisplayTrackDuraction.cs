@@ -1,3 +1,4 @@
+using System.Globalization;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TMPro;
@@ -33,14 +34,14 @@ namespace TimeLine
             // Подписка на событие выделения объекта:
             // Берем последний выделенный объект (индекс [^1]) и выводим его длительность в тиках.
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => 
-                _inputField.text = data.Tracks[^1].trackObject.TimeDuractionInTicks.ToString());
+                _inputField.text = data.Tracks[^1].components.Data.TimeDurationInTicks.ToString(CultureInfo.InvariantCulture));
 
             // Подписка на событие снятия выделения с конкретного объекта:
             // Обновляем текст, чтобы он соответствовал оставшемуся последнему выделенному объекту.
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
             {
                 // Проверка на пустой список может понадобиться здесь, если после деселекта ничего не осталось
-                _inputField.text = data.SelectedObjects[^1].trackObject.TimeDuractionInTicks.ToString();
+                _inputField.text = data.SelectedObjects[^1].components.Data.TimeDurationInTicks.ToString(CultureInfo.InvariantCulture);
             });
 
             // Подписка на событие снятия выделения со всех объектов:
@@ -53,7 +54,7 @@ namespace TimeLine
                 if (float.TryParse(text, out float newDuration))
                 {
                     // Применяем новую длительность к текущему выделенному объекту.
-                    _trackObjectStorage.selectedObject.trackObject.ChangeDurationInTicks(newDuration);
+                    _trackObjectStorage.selectedObject.components.Data.ChangeDurationInTicks(newDuration);
                 }
             });
         }

@@ -5,12 +5,12 @@ namespace TimeLine.EventBus.Events.TrackObject
 {
     public struct AddComponentEvent : IEvent
     {
-        public TrackObjectData TrackObjectData { get; }
+        public TrackObjectPacket TrackObjectPacket { get; }
         public Component component { get; }
 
-        public AddComponentEvent(TrackObjectData trackObjectData, Component component)
+        public AddComponentEvent(TrackObjectPacket trackObjectPacket, Component component)
         {
-            TrackObjectData = trackObjectData;
+            TrackObjectPacket = trackObjectPacket;
             this.component = component;
         }
     }

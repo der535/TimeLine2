@@ -5,6 +5,7 @@ using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
@@ -48,15 +49,15 @@ namespace TimeLine
             _main = main;
         }
 
-        public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<TrackObjectData> trackObjectData)
+        public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<TrackObjectPacket> trackObjectData)
         {
             double minTime = double.MaxValue;
             double maxTime = double.MinValue;
 
             foreach (var selectObject in trackObjectData)
             {
-                double startTime = selectObject.trackObject.StartTimeInTicks;
-                double endTime = startTime + selectObject.trackObject.TimeDuractionInTicks;
+                double startTime = selectObject.components.Data.StartTimeInTicks;
+                double endTime = startTime + selectObject.components.Data.TimeDurationInTicks;
 
                 if (startTime < minTime)
                     minTime = startTime;
@@ -90,16 +91,31 @@ namespace TimeLine
 
         public void Create(string groupName)
         {
-            if (_selectObjectController.SelectObjects.Count <= 0) return;
+            if (_selectObjectController.SelectObjects.Count <= 0)
+                return; // Если не выбран не один объект, то группу не создаём
 
-            TrackObject trackObject = _container
-                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
+            GameObject trackObject = _container
+                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform); // Создём трекобжект группы
 
-            var (minTime, maxTime) = CalculateMinAndMaxTime(_selectObjectController.SelectObjects);
+            TrackObjectComponents components = new TrackObjectComponents(); // Создаём класс компонентов группы
+            _container.Inject(components);
 
-            var currentTime = TimeLineConverter.Instance.TicksCurrentTime();
-            _main.SetTimeInTicks(minTime);
+            var (minTime, maxTime) =
+                CalculateMinAndMaxTime(_selectObjectController
+                    .SelectObjects); // Cчитаем стартовое время группы и конечное время группы
 
+            TrackObjectData data = new TrackObjectData(maxTime - minTime, "Group", 0, string.Empty, minTime,
+                0, 0, true); //Создаём класс данных группы
+
+            components.Setup(data, trackObject.GetComponent<TrackObjectView>(),
+                trackObject.GetComponent<TrackObjectSelect>(), trackObject.GetComponent<TrackObjectVisual>(),
+                trackObject
+                    .GetComponent<
+                        TrackObjectCustomizationController>()); // Заполняем класс данных компонентами и данными
+
+            var currentTime = TimeLineConverter.Instance.TicksCurrentTime(); // Получаем текущее время
+            _main.SetTimeInTicks(
+                minTime); //Устанавливаем текущее время в начало группы что бы ничего не съхало при паренте
 
             GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
 
@@ -108,10 +124,10 @@ namespace TimeLine
 
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
-                selectObject.trackObject.GroupOffset(minTime);
-                selectObject.trackObject.GroupOffsetTrack(trackObject);
+                selectObject.components.Data.GroupOffset(minTime);
+                selectObject.components.Data.GroupOffsetTrack(components);
 
-                if (string.IsNullOrEmpty(selectObject.trackObject._parentID))
+                if (string.IsNullOrEmpty(selectObject.components.Data.ParentID))
                 {
                     var position = selectObject.sceneObject.transform.localPosition;
                     var rotation = selectObject.sceneObject.transform.rotation;
@@ -126,29 +142,37 @@ namespace TimeLine
                 {
                     foreach (var node2 in node.Children)
                     {
-                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
+                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(data);
                     }
                 }
             }
 
-            trackObject.Setup(maxTime - minTime, groupName, _trackStorage.TrackLines[0], string.Empty, minTime, 
-                0,0,true);
-
             Branch branch = _branchCollection.AddBranch(UniqueIDGenerator.GenerateUniqueID(), groupName);
 
-            _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, _selectObjectController.SelectObjects,
+            _trackObjectStorage.AddGroup(sceneObject, components, branch, _selectObjectController.SelectObjects,
                 UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID(), String.Empty);
-
 
             _main.SetTimeInTicks(currentTime);
         }
 
-        public TrackObjectGroup Create(List<TrackObjectData> trackObjects, string compositionID = null)
+        public TrackObjectGroup Create(List<TrackObjectPacket> trackObjects, string compositionID = null)
         {
-            TrackObject trackObject = _container
-                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform).GetComponent<TrackObject>();
+            GameObject trackObject = _container
+                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform);
+
+            TrackObjectComponents components = new TrackObjectComponents();
+            _container.Inject(components);
 
             var (minTime, maxTime) = CalculateMinAndMaxTime(trackObjects);
+
+            TrackObjectData data = new TrackObjectData(maxTime - minTime, "Group", 0, string.Empty, minTime,
+                0, 0, true);
+
+            components.Setup(data, trackObject.GetComponent<TrackObjectView>(),
+                trackObject.GetComponent<TrackObjectSelect>(),
+                trackObject.GetComponent<TrackObjectVisual>(),
+                trackObject.GetComponent<TrackObjectCustomizationController>());
+
 
             _main.SetTimeInTicks(minTime);
 
@@ -158,8 +182,8 @@ namespace TimeLine
 
             foreach (var selectObject in trackObjects)
             {
-                selectObject.trackObject.GroupOffset(minTime);
-                selectObject.trackObject.GroupOffsetTrack(trackObject);
+                selectObject.components.Data.GroupOffset(minTime);
+                selectObject.components.Data.GroupOffsetTrack(components);
 
                 if (selectObject.sceneObject.transform.parent == null ||
                     selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
@@ -177,13 +201,11 @@ namespace TimeLine
                 {
                     foreach (var node2 in node.Children)
                     {
-                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(trackObject);
+                        _keyframeTrackStorage.GetTrack(node2)?.SetParent(data);
                     }
                 }
             }
 
-            trackObject.Setup(maxTime - minTime, "Group", _trackStorage.TrackLines[0], string.Empty, minTime, 
-                0,0,true);
 
             string id = UniqueIDGenerator.GenerateUniqueID();
             Branch branch = _branchCollection.AddBranch(id, scenePrefab.name);
@@ -191,7 +213,7 @@ namespace TimeLine
             if (string.IsNullOrEmpty(compositionID))
                 compositionID = UniqueIDGenerator.GenerateUniqueID();
 
-            return _trackObjectStorage.AddGroup(sceneObject, trackObject, branch, trackObjects,
+            return _trackObjectStorage.AddGroup(sceneObject, components, branch, trackObjects,
                 UniqueIDGenerator.GenerateUniqueID(), compositionID, String.Empty); //?????????
         }
     }

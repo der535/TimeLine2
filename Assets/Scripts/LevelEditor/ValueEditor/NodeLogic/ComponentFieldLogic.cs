@@ -45,7 +45,7 @@ public class ComponentFieldLogic : NodeLogic
         }
     }
 
-    public void Load(Dictionary<string, object> data, List<TrackObjectData> objects = null)
+    public void Load(Dictionary<string, object> data, List<TrackObjectPacket> objects = null)
     {
         if (objects == null)
         {

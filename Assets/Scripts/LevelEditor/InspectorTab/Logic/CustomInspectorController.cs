@@ -50,7 +50,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
             _componentDrawers.Add(new CircleCollider2DDrawer());
             _componentDrawers.Add(new CapsuleCollider2DDrawer());
             _componentDrawers.Add(new EdgeCollider2DDrawer());
-            _componentDrawers.Add(new PressEventDrawer());
             _componentDrawers.Add(new ShakeDrawer());
             _componentDrawers.Add(new PolygonCollider2DDrawer());
             _componentDrawers.Add(new RadialSunburstDrawer());

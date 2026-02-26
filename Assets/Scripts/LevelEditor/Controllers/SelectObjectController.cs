@@ -10,9 +10,9 @@ namespace TimeLine.EventBus.Events.TrackObject
     {
         [SerializeField] private SelectLock _selectLock;
         private GameEventBus _gameEventBus;
-        private List<TrackObjectData> _trackObjects = new List<TrackObjectData>();
+        private List<TrackObjectPacket> _trackObjects = new List<TrackObjectPacket>();
 
-        public List<TrackObjectData> SelectObjects => this._trackObjects;
+        public List<TrackObjectPacket> SelectObjects => this._trackObjects;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus)
@@ -25,7 +25,7 @@ namespace TimeLine.EventBus.Events.TrackObject
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => { _trackObjects.Clear(); });
         }
 
-        public void SelectMultiple(TrackObjectData trackObject)
+        public void SelectMultiple(TrackObjectPacket trackObject)
         {
             var isMultiple = UnityEngine.Input.GetKey(KeyCode.LeftShift);
 
@@ -57,12 +57,11 @@ namespace TimeLine.EventBus.Events.TrackObject
 
             if (changed)
             {
-                // print(_trackObjects);
                 _gameEventBus.Raise(new SelectObjectEvent(_trackObjects));
             }
         }
 
-        public void SelectMultiple(List<TrackObjectData> trackObjects)
+        public void SelectMultiple(List<TrackObjectPacket> trackObjects)
         {
             
             var changed = false;
@@ -86,7 +85,7 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
-        public void SelectNoClear(TrackObjectData trackObject)
+        public void SelectNoClear(TrackObjectPacket trackObject)
         {
             if (_selectLock.IsLocked) return;
 
@@ -97,7 +96,7 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
-        public void Deselect(TrackObjectData trackObject)
+        public void Deselect(TrackObjectPacket trackObject)
         {
             _trackObjects.Remove(trackObject);
             if (_trackObjects.Count == 0)
@@ -117,60 +116,60 @@ namespace TimeLine.EventBus.Events.TrackObject
         }
 
         public void StartMultipleMove(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self)
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
             {
-                trackObjectData.trackObject.SavePosition();
+                trackObjectData.components.trackObject.SavePosition();
             }
         }
 
-        public void MultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self,
+        public void MultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self,
             double ticks)
         {
             if (_trackObjects.Count <= 1 || ticks == 0) return;
 
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
             {
-                trackObjectData.trackObject.AddTicksMove(ticks);
+                trackObjectData.components.trackObject.AddTicksMove(ticks);
             }
         }
 
         public void MultipleChangeTrackLine(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, int deltaIndex)
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, int deltaIndex)
         {
             if (_trackObjects.Count <= 1) return;
 
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
             {
-                trackObjectData.trackObject.AddLineTrackIndex(deltaIndex);
+                trackObjectData.components.trackObject.AddLineTrackIndex(deltaIndex);
             }
         }
 
         public void SaveResizingData(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self)
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
             {
-                trackObjectData.trackObject.SaveResizingData();
+                trackObjectData.components.trackObject.SaveResizingData();
             }
         }
 
         public void MultipleResizingRight(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, double ticks)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
             {
-                trackObjectData.trackObject.MultipleRightResize(ticks);
+                trackObjectData.components.trackObject.MultipleRightResize(ticks);
             }
         }
 
         public void MultipleResizingLeft(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject self, double ticks)
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, double ticks)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
             {
-                trackObjectData.trackObject.MultipleLeftResize(ticks);
+                trackObjectData.components.trackObject.MultipleLeftResize(ticks);
             }
         }
     }
