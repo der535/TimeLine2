@@ -1,5 +1,8 @@
-﻿using TimeLine.CustomInspector.UI.Drawers;
+﻿using System.Collections.Generic;
+using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using Unity.Entities;
 using UnityEngine;
 
 namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
@@ -10,33 +13,20 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         private CustomInspectorDrawer _customInspectorDrawer = null;
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator)
+            KeyframeCreator keyframeCreator, ToolsController toolsController)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
         }
-
-        public bool GetComponent(Component component)
+        
+        public bool GetComponent(List<ComponentType> component)
         {
-            return component.GetType() == typeof(EdgeCollider2DComponent);
+            return false;
         }
 
-        public void Draw(Component component, GameObject target)
+        public void Draw(Entity target)
         {
-            _customInspectorDrawer.CreateComponent(component, true);
-            SceneObjectLink link = target.GetComponent<SceneObjectLink>();
-            if (component is EdgeCollider2DComponent rendererComponent)
-            {
-                _customInspectorDrawer.CreateEditColliderButton();
-                _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
-                _customInspectorDrawer.CreateFloatField(rendererComponent.edgeRadius,                     link.trackObjectPacket,
-                    (BaseParameterComponent)component,"0", null);
-                
-                _customInspectorDrawer.AddSpace(5);
-                
-                _customInspectorDrawer.CreateBoolField(rendererComponent.isDamageable);
-                _customInspectorDrawer.CreateBoolField(rendererComponent.isObstacle);
-            }
+            throw new System.NotImplementedException();
         }
     }
 }

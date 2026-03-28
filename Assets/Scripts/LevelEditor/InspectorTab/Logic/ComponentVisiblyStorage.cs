@@ -9,17 +9,17 @@ namespace TimeLine
     /// </summary>
     public class ComponentVisiblyStorage : MonoBehaviour
     {
-        Dictionary<object, bool> components = new();
+        Dictionary<string, bool> components = new();
 
-        internal void SetVisibility(Type o, bool visibility)
+        internal void SetVisibility(string componentName, bool visibility)
         {
-            components[o] = visibility; // Всегда обновляет значение
+            components[componentName] = visibility; // Всегда обновляет значение
         }
 
-        internal bool? GetVisibility(Type o)
+        internal bool? GetVisibility(string componentName)
         {
-            if (components.ContainsKey(o))
-                return components[o];
+            if (components.ContainsKey(componentName))
+                return components[componentName];
             return null;
         }
     }

@@ -86,7 +86,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
                     minTime = (float)keyframe.Ticks;
 
                 // Обновляем границы значений (предполагается, что данные — float)
-                if (keyframe.GetData().GetValue() is float value)
+                if (keyframe.GetEntityData().GetValue() is float value)
                 {
                     if (value > maxValue) maxValue = value;
                     if (value < minValue) minValue = value;

@@ -59,19 +59,6 @@ namespace TimeLine
             }
         }
         
-        public void SeparateAll()
-        {
-            // Создаём копию списка, так как мы можем удалять элементы во время итерации
-            var groupsToSeparate = _selectObjectController.SelectObjects
-                .OfType<TrackObjectGroup>()
-                .ToList();
-
-            foreach (var group in groupsToSeparate)
-            {
-                SeparateSingle(group);
-            }
-        }
-
         internal List<TrackObjectPacket> SeparateSingle(TrackObjectGroup group)
         {
             List<TrackObjectPacket> trackObjects = new List<TrackObjectPacket>();

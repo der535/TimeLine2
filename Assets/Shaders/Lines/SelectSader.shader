@@ -19,7 +19,7 @@ Shader "Unlit/MovingStripesDiagonalClipped"
             "RenderType"="Transparent" "Queue"="Transparent"
         }
         LOD 100
-        Blend [_SrcFactor] [_DstFactor] // или SrcAlpha OneMinusDstAlpha — оба работают
+        Blend [_SrcFactor] [_DstFactor]
         BlendOp [_Opp]
         ZWrite Off
 

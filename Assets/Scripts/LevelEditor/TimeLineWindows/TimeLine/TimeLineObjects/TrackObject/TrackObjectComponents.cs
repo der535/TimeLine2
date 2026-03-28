@@ -33,7 +33,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public void Setup(TrackObjectData data, ITrackObjectView view, TrackObjectSelect select,
             TrackObjectVisual visual, TrackObjectCustomizationController customizationController)
         {
-            View = view;
+            if(view != null)
+                View = view;
             Select = select;
             Visual = visual;
             CustomizationController = customizationController;
@@ -72,7 +73,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             }
             else
             {
-                Debug.Log("Already setup");
                 return;
             }
 
@@ -87,11 +87,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                 _tickableManager.Add(tickable);
             }
 
-            trackObject.Setup(data, null, State);
+            trackObject.Setup(data,  new NullTrackObjectView(), State);
             GlobalTime = new TrackObjectGlobalTime(this, Data);
         }
 
-        public void OnDestroy()
+        public void Dispose()
         {
             Data = null;
             trackObject.Dispose();

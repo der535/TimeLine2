@@ -1,5 +1,10 @@
-﻿using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
+﻿using System.Collections.Generic;
+using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using Unity.Entities;
+using Unity.Rendering;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace TimeLine.CustomInspector.UI.Drawers
@@ -11,33 +16,63 @@ namespace TimeLine.CustomInspector.UI.Drawers
         private TrackObjectStorage _trackObjectStorage = null;
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator)
+            KeyframeCreator keyframeCreator, ToolsController toolsController)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public bool GetComponent(Component component)
+        public bool GetComponent(List<ComponentType> component)
         {
-            return component.GetType() == typeof(SpriteRendererComponent);
+            return
+            (
+                CheckIfComponentTypeInList.Check(component, typeof(RenderMeshArray))
+            );
         }
 
-        public void Draw(Component component, GameObject target)
+        public void Draw(Entity target)
         {
-            _customInspectorDrawer.CreateComponent(component, true);
-            string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
+            _customInspectorDrawer.CreateComponent(ComponentNames.SpriteRenderer, target, true);
 
-            if (component is SpriteRendererComponent rendererComponent)
+            var world = World.DefaultGameObjectInjectionWorld;
+            var manager = world.EntityManager;
+
+            // 2. Проверяем, является ли тип компонента типом RenderMeshArray
+// 1. Проверяем RenderMeshArray (теперь как структуру!)
+            if (CheckIfComponentTypeInList.Check(target, typeof(RenderMeshArray)))
             {
-                _customInspectorDrawer.CreateSpriteField(rendererComponent.Sprite);
-                _customInspectorDrawer.CreateIntField(rendererComponent.OrderInLayer, null);
-                // _keyframeCreater.CreateKeyframe(new YOffsetData(rendererComponent.OffsetY.Value) todo Добавить создание ключевого кадра
-                _customInspectorDrawer.CreateBoolField(rendererComponent.InvertX);
-                _customInspectorDrawer.CreateBoolField(rendererComponent.InvertY);
-                _customInspectorDrawer.CreateColorField(rendererComponent.SpriteColor, () =>
-                    _keyframeCreator.CreateKeyframe(new ColorData(rendererComponent.SpriteColor.Value), target,
-                        rendererComponent.GetType().Name, rendererComponent.SpriteColor), id);
+                // Для ISharedComponentData используем этот метод:
+                RenderMeshArray rma = manager.GetSharedComponentManaged<RenderMeshArray>(target);
+
+                // Чтобы вытащить конкретный материал, нам всё ещё нужен MaterialMeshInfo
+                if (manager.HasComponent<MaterialMeshInfo>(target))
+                {
+                    var meshInfo = manager.GetComponentData<MaterialMeshInfo>(target);
+
+                    // Получаем текущий материал
+                    Material currentMat = rma.GetMaterial(meshInfo);
+
+                    _customInspectorDrawer.CreateSpriteField(currentMat.mainTexture.name,
+                        (value) => { currentMat.mainTexture = value; });
+                    
+                    _customInspectorDrawer.CreateColorField(value => currentMat.color = value,  currentMat.color,null );
+                    
+                    
+                    _customInspectorDrawer.CreateIntField(manager.GetComponentData<LocalTransform>(target).Position.z, "Order in layer",
+                        (value) =>
+                        {
+                            LocalTransform localTransform = manager.GetComponentData<LocalTransform>(target);
+                            localTransform.Position.z = value / 100;
+                            manager.SetComponentData<LocalTransform>(target, localTransform);
+                        }, null);
+
+                    if (currentMat != null)
+                    {
+                        // Debug.Log($"Текущий материал: {currentMat.mainTexture.name}");
+                        // Твоя отрисовка UI
+                    }
+                }
             }
         }
     }

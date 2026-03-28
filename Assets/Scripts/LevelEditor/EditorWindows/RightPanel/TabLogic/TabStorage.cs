@@ -8,6 +8,8 @@ namespace TimeLine
     {
        [SerializeField] private List<TabData> tabs = new();
 
+       private TabData _currentTab;
+       
        private void Start()
        {
            foreach (var tab in tabs)
@@ -36,6 +38,11 @@ namespace TimeLine
                tabData.tabButton.Selected();
                tabData.tabPanel.SetActive(true);
            });
+       }
+
+       public TabData GetActiveTab()
+       {
+           return _currentTab;
        }
     }
 

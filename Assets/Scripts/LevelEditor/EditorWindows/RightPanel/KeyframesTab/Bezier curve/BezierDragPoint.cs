@@ -158,11 +158,11 @@ namespace TimeLine
 
                 rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, newPositionY);
 
-                var previosValue = _keyframe.GetData().GetValue();
+                var previosValue = _keyframe.GetEntityData().GetValue();
 
-                _keyframe.GetData().SetValue(rectTransform.anchoredPosition.y / _verticalBezierZoom.Zoom);
+                _keyframe.GetEntityData().SetValue(rectTransform.anchoredPosition.y / _verticalBezierZoom.Zoom);
 
-                var difference = (float)_keyframe.GetData().GetValue() - (float)previosValue;
+                var difference = (float)_keyframe.GetEntityData().GetValue() - (float)previosValue;
 
                 #endregion
 

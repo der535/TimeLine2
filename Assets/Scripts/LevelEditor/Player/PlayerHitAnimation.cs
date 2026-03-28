@@ -1,38 +1,87 @@
 using System;
 using System.Collections;
+using EventBus;
+using Unity.Entities;
+using Unity.Rendering;
 using UnityEngine;
+using Zenject;
 
 namespace TimeLine
 {
-    public class PlayerHitAnimation : MonoBehaviour
+    public class PlayerHitAnimation : ITickable
     {
-        [SerializeField] private SpriteRenderer playerSprite; // Спрайт игрока
-        [SerializeField] private float countCycle; // Количество циклов мигания
-        [SerializeField] private float transparent; // Прозрачность при мигании
+        private const float CountCycle = 5;
+        private const float Transparent = 0.1f;
 
-        // Метод запуска анимации с колбэком завершения
-        internal void Play(float duration, Action onFinish)
+        private float _timer = 0f;
+        private float _totalDuration = 0f;
+        private bool _isActive = false;
+        private Action _onFinishCallback;
+        
+        private Entity _player;
+        private Material _playerMaterial;
+        
+        private GameEventBus _gameEventBus;
+        
+        [Inject]
+        PlayerHitAnimation(GameEventBus gameEventBus)
         {
-            StartCoroutine(Animation(duration, onFinish));
+            gameEventBus.SubscribeTo((ref LevelLoadedEvent _) => Initialize());
         }
 
-        // Корутина анимации мигания
-        IEnumerator Animation(float duration, Action onFinish)
+        public void Initialize()
         {
-            float durationHalfCycle = duration / countCycle / 2;
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            EntityQuery query = entityManager.CreateEntityQuery(typeof(PlayerTag));
+            _player = query.GetSingletonEntity();
+            
+            RenderMeshArray rma = entityManager.GetSharedComponentManaged<RenderMeshArray>(_player);  
+            if (entityManager.HasComponent<MaterialMeshInfo>(_player))  
+            {  
+                var meshInfo = entityManager.GetComponentData<MaterialMeshInfo>(_player);  
+  
+                // Получаем текущий материал  
+                _playerMaterial = rma.GetMaterial(meshInfo);  
+            }
+        }
+        public void Play(float duration, Action onFinish)
+        {
+            _totalDuration = duration;
+            _onFinishCallback = onFinish;
+            _timer = 0f;
+            _isActive = true;
+        }
 
-            for (int i = 0; i < countCycle; i++)
+        // Этот метод нужно вызывать каждый кадр из какого-нибудь MonoBehaviour.Update()
+        public void Tick()
+        {
+            if (!_isActive) return;
+
+            _timer += Time.deltaTime;
+
+            if (_timer >= _totalDuration)
             {
-                // Устанавливаем прозрачность
-                playerSprite.color = new Color(playerSprite.color.r, playerSprite.color.g, playerSprite.color.b, transparent);
-                yield return new WaitForSeconds(durationHalfCycle);
-
-                // Возвращаем полную непрозрачность
-                playerSprite.color = new Color(playerSprite.color.r, playerSprite.color.g, playerSprite.color.b, 1);
-                yield return new WaitForSeconds(durationHalfCycle);
+                StopAnimation();
+                return;
             }
 
-            onFinish.Invoke(); // Вызываем колбэк завершения
+            // Логика мигания: делим общее время на количество циклов
+            float cycleDuration = _totalDuration / CountCycle;
+            // Если остаток от деления меньше половины цикла — делаем прозрачным
+            bool isTransparent = (_timer % cycleDuration) < (cycleDuration / 2f);
+
+            Color c = _playerMaterial.color;
+            c.a = isTransparent ? Transparent : 1f;
+            _playerMaterial.color = c;
+        }
+
+        private void StopAnimation()
+        {
+            _isActive = false;
+            Color c = _playerMaterial.color;
+            c.a = 1f;
+            _playerMaterial.color = c;
+            _onFinishCallback?.Invoke();
         }
     }
 }

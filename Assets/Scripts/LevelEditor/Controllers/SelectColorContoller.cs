@@ -1,7 +1,7 @@
 using System;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.ActionHistory;
-using TimeLine.LevelEditor.ActionHistory.Commands;
+// using TimeLine.LevelEditor.ActionHistory.Commands;
 using UnityEngine;
 
 namespace TimeLine
@@ -11,17 +11,10 @@ namespace TimeLine
         [SerializeField] private RectTransform rectTransform;
         [SerializeField] private FlexibleColorPicker flexibleColorPicker;
 
-        private ColorParameter _colorParameter;
-        private TrackObjectStorage _trackObjectStorage;
-        private Color _previousValue;
-        private string _gameObjectID;
+        private Action<Color> OnColorChanged;
 
         private bool _ignorFirstChange = true;
 
-        private void Construct(TrackObjectStorage trackObjectStorage)
-        {
-            _trackObjectStorage = trackObjectStorage;
-        }
         private void Start()
         {
             flexibleColorPicker.onColorChange.AddListener((value) =>
@@ -29,23 +22,20 @@ namespace TimeLine
                 if (_ignorFirstChange)
                 {
                     _ignorFirstChange = false;
-                    return;
                 }
-                print("onColorChange");
-                CommandHistory.ExecuteCommand(new ColorParameterChangeCommand(_trackObjectStorage, _colorParameter,
-                    _colorParameter.Name, _gameObjectID, _previousValue, value));
-                _previousValue = _colorParameter.Value;
-                //
-                // _colorParameter.Value = color;
-            }); 
+                else
+                {
+                    OnColorChanged.Invoke(value);
+                }
+            });
         }
 
-        internal void Setup(ColorParameter colorParameter, string gameObjectId)
+
+        internal void Setup(Action<Color> colorParameter, Color startColor)
         {
-            _gameObjectID = gameObjectId;
-            _colorParameter = colorParameter;
+            OnColorChanged = colorParameter;
             rectTransform.gameObject.SetActive(true);
-            flexibleColorPicker.color = colorParameter.Value;            
+            flexibleColorPicker.color = startColor;
         }
 
         public void Close()
@@ -56,7 +46,6 @@ namespace TimeLine
 
         public void Select()
         {
-            _colorParameter.Value = flexibleColorPicker.color;
             Close();
         }
     }

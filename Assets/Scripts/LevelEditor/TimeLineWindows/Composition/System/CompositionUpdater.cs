@@ -3,6 +3,7 @@ using System.Linq;
 using NaughtyAttributes;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using TimeLine.LevelEditor.ValueEditor.Save;
@@ -69,7 +70,7 @@ namespace TimeLine
                     {
                         if (updateSelf)
                         {
-                            var (trackData, _, _, tra) = facadeObjectSpawner.LoadObject(child, false);
+                            var (trackData,  _, tra) = facadeObjectSpawner.LoadObject(child, false);
                             tracks.AddRange(tra);
                             trackObjectDatas.Add(trackData);
                         }
@@ -80,11 +81,11 @@ namespace TimeLine
                 {
                     foreach (var keyframe in track.Keyframes)
                     {
-                        if (!string.IsNullOrEmpty(keyframe.GetData().Graph))
+                        if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
                         {
-                            keyframe.GetData().Logic = _saveNodes.LoadGraph(keyframe.GetData().Graph,
-                                TypeToDataType.Convert(keyframe.GetData().GetType()),
-                                keyframe.GetData().initializedNodes, trackObjectDatas);
+                            keyframe.GetEntityData().Logic = _saveNodes.LoadGraph(keyframe.GetEntityData().Graph,
+                                TypeToDataType.Convert(keyframe.GetEntityData().GetType()),
+                                keyframe.GetEntityData().initializedNodes, trackObjectDatas);
                         }
                     }
                 }

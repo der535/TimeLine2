@@ -5,11 +5,13 @@ namespace TimeLine.EventBus.Events.Misc
 {
     public class GetParameterEvent : IEvent
     {
-        public (InspectableParameter, MapParameterComponen) Parameter { get; }
+        public MapParameterComponen _map { get; }
+        public TrackObjectPacket _trackObjectPacket { get; }
 
-        public GetParameterEvent((InspectableParameter, MapParameterComponen) parameter)
+        public GetParameterEvent(MapParameterComponen map, TrackObjectPacket trackObjectPacket)
         {
-            Parameter = parameter;
+            _map = map;
+            _trackObjectPacket = trackObjectPacket;
         }
     }
 }

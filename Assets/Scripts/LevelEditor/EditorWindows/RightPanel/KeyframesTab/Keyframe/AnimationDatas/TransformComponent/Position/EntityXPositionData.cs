@@ -3,31 +3,33 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.TimeLine;
+using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position
 {
     [System.Serializable]
-    public class XPositionData : AnimationData
+    public class EntityXPositionData : EntityAnimationData
     {
-        public XPositionData(float value)
+        public EntityXPositionData(float value)
         {
-            // this.value = value;
             Logic = new OutputLogic();
             Logic.Initialize(DataType.Float);
             Logic.ManualValues[0] = value;
             Graph = SaveGraph.ToJson(Logic);
         }
-        
-      
 
-        public override Type GetComponentType()
+        public override ComponentNames GetComponentType()
         {
-            return typeof(global::TimeLine.TransformComponent);
+            return ComponentNames.Transform;
         }
 
         public override float4 PackDataToFloat4()
@@ -35,14 +37,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             return new float4((float)Logic.GetValue(), 0, 0, 0);
         }
 
-        public override AnimationData Clone()
+        public override EntityAnimationData Clone()
         {
-            return new XPositionData((float)Logic.GetValue());
+            return new EntityXPositionData((float)Logic.GetValue());
         }
 
         public override object GetValue()
         {
-            
             return (float)Logic.GetValue();
         }
 
@@ -57,7 +58,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
         public override string GetDataType()
         {
-            return nameof(XPositionData);
+            return nameof(EntityXPositionData);
         }
 
         public override JObject SerializeData()
@@ -78,22 +79,19 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             }
         }
 
-        public override void Apply(Component target, float4 value)
+        public override void Apply(Entity target, float4 value)
         {
-            if (target is global::TimeLine.TransformComponent component)
-            {
-                component.XPosition.Value = value.x;
-            }
+            Apply(target, (object)value.x);
         }
 
         public override void Interpolate(
-            AnimationData other,
+            EntityAnimationData other,
             double t,
             global::TimeLine.Keyframe.Keyframe current,
             global::TimeLine.Keyframe.Keyframe next,
-            global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target)
+            global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Entity target)
         {
-            if (other is not XPositionData otherPos)
+            if (other is not EntityXPositionData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
 
             float localT = (float)t;
@@ -109,12 +107,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             Apply(target, interpolatedValue);
         }
 
-        public override void Apply(Component target, object o)
+        public override void Apply(Entity target, object o)
         {
-            if (target is global::TimeLine.TransformComponent component)
-            {
-                component.XPosition.Value = (float)o;
-            }
+            EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            ObjectPositionOffsetData objectPositionOffsetData = manager.GetComponentData<ObjectPositionOffsetData>(target);
+            LocalTransform localTransform = manager.GetComponentData<LocalTransform>(target);
+            localTransform.Position.x = (float)o + objectPositionOffsetData.Offset.x;
+            manager.SetComponentData(target, localTransform);
         }
     }
 }

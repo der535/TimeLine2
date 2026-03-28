@@ -4,6 +4,8 @@ using EventBus;
 using TimeLine.Components;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.ContextMenu;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -30,7 +32,7 @@ namespace TimeLine.LevelEditor.CopyComponent
             _trackObjectStorage = trackObjectStorage;
         }
 
-        internal void Setup(BaseParameterComponent component, bool isRemoveble)
+        internal void Setup(ComponentNames componentName, Entity entity, bool isRemoveble)
         {
             button.onClick.AddListener(() =>
             {
@@ -39,14 +41,14 @@ namespace TimeLine.LevelEditor.CopyComponent
                     (() =>
                     {
                         _gameEventBus.Raise(
-                            new RemoveComponentEvent(_trackObjectStorage.GetTrackObjectData(component.gameObject),
-                                component));
+                            new RemoveComponentEvent(_trackObjectStorage.GetTrackObjectData(entity),
+                                componentName));
                     }, "Remove component", isRemoveble),
-                    (() => { _copyComponentController.Copy(component); }, "Copy Component", true),
-                    (() => { _copyComponentController.PasteNewComponent(component.gameObject); },
-                        "Past component as new", ComponentRules.CanAdd(_copyComponentController.GetCopyComponent(), component.gameObject)),
-                    (() => { _copyComponentController.PasteValues(component.gameObject, component); },
-                        "Past component values and animation", _copyComponentController.CompareTypes(component)),
+                    // (() => { _copyComponentController.Copy(component); }, "Copy Component", true),
+                    // (() => { _copyComponentController.PasteNewComponent(component.gameObject); },
+                    //     "Past component as new", ComponentRules.CanAdd(_copyComponentController.GetCopyComponent(), component.gameObject)),
+                    // (() => { _copyComponentController.PasteValues(component.gameObject, component); },
+                    //     "Past component values and animation", _copyComponentController.CompareTypes(component)),
                 });
 
                 _contextMenuController.ShowMenu();

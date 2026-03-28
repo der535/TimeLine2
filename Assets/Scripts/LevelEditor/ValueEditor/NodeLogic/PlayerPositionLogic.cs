@@ -4,10 +4,10 @@ using Zenject;
 
 public class PlayerPositionLogic : NodeLogic
 {
-    PlayerPosition _playerPosition;
+    PlayerComponents _playerPosition;
 
     [Inject]
-    private void Construct(PlayerPosition playerPosition)
+    private void Construct(PlayerComponents playerPosition)
     {
         _playerPosition = playerPosition;
     }

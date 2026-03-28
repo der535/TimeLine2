@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.CustomInspector.UI.FieldUI;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.FieldUI;
+using TimeLine.LevelEditor.InspectorTab.InspectorView.FieldUI;
+using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.FieldUI;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TMPro;
+using Unity.Entities;
+using Unity.Rendering;
 using UnityEngine;
 using Zenject;
 
@@ -34,23 +40,39 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
     
         private ComponentUI _currentComponent;
         private DiContainer _container;
+        private GetSpriteName _getSpriteName;
 
         [Inject]
-        private void Construct(DiContainer container)
+        private void Construct(DiContainer container, GetSpriteName getSpriteName)
         {
             _container = container;  
+            _getSpriteName = getSpriteName;
         }
 
-        public void CreateComponent(Component component, bool isRemovable)
+        /// <summary>
+        /// Создаёт компонент
+        /// </summary>
+        /// <param name="name">Список типов структу которые будут удаляться</param>
+        /// <param name="componentName">Имя компонента</param>
+        /// <param name="entity">Сущность к которой эти компоненты будут привязанны</param>
+        /// <param name="isRemovable">Компонента удаляемый?</param>
+        public void CreateComponent(ComponentNames name, Entity entity, bool isRemovable)
         {
             _currentComponent = _container.InstantiatePrefab(componentUIPrefab, rootObject).GetComponent<ComponentUI>();
-            _currentComponent.Setup(component, isRemovable);
+            _currentComponent.Setup(name, entity, isRemovable);
         }
 
         public void CreateStringField(StringParameter stringParameter)
         {
             var parameter = Instantiate(stringField, _currentComponent.RootObject);
             parameter.Setup(stringParameter);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
+        public void CreateStringField(string stringParameter, string parameterName, Action<string> onValueChanged)
+        {
+            var parameter = Instantiate(stringField, _currentComponent.RootObject);
+            parameter.Setup(stringParameter, parameterName, onValueChanged);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
@@ -69,17 +91,24 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
-        public void CreateAddComponentButton(GameObject target)
+        public void CreateAddComponentButton(Entity target)
         {
             var parameter = _container.InstantiatePrefab(button, rootObject).GetComponent<AddComponentButton>();
             parameter.Setup(target);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 
-        public void CreateFloatField(FloatParameter floatParameter, TrackObjectPacket trackObjectPacket, BaseParameterComponent component, string gameObjectID, Action createKeyframe)
+        public void CreateFloatField(FloatParameter floatParameter, TrackObjectPacket trackObjectPacket, BaseParameterComponent component, string gameObjectID, Action createKeyframe, string fieldId)
         {
             var parameter = _container.InstantiatePrefab(floatFieldUIPrefab, _currentComponent.RootObject).GetComponent<FloatFieldUI>();
-            parameter.Setup(trackObjectPacket, component, floatParameter, gameObjectID, createKeyframe);
+            parameter.Setup(trackObjectPacket, component, floatParameter, gameObjectID, createKeyframe,fieldId);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
+        public void CreateFloatField(float startValue, string parameterName, Action createKeyframe, Action<float> onValueChanged,  TrackObjectPacket trackObjectPacket, string fieldID, FloatParameter onValueChangedSub = null)
+        {
+            var parameter = _container.InstantiatePrefab(floatFieldUIPrefab, _currentComponent.RootObject).GetComponent<FloatFieldUI>();
+            parameter.Setup( startValue, parameterName, createKeyframe, onValueChanged,  trackObjectPacket, fieldID, onValueChangedSub);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         
@@ -90,39 +119,60 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         
-        public void CreateColorField(ColorParameter colorParameter, Action createKeyframe, string gameObjectID)
+        public void CreateIntField(float startValue, string parameterName, Action<float> onValueChange, Action createKeyframe)
         {
-            var parameter = _container.InstantiatePrefab(colorField, _currentComponent.RootObject).GetComponent<ColorFieldUI>();
-            parameter.Setup(colorParameter, createKeyframe, gameObjectID);
+            var parameter = Instantiate(intFieldUIPrefab, _currentComponent.RootObject);
+            parameter.Setup(startValue, parameterName, onValueChange, createKeyframe);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
         
-        public TMP_Dropdown CreateDropDownField(string parameterName)
-        {
-            var parameter = Instantiate(dropDownFieldUI, _currentComponent.RootObject);
-            var dropdown = parameter.Setup(parameterName);
-            _currentComponent.AddHeight(parameter.GetFieldHeight());
-            return dropdown;
-        }
 
+        public void CreateColorField(Action<Color> changeColor, Color startColor, Action createKeyframe)
+        {
+            var parameter = _container.InstantiatePrefab(colorField, _currentComponent.RootObject).GetComponent<ColorFieldUI>();
+            parameter.Setup(changeColor, startColor, createKeyframe);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
         public void CreateEditColliderButton()
         {
             var button = _container.InstantiatePrefab(editColliderButton, _currentComponent.RootObject).GetComponent<EditColliderFieldUI>();
             button.Setup();
         }
     
-        public void CreateBoolField(BoolParameter field)
+        // public void CreateBoolField(BoolParameter field)
+        // {
+        //     var parameter = Instantiate(boolField, _currentComponent.RootObject);
+        //     parameter.Setup(field);
+        //     _currentComponent.AddHeight(parameter.GetFieldHeight());
+        // }
+        
+        /// <summary>
+        /// Создаёт переключатель в инспекторе
+        /// </summary>
+        /// <param name="startValue">Стартовое значение</param>
+        /// <param name="parameterName">Имя параметра</param>
+        /// <param name="onValueChanged">Действие при смене значения</param>
+        public void CreateBoolField(bool startValue, string parameterName, Action<bool> onValueChanged)
         {
             var parameter = Instantiate(boolField, _currentComponent.RootObject);
-            parameter.Setup(field);
+            parameter.Setup(startValue, parameterName, onValueChanged);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
+
         
         public void CreateSpriteField(SpriteParameter field)
         {
             // print("CreateSpriteField");
             var parameter = _container.InstantiatePrefab(spriteField, _currentComponent.RootObject).GetComponent<SpriteFieldUI>();
             parameter.Setup(field);
+            _currentComponent.AddHeight(parameter.GetFieldHeight());
+        }
+        
+        public void CreateSpriteField(string spriteName, Action<Texture> onValueChanged)
+        {
+            var parameter = _container.InstantiatePrefab(spriteField, _currentComponent.RootObject).GetComponent<SpriteFieldUI>();
+            parameter.Setup(_getSpriteName.GetSpriteFromName(spriteName), onValueChanged);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
     

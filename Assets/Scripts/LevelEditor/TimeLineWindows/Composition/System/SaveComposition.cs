@@ -9,6 +9,7 @@ using System.Linq;
 using EventBus;
 using TimeLine.LevelEditor;
 using TimeLine.LevelEditor.LevelJson;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using Zenject;
@@ -232,7 +233,7 @@ namespace TimeLine
                     var editedComposition = compositionData.DuplicateComposition();
                     var existing = _compositionData[i].DuplicateComposition();
 
-                    print(JsonConvert.SerializeObject(editedComposition, Formatting.Indented));
+                    // print(JsonConvert.SerializeObject(editedComposition, Formatting.Indented));
                     
                     RemoveIDFromComposition(editedComposition);
                     RemoveIDFromComposition(existing);
@@ -240,13 +241,13 @@ namespace TimeLine
                     if (JsonConvert.SerializeObject(editedComposition, Formatting.Indented) !=
                         JsonConvert.SerializeObject(existing, Formatting.Indented))
                     {
-                        print(false);
+                        // print(false);
                         compositionData.lastEditID = Guid.NewGuid().ToString();
                         existing.lastEditID = compositionData.lastEditID;
                     }
                     else
                     {
-                        print(true);
+                        // print(true);
                         compositionData.lastEditID = _compositionData[i].lastEditID;
                         existing.lastEditID = _compositionData[i].lastEditID;
                     }
@@ -254,7 +255,7 @@ namespace TimeLine
                     // Обновляем только нужные поля, сохраняя ID
                     _compositionData[i] = compositionData;
                     _compositionData[i].compositionID = compositionID; // на случай, если он был перезаписан
-                    print(JsonConvert.SerializeObject( _compositionData[i], Formatting.Indented));
+                    // print(JsonConvert.SerializeObject( _compositionData[i], Formatting.Indented));
                     return;
                 }
             }

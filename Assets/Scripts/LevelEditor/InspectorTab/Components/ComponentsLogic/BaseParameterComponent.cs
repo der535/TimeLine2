@@ -34,37 +34,37 @@ public abstract class BaseParameterComponent : MonoBehaviour, IParameterComponen
     /// </summary>
     /// <typeparam name="TValue">Тип значения (float, Color, и т.д.)</typeparam>
     /// <typeparam name="TParam">Тип класса параметра (FloatParameter, ColorParameter, и т.д.)</typeparam>
-    protected void Bind<TValue, TParam>(
-        TParam param, 
-        System.Func<TValue, AnimationData> dataFactory, 
-        System.Action<TValue> applyLogic) 
-        where TParam : InspectableParameter
-    {
-        // Подписываемся на изменение значения
-        param.OnValueChanged += () => 
-        {
-            // 1. Получаем текущее типизированное значение через рефлексию или приведение
-            // Так как в InspectableParameter значение лежит в объекте, приводим его
-            TValue currentVal = (TValue)param.GetValue();
-
-            // 2. Применяем логику к объекту в Unity
-            applyLogic?.Invoke(currentVal);
-            
-            // 3. Если идет запись — создаем ключ
-            if (_timeLineRecorder.IsRecording() && UpdatingFromAnimation.isUpdatingFromAnimation == false)
-            {
-                CreateKeyframeManual(dataFactory(currentVal), param);
-            }
-        };
-    }
+    // protected void Bind<TValue, TParam>(
+    //     TParam param, 
+    //     System.Func<TValue, AnimationData> dataFactory, 
+    //     System.Action<TValue> applyLogic) 
+    //     where TParam : InspectableParameter
+    // {
+    //     // Подписываемся на изменение значения
+    //     param.OnValueChanged += () => 
+    //     {
+    //         // 1. Получаем текущее типизированное значение через рефлексию или приведение
+    //         // Так как в InspectableParameter значение лежит в объекте, приводим его
+    //         TValue currentVal = (TValue)param.GetValue();
+    //
+    //         // 2. Применяем логику к объекту в Unity
+    //         applyLogic?.Invoke(currentVal);
+    //         
+    //         // 3. Если идет запись — создаем ключ
+    //         if (_timeLineRecorder.IsRecording() && UpdatingFromAnimation.isUpdatingFromAnimation == false)
+    //         {
+    //             CreateKeyframeManual(dataFactory(currentVal), param);
+    //         }
+    //     };
+    // }
     
     /// <summary>
     /// Метод для принудительного создания ключа (используется в Drawer-ах)
     /// </summary>
-    public void CreateKeyframeManual(AnimationData data, InspectableParameter param)
-    {
-        _keyframeCreator.CreateKeyframe(data, gameObject, GetType().Name, param);
-    }
+    // public void CreateKeyframeManual(AnimationData data, InspectableParameter param)
+    // {
+    //     _keyframeCreator.CreateKeyframe(data, gameObject, GetType().Name, param);
+    // }
     
     public abstract IEnumerable<InspectableParameter> GetParameters();
 

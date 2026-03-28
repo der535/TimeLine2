@@ -1,15 +1,14 @@
 using EventBus;
-using TimeLine.Keyframe;
-using UnityEngine;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 
 namespace TimeLine.EventBus.Events.TrackObject
 {
     public struct RemoveComponentEvent : IEvent
     {
         public TrackObjectPacket TrackObjectPacket { get; }
-        public Component Component { get; }
+        public ComponentNames Component { get; }
 
-        public RemoveComponentEvent(TrackObjectPacket trackObjectPacket, Component component)
+        public RemoveComponentEvent(TrackObjectPacket trackObjectPacket, ComponentNames component)
         {
             TrackObjectPacket = trackObjectPacket;
             Component = component;

@@ -4,6 +4,8 @@ using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
 using Zenject;
 
@@ -12,12 +14,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
     public class TrackObjectRemover : MonoBehaviour
     {
         [SerializeField] private WindowsFocus windowsFocus;
-        
+
         private TrackObjectStorage _trackObjectStorage;
         private KeyframeTrackStorage _keyframeTrackStorage;
         private SelectObjectController _selectObjectController;
         private ActionMap _actionMap;
         private GameEventBus _gameEventBus;
+        private EntityManager _entityManager;
 
         [Inject]
         private void Construct(
@@ -37,12 +40,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         private void Start()
         {
             _actionMap.Editor.X.started += _ => Remove();
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         }
-        
+
         private void Remove()
         {
-            if(!windowsFocus.IsFocused) return;
-            
+            if (!windowsFocus.IsFocused) return;
+
             foreach (var select in _selectObjectController.SelectObjects)
             {
                 if (select is TrackObjectGroup group)
@@ -60,61 +64,49 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         internal void SingleRemove(TrackObjectPacket select)
         {
-            Disassemble(select.sceneObject);
-            
+            // Disassemble(select.sceneObject);
+
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
 
-            select.components.View.Destroy();
-            Destroy(select.sceneObject);
+
+// Если они разные, удаление не сработает!
+            
+            select.components.Dispose();
+            _entityManager.DestroyEntity(select.entity);
 
             _trackObjectStorage.Remove(select);
         }
-        
+
         internal void SingleRemoveNoStorage(TrackObjectPacket select, bool disassemble = true)
         {
-           if(disassemble) Disassemble(select.sceneObject);
+            // if(disassemble) Disassemble(select.sceneObject);
 
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
 
-            select.components.View.Destroy();
-            Destroy(select.sceneObject);
-        }
-        
-        void Disassemble(GameObject parentObject)
-        {
-            // Используем ToList() из System.Linq, так как мы будем менять родителя (child.parent = null)
-            // Если менять иерархию внутри обычного foreach, итератор может "сломаться"
-            foreach (Transform child in parentObject.transform.Cast<Transform>().ToList())
+            select.components.Dispose();
+            _entityManager.DestroyEntity(select.entity);
+            if (_entityManager.Exists(select.entity))
             {
-                // ВАЖНО: вызываем у child!
-                if (child.TryGetComponent(out SceneObjectLink link))
-                {
-                    link.trackObjectPacket.components.Data.ParentID = string.Empty;
-                    child.SetParent(null); // Отцепляем
-                }
+                Debug.Log($"[DEBUG] Сущность {select.entity.Index}:{select.entity.Version} найдена в мире: {World.DefaultGameObjectInjectionWorld.Name}");
             }
         }
 
-        
+
         internal void SingleRemove(TrackObjectGroup select, bool disassemble = true)
         {
-            if(disassemble)
-                Disassemble(select.sceneObject);
-            
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
 
-            select.components.View.Destroy();
-            Destroy(select.sceneObject);
-            
+            select.components.Dispose();
+            _entityManager.DestroyEntity(select.entity);
             _trackObjectStorage.Remove(select);
         }
 
@@ -132,6 +124,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                     SingleRemove(item);
                 }
             }
+
             SingleRemove(list);
         }
     }

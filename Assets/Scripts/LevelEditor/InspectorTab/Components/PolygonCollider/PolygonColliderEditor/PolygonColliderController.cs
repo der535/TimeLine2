@@ -4,7 +4,7 @@ using UnityEngine;
 using TimeLine.EventBus.Events.EditroSceneCamera;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.Core;
-using TimeLine.LevelEditor.General;
+using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
 using Unity.Mathematics;
 
 namespace TimeLine.EdgeColliderEditor

@@ -1,3 +1,4 @@
+using System.Globalization;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
@@ -25,7 +26,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) =>
             {
                 _keyframe = data.Keyframe;
-                text.text = $"Time: {data.Keyframe.Ticks.ToString()}, Value: {data.Keyframe.GetData().GetValue()}";
+                text.text = $"Time: {data.Keyframe.Ticks.ToString(CultureInfo.InvariantCulture)}, Value: {data.Keyframe.GetEntityData().GetValue()}";
             });
             
             _gameEventBus.SubscribeTo((ref DeselectAllKeyframeEvent data) =>

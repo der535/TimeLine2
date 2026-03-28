@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.SpriteLoader;
+using Unity.Rendering;
 using UnityEngine;
 using Zenject;
 
@@ -90,7 +91,41 @@ namespace TimeLine
                     }
 
                     windows.gameObject.SetActive(false);
-                    _gameEventBus.Raise(new SelectedNewSpriteEvent(spriteParameter));
+                    // _gameEventBus.Raise(new SelectedNewSpriteEvent(spriteParameter));
+                };
+
+                if (card.SpriteParameter != null)
+                {
+                    card.Setup(card.SpriteParameter, card.textureData, onSelect);
+                }
+                else
+                {
+                    card.Setup(card.sprite, onSelect);
+                }
+            }
+        }
+        
+        internal void Setup(Sprite sprite, Action<Texture> onValueChanged)
+        {
+            windows.gameObject.SetActive(true);
+
+            foreach (var card in _spriteCards)
+            {
+                Action onSelect = () =>
+                {
+                    if (card.SpriteParameter != null)
+                    {
+                        onValueChanged.Invoke(card.SpriteParameter.Value.texture);
+                    }
+                    else
+                    {
+                        onValueChanged.Invoke(card.sprite.texture);
+                    }
+
+                    windows.gameObject.SetActive(false);
+                    
+                    if(sprite != null)
+                        _gameEventBus.Raise(new SelectedNewSpriteEvent(sprite));
                 };
 
                 if (card.SpriteParameter != null)

@@ -4,7 +4,7 @@ using TimeLine.EventBus.Events.TrackObject;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine.LevelEditor.General
+namespace TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider
 {
     public class C_EditColliderState : MonoBehaviour
     {

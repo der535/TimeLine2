@@ -697,7 +697,7 @@ PlayerSettings:
     PS5: DOTWEEN
     QNX: DOTWEEN
     ReservedCFE: DOTWEEN
-    Standalone: DOTWEEN
+    Standalone: DOTWEEN;UNITY_PHYSICS_CUSTOM
     VisionOS: DOTWEEN
     WebGL: DOTWEEN
     Windows Store Apps: DOTWEEN
@@ -729,7 +729,7 @@ PlayerSettings:
     tvOS: 1
   incrementalIl2cppBuild: {}
   suppressCommonWarnings: 1
-  allowUnsafeCode: 0
+  allowUnsafeCode: 1
   useDeterministicCompilation: 1
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 1

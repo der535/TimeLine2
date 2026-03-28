@@ -3,7 +3,7 @@ using EventBus;
 
 namespace TimeLine.EventBus.Events.TrackObject
 {
-    public class SelectObjectEvent: IEvent
+    public class SelectObjectEvent : IEvent
     {
         public List<TrackObjectPacket> Tracks { get; }
 

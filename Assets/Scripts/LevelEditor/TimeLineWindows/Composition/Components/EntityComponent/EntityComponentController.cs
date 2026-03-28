@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.EntityComponentInstaller;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.EntityComponentSaver;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Entities.Graphics;
+using Unity.Physics;
 using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
@@ -18,13 +19,22 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         SpriteRenderer,
         NameComponent,
         Transform,
+        CompositionOffset,
+        BoxCollider,
+        CircleCollider,
+        PolygonCollider,
+        SunBurstMaterial,
     }
 
-    public class EntityComponentRules
+    public class EntityComponentController
     {
         private IComponentInstaller[] _componentInstallers;
+        private IEntityComponentSave[] _entityComponentSaves;
         private EntityManager _entityManager;
 
+        /// <summary>
+        /// Словарь со списком структур которые есть у определённых компонентов
+        /// </summary>
         private readonly Dictionary<ComponentNames, ComponentType[]> _componentTypes = new()
         {
             {
@@ -41,24 +51,102 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 {
                     typeof(LocalTransform)
                 }
+            },
+            {
+                ComponentNames.BoxCollider, new ComponentType[]
+                {
+                    typeof(PhysicsCollider),
+                    typeof(BoxColliderData)
+                }
+            },
+            {
+                ComponentNames.CircleCollider, new ComponentType[]
+                {
+                    typeof(PhysicsCollider),
+                    typeof(CircleColliderData)
+                }
+            },
+            {
+                ComponentNames.PolygonCollider, new ComponentType[]
+                {
+                    typeof(PhysicsCollider),
+                    typeof(PolygonColliderData)
+                }
+            },
+            {
+                ComponentNames.SunBurstMaterial, new ComponentType[]
+                {
+                    typeof(SunBurstMaterialData)
+                }
             }
+            
         };
 
-        EntityComponentRules(SpriteRendererInstaller spriteRendererInstaller)
+        EntityComponentController(
+            SpriteRendererInstaller spriteRendererInstaller,
+            SunBurstMaterialInstaller sunBurstMaterialInstaller,
+            BoxColliderInstaller boxColliderInstaller,
+            CircleColliderInstaller circleColliderInstaller,
+            PolygoneColliderInstaller polygoneColliderInstaller,
+            SaveSpriteRenderer saveSpriteRenderer,
+            SaveBoxCollider saveBoxCollider,
+            SaveCircleCollider saveCircleCollider,
+            SavePolygonCollider savePolygonCollider,
+            SaveCompositionOffset saveCompositionOffset,
+            SaveTransform saveTransform) 
         {
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _componentInstallers = new IComponentInstaller[] { spriteRendererInstaller };
+            _componentInstallers = new IComponentInstaller[]
+            {
+                spriteRendererInstaller, 
+                boxColliderInstaller, 
+                circleColliderInstaller, 
+                polygoneColliderInstaller,
+                sunBurstMaterialInstaller
+            };
+            _entityComponentSaves = new IEntityComponentSave[]
+            {
+                saveSpriteRenderer, 
+                saveTransform, 
+                saveBoxCollider, 
+                saveCircleCollider, 
+                savePolygonCollider,
+                saveCompositionOffset
+            };
         }
 
-
-        public void Save(Entity entity)
+        /// <summary>
+        /// Сохранение данных
+        /// </summary>
+        /// <param name="entity"></param>
+        public Dictionary<ComponentNames, Dictionary<string, object>> Save(Entity entity)
         {
-            Dictionary<ComponentNames, Dictionary<string, object>> data = new Dictionary<ComponentNames, Dictionary<string, object>>();
-            var (componentNames, save) = SaveTransform.Save(entity);
-            var (componentNames1, save1) = SaveSpriteRenderer.Save(entity);
-            data.Add(componentNames, save);
-            data.Add(componentNames1, save1);
-            Debug.Log(JsonConvert.SerializeObject(data));
+            Dictionary<ComponentNames, Dictionary<string, object>> data =
+                new Dictionary<ComponentNames, Dictionary<string, object>>();
+
+            foreach (var componentSaves in _entityComponentSaves)
+            {
+                var (componentNames, save) = componentSaves.Save(entity);
+                if (save != null) data.Add(componentNames, save);
+            }
+
+            return data;
+        }
+
+        /// <summary>
+        /// Загрузка
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="dataList"></param>
+        public void Load(Entity entity, Dictionary<ComponentNames, Dictionary<string, object>> dataList)
+        {
+            foreach (var componentSaves in _entityComponentSaves)
+            {
+                // Debug.Log(dataList.ContainsKey(componentSaves.Check()));
+                // Debug.Log(componentSaves.Check());
+                if (dataList.ContainsKey(componentSaves.Check()))
+                    componentSaves.Load(dataList[componentSaves.Check()], entity);
+            }
         }
 
         /// <summary>
@@ -101,6 +189,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             }
         }
 
+        /// <summary>
+        /// Удаляет компонент
+        /// </summary>
+        /// <param name="componentNames">Название компонента</param>
+        /// <param name="entity">Сущность в котором компонент будет удалён</param>
         internal void RemoveComponent(ComponentNames componentNames, Entity entity)
         {
             foreach (var componentInstaller in _componentInstallers)

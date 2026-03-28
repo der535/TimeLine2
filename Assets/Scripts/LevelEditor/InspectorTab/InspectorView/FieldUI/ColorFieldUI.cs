@@ -19,7 +19,7 @@ namespace TimeLine.CustomInspector.UI.FieldUI
         [Space] [SerializeField] private EventTrigger createKeyframeButton;
         
         private SelectColorContoller _selectColorController;
-        private ColorParameter _currentParameter;
+        private Action<Color> OnCnageColor;
         
         private Color _previousValue;
         
@@ -28,46 +28,30 @@ namespace TimeLine.CustomInspector.UI.FieldUI
         {
             _selectColorController = selectColorController;
         }
-
-        public void Setup(ColorParameter colorParameter, Action createKeyframe, string gameObjectId)
+        
+        public void Setup(Action<Color> onCnageColor, Color startColor, Action createKeyframe)
         {
             // Отписка от предыдущего параметра (если есть)
-            UnsubscribeFromParameter();
+            OnCnageColor = null;
+            OnCnageColor += (value) => _colorImage.color = value;
+            OnCnageColor += onCnageColor;
+            
+            _colorImage.color = startColor; //Задаём цвет image
 
-            _currentParameter = colorParameter; //Сохраняем ссылку на параметр
-            _colorImage.color = _currentParameter.Value; //Задаём цвет image
+            _button.onClick.AddListener(() => OnButtonClick(startColor));
 
-            _button.onClick.AddListener(() => OnButtonClick(gameObjectId));
-            _currentParameter.OnValueChanged += OnParameterValueChange;
             
             UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, () => createKeyframe?.Invoke());
         }
+
         
-        private void OnButtonClick(string gameObjectId)
+        private void OnButtonClick(Color startColor)
         {
-            _selectColorController?.Setup(_currentParameter, gameObjectId);
+            _selectColorController?.Setup(OnCnageColor, startColor);
         }
-
-        private void OnParameterValueChange()
-        {
-            if (_colorImage != null)
-            {
-                _colorImage.color = _currentParameter.Value;
-            }
-        }
-
-        private void UnsubscribeFromParameter()
-        {
-            if (_currentParameter != null)
-            {
-                _currentParameter.OnValueChanged -= OnParameterValueChange;
-                _currentParameter = null;
-            }
-        }
-
+        
         private void OnDestroy()
         {
-            UnsubscribeFromParameter();
             if (_button != null)
             {
                 _button.onClick.RemoveAllListeners();

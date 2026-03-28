@@ -67,7 +67,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         internal void Setup(TrackObjectData trackObjectData, ITrackObjectView View, TrackObjectState state)
         {
-            Debug.Log("Setup");
             _gameEventBus.SubscribeTo<ScrollTimeLineEvent>(ScrollTimeLineEvent);
             _gameEventBus.SubscribeTo<TimeLineZoomEvent>(TimeLineZoomEvent);
             _gameEventBus.SubscribeTo<OpenEditorEvent>(OpenEditorEvent);
@@ -75,6 +74,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _data = trackObjectData;
             _state = state;
             _trackObjectView = View;
+            _trackObjectView.Rename(trackObjectData.Name);
             _data.OnChangeDuration += _ => UpdateVisuals();
 
             UpdateVisuals();
@@ -86,10 +86,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         public void Dispose()
         {
-            Debug.Log("Dispose");
             _gameEventBus.UnsubscribeFrom<ScrollTimeLineEvent>(ScrollTimeLineEvent);
             _gameEventBus.UnsubscribeFrom<TimeLineZoomEvent>(TimeLineZoomEvent);
             _gameEventBus.UnsubscribeFrom<OpenEditorEvent>(OpenEditorEvent);
+            _trackObjectView?.Destroy();
         }
 
 

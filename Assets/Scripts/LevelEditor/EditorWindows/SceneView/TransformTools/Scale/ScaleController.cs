@@ -8,6 +8,12 @@ using UnityEngine.Serialization;
 using Zenject;
 using System.Linq;
 using TimeLine.EventBus.Events.EditroSceneCamera;
+using TimeLine.LevelEditor.ECS;
+using TimeLine.LevelEditor.ECS.Services;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 
 namespace TimeLine
 {
@@ -16,56 +22,53 @@ namespace TimeLine
         [FormerlySerializedAs("_gridScene")] [SerializeField]
         private GridScene gridScene;
 
-        [FormerlySerializedAs("edit_camera_UI")] [FormerlySerializedAs("camera")] [SerializeField] private Camera editCameraUI;
+        [FormerlySerializedAs("edit_camera_UI")] [FormerlySerializedAs("camera")] [SerializeField]
+        private Camera editCameraUI;
+
         [SerializeField] private RectTransform tool;
-        [FormerlySerializedAs("_scaleTool")] [SerializeField] private ScaleTool scaleTool;
+
+        [FormerlySerializedAs("_scaleTool")] [SerializeField]
+        private ScaleTool scaleTool;
 
         private GameEventBus _eventBus;
-        private MainObjects _mainObjects;
         private SceneToRawImageConverter _sceneToRawImageConverter;
         private CoordinateSystem _coordinateSystem;
 
-        private List<(TransformComponent transformComponent, Vector2 startScale, Vector2 startPosition)> _transformComponent = new();
+        private List<(Entity entity, Vector2 startScale, Vector2 startPosition)> _transformComponent = new();
 
         private Action _objectFollowingTool;
-        private Action _toolFollowingObject;
 
         private Action<float> _horizontalScale;
         private Action<float> _verticalScale;
 
-        private Vector2 center;
+        private Vector2 _center;
+
+        private EntityManager _entityManager;
+
+        public Action OnValueChanged;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, MainObjects mainObjects,
+        private void Construct(GameEventBus gameEventBus,
             SceneToRawImageConverter sceneToRawImageConverter, CoordinateSystem coordinateSystem)
         {
             _eventBus = gameEventBus;
-            _mainObjects = mainObjects;
             _sceneToRawImageConverter = sceneToRawImageConverter;
             _coordinateSystem = coordinateSystem;
         }
 
         private void Awake()
         {
-            _eventBus.SubscribeTo(((ref SelectObjectEvent data) =>
-            {
-                SetPosition(data.Tracks);
-            }));
-            _eventBus.SubscribeTo((ref DeselectObjectEvent data) =>
-            {
-                SetPosition(data.SelectedObjects);
-            });
-            _eventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) =>
-            {
-                UpdatePosition();
-            });
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            _eventBus.SubscribeTo(((ref SelectObjectEvent data) => { SetPosition(data.Tracks); }));
+            _eventBus.SubscribeTo((ref DeselectObjectEvent data) => { SetPosition(data.SelectedObjects); });
+            _eventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) => { UpdatePosition(); });
             _eventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
             {
-                _transformComponent = new List<(TransformComponent transformComponent, Vector2 startScale, Vector2 startPosition)>();
+                _transformComponent = new List<(Entity entity, Vector2 startScale, Vector2 startPosition)>();
             });
 
-            _toolFollowingObject += () => UpdatePosition();
-            
+
             scaleTool.HorizontalDeltaStart += SetStartScale;
             scaleTool.VerticalDeltaStart += SetStartScale;
 
@@ -74,51 +77,86 @@ namespace TimeLine
                 foreach (var variable in _transformComponent)
                 {
                     // 1. Рассчитываем смещение относительно центра
-                    float offset = variable.startPosition.x - center.x;
+                    float offset = variable.startPosition.x - _center.x;
                     // 2. Масштабируем смещение и прибавляем обратно к центру
-                    float rawPosition = center.x + (offset * f);
-        
+                    float rawPosition = _center.x + (offset * f);
+
                     float newScale = gridScene.SnapToGrid(variable.startScale.x * f);
-                    variable.transformComponent.XScale.Value = newScale;
+
+                    //Получаем матрицу трансформаций
+                    PostTransformMatrix ptm = _entityManager.GetComponentData<PostTransformMatrix>(variable.entity);
+                    float3 scale = GetScaleFromMatrix.Get(ptm.Value);
+                    scale.x = newScale;
+                    ptm.Value = float4x4.Scale(scale);
+                    _entityManager.SetComponentData(variable.entity, ptm);
 
                     if (_coordinateSystem.IsGlobal)
                     {
                         float newPosition = gridScene.SnapToGrid(rawPosition);
-                        variable.transformComponent.XPosition.Value = newPosition; 
-                    }
 
+                        LocalTransform localTransform =
+                            _entityManager.GetComponentData<LocalTransform>(variable.entity);
+                        localTransform.Position.x = newPosition;
+                        
+                        PositionData positionData = new PositionData();
+                        positionData.Position = new float2(localTransform.Position.x, localTransform.Position.y);
+                        
+                        _entityManager.SetComponentData(variable.entity, positionData);
+                        _entityManager.SetComponentData(variable.entity, localTransform);
+                    }
                 }
+                
+                OnValueChanged.Invoke();
             };
 
             scaleTool.VerticalDelta += f =>
             {
                 foreach (var variable in _transformComponent)
                 {
-                    float offset = variable.startPosition.y - center.y;
-                    float rawPosition = center.y + (offset * f);
-        
+                    float offset = variable.startPosition.y - _center.y;
+                    float rawPosition = _center.y + (offset * f);
+
                     float newScale = gridScene.SnapToGrid(variable.startScale.y * f);
-                    variable.transformComponent.YScale.Value = newScale;
+                    PostTransformMatrix ptm = _entityManager.GetComponentData<PostTransformMatrix>(variable.entity);
+                    float3 scale = GetScaleFromMatrix.Get(ptm.Value);
+                    scale.y = newScale;
+                    ptm.Value = float4x4.Scale(scale);
+                    _entityManager.SetComponentData(variable.entity, ptm);
 
                     if (_coordinateSystem.IsGlobal)
                     {
                         float newPosition = gridScene.SnapToGrid(rawPosition);
-                        variable.transformComponent.YPosition.Value = newPosition;
+
+                        LocalTransform localTransform =
+                            _entityManager.GetComponentData<LocalTransform>(variable.entity);
+                        localTransform.Position.y = newPosition;
+                        
+                        PositionData positionData = new PositionData();
+                        positionData.Position = new float2(localTransform.Position.x, localTransform.Position.y);
+                        _entityManager.SetComponentData(variable.entity, positionData);
+                        
+                        _entityManager.SetComponentData(variable.entity, localTransform);
                     }
                 }
+                
+                OnValueChanged.Invoke();
             };
 
             _coordinateSystem.OnCoordinateChanged += isGlobal =>
             {
-                if(isGlobal)
-                    tool.position = _sceneToRawImageConverter.WorldToUIPosition(center);
+                if (isGlobal)
+                    tool.position = _sceneToRawImageConverter.WorldToUIPosition(_center);
                 else
                 {
-                    tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(_transformComponent[^1].transformComponent.XPosition.Value, _transformComponent[^1].transformComponent.YPosition.Value));
+                    LocalTransform localTransform =
+                        _entityManager.GetComponentData<LocalTransform>(_transformComponent[^1].entity);
+                    tool.position =
+                        _sceneToRawImageConverter.WorldToUIPosition(new Vector2(localTransform.Position.x,
+                            localTransform.Position.y));
                 }
             };
         }
-        
+
         private void UpdatePosition()
         {
             if (_transformComponent == null || _transformComponent.Count == 0) return;
@@ -128,15 +166,15 @@ namespace TimeLine
             if (_coordinateSystem.IsGlobal)
             {
                 // В глобальном режиме всегда в центре группы
-                List<TransformComponent> selectionOnly = _transformComponent.Select(item => item.transformComponent).ToList();
-                center = GetCenter.GetSelectionCenter(selectionOnly);
-                targetWorldPos = center;
+                List<Entity> selectionOnly = _transformComponent.Select(item => item.entity).ToList();
+                _center = GetCenter.GetSelectionCenter(selectionOnly);
+                targetWorldPos = _center;
             }
             else
             {
                 // В локальном режиме на последнем выбранном объекте
-                var lastObj = _transformComponent[^1].transformComponent;
-                targetWorldPos = new Vector2(lastObj.XPosition.Value, lastObj.YPosition.Value);
+                var lastObj = _entityManager.GetComponentData<LocalTransform>(_transformComponent[^1].entity).Position;
+                targetWorldPos = new Vector2(lastObj.x, lastObj.y);
             }
 
             tool.position = _sceneToRawImageConverter.WorldToUIPosition(targetWorldPos);
@@ -145,28 +183,33 @@ namespace TimeLine
             if (!_coordinateSystem.IsGlobal && _transformComponent.Count > 0)
             {
                 // Наклоняем инструмент вслед за объектом
-                tool.rotation = Quaternion.Euler(0, 0, _transformComponent[^1].transformComponent.ZRotation.Value);
+                tool.rotation = Quaternion.Euler(0, 0,
+                    GetDegree.FromQuaternion(_entityManager
+                        .GetComponentData<LocalTransform>(_transformComponent[^1].entity).Rotation).z);
             }
             else
             {
                 tool.rotation = Quaternion.identity;
             }
         }
-        
-        
+
+
         public void EnableTool()
         {
-            List<TransformComponent> selectionOnly = _transformComponent
+            List<Entity> selectionOnly = _transformComponent
                 .Select(item => item.Item1)
                 .ToList();
 
-            center = GetCenter.GetSelectionCenter(selectionOnly);
-            
-            if(_coordinateSystem.IsGlobal)
-                tool.position = _sceneToRawImageConverter.WorldToUIPosition(center);
+            _center = GetCenter.GetSelectionCenter(selectionOnly);
+
+            if (_coordinateSystem.IsGlobal)
+                tool.position = _sceneToRawImageConverter.WorldToUIPosition(_center);
             else
             {
-                tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(_transformComponent[^1].transformComponent.XPosition.Value, _transformComponent[^1].transformComponent.YPosition.Value));
+                float3 position = _entityManager.GetComponentData<LocalTransform>(_transformComponent[^1].entity)
+                    .Position;
+                tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(
+                    position.x, position.y));
             }
         }
 
@@ -174,61 +217,55 @@ namespace TimeLine
         {
             for (int i = 0; i < _transformComponent.Count; i++)
             {
-                List<TransformComponent> selectionOnly = _transformComponent
+                List<Entity> selectionOnly = _transformComponent
                     .Select(item => item.Item1)
                     .ToList();
 
-                center = GetCenter.GetSelectionCenter(selectionOnly);
-                
-                // Извлекаем компоненты для удобства расчетов
-                var component = _transformComponent[i].transformComponent;
+                _center = GetCenter.GetSelectionCenter(selectionOnly);
 
-                float snappedX = gridScene.SnapToGrid(component.XScale.Value);
-                float snappedY = gridScene.SnapToGrid(component.YScale.Value);
-                
-                float positionX = gridScene.SnapToGrid(component.XPosition.Value);
-                float positionY = gridScene.SnapToGrid(component.YPosition.Value);
+                // Извлекаем компоненты для удобства расчетов
+                var localTransform = _entityManager.GetComponentData<LocalTransform>(_transformComponent[i].entity) ;
+                var postTransformMatrix = _entityManager.GetComponentData<PostTransformMatrix>(_transformComponent[i].entity) ;
+
+                var scale = GetScaleFromMatrix.Get(postTransformMatrix.Value);
+
+                float snappedX = gridScene.SnapToGrid(scale.x);
+                float snappedY = gridScene.SnapToGrid(scale.y);
+
+                float positionX = gridScene.SnapToGrid(localTransform.Position.x);
+                float positionY = gridScene.SnapToGrid(localTransform.Position.y);
 
                 // Перезаписываем кортеж целиком по индексу
-                _transformComponent[i] = (component, new Vector2(snappedX, snappedY), new Vector2(positionX, positionY));
+                _transformComponent[i] =
+                    (_transformComponent[i].entity, new Vector2(snappedX, snappedY), new Vector2(positionX, positionY));
             }
         }
-        
+
 
         private void SetPosition(List<TrackObjectPacket> listObjects)
         {
-            foreach (var VARIABLE in _transformComponent)
-            {
-                if(VARIABLE.Item1.XPosition == null || VARIABLE.Item1.YPosition == null) continue;
-
-                VARIABLE.Item1.XPosition.OnValueChanged -= _toolFollowingObject;
-                VARIABLE.Item1.YPosition.OnValueChanged -= _toolFollowingObject;
-            }
-
             _transformComponent.Clear();
             foreach (var variable in listObjects)
             {
-                _transformComponent.Add((variable.sceneObject.GetComponent<TransformComponent>(), Vector2.zero, Vector2.zero));
+                _transformComponent.Add((variable.entity, Vector2.zero,
+                    Vector2.zero));
             }
 
-            center = GetCenter.GetSelectionCenter(listObjects.Select(i => i.sceneObject.transform).ToList());
-            
-            tool.position = _sceneToRawImageConverter.WorldToUIPosition(center);
-            
+            _center = GetCenter.GetSelectionCenter(listObjects.Select(i => _entityManager.GetComponentData<LocalTransform>(i.entity)).ToList());
+
+            tool.position = _sceneToRawImageConverter.WorldToUIPosition(_center);
+
             if (_transformComponent.Count <= 1)
             {
+                var rotation = GetDegree.FromQuaternion(_entityManager.GetComponentData<LocalTransform>(_transformComponent[0].entity)
+                    .Rotation);
+                
                 tool.rotation = Quaternion.Euler(tool.rotation.x, tool.rotation.y,
-                    _transformComponent[0].Item1.ZRotation.Value);
+                    rotation.z);
             }
             else
             {
                 tool.rotation = Quaternion.Euler(tool.rotation.x, tool.rotation.y, 0);
-            }
-
-            foreach (var VARIABLE in _transformComponent)
-            {
-                VARIABLE.Item1.XPosition.OnValueChanged += _toolFollowingObject;
-                VARIABLE.Item1.YPosition.OnValueChanged += _toolFollowingObject;
             }
         }
     }

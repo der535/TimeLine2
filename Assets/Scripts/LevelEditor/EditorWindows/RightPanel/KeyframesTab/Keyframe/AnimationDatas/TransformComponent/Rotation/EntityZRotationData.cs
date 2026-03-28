@@ -1,6 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 using TimeLine.LevelEditor.ECS;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.TimeLine;
@@ -12,9 +13,9 @@ using UnityEngine;
 namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position
 {
     [System.Serializable]
-    public class EntityYRotationData : EntityAnimationData
+    public class EntityZRotationData : EntityAnimationData
     {
-        public EntityYRotationData(float value)
+        public EntityZRotationData(float value)
         {
             Logic = new OutputLogic();
             Logic.Initialize(DataType.Float);
@@ -22,9 +23,9 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             Graph = SaveGraph.ToJson(Logic);
         }
         
-        public override Type GetComponentType()
+        public override ComponentNames GetComponentType()
         {
-            return typeof(global::TimeLine.TransformComponent);
+            return ComponentNames.Transform;
         }
 
         public override float4 PackDataToFloat4()
@@ -32,9 +33,9 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             return new float4((float)Logic.GetValue(), 0, 0, 0);
         }
 
-        public override AnimationData Clone()
+        public override EntityAnimationData Clone()
         {
-            return new XPositionData((float)Logic.GetValue());
+            return new EntityZRotationData((float)Logic.GetValue());
         }
 
         public override object GetValue()
@@ -54,20 +55,20 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
         public override string GetDataType()
         {
-            return nameof(XPositionData);
+            return nameof(EntityZRotationData);
         }
 
         public override JObject SerializeData()
         {
             return new JObject
             {
-                ["transform-position-x"] = JToken.FromObject((float)Logic.GetValue())
+                ["transform-rotation-z"] = JToken.FromObject((float)Logic.GetValue())
             };
         }
 
         public override void DeserializeData(JObject data)
         {
-            if (data.TryGetValue("transform-position-x", out JToken token))
+            if (data.TryGetValue("transform-rotation-z", out JToken token))
             {
                 Logic.Initialize(DataType.Float);
                 Logic.ManualValues[0] = token.ToObject<float>();
@@ -77,10 +78,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
         public override void Apply(Entity target, float4 value)
         {
-            EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            LocalTransform localTransform = manager.GetComponentData<LocalTransform>(target);
-            localTransform.Position.y = value.x;
-            manager.SetComponentData(target, localTransform);
+            Apply(target, (object)value.x);
         }
 
         public override void Interpolate(
@@ -90,7 +88,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             global::TimeLine.Keyframe.Keyframe next,
             global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Entity target)
         {
-            if (other is not EntityXPositionData otherPos)
+            if (other is not EntityZRotationData otherPos)
                 throw new System.ArgumentException("Interpolation requires another XPositionData.");
 
             float localT = (float)t;
@@ -112,7 +110,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             LocalTransform localTransform = manager.GetComponentData<LocalTransform>(target);
             
             Vector3 currentEuler = GetDegree.FromQuaternion(localTransform.Rotation);
-            currentEuler.y = (float)o;
+            currentEuler.z = (float)o;
             localTransform.Rotation = GetDegree.FromEuler(currentEuler);
             
             manager.SetComponentData(target, localTransform);

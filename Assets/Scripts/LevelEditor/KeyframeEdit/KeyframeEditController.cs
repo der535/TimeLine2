@@ -49,21 +49,15 @@ namespace TimeLine.LevelEditor.KeyframeEdit
             // --- 1. Логика проверки идентичности данных ---
             var firstKey = _selectedKeyframesStorage.Keyframes[0];
             double sameTime = firstKey.Ticks;
-            // var sameValue = firstKey.GetData().GetValue();
-            // var sameTypeValue = firstKey.GetData().GetValue().GetType();
             var sameInterpolation = firstKey.Interpolation;
 
             bool isSameTime = true;
-            // bool isSameValue = true;
-            // bool isSameType = true;
             bool isSameInterpolation = true;
 
             foreach (var wrapper in _selectedKeyframesStorage.Keyframes)
             {
                 var k = wrapper;
                 if (Math.Abs(sameTime - k.Ticks) > 0.001) isSameTime = false;
-                // if (sameValue != k.GetData().GetValue()) isSameValue = false;
-                // if (sameTypeValue != k.GetData().GetValue().GetType()) isSameType = false;
                 if (sameInterpolation != k.Interpolation) isSameInterpolation = false;
             }
 
@@ -83,34 +77,6 @@ namespace TimeLine.LevelEditor.KeyframeEdit
                     k.Ticks = value;
             });
             
-
-            // // --- 3. Настройка поля Значения ---
-            // if (!isSameType)
-            // {
-            //     keyframeEditView.SetTextInputValue("Different types");
-            //     keyframeEditView.SetValueInputInteractable(false);
-            // }
-            // else
-            // {
-            //     keyframeEditView.SetValueInputInteractable(true);
-            //     if (isSameValue)
-            //     {
-            //         keyframeEditView.SetTextInputValuePlaceHolder( string.Empty);
-            //         keyframeEditView.SetTextInputValue(sameValue);
-            //     }
-            //     else
-            //     {
-            //         keyframeEditView.SetTextInputValuePlaceHolder("---");
-            //         keyframeEditView.SetTextInputValue(string.Empty);
-            //     }
-            //
-            //     keyframeEditView.InputValueOnChange((value) =>
-            //     {
-            //         foreach (var k in _selectedKeyframesStorage.Keyframes)
-            //             k.GetData().SetValue(value);
-            //     });
-            //     
-            // }
 
             // --- 4. Настройка Интерполяции (Dropdown) ---
             if (isSameInterpolation)

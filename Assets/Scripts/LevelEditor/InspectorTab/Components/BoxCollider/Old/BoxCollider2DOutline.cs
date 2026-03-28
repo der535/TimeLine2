@@ -17,7 +17,7 @@ public class BoxCollider2DOutline : MonoBehaviour
     [SerializeField] private LineRenderer lineRenderer;
     
     private Entity target;
-    private EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+    private EntityManager entityManager;
     private CameraReferences _cameraReferences;
     
     [Inject]
@@ -25,7 +25,12 @@ public class BoxCollider2DOutline : MonoBehaviour
     {
         _cameraReferences = cameraReferences;
     }
-    
+
+    private void Start()
+    {
+        entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+    }
+
     internal void SetActiveLineRenderer(bool active)
     {
         lineRenderer.enabled = active;

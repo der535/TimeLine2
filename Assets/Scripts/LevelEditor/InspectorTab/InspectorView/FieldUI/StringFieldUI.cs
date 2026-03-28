@@ -24,6 +24,14 @@ namespace TimeLine
 
             inputField.onEndEdit.AddListener(arg0 => stringParameter.Value = arg0);
         }
+        
+        public void Setup(string value, string paremeterName, Action<string> onValueChanged)
+        {
+            parameterName.text = paremeterName;
+            inputField.text = value;
+            
+            inputField.onEndEdit.AddListener(onValueChanged.Invoke);
+        }
 
         public float GetFieldHeight()
         {

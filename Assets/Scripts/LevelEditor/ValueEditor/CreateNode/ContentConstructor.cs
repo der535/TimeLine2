@@ -62,10 +62,10 @@ namespace TimeLine.LevelEditor.ValueEditor
                     EventBinder binder = new EventBinder();
                     binder.Add(_gameEventBus, (ref GetParameterEvent data) =>
                     {
-                        componentFieldLogic._parameter = data.Parameter.Item1;
-                        componentFieldLogic._Map = data.Parameter.Item2;
-                        node.AddOutPutDynamic(data.Parameter.Item1.Name,
-                            TypeToDataType.Convert(data.Parameter.Item1.ValueType));
+                        componentFieldLogic._Map = data._map;
+                        componentFieldLogic.Entity = data._trackObjectPacket.entity;
+                        node.AddOutPutDynamic(data._map.ParameterID,
+                            TypeToDataType.Convert(typeof(float)));
                         binder.Dispose();
                     });
                     selectField.SetActiveButton(false);
@@ -75,7 +75,6 @@ namespace TimeLine.LevelEditor.ValueEditor
                 {
                     node.RemoveOutputDynamic(logic.OutputDefinitions.Count-1);
                     componentFieldLogic._Map = null;
-                    componentFieldLogic._parameter = null;
                     selectField.SetActiveButton(true);
                     removeField.SetActiveButton(false);
                 });

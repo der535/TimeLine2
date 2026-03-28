@@ -35,10 +35,9 @@ namespace TimeLine.Keyframe
         {
             _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) =>
             {
-                if (!_playAndStopButton._isPlaying)
-                {
+
                     Evaluate(data.Time);
-                }
+                
             });
         }
 
@@ -56,7 +55,7 @@ namespace TimeLine.Keyframe
                 key.inTangent = (float)k.InTangent;
                 key.inWeight = (float)k.InWeight;
                 key.outWeight = (float)k.OutWeight;
-                if (k.GetData().GetValue() is float value)
+                if (k.GetEntityData().GetValue() is float value)
                     key.value = value;
                 key.time = (float)TimeLineConverter.Instance.TicksToSeconds(k.Ticks);
                 curve.AddKey(key);
@@ -122,7 +121,13 @@ namespace TimeLine.Keyframe
             return null;
         }
 
-        public void AddKeyframe(TreeNode treeNode, double time, AnimationData data)
+        // public void AddKeyframe(TreeNode treeNode, double time, AnimationData data)
+        // {
+        //     Track track = GetTrack(treeNode);
+        //     _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));
+        // }
+        //
+        public void AddKeyframe(TreeNode treeNode, double time, EntityAnimationData data)
         {
             Track track = GetTrack(treeNode);
             _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));

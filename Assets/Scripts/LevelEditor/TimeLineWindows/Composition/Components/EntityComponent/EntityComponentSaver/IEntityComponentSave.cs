@@ -4,7 +4,7 @@ using Unity.Entities;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.EntityComponentSaver
 {
-    public interface EntityComponentSaveBase
+    public interface IEntityComponentSave
     {
         public (ComponentNames componentNames, Dictionary<string, object> save) Save(Entity entity);
         public  ComponentNames Check();

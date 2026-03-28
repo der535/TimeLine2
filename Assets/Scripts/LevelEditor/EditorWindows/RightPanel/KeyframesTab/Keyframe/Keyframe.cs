@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
-using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
-using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
-using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.RadialSunburstDrawer;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
-using TimeLine.LevelEditor.Tabs.InspectorTab.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.ValueEditor.NodeLogic;
+using Unity.Entities;
 
 namespace TimeLine.Keyframe
 {
@@ -48,7 +42,8 @@ namespace TimeLine.Keyframe
             Hold = 2
         }
 
-        private AnimationData animationData;
+        // private AnimationData animationData;
+        private EntityAnimationData entityAnimationData;
 
         public Keyframe(double ticks, InterpolationType interpolation,  double outTangent = 0, double inTangent = 0,
             double inWeight = 0.5f, double outWeight = 0.5f)
@@ -65,42 +60,41 @@ namespace TimeLine.Keyframe
             Initialize += () =>
             {
                 
-                if (animationData.initializedNodes != null)
+                if (entityAnimationData is { initializedNodes: not null })
                 {
-                    foreach (var VARIABLE in animationData.initializedNodes)
+                    foreach (var variable in entityAnimationData.initializedNodes)
                     {
-                        VARIABLE.Initialized();
+                        variable.Initialized();
                     }
                 }
 
        
             };
         }
-
-        public void AddData(AnimationData data)
+        
+        public void AddData(EntityAnimationData data)
         {
-            // Debug.Log(data);
-            animationData = data;
+            entityAnimationData = data;
         }
 
-        public void Apply(Component target)
+        public void Apply(Entity target)
         {
-            animationData.Apply(target, animationData.GetValue());
+            entityAnimationData.Apply(target, entityAnimationData.GetValue());
         }
 
-        public AnimationData GetData() => animationData;
+        public EntityAnimationData GetEntityData() => entityAnimationData;
 
         public Keyframe Clone()
         {
             Keyframe clone = new Keyframe(Ticks, Interpolation, OutTangent, InTangent, InWeight, OutWeight);
-            clone.AddData(animationData.Clone());
+            clone.AddData(entityAnimationData.Clone());
             return clone;
         }
 
-        public void Interpolate(Keyframe next, Component target, double t)
+        public void Interpolate(Keyframe next, Entity target, double t)
         {
-            AnimationData currentData = animationData;
-            AnimationData nextData = next.animationData;
+            EntityAnimationData currentData = entityAnimationData;
+            EntityAnimationData nextData = next.entityAnimationData;
 
             if (currentData != null && nextData != null)
             {
@@ -126,9 +120,9 @@ namespace TimeLine.Keyframe
                 InTangent = InTangent,
                 InWeight = InWeight,
                 OutWeight = OutWeight,
-                DataType = animationData?.GetDataType(),
-                Data = animationData?.SerializeData(),
-                Graph = animationData?.Graph
+                DataType = entityAnimationData?.GetDataType(),
+                Data = entityAnimationData?.SerializeData(),
+                Graph = entityAnimationData?.Graph
             };
         }
 
@@ -149,7 +143,7 @@ namespace TimeLine.Keyframe
 
             if (!string.IsNullOrEmpty(saveData.DataType) && saveData.Data != null)
             {
-                AnimationData data = CreateAnimationData(saveData.DataType);
+                EntityAnimationData data = CreateEntityAnimationData(saveData.DataType);
                 if (data != null)
                 {
                     data.DeserializeData(saveData.Data);
@@ -162,7 +156,6 @@ namespace TimeLine.Keyframe
                         data.Logic = logic;
                         data.initializedNodes = initializedNodes;
                     }
-
                 }
                 else
                 {
@@ -170,32 +163,23 @@ namespace TimeLine.Keyframe
                 }
             }
 
+
             return keyframe;
         }
-
-        // 🔑 Фабрика для создания AnimationData по имени типа
-        public static AnimationData CreateAnimationData(string typeName)
+        
+        public static EntityAnimationData CreateEntityAnimationData(string typeName)
         {
             return typeName switch
             {
                 // nameof(PositionData) => new PositionData(Vector3.zero),
-                nameof(XPositionData) => new XPositionData(0),
-                nameof(YPositionData) => new YPositionData(0),
-                nameof(XRotationData) => new XRotationData(0),
-                nameof(YRotationData) => new YRotationData(0),
-                nameof(ZRotationData) => new ZRotationData(0),
-                nameof(XScaleData) => new XScaleData(0),
-                nameof(YScaleData) => new YScaleData(0),
-                nameof(ColorData) => new ColorData(Color.black),
+                nameof(EntityXPositionData) => new EntityXPositionData(0),
+                nameof(EntityYPositionData) => new EntityYPositionData(0),
+                nameof(EntityXRotationData) => new EntityXRotationData(0),
+                nameof(EntityYRotationData) => new EntityYRotationData(0),
+                nameof(EntityZRotationData) => new EntityZRotationData(0),
+                nameof(EntityXScaleData) => new EntityXScaleData(0),
+                nameof(EntityYScaleData) => new EntityYScaleData(0),
 
-                nameof(XSizeData) => new XSizeData(0),
-                nameof(YSizeData) => new YSizeData(0),
-                nameof(XOffsetData) => new XOffsetData(0),
-                nameof(YOffsetData) => new YOffsetData(0),
-                nameof(RadialSunburstMaterial) => new RadialSunburstMaterialColor1(Color.black),
-                nameof(RadialSunburstMaterialColor1) => new RadialSunburstMaterialColor1(Color.black),
-                nameof(RadialSunburstMaterialColor2) => new RadialSunburstMaterialColor2(Color.black),
-                nameof(RadialSunburstMaterialRotationSpeed) => new RadialSunburstMaterialRotationSpeed(0),
                 _ => null
             };
         }

@@ -4,6 +4,11 @@ using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.EditroSceneCamera;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ECS;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -13,16 +18,19 @@ namespace TimeLine
     public class RotationController : MonoBehaviour
     {
         // Вспомогательный класс для хранения данных объектов при вращении
-        private class RotationData
+        private class RotationToolData
         {
-            public TransformComponent Transform;
+            public Entity Entity;
             public Vector2 StartPosition;
             public float StartRotation;
         }
 
         [SerializeField] private RectTransform tool;
         [SerializeField] private RotateTool rotateTool;
-        [FormerlySerializedAs("camera")] [SerializeField] private Camera edit_camera_UI;
+
+        [FormerlySerializedAs("camera")] [SerializeField]
+        private Camera edit_camera_UI;
+
         [SerializeField] private RectTransform toolCanvas;
 
         private Action _toolFollowingObject;
@@ -31,11 +39,15 @@ namespace TimeLine
         private SceneToRawImageConverter _sceneToRawImageConverter;
         private CoordinateSystem _coordinateSystem;
 
-        private List<RotationData> _selectedObjects = new List<RotationData>();
+        private List<RotationToolData> _selectedObjects = new List<RotationToolData>();
         private Vector2 _groupCenter;
+        private EntityManager _entityManager;
+
+        public Action OnValueChanged;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, GridScene gridScene, SceneToRawImageConverter sceneToRawImageConverter, CoordinateSystem coordinateSystem)
+        private void Construct(GameEventBus gameEventBus, GridScene gridScene,
+            SceneToRawImageConverter sceneToRawImageConverter, CoordinateSystem coordinateSystem)
         {
             _gameEventBus = gameEventBus;
             _gridScene = gridScene;
@@ -45,12 +57,14 @@ namespace TimeLine
 
         private void Awake()
         {
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Tracks)));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Select(data.SelectedObjects));
             _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) => UpdataPosition());
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
             {
-                _selectedObjects = new List<RotationData>();
+                _selectedObjects = new List<RotationToolData>();
             });
 
             // Логика перемещения инструмента за объектами
@@ -64,24 +78,43 @@ namespace TimeLine
                 {
                     // Одиночный объект: просто меняем ZRotation
                     var obj = _selectedObjects[0];
-                    obj.Transform.ZRotation.Value = _gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle);
+                    LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(obj.Entity);
+                    RotationData rotationData = _entityManager.GetComponentData<RotationData>(obj.Entity);
+
+
+                    float newZ = _gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle);
+                    rotationData.RotateZ = newZ;
+
+                    var objectRotation = GetDegree.FromQuaternion(localTransform.Rotation);
+
+
+                    localTransform.Rotation =
+                        GetDegree.FromEuler(new Vector3(objectRotation.x, objectRotation.y, rotationData.RotateZ));
+
+                    _entityManager.SetComponentData(obj.Entity, localTransform);
+                    _entityManager.SetComponentData(obj.Entity, rotationData);
                 }
                 else
                 {
                     // Групповое вращение
                     RotateGroup(deltaAngle);
                 }
+
+                OnValueChanged.Invoke();
             };
 
             rotateTool.StartRotationAction = () =>
             {
                 // Перед началом вращения фиксируем текущие данные и центр
-                _groupCenter = GetCenter.GetSelectionCenter(_selectedObjects.Select(x => x.Transform).ToList());
-                
+                _groupCenter = GetCenter.GetSelectionCenter(_selectedObjects
+                    .Select(x => _entityManager.GetComponentData<LocalTransform>(x.Entity)).ToList());
+
                 foreach (var item in _selectedObjects)
                 {
-                    item.StartPosition = new Vector2(item.Transform.XPosition.Value, item.Transform.YPosition.Value);
-                    item.StartRotation = item.Transform.ZRotation.Value;
+                    LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(item.Entity);
+                    RotationData rotationData = _entityManager.GetComponentData<RotationData>(item.Entity);
+                    item.StartPosition = new Vector2(localTransform.Position.x, localTransform.Position.y);
+                    item.StartRotation = rotationData.RotateZ;
                 }
             };
 
@@ -89,17 +122,20 @@ namespace TimeLine
             {
                 if (isGlobal)
                 {
-                    var transforms = _selectedObjects.Select(x => x.Transform).ToList();
+                    var transforms = _selectedObjects
+                        .Select(x => _entityManager.GetComponentData<LocalTransform>(x.Entity)).ToList();
                     _groupCenter = GetCenter.GetSelectionCenter(transforms);
                     tool.position = _sceneToRawImageConverter.WorldToUIPosition(_groupCenter);
                 }
                 else
                 {
-                    tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(_selectedObjects[^1].Transform.XPosition.Value, _selectedObjects[^1].Transform.YPosition.Value));
+                    tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(
+                        _entityManager.GetComponentData<LocalTransform>(_selectedObjects[^1].Entity).Position.x,
+                        _entityManager.GetComponentData<LocalTransform>(_selectedObjects[^1].Entity).Position.y));
                 }
             };
         }
-        
+
         private void UpdataPosition()
         {
             if (_selectedObjects.Count == 0) return;
@@ -109,23 +145,26 @@ namespace TimeLine
             if (_coordinateSystem.IsGlobal)
             {
                 // Позиция в центре всех выбранных объектов
-                var transforms = _selectedObjects.Select(x => x.Transform).ToList();
+                var transforms = _selectedObjects.Select(x => _entityManager.GetComponentData<LocalTransform>(x.Entity))
+                    .ToList();
                 targetWorldPos = GetCenter.GetSelectionCenter(transforms);
             }
             else
             {
                 // Позиция на последнем выбранном объекте
-                var lastObj = _selectedObjects[^1].Transform;
-                targetWorldPos = new Vector2(lastObj.XPosition.Value, lastObj.YPosition.Value);
+                var lastObj = _entityManager.GetComponentData<LocalTransform>(_selectedObjects[^1].Entity).Position;
+                targetWorldPos = new Vector2(lastObj.x, lastObj.y);
             }
 
             // Конвертация мировых координат в позицию UI
             tool.position = _sceneToRawImageConverter.WorldToUIPosition(targetWorldPos);
-    
+
             // Опционально: если гизмо вращения должно визуально отражать поворот объекта в Local режиме
             if (!_coordinateSystem.IsGlobal)
             {
-                tool.rotation = Quaternion.Euler(0, 0, _selectedObjects[^1].Transform.ZRotation.Value);
+                tool.rotation = Quaternion.Euler(0, 0,
+                    GetDegree.FromQuaternion(_entityManager
+                        .GetComponentData<LocalTransform>(_selectedObjects[^1].Entity).Rotation.value).z);
             }
             else
             {
@@ -135,39 +174,19 @@ namespace TimeLine
 
         private void Select(List<TrackObjectPacket> data)
         {
-            // 1. Отписываемся от старых объектов
-            foreach (var item in _selectedObjects)
-            {
-                if(item.Transform.XPosition == null || item.Transform.YPosition == null) continue;
-                item.Transform.XPosition.OnValueChanged -= _toolFollowingObject;
-                item.Transform.YPosition.OnValueChanged -= _toolFollowingObject;
-            }
-
             // 2. Очищаем список
             _selectedObjects.Clear();
 
             // 3. Добавляем новые
             foreach (var trackData in data)
             {
-                if (trackData.sceneObject.TryGetComponent<TransformComponent>(out var comp))
-                {
-                    _selectedObjects.Add(new RotationData { Transform = comp });
-                }
+                _selectedObjects.Add(new RotationToolData { Entity = trackData.entity });
             }
 
             if (_selectedObjects.Count == 0)
             {
                 tool.gameObject.SetActive(false);
                 return;
-            }
-
-            // tool.gameObject.SetActive(true);
-
-            // 4. Подписываемся на изменения и обновляем UI
-            foreach (var item in _selectedObjects)
-            {
-                item.Transform.XPosition.OnValueChanged += _toolFollowingObject;
-                item.Transform.YPosition.OnValueChanged += _toolFollowingObject;
             }
 
             UpdateToolUI();
@@ -177,7 +196,8 @@ namespace TimeLine
         {
             if (_selectedObjects.Count == 0) return;
 
-            var transforms = _selectedObjects.Select(x => x.Transform).ToList();
+            var transforms = _selectedObjects.Select(x => _entityManager.GetComponentData<LocalTransform>(x.Entity))
+                .ToList();
             Vector2 currentCenter = GetCenter.GetSelectionCenter(transforms);
             tool.position = _sceneToRawImageConverter.WorldToUIPosition(currentCenter);
         }
@@ -203,38 +223,44 @@ namespace TimeLine
                 if (_coordinateSystem.IsGlobal)
                 {
                     Vector3 newPosition = (Vector3)_groupCenter + rotatedDirection;
-                    item.Transform.XPosition.Value = newPosition.x;
-                    item.Transform.YPosition.Value = newPosition.y;
+                    LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(item.Entity);
+                    localTransform.Position.x = newPosition.x;
+                    localTransform.Position.y = newPosition.y;
+
+                    PositionData positionData = new PositionData();
+                    positionData.Position = new float2(localTransform.Position.x, localTransform.Position.y);
+                    _entityManager.SetComponentData(item.Entity, positionData);
+
+                    _entityManager.SetComponentData(item.Entity, localTransform);
                 }
 
 
-                // 5. Поворот самого объекта тоже на заснапленный угол
-                item.Transform.ZRotation.Value = item.StartRotation + snappedDeltaAngle;
+                var obj = item;
+                LocalTransform localTransform2 = _entityManager.GetComponentData<LocalTransform>(obj.Entity);
+                Vector3 currentEuler = GetDegree.FromQuaternion(localTransform2.Rotation);
+                float newZ = item.StartRotation + snappedDeltaAngle;
+                currentEuler.z = newZ;
+                localTransform2.Rotation = GetDegree.FromEuler(currentEuler);
+                _entityManager.SetComponentData(obj.Entity, localTransform2);
             }
         }
-        
-        
+
+
         public void EnableTool()
         {
             if (_coordinateSystem.IsGlobal)
             {
-                var transforms = _selectedObjects.Select(x => x.Transform).ToList();
+                var transforms = _selectedObjects.Select(x => _entityManager.GetComponentData<LocalTransform>(x.Entity))
+                    .ToList();
                 _groupCenter = GetCenter.GetSelectionCenter(transforms);
                 tool.position = _sceneToRawImageConverter.WorldToUIPosition(_groupCenter);
             }
             else
             {
-                tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(_selectedObjects[^1].Transform.XPosition.Value, _selectedObjects[^1].Transform.YPosition.Value));
-            }
-        }
-
-        private void OnDestroy()
-        {
-            foreach (var item in _selectedObjects)
-            {
-                if (item.Transform == null) continue;
-                item.Transform.XPosition.OnValueChanged -= _toolFollowingObject;
-                item.Transform.YPosition.OnValueChanged -= _toolFollowingObject;
+                LocalTransform localTransform =
+                    _entityManager.GetComponentData<LocalTransform>(_selectedObjects[^1].Entity);
+                tool.position = _sceneToRawImageConverter.WorldToUIPosition(new Vector2(
+                    localTransform.Position.x, localTransform.Position.y));
             }
         }
     }

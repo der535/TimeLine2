@@ -102,9 +102,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 {
                     fieldLogic.Load(nEntry.AdditionalData, objects);
                     var parameter = fieldLogic.GetField();
-                    print(parameter == null);
-                    if(parameter!=null)
-                        fieldLogic.AddOutputDefinition(parameter.Name, TypeToDataType.Convert(parameter.ValueType));
+                    fieldLogic.AddOutputDefinition(parameter.Item2.ParameterID, TypeToDataType.Convert(typeof(float)));
                 }
 
                 // 2. Исправляем типы в ManualValues

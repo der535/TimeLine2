@@ -48,8 +48,8 @@ namespace TimeLine
             _activeObjectControllerComponent = gameObject.GetComponent<ActiveObjectControllerComponent>();
             _activeObjectControllerComponent.IsActiveChanged += _isActiveChanged;
             
-            TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
-            transformComponent.ChangeTransform += _capsuleCollider2DOutline.UpdateOutline;
+            // TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
+            // transformComponent.ChangeTransform += _capsuleCollider2DOutline.UpdateOutline;
             
             // Подписки на обновление
             _capsuleCollider2DOutline.SetActiveLineRenderer(false);
@@ -113,7 +113,7 @@ namespace TimeLine
                     : CapsuleDirection2D.Horizontal;
                 _capsuleCollider2DOutline.UpdateOutline();
             };
-            _capsuleCollider2DOutline.Setup(_activeObjectControllerComponent, transformComponent);
+            // _capsuleCollider2DOutline.Setup(_activeObjectControllerComponent, transformComponent);
         }
         public override IEnumerable<InspectableParameter> GetParameters()
         {
@@ -146,8 +146,8 @@ namespace TimeLine
         public void OnDestroy()
         {
             _activeObjectControllerComponent.IsActiveChanged -= _isActiveChanged;
-            TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
-            transformComponent.ChangeTransform -= _capsuleCollider2DOutline.UpdateOutline;
+            // TransformComponent transformComponent = gameObject.GetComponent<TransformComponent>();
+            // transformComponent.ChangeTransform -= _capsuleCollider2DOutline.UpdateOutline;
             
             _eventBus.UnsubscribeFrom<SelectObjectEvent>(HandleSelectObjectEvent);
             _eventBus.UnsubscribeFrom<DeselectAllObjectEvent>(HandleDeselectObjectEvent);

@@ -12,6 +12,7 @@ namespace TimeLine.Input
     public class KeyframeMoveTimeLine : MonoBehaviour
     {
         [SerializeField] private RectTransform clickArea;
+        [SerializeField] private TabStorage tabStorage;
         [SerializeField] private RectTransform scrollingRecTransform;
         [FormerlySerializedAs("camera")] [SerializeField] private Camera _camera;
 
@@ -60,7 +61,7 @@ namespace TimeLine.Input
                     out var localPoint))
             {
                 // 2. Проверяем, входит ли локальная точка в границы прямоугольника
-                if (clickArea.rect.Contains(localPoint) && UnityEngine.Input.GetMouseButtonDown(0))
+                if (clickArea.rect.Contains(localPoint) && clickArea.transform.gameObject.activeInHierarchy && UnityEngine.Input.GetMouseButtonDown(0))
                 {
                     _isActive = true;
                 }
@@ -72,6 +73,8 @@ namespace TimeLine.Input
             ClickArea();
             bool isMouseHeld = _actionMap.Editor.MouseLeft.IsPressed();
 
+            
+            
             if (!_dragStarted)
             {
                 // Ждём одновременного выполнения: активен + нажата мышь
@@ -101,6 +104,7 @@ namespace TimeLine.Input
         {
             Vector2 cursorPos = GetCursorPosition();
             float pixelX = cursorPos.x;
+
             
             double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (_timeLineKeyframeZoom.Zoom);
             double rawTicks = pixelX * ticksPerPixel + _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks;
@@ -120,8 +124,9 @@ namespace TimeLine.Input
                     targetTicks = snappedPoint;
                 }
             }
+            
 
-            _main.SetTimeInTicks(targetTicks);
+            _main.SetTimeInTicks(targetTicks, true);
         }
 
         private bool TryGetSnapTicks(double currentTicks, double threshold, out double finalTicks)

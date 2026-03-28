@@ -11,7 +11,7 @@ public class CapsuleCollider2DOutline : MonoBehaviour
     [SerializeField] private float pixelThickness = 1f;
     [Space]
     [SerializeField] private LineRenderer lineRenderer;
-    [SerializeField] private PhysicsAnchor physicsAnchor;
+    // [SerializeField] private PhysicsAnchor physicsAnchor;
     [SerializeField] private CapsuleCollider2D capsuleCollider;
     [SerializeField] private Camera mainCamera;
 
@@ -28,10 +28,10 @@ public class CapsuleCollider2DOutline : MonoBehaviour
         lineRenderer.enabled = active;
     }
     
-    internal void Setup(ActiveObjectControllerComponent activeObjectControllerComponent, TransformComponent transformComponent)
-    {
-        physicsAnchor.Setup(activeObjectControllerComponent, transformComponent);
-    }
+    // internal void Setup(ActiveObjectControllerComponent activeObjectControllerComponent, TransformComponent transformComponent)
+    // {
+    //     physicsAnchor.Setup(activeObjectControllerComponent, transformComponent);
+    // }
 
     [Button]
     internal void UpdateOutline()

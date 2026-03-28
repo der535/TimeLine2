@@ -14,10 +14,10 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
 
             return t switch
             {
-                var _ when t == typeof(float)  => DataType.Float,
-                var _ when t == typeof(int)    => DataType.Int,
-                var _ when t == typeof(string) => DataType.String,
-                var _ when t == typeof(Color) => DataType.Color,
+                _ when t == typeof(float)  => DataType.Float,
+                _ when t == typeof(int)    => DataType.Int,
+                _ when t == typeof(string) => DataType.String,
+                _ when t == typeof(Color) => DataType.Color,
                 _                              => DataType.Float
             };
         }
@@ -29,10 +29,10 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
 
             return typeName switch
             {
-                var _ when typeName == typeof(float)  => DataType.Float,
-                var _ when typeName == typeof(int)    => DataType.Int,
-                var _ when typeName == typeof(string) => DataType.String,
-                var _ when typeName == typeof(Color) => DataType.Color,
+                _ when typeName == typeof(float)  => DataType.Float,
+                _ when typeName == typeof(int)    => DataType.Int,
+                _ when typeName == typeof(string) => DataType.String,
+                _ when typeName == typeof(Color) => DataType.Color,
                 _                              => DataType.Float
             };
         }

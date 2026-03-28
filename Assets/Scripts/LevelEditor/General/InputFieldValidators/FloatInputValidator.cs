@@ -13,6 +13,11 @@ namespace TimeLine
         private readonly float _minValue;
         private readonly bool _hasMinValue;
 
+            /// <summary>
+            /// Флаг означающие вызывать ли _onValidValueChanged при изменение значения в ипут филде
+            /// </summary>
+        public bool isReadChanges = true;
+
         public FloatInputValidator(TMP_InputField inputField, Action<float> onValidValueChanged, float? minValue = null)
         {
             _onValidValueChanged = onValidValueChanged;
@@ -26,6 +31,7 @@ namespace TimeLine
 
         private void OnInputValueChanged(string input)
         {
+            if (!isReadChanges) return;
             if (string.IsNullOrEmpty(input)) return;
             if (float.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
             {
@@ -38,6 +44,7 @@ namespace TimeLine
 
         private void OnInputEndEdit(string input)
         {
+            if (!isReadChanges) return;
             if (string.IsNullOrEmpty(input))
             {
                 float value = _hasMinValue ? _minValue : 0f;

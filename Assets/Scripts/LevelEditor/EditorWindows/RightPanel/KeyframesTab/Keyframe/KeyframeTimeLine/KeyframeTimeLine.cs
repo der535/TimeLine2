@@ -78,8 +78,9 @@ namespace TimeLine
 
             // Вычисляем позицию
             float positionX = (float)(timeDiffSeconds *
-                                      (_timeLineSettings.DistanceBetweenBeatLines + timeLineKeyframeZoom.Zoom) *
+                                      timeLineKeyframeZoom.Zoom *
                                       (_musicData.bpm / 60));
+
 
             rect.anchoredPosition = new Vector2(positionX, rect.anchoredPosition.y);
         }

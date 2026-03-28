@@ -27,10 +27,10 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
             {
                 foreach (var keyframe in track.Track.Keyframes)
                 {
-                    if (!string.IsNullOrEmpty(keyframe.GetData().Graph))
+                    if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
                     {
-                        (keyframe.GetData().Logic, keyframe.GetData().initializedNodes)=_saveNodes.LoadLogicOnly(keyframe.GetData().Graph,
-                            TypeToDataType.Convert(keyframe.GetData().GetType()));
+                        (keyframe.GetEntityData().Logic, keyframe.GetEntityData().initializedNodes)=_saveNodes.LoadLogicOnly(keyframe.GetEntityData().Graph,
+                            TypeToDataType.Convert(keyframe.GetEntityData().GetType()));
                         
                     }
                 }
@@ -52,11 +52,11 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
                 if (track?.Track.Keyframes != null)
                     foreach (var keyframe in track.Track.Keyframes)
                     {
-                        if (!string.IsNullOrEmpty(keyframe.GetData().Graph))
+                        if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
                         {
-                            (keyframe.GetData().Logic, keyframe.GetData().initializedNodes) = _saveNodes.LoadLogicOnly(
-                                keyframe.GetData().Graph,
-                                TypeToDataType.Convert(keyframe.GetData().GetType()), trackObjectDatas);
+                            (keyframe.GetEntityData().Logic, keyframe.GetEntityData().initializedNodes) = _saveNodes.LoadLogicOnly(
+                                keyframe.GetEntityData().Graph,
+                                TypeToDataType.Convert(keyframe.GetEntityData().GetType()), trackObjectDatas);
                         }
                     }
             }

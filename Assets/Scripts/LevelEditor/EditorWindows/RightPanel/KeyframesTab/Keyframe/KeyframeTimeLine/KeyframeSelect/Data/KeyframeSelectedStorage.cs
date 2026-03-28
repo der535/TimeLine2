@@ -4,6 +4,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
 {
     public class KeyframeSelectedStorage
     {
-        public List<global::TimeLine.Keyframe.Keyframe> Keyframes = new List<global::TimeLine.Keyframe.Keyframe>();
+        public List<global::TimeLine.Keyframe.Keyframe> Keyframes = new();
     }
 }

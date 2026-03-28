@@ -3,10 +3,14 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.outline;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Rendering;
+using Unity.Transforms;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.EditorWindows.SceneView.Outline
 {
     public class OutlineController : MonoBehaviour
     {
@@ -16,28 +20,31 @@ namespace TimeLine
         [SerializeField] private Material outlineMaterial;
         [SerializeField] private Color outlineColor;
 
-        private List<SpriteRenderer> _outlines = new();
+        private List<Entity> _outlines = new();
 
         GameEventBus _gameEventBus;
         SelectObjectController _selectObjectController;
-        SpriteOutlineBuffer _outlineBuffer;
+        private AddAnEntitySprite _addAnEntitySprite;
+        private EntityManager _entityManager;
 
         [Inject]
-        private void Construct(GameEventBus eventBus, SelectObjectController selectObjectController, SpriteOutlineBuffer outlineBuffer)
+        private void Construct(GameEventBus eventBus, SelectObjectController selectObjectController,
+             AddAnEntitySprite addAnEntitySprite)
         {
             _gameEventBus = eventBus;
             _selectObjectController = selectObjectController;
-            _outlineBuffer = outlineBuffer;
+            _addAnEntitySprite = addAnEntitySprite;
         }
 
         private void Start()
         {
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
                 Clear();
                 foreach (var track in data.Tracks)
                 {
-                    DrawOutline(track.sceneObject);
+                    DrawOutline(track.entity);
                 }
             });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
@@ -45,7 +52,7 @@ namespace TimeLine
                 Clear();
                 foreach (var track in data.SelectedObjects)
                 {
-                    DrawOutline(track.sceneObject);
+                    DrawOutline(track.entity);
                 }
             });
             _gameEventBus.SubscribeTo((ref SelectedNewSpriteEvent data) =>
@@ -53,14 +60,14 @@ namespace TimeLine
                 Clear();
                 foreach (var track in _selectObjectController.SelectObjects)
                 {
-                    DrawOutline(track.sceneObject);
+                    DrawOutline(track.entity);
                 }
             });
-
+        
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
         }
 
-        private void DrawOutline(GameObject selectedObject)
+        private void DrawOutline(Entity selectedObject)
         {
             if (trackObjectStorage.GetTrackObjectData(selectedObject) is TrackObjectGroup trackObjectGroup)
             {
@@ -75,7 +82,7 @@ namespace TimeLine
             Clear();
             foreach (var track in _selectObjectController.SelectObjects)
             {
-                DrawOutline(track.sceneObject);
+                DrawOutline(track.entity);
             }
         }
 
@@ -89,39 +96,54 @@ namespace TimeLine
                 }
                 else
                 {
-                    CheckSpriteRenderer(trackObject.sceneObject);
+                    CheckSpriteRenderer(trackObject.entity);
                 }
             }
         }
 
-        void CheckSpriteRenderer(GameObject selectedObject)
+        void CheckSpriteRenderer(Entity selectedObject)
         {
-            if (selectedObject.TryGetComponent(out SpriteRenderer spriteRenderer))
+            if (_entityManager.HasComponent<RenderMeshArray>(selectedObject))
             {
-                var outlines = new List<SpriteRenderer>();
-                
-                SpriteRenderer outlinePart =
-                    Instantiate(outlinePrefab, selectedObject.transform).GetComponent<SpriteRenderer>();
-                // print(spriteRenderer.sprite.name);
-                outlinePart.sprite = _outlineBuffer.GetSprite(spriteRenderer.sprite.name) ?? spriteRenderer.sprite;
-                outlinePart.material = outlineMaterial;
-                outlinePart.sortingOrder = 99;
-                outlinePart.color = new Color(1,1,1,1);
-                outlinePart.maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
-                outlines.Add(outlinePart);
+                Material currentMat = null;
 
-                _outlines.AddRange(outlines);
+                RenderMeshArray rma = _entityManager.GetSharedComponentManaged<RenderMeshArray>(selectedObject);  
+                if (_entityManager.HasComponent<MaterialMeshInfo>(selectedObject))  
+                {  
+                    var meshInfo = _entityManager.GetComponentData<MaterialMeshInfo>(selectedObject);  
+  
+                    // Получаем текущий материал  
+                    currentMat = rma.GetMaterial(meshInfo);  
+                }
+                
+                _outlines.Add(CreateChildEntity(selectedObject, currentMat.mainTexture));
             }
         }
 
+        
+        public Entity CreateChildEntity(Entity parentEntity, Texture texture)
+        {
+            // 1. Создаем новую сущность (ребенка)
+            Entity childEntity = _entityManager.CreateEntity();
+
+            _addAnEntitySprite.SetupSpriteRender(childEntity, texture, outlineMaterial);
+
+            // 2. Добавляем LocalTransform (локальные координаты относительно родителя)
+            _entityManager.AddComponentData(childEntity, LocalTransform.FromPosition(new float3(0, 0, 0)));
+
+            // 3. Устанавливаем родителя
+            // Это автоматически добавит компонент Parent
+            _entityManager.AddComponentData(childEntity, new Unity.Transforms.Parent { Value = parentEntity });
+            return childEntity;
+        }
+        
         [Button]
         private void Clear()
         {
-
             foreach (var part in _outlines)
             {
-                if(part!=null)
-                    Destroy(part?.gameObject);
+                // Debug.Log(part);
+                _entityManager.DestroyEntity(part);
             }
 
             _outlines.Clear();

@@ -1,10 +1,16 @@
 ﻿using System;
+using TimeLine.LevelEditor.ECS;
+using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.TrackObjectSize.Data;
 using TimeLine.TimeLine;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using Zenject;
 
@@ -24,6 +30,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private ITrackObjectSizeReader _trackObjectSizeReader;
         private IMaxObjectIndexDataReading _maxObjectIndexDataReading;
         private AddAnEntitySprite _addAnEntitySprite;
+
+        private EntityManager _entityManager;
 
         public ObjectFactory(
             Main main,
@@ -49,82 +57,86 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _trackObjectSizeReader = trackObjectSizeReader;
             _maxObjectIndexDataReading = maxObjectIndexDataReading;
             _addAnEntitySprite = addAnEntitySprite;
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         }
 
         /// <summary>
         /// Создаёт объект на сцене с компонентам спрайта
         /// </summary>
-        internal TrackObjectPacket CreateSceneObjectAndAddSprite(Sprite sprite)
+        internal void CreateSceneObjectAndAddSprite(Sprite sprite)
         {
-            string id = UniqueIDGenerator.GenerateUniqueID();
-
             // Создаем сценный объект
-            var (sceneObject, entity) = CreateSceneObject();
-            
-            _addAnEntitySprite.SetupSpriteRender(entity, sprite);
-
-            var component = sceneObject.AddComponent<SpriteRendererComponent>();
-            _container.Inject(component);
-            component.Sprite.Value = sprite;
+            var entity = CreateSceneObject(sprite.name);
 
             string name = $"{sprite.name} {_maxObjectIndexDataReading.GetNextIndex()}";
 
-            sceneObject.name = name;
+            _addAnEntitySprite.SetupSpriteRender(entity, sprite); // сетапаем спрайт
+            
 
             // Создаем трек-объект
             TrackObjectComponents trackObject = CreateTrackObject(_trackObjectSizeReader.GetSize(), name,
                 0, TimeLineConverter.Instance.TicksCurrentTime());
 
             // Создаем ветку
-            Branch branch = _branchCollection.AddBranch(id, name);
+            Branch branch = _branchCollection.AddBranch(UniqueIDGenerator.GenerateUniqueID(), name);
 
-            // Добавляем в хранилище
-            var TrackObjectData =
-                _trackObjectStorage.Add(sceneObject, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
-
-
-            sceneObject.GetComponent<NameComponent>().Name.Value = name;
-
-            return TrackObjectData;
+            _trackObjectStorage.Add(null, entity, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
         }
 
-        internal TrackObjectPacket CreateFullObject(string name)
-        {
-            string id = UniqueIDGenerator.GenerateUniqueID();
-
-            // Создаем сценный объект
-            GameObject sceneObject = CreateSceneObject().Item1;
-
-            // Создаем трек-объект
-            TrackObjectComponents trackObject = CreateTrackObject(_trackObjectSizeReader.GetSize(), name,
-                0, TimeLineConverter.Instance.TicksCurrentTime());
-
-            // Создаем ветку
-            Branch branch = _branchCollection.AddBranch(id, name);
-
-            // Добавляем в хранилище
-            var TrackObjectData =
-                _trackObjectStorage.Add(sceneObject, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
-
-            sceneObject.GetComponent<NameComponent>().Name.Value = name;
-
-            return TrackObjectData;
-        }
+        // internal TrackObjectPacket CreateFullObject(string name)
+        // {
+        //     string id = UniqueIDGenerator.GenerateUniqueID();
+        //
+        //     // Создаем сценный объект
+        //     var entity = CreateSceneObject();
+        //
+        //     // Создаем трек-объект
+        //     TrackObjectComponents trackObject = CreateTrackObject(_trackObjectSizeReader.GetSize(), name,
+        //         0, TimeLineConverter.Instance.TicksCurrentTime());
+        //
+        //     // Создаем ветку
+        //     Branch branch = _branchCollection.AddBranch(id, name);
+        //
+        //     // Добавляем в хранилище
+        //     var TrackObjectData =
+        //         _trackObjectStorage.Add(null, entity, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
+        //
+        //     // sceneObject.GetComponent<NameComponent>().Name.Value = name;
+        //
+        //     return TrackObjectData;
+        // }
 
         /// <summary>
         /// Создаёт объект на сцене
         /// </summary>
         /// <returns></returns>
-        internal (GameObject, Entity) CreateSceneObject()
+        internal Entity CreateSceneObject(string name)
         {
             //Старая система создание объекта
-            GameObject sceneTrackObject = _container.InstantiatePrefab(_sceneObjectPrefab, _rootSceneObject);
+            // GameObject sceneTrackObject = _container.InstantiatePrefab(_sceneObjectPrefab, _rootSceneObject);
 
             //Н
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             Entity entity = entityManager.CreateEntity();
+            _entityManager.AddComponent<EntityActiveTag>(entity);
+            _entityManager.AddComponent<LocalTransform>(entity);
+            _entityManager.AddComponent<ObjectPositionOffsetData>(entity);
+            _entityManager.AddComponent<PostTransformMatrix>(entity);
+            _entityManager.AddComponent<PositionData>(entity);
+            _entityManager.AddComponent<RotationData>(entity);
+            
+            EntityName.SetupName(entity, name); // сетапаем имя
 
-            return (sceneTrackObject, entity);
+            var transform = LocalTransform.Identity;
+            // Вместо пустой матрицы ставим единичную
+            _entityManager.SetComponentData(entity, new PostTransformMatrix
+            {
+                Value = float4x4.identity
+            });
+
+            _entityManager.SetComponentData(entity, transform);
+
+            return (entity);
         }
 
         /// <summary>

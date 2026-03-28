@@ -5,28 +5,29 @@ using Zenject;
 
 namespace TimeLine
 {
-    public class PlayerHitController : MonoBehaviour
+    public class PlayerHitController : IInitializable
     {
-        [SerializeField] private float timeOfInvulnerability; // Время неуязвимости
-        [SerializeField] private PlayerHitAnimation playerHitAnimation; // Анимация получения урона
-        [SerializeField] private PlayerInvulnerable playerInvulnerable; // Состояние неуязвимости
+        private const float TimeOfInvulnerability = 2; // Время неуязвимости
+        private PlayerHitAnimation _playerHitAnimation; // Анимация получения урона
 
         private GameEventBus _gameEventBus;
 
         // Внедрение зависимостей через Zenject
         [Inject]
-        private void Constructor(GameEventBus gameEventBus)
+        private void Constructor(GameEventBus gameEventBus, PlayerHitAnimation playerHitAnimation)
         {
             _gameEventBus = gameEventBus;
+            _playerHitAnimation = playerHitAnimation;
         }
 
-        private void Start()
+        public void Initialize()
         {
             // Подписка на событие получения урона
-            _gameEventBus.SubscribeTo((ref PlayerTakeDamageEvent playerTakeDamageEvent) =>
+            _gameEventBus.SubscribeTo((ref PlayerTakeDamageEvent _) =>
             {
-                playerInvulnerable.SetActive(true); // Включаем неуязвимость
-                playerHitAnimation.Play(timeOfInvulnerability, () => playerInvulnerable.SetActive(false)); // Запускаем анимацию с колбэком
+                PlayerInvulnerable.SetActive(true); // Включаем неуязвимость
+                _playerHitAnimation.Play(TimeOfInvulnerability,
+                    () => PlayerInvulnerable.SetActive(false)); // Запускаем анимацию с колбэком
             });
             // todo НЕТ ОТПИСКИ ОТ СОБЫТИЙ!
         }

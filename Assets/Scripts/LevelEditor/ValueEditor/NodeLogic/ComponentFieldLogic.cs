@@ -3,12 +3,13 @@ using Newtonsoft.Json;
 using TimeLine;
 using TimeLine.LevelEditor.Misk;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using Unity.Entities;
 using UnityEngine;
 using Zenject;
 
 public class ComponentFieldLogic : NodeLogic
 {
-    public InspectableParameter _parameter;
+    public Entity Entity;
     public MapParameterComponen _Map;
 
     private FindField _FindField;
@@ -24,14 +25,13 @@ public class ComponentFieldLogic : NodeLogic
         data["Map"] = _Map; // Сохраняем наш объект под ключом "Map"
     }
 
-    public InspectableParameter GetField()
+    public (Entity, MapParameterComponen) GetField()
     {
-        return _parameter;
+        return (Entity, _Map);
     }
 
     public override void OnLoad(Dictionary<string, object> data)
     {
-        Debug.Log(JsonConvert.SerializeObject(data));
         if (data.TryGetValue("Map", out var mapObj))
         {
             // Newtonsoft восстанавливает вложенные объекты как JObject
@@ -40,8 +40,10 @@ public class ComponentFieldLogic : NodeLogic
             else
                 _Map = (MapParameterComponen)mapObj;
             
-            if (_Map != null)
-                _parameter = _FindField.Find(_Map);
+            var entity = _FindField.Find(_Map);
+            
+            if (_Map != null && entity != null)
+                Entity = (Entity)entity;
         }
     }
 
@@ -60,11 +62,14 @@ public class ComponentFieldLogic : NodeLogic
                 _Map = jObj.ToObject<MapParameterComponen>();
             else
                 _Map = (MapParameterComponen)mapObj;
-
-            if (_Map != null)
-                _parameter = _FindField.Find(_Map, objects);
+            
+            var entity = _FindField.Find(_Map, objects);
+            
+            if (_Map != null && entity != null)
+                Entity = (Entity)entity;
         }
     }
 
-    public override object GetValue(int outputIndex = 0) => _parameter.GetValue();
+    public override object GetValue(int outputIndex = 0) => AnimationDataResolver.GetValue(_Map.ParameterID, Entity,
+        World.DefaultGameObjectInjectionWorld.EntityManager);
 }

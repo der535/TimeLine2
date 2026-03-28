@@ -1,40 +1,39 @@
 ﻿using EventBus;
+using Unity.Entities;
+using Unity.Transforms;
 using UnityEngine;
 using Zenject;
 
 namespace TimeLine.LevelEditor.Player
 {
-    public class ResurrectPlayer : MonoBehaviour
+    public class ResurrectPlayer : IInitializable
     {
-        [SerializeField] private SpriteRenderer spriteRenderer; // Спрайт игрока
-        [SerializeField] private GameObject player; // Объект игрока
-
         private GameEventBus _gameEventBus;
-        private ActionMap _actionMap; // Input System
-        private Main _main; // Главный контроллер (не используется)
+        private ActionMap _actionMap; 
+        private PlayerComponents _playerComponents;
 
         // Внедрение зависимостей
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, Main main)
+        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, PlayerComponents playerComponents)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
-            _main = main; // ВНЕДРЕН, НО НЕ ИСПОЛЬЗУЕТСЯ
+            _playerComponents = playerComponents;
         }
 
-        private void Start()
+        public void Initialize()
         {
-            // Подписка на события рестарта и перехода в игровой режим
             _gameEventBus.SubscribeTo((ref RestartGameEvent _) => Resurrect());
             _gameEventBus.SubscribeTo((ref TurnToPlayModeEvent _) => Resurrect());
-            // НЕТ ОТПИСКИ ОТ СОБЫТИЙ!
         }
 
         private void Resurrect()
         {
-            // Сброс позиции на начало
-            player.transform.position = new Vector3(0, 0, 0);
-            spriteRenderer.enabled = true; // Показываем спрайт
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            LocalTransform playerTransform = entityManager.GetComponentData<LocalTransform>(_playerComponents.Player);
+            playerTransform.Position = new Vector3(0, 0, playerTransform.Position.z);
+            entityManager.SetComponentData(_playerComponents.Player, playerTransform);
+            _playerComponents.SetActive(true);
             _actionMap.Player.Enable(); // Включаем управление
         }
     }

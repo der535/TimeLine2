@@ -6,23 +6,19 @@ using Zenject;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine
 {
-    public class TimeLineRestartAnimation : MonoBehaviour
+    public class TimeLineRestartAnimation
     {
-        private TrackObjectStorage _trackObjectStorage;
         private GameEventBus _gameEventBus;
-        private ActionMap _actionMap;
         private TimeLineSpeedController _timeLineSpeedController;
         private M_AudioPlaybackService _audioPlaybackService;
 
         internal bool IsPlayerDeath;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, ActionMap actionMap,
-            TrackObjectStorage trackObjectStorage, TimeLineSpeedController timeLineSpeedController, M_AudioPlaybackService playbackService)
+        private void Constructor(GameEventBus gameEventBus, 
+            TimeLineSpeedController timeLineSpeedController, M_AudioPlaybackService playbackService)
         {
             _gameEventBus = gameEventBus;
-            _actionMap = actionMap;
-            _trackObjectStorage = trackObjectStorage;
             _timeLineSpeedController = timeLineSpeedController;
             _audioPlaybackService = playbackService;
         }

@@ -4,6 +4,7 @@ using System.IO;
 using EventBus;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
@@ -11,8 +12,8 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.LoadingScreen.Controllers;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
-using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.SpriteLoader;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using TimeLine.LevelEditor.UIAnimation;
 using TimeLine.LevelEditor.ValueEditor.Test;
@@ -21,7 +22,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.Save
 {
     public class SaveLevel : MonoBehaviour
     {
@@ -42,29 +43,30 @@ namespace TimeLine
         // === Private Fields ===
         private LevelBaseInfo _levelBaseInfo;
         private GameEventBus _gameEventBus;
-        private MainObjects _mainObjects;
         private CustomSpriteStorage _customSpriteStorage;
         private ParentLinkRestorer _parentLinkRestorer;
         private LoadingScreenController _loadingScreenController;
         private MaxObjectIndexController _maxObjectIndexController;
         private SaveButtonAnimation _saveButtonAnimation;
         private LoadGraphLogic _loadGraphLogic;
+        private EntityComponentController _entityComponentController;
         public LevelBaseInfo LevelBaseInfo => _levelBaseInfo;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, MainObjects mainObjects,
+        private void Construct(GameEventBus gameEventBus,
             CustomSpriteStorage customSpriteStorage, ParentLinkRestorer parentLinkRestorer,
             LoadingScreenController loadingScreenController, MaxObjectIndexController maxObjectIndexController,
-            SaveButtonAnimation saveButtonAnimation, LoadGraphLogic loadGraphLogic)
+            SaveButtonAnimation saveButtonAnimation, LoadGraphLogic loadGraphLogic,
+            EntityComponentController entityComponentController)
         {
             _gameEventBus = gameEventBus;
-            _mainObjects = mainObjects;
             _customSpriteStorage = customSpriteStorage;
             _parentLinkRestorer = parentLinkRestorer;
             _loadingScreenController = loadingScreenController;
             _maxObjectIndexController = maxObjectIndexController;
             _saveButtonAnimation = saveButtonAnimation;
             _loadGraphLogic = loadGraphLogic;
+            _entityComponentController = entityComponentController;
         }
 
         // === Unity Lifecycle ===
@@ -83,6 +85,11 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) => { _levelBaseInfo = eventData.LevelInfo; });
         }
 
+        public void Save2()
+        {
+            _entityComponentController.Save(trackObjectStorage.TrackObjects[0].entity);
+        }
+
 
         public void Save()
         {
@@ -98,8 +105,6 @@ namespace TimeLine
 
             var saveLevelDto = new SaveLevelDTO();
 
-            saveLevelDto.Lines = trackStorage.TrackLines.Count;
-
             foreach (var group in trackObjectStorage.TrackObjectGroups)
                 saveLevelDto.groupGameObjectSaveData.Add(SaveGroup(group, true));
 
@@ -111,9 +116,8 @@ namespace TimeLine
 
             string filePath = $"{directoryPath}/LevelObjects.json";
             string json = JsonConvert.SerializeObject(saveLevelDto, Formatting.Indented);
+            Debug.Log(json);
             File.WriteAllText(filePath, json);
-            print(filePath);
-            print(json);
 
             string levelBaseInfoPath =
                 $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelBaseInfo.json";
@@ -139,10 +143,7 @@ namespace TimeLine
                 _customSpriteStorage.Load(onDone); // onDone вызовется внутри хранилища
             });
 
-            _loadingScreenController.AddStep("Загрузка объектов таймлайна", () =>
-            {
-                LoadLevelObjects(); // Вынесли сложную логику в отдельный метод
-            });
+            _loadingScreenController.AddStep("Загрузка объектов таймлайна", LoadLevelObjects);
 
             _loadingScreenController.StartLoading();
         }
@@ -169,8 +170,8 @@ namespace TimeLine
                     composition.FindCompositionDataById(group.compositionID);
                 facadeObjectSpawner.LoadComposition(group, group.compositionID, false, groupGameObjectSaveData);
             }
-            
-            
+
+
             _loadGraphLogic.LoadGraph();
             _parentLinkRestorer.Restor();
         }
@@ -184,27 +185,29 @@ namespace TimeLine
             var saveData = new GameObjectSaveData
             {
                 lineIndex = trackObject.components.Data.TrackLineIndex,
-                gameObjectName = trackObject.sceneObject.name,
+                gameObjectName = trackObject.branch.Name,
                 startTime = trackObject.components.Data.StartTimeInTicks,
                 duractionTime = trackObject.components.Data.TimeDurationInTicks,
                 sceneObjectID = trackObject.sceneObjectID,
                 parentObjectID = trackObject.components.Data.ParentID,
                 branch = trackObject.branch.ToSaveData(),
-                Components = new List<ComponentData>(),
+                EntityComponents = new(),
                 tracks = new List<TrackSaveData>()
             };
 
-            var parameterComponents = trackObject.sceneObject.GetComponents<IParameterComponent>();
-            foreach (var component in parameterComponents)
-            {
-                var compData = new ComponentData
-                {
-                    ComponentType = component.GetComponentTypeName(),
-                    Parameters = component.GetParameterData(),
-                    id = component.GetID()
-                };
-                saveData.Components.Add(compData);
-            }
+            // var parameterComponents = trackObject.sceneObject.GetComponents<IParameterComponent>();
+            var data = _entityComponentController.Save(trackObject.entity);
+            saveData.EntityComponents = data;
+            // foreach (var component in parameterComponents)
+            // {
+            // var compData = new ComponentData
+            // {
+            // ComponentType = component.GetComponentTypeName(),
+            // Parameters = component.GetParameterData(),
+            // id = component.GetID()
+            // };
+            // saveData.Components.Add(compData);
+            // }
 
             SaveKeyframeTrack(trackObject.branch.Root, saveData);
             return saveData;
@@ -213,6 +216,7 @@ namespace TimeLine
         public GroupGameObjectSaveData SaveGroup(TrackObjectGroup group, bool saveGroupID = false)
         {
             var baseData = SaveGameObject(group, "");
+            Debug.Log(baseData.gameObjectName);
             GroupGameObjectSaveData groupData;
             if (saveGroupID == false)
             {
@@ -226,7 +230,7 @@ namespace TimeLine
                     startTime = baseData.startTime,
                     duractionTime = baseData.duractionTime,
                     branch = baseData.branch,
-                    Components = baseData.Components,
+                    EntityComponents = baseData.EntityComponents,
                     tracks = baseData.tracks,
                     children = new List<GameObjectSaveData>()
                 };
@@ -240,17 +244,20 @@ namespace TimeLine
                     compositionID = group.compositionID,
                     sceneObjectID = baseData.sceneObjectID,
                     parentObjectID = baseData.parentObjectID,
+                    gameObjectName = baseData.gameObjectName,
                     startTime = baseData.startTime,
                     duractionTime = baseData.duractionTime,
                     branch = baseData.branch,
-                    Components = baseData.Components,
+                    EntityComponents = baseData.EntityComponents,
                     tracks = baseData.tracks,
                 };
             }
+            
+            Debug.Log(groupData.gameObjectName);
+
 
             groupData.reduceRight = group.components.Data.ReducedRight;
             groupData.reduceLeft = group.components.Data.ReducedLeft;
-
 
             if (saveGroupID == false)
             {
@@ -265,12 +272,13 @@ namespace TimeLine
                     else
                     {
                         var data = SaveGameObject(child, "");
-                        print(data.sceneObjectID);
+                        // print(data.sceneObjectID);
                         groupData.children.Add(data);
                     }
                 }
             }
 
+            Debug.Log(groupData.gameObjectName);
 
             return groupData;
         }
@@ -278,11 +286,10 @@ namespace TimeLine
         internal GroupGameObjectSaveData FullSave(TrackObjectGroup group)
         {
             var baseData = SaveGameObject(group, "");
-            GroupGameObjectSaveData groupData;
 
-            groupData = new GroupGameObjectSaveData
+            var groupData = new GroupGameObjectSaveData
             {
-                lineIndex =group.components.Data.TrackLineIndex,
+                lineIndex = group.components.Data.TrackLineIndex,
                 sceneObjectID = baseData.sceneObjectID,
                 parentObjectID = baseData.parentObjectID,
                 compositionID = group.compositionID,
@@ -291,7 +298,8 @@ namespace TimeLine
                 startTime = baseData.startTime,
                 duractionTime = baseData.duractionTime,
                 branch = baseData.branch,
-                Components = baseData.Components,
+                // Components = baseData.Components,
+                EntityComponents = baseData.EntityComponents,
                 tracks = baseData.tracks,
                 children = new List<GameObjectSaveData>(),
             };
@@ -341,7 +349,6 @@ namespace TimeLine
     {
         public List<GroupGameObjectSaveData> groupGameObjectSaveData = new();
         public List<GameObjectSaveData> gameObjectSaveData = new();
-        public int Lines;
     }
 
     [System.Serializable]
@@ -353,8 +360,11 @@ namespace TimeLine
         public string gameObjectName;
         public double startTime;
         public double duractionTime;
+
         public BranchSaveData branch;
-        public List<ComponentData> Components = new();
+
+        // public List<ComponentData> Components = new();
+        public Dictionary<ComponentNames, Dictionary<string, object>> EntityComponents = new();
         public List<TrackSaveData> tracks = new();
 
         public GameObjectSaveData Dublicate()
@@ -368,8 +378,9 @@ namespace TimeLine
                 startTime = startTime,
                 duractionTime = duractionTime,
                 branch = branch.Duplicate(),
-                Components = new List<ComponentData>(Components) ,
-                tracks = new List<TrackSaveData>(tracks) 
+                EntityComponents = new Dictionary<ComponentNames, Dictionary<string, object>>(EntityComponents),
+                // Components = new List<ComponentData>(Components),
+                tracks = new List<TrackSaveData>(tracks)
             };
         }
     }
@@ -392,13 +403,15 @@ namespace TimeLine
             {
                 newList.Add(data.Dublicate());
             }
+
             return new GroupGameObjectSaveData()
             {
                 gameObjectName = gameObjectName,
                 startTime = startTime,
                 duractionTime = duractionTime,
                 branch = branch.Duplicate(),
-                Components = new List<ComponentData>(Components),
+                EntityComponents = new Dictionary<ComponentNames, Dictionary<string, object>>(EntityComponents),
+                // Components = new List<ComponentData>(Components),
                 tracks = new List<TrackSaveData>(tracks),
                 compositionID = Guid.NewGuid().ToString(),
                 lastEditID = lastEditID,

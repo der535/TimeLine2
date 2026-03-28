@@ -8,12 +8,17 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Core.MusicLoader;
+using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -23,8 +28,8 @@ namespace TimeLine
 {
     public class TrackObjectStorage : MonoBehaviour
     {
-        private List<TrackObjectPacket> _trackObjects = new();
-        private List<TrackObjectGroup> _trackObjectGroups = new();
+        private readonly List<TrackObjectPacket> _trackObjects = new();
+        private readonly List<TrackObjectGroup> _trackObjectGroups = new();
 
         [FormerlySerializedAs("_selectedObject")]
         public TrackObjectPacket selectedObject;
@@ -33,7 +38,8 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
         private SaveComposition _composition;
         private ActionMap _actionMap;
-        private M_PlaybackState playbackState;
+        private M_PlaybackState _playbackState;
+        private EntityManager _entityManager;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, SelectObjectController selectObjectController,
@@ -44,7 +50,7 @@ namespace TimeLine
             _selectObjectController = selectObjectController;
             _composition = saveComposition;
             _actionMap = actionMap;
-            playbackState = _playbackState;
+            this._playbackState = _playbackState;
         }
 
         public List<TrackObjectPacket> TrackObjects => _trackObjects;
@@ -52,10 +58,11 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>((ref TickSmoothTimeEvent x) => ActiveSceneObject(x.Time));
-            _gameEventBus.SubscribeTo<LevelLoadedEvent>((ref LevelLoadedEvent _) =>
-                ActiveSceneObject(playbackState.SmoothTimeInTicks));
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => DeselectAllObject());
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent x) => ActiveSceneObject(x.Time));
+            _gameEventBus.SubscribeTo((ref LevelLoadedEvent _) =>
+                ActiveSceneObject(_playbackState.SmoothTimeInTicks));
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
                 var trackObjectData = GetTrackObjectData(data.Tracks[^1].components.trackObject);
@@ -104,7 +111,7 @@ namespace TimeLine
             List<TrackObjectPacket> trackObjectData = new List<TrackObjectPacket>();
             foreach (var track in _trackObjects)
             {
-                if (track.sceneObject.GetComponent<ActiveObjectControllerComponent>().IsActive)
+                if (_entityManager.IsComponentEnabled<EntityActiveTag>(track.entity))
                 {
                     trackObjectData.Add(track);
                 }
@@ -112,7 +119,7 @@ namespace TimeLine
 
             foreach (var group in _trackObjectGroups)
             {
-                if (group.sceneObject.GetComponent<ActiveObjectControllerComponent>().IsActive)
+                if (_entityManager.IsComponentEnabled<EntityActiveTag>(group.entity))
                 {
                     trackObjectData.Add(group);
                 }
@@ -125,8 +132,6 @@ namespace TimeLine
 
         private void ActiveSceneObject(double time)
         {
-            Stopwatch sw = Stopwatch.StartNew();
-            
             for (int i = 0; i < _trackObjects.Count; i++)
             {
                 CheckActiveTrackObjects(_trackObjects[i], time);
@@ -136,10 +141,6 @@ namespace TimeLine
             {
                 CheckActiveGroup(_trackObjectGroups[i], time);
             }
-            sw.Stop();
-
-            // Выводим время в миллисекундах или тиках
-            // UnityEngine.Debug.Log($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms ({sw.ElapsedTicks} ticks)");
         }
 
         internal TrackObjectPacket FindObjectByID(string id)
@@ -164,7 +165,7 @@ namespace TimeLine
             return null;
         }
 
-        
+
         /// <summary>
         /// Проверка одного конкретного трекобжекта
         /// </summary>
@@ -181,6 +182,34 @@ namespace TimeLine
             }
         }
 
+        public void ToggleEntity(Entity entity, bool active)
+        {
+            var manager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            if (active)
+            {
+                if (manager.HasComponent<EntityActiveTag>(entity))
+                {
+                    bool isActive = manager.IsComponentEnabled<EntityActiveTag>(entity);
+                    if (isActive == true) return;
+                }
+
+                manager.AddComponent<ActivatingRequestTag>(entity);
+                manager.SetComponentEnabled<EntityActiveTag>(entity, true);
+            }
+            else
+            {
+                if (manager.HasComponent<EntityActiveTag>(entity))
+                {
+                    bool isActive = manager.IsComponentEnabled<EntityActiveTag>(entity);
+                    if (isActive == false) return;
+                }
+
+                manager.AddComponent<DeactivatingRequestTag>(entity);
+                manager.SetComponentEnabled<EntityActiveTag>(entity, false);
+            }
+        }
+
         private void CheckActiveTrackObjects(TrackObjectPacket trackObject, double time)
         {
             if (trackObject.components.View.GetActive())
@@ -189,11 +218,13 @@ namespace TimeLine
                                       trackObject.components.Data.TimeDurationInTicks +
                                       trackObject.components.Data.StartTimeInTicks > time;
 
-                trackObject.activeObjectController?.Turn(trackObject.components.Data.IsActive && shouldBeActive);
+                // trackObject.activeObjectController?.Turn(trackObject.components.Data.IsActive && shouldBeActive);
+                ToggleEntity(trackObject.entity, shouldBeActive);
             }
             else
             {
-                trackObject.activeObjectController?.Turn(false);
+                // trackObject.activeObjectController?.Turn(false);
+                ToggleEntity(trackObject.entity, false);
             }
         }
 
@@ -206,7 +237,8 @@ namespace TimeLine
 
             if ((!enchanted && !group.components.View.GetActive()) || activeGroup == false)
             {
-                group.activeObjectController.Turn(false);
+                ToggleEntity(group.entity, false);
+                // group.activeObjectController.Turn(false);
 
                 foreach (var trackObject in group.TrackObjectDatas)
                 {
@@ -216,20 +248,23 @@ namespace TimeLine
                         continue;
                     }
 
-                    trackObject.activeObjectController.Turn(false);
+                    // trackObject.activeObjectController.Turn(false);
+                    ToggleEntity(trackObject.entity, false);
                 }
 
                 return;
             }
 
 
-            group.activeObjectController.Turn(isGroupActive);
+            ToggleEntity(group.entity, isGroupActive);
+            // group.activeObjectController.Turn(isGroupActive);
 
             foreach (var trackObject in group.TrackObjectDatas)
             {
                 if (!isGroupActive)
                 {
-                    trackObject.activeObjectController.Turn(false);
+                    // trackObject.activeObjectController.Turn(false);
+                    ToggleEntity(trackObject.entity, false);
                 }
 
                 if (trackObject is TrackObjectGroup nestedGroup)
@@ -244,22 +279,27 @@ namespace TimeLine
 
                 bool finalState = group.components.Data.IsActive && isObjectActive && isGroupActive;
 
-                trackObject.activeObjectController.Turn(finalState);
+                // trackObject.activeObjectController.Turn(finalState);
+                ToggleEntity(trackObject.entity, finalState);
             }
         }
 
-        internal TrackObjectPacket Add(GameObject sceneObject, TrackObjectComponents selectedObject, Branch branch, string id)
+        internal TrackObjectPacket Add(GameObject sceneObject, Entity entity, TrackObjectComponents selectedObject,
+            Branch branch,
+            string id)
         {
-            TrackObjectPacket trackObjectPacket = new TrackObjectPacket(sceneObject, selectedObject, branch, id);
+            TrackObjectPacket trackObjectPacket =
+                new TrackObjectPacket(sceneObject, entity, selectedObject, branch, id);
             _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectPacket));
             _trackObjects.Add(trackObjectPacket);
-            sceneObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectPacket;
+            // sceneObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectPacket;
 
             //Debug.Log($"[Add] TrackObject '{selectedObject.Name}' added to storage.");
             return trackObjectPacket;
         }
 
-        internal TrackObjectGroup AddGroup(GameObject sceneObject, TrackObjectComponents trackObject, Branch branch,
+        internal TrackObjectGroup AddGroup(GameObject sceneObject, Entity entity, TrackObjectComponents trackObject,
+            Branch branch,
             List<TrackObjectPacket> trackObjectDatas, string sceneObjectID, string compositionID, string lastEditID,
             bool addToStorage = true)
         {
@@ -278,7 +318,8 @@ namespace TimeLine
             if (compositionID == "")
                 compositionID = Guid.NewGuid().ToString();
             TrackObjectGroup group =
-                new TrackObjectGroup(sceneObject, trackObject, branch, sceneObjectID, objectsForGroup, compositionID,
+                new TrackObjectGroup(sceneObject, entity, trackObject, branch, sceneObjectID, objectsForGroup,
+                    compositionID,
                     lastEditID)
                 {
                     compositionID = compositionID
@@ -381,29 +422,28 @@ namespace TimeLine
             return null;
         }
 
-        internal TrackObjectGroup DeepSearchGroup(GameObject gObject)
+        internal TrackObjectPacket GetTrackObjectData(Entity gObject)
         {
+            TrackObjectPacket packet = _trackObjects.FirstOrDefault(trackObject => trackObject.entity == gObject);
+            if (packet != null) return packet;
+
+            packet = _trackObjectGroups.FirstOrDefault(trackObject => trackObject.entity == gObject);
+            if (packet != null) return packet;
+
             foreach (var group in _trackObjectGroups)
             {
-                return DeepSearchGroup(group, gObject);
-            }
-
-            return null;
-        }
-
-        private TrackObjectGroup DeepSearchGroup(TrackObjectGroup group, GameObject gObject)
-        {
-            foreach (var child in group.TrackObjectDatas)
-            {
-                if (child is TrackObjectGroup childGroup)
+                packet = group.TrackObjectDatas.FirstOrDefault(trackObject => trackObject.entity == gObject);
+                if (packet != null)
                 {
-                    if (child.sceneObject == gObject) return childGroup;
-                    DeepSearchGroup(childGroup, gObject);
+                    //Debug.Log($"[GetTrackObjectData] Found object '{gObject.name}' inside group '{group.trackObject.Name}'.");
+                    return packet;
                 }
             }
 
+            //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
             return null;
         }
+
 
         /// <summary>
         /// Возвращает TrackObjectData, соответствующий указанному GameObject.
@@ -449,12 +489,14 @@ namespace TimeLine
                 _trackObjects.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
             if (packet != null) return packet;
 
-            packet = _trackObjectGroups.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
+            packet = _trackObjectGroups.FirstOrDefault(trackObject2 =>
+                trackObject2.components.trackObject == trackObject);
             if (packet != null) return packet;
 
             foreach (var group in _trackObjectGroups)
             {
-                packet = group.TrackObjectDatas.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
+                packet = group.TrackObjectDatas.FirstOrDefault(trackObject2 =>
+                    trackObject2.components.trackObject == trackObject);
                 if (packet != null)
                 {
                     //Debug.Log($"[GetTrackObjectData] Found TrackObject '{trackObject.Name}' inside group '{group.trackObject.Name}'.");
@@ -598,21 +640,24 @@ namespace TimeLine
     public class TrackObjectPacket
     {
         public GameObject sceneObject;
+        public Entity entity;
         public ActiveObjectControllerComponent activeObjectController;
         [FormerlySerializedAs("trackObject")] public TrackObjectComponents components;
         public Branch branch;
 
         public string sceneObjectID;
 
-        public TrackObjectPacket(GameObject sceneObject, TrackObjectComponents components, Branch branch, string sceneObjectID)
+        public TrackObjectPacket(GameObject sceneObject, Entity entity, TrackObjectComponents components, Branch branch,
+            string sceneObjectID)
         {
             this.sceneObject = sceneObject;
+            this.entity = entity;
             this.components = components;
             this.branch = branch;
             this.sceneObjectID = sceneObjectID;
-            this.activeObjectController = sceneObject.GetComponent<ActiveObjectControllerComponent>();
-            if (!activeObjectController)
-                Debug.LogWarning("Не найдер ActiveObjectControllerComponent", sceneObject);
+            // this.activeObjectController = sceneObject.GetComponent<ActiveObjectControllerComponent>();
+            // if (!activeObjectController)
+            // Debug.LogWarning("Не найдер ActiveObjectControllerComponent", sceneObject);
         }
     }
 
@@ -629,11 +674,13 @@ namespace TimeLine
             set { _trackObjectDatas = value; }
         }
 
-        public TrackObjectGroup(GameObject sceneObject, TrackObjectComponents components, Branch branch, string sceneObjectID,
+        public TrackObjectGroup(GameObject sceneObject, Entity entity, TrackObjectComponents components, Branch branch,
+            string sceneObjectID,
             List<TrackObjectPacket> trackObjectDatas, string compositionID, string lastEditID) : base(sceneObject,
-            components, branch,
+            entity, components, branch,
             sceneObjectID)
         {
+            this.entity = entity;
             this.compositionID = compositionID;
             this.lastEditID = lastEditID;
             this.sceneObject = sceneObject;
@@ -656,13 +703,13 @@ namespace TimeLine
         /// <param name="compositionUpdateID">ID композиции который обновился</param>
         public void Update(double newDuraction, List<TrackObjectPacket> trackObjectDatas, TrackObjectRemover remover,
             MainObjects _mainObjects, KeyframeTrackStorage _keyframeTrackStorage, string lastEditID,
-            SaveComposition saveComposition, string compositionUpdateID, bool updateSelf, LoadGraphLogic _loadGraphLogic)
+            SaveComposition saveComposition, string compositionUpdateID, bool updateSelf,
+            LoadGraphLogic _loadGraphLogic)
         {
             this.lastEditID = lastEditID;
 
             components.Data.UpdateDuraction(newDuraction);
 
-            
             List<TrackObjectPacket> updateTrackObjectDatas = new List<TrackObjectPacket>();
 
             //Если композиция не полностью обновляется
@@ -712,18 +759,31 @@ namespace TimeLine
                 track.components.View.Hide();
             }
 
+            var _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             foreach (var selectObject in updateTrackObjectDatas)
             {
-                if (selectObject.sceneObject.transform.parent == null ||
-                    selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                // if (selectObject.sceneObject.transform.parent == null ||
+                // selectObject.sceneObject.transform.parent.transform == _mainObjects.SceneObjectParent)
+                if (!_entityManager.HasComponent<Unity.Transforms.Parent>(selectObject.entity))
                 {
-                    Vector3 pos = selectObject.sceneObject.transform.localPosition;
-                    Quaternion rot = selectObject.sceneObject.transform.localRotation;
-                    Vector3 scale = selectObject.sceneObject.transform.localScale;
-                    selectObject.sceneObject.transform.SetParent(sceneObject.transform);
-                    selectObject.sceneObject.transform.localPosition = pos;
-                    selectObject.sceneObject.transform.localRotation = rot;
-                    selectObject.sceneObject.transform.localScale = scale;
+                    _entityManager.AddComponentData(selectObject.entity,
+                        new Unity.Transforms.Parent { Value = entity });
+                    // Если хочешь, чтобы он наследовал трансформации родителя:
+                    if (!_entityManager.HasComponent<LocalToWorld>(selectObject.entity))
+                        _entityManager.AddComponent<LocalToWorld>(selectObject.entity);
+
+                    // Для родителя (обязательно!)
+                    if (!_entityManager.HasComponent<LocalToWorld>(entity))
+                        _entityManager.AddComponent<LocalToWorld>(entity);
+
+
+                    // Vector3 pos = selectObject.sceneObject.transform.localPosition;
+                    // Quaternion rot = selectObject.sceneObject.transform.localRotation;
+                    // Vector3 scale = selectObject.sceneObject.transform.localScale;
+                    // selectObject.sceneObject.transform.SetParent(sceneObject.transform);
+                    // selectObject.sceneObject.transform.localPosition = pos;
+                    // selectObject.sceneObject.transform.localRotation = rot;
+                    // selectObject.sceneObject.transform.localScale = scale;
                 }
 
 
@@ -736,11 +796,40 @@ namespace TimeLine
                 }
             }
 
-            
-            
+
             _loadGraphLogic.LoadGraph(TrackObjectDatas);
 
             ParentLinkRestorer.Restor(updateTrackObjectDatas);
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            GetChildrenExample(_trackObjectDatas.Select(x => x.entity).ToList(),
+                entityManager.GetComponentData<CompositionPositionOffsetData>(entity).Offset);
+        }
+
+        private void GetChildrenExample(List<Entity> children, float2 newOffset)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            // Проверяем, есть ли у сущности вообще дети
+
+            foreach (var childEntity in children)
+            {
+                ObjectPositionOffsetData
+                    offsetData =
+                        entityManager
+                            .GetComponentData<ObjectPositionOffsetData>(childEntity); // Получаем компонент оффсета
+
+                offsetData.Offset = newOffset; //Задаём новый оффсет
+
+                entityManager.SetComponentData(childEntity, offsetData); //Применяем данные
+                LocalTransform
+                    localtransform =
+                        entityManager.GetComponentData<LocalTransform>(childEntity); //Получаем компонент трансформа
+                PositionData
+                    positionData =
+                        entityManager.GetComponentData<PositionData>(childEntity); //Получаем компонент трансформа
+                localtransform.Position = new float3(positionData.Position.x + offsetData.Offset.x,
+                    positionData.Position.y + offsetData.Offset.y, localtransform.Position.z);
+                entityManager.SetComponentData(childEntity, localtransform);
+            }
         }
 
         private void UpdateLastEditID(List<TrackObjectPacket> trackObjectDatas, SaveComposition saveComposition)

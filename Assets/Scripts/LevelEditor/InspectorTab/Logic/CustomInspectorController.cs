@@ -1,15 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using EventBus;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.Drawers;
+using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
+using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
+using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
 
-namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspector
+namespace TimeLine.LevelEditor.InspectorTab.Logic
 {
     public class CustomInspectorController : MonoBehaviour
     {
@@ -22,23 +27,29 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
         [Space] [SerializeField] private ComponentUI componentUIPrefab;
 
         private List<IComponentDrawer> _componentDrawers = new();
+        private List<IComponentDrawer> _structurDrawers = new();
 
         private GameEventBus _gameEventBus;
 
-        private GameObject _selectedObject;
+        private Entity _selectedObject;
         private TrackObjectStorage _selectedTransform;
+        private ColliderDrawer _colliderDrawer;
+        private ToolsController _toolsController;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage)
+        private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
+            ColliderDrawer colliderDrawer, ToolsController toolsController)
         {
             _gameEventBus = gameEventBus;
             _selectedTransform = trackObjectStorage;
+            _colliderDrawer = colliderDrawer;
+            _toolsController = toolsController;
         }
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].sceneObject));
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Draw(data.SelectedObjects[^1].sceneObject));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].entity));
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Draw(data.SelectedObjects[^1].entity));
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
             _gameEventBus.SubscribeTo((ref AddComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
             _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
@@ -46,12 +57,12 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new NameDrawer());
             _componentDrawers.Add(new SpriteRendererDrawer());
-            _componentDrawers.Add(new BoxCollider2DDrawer());
-            _componentDrawers.Add(new CircleCollider2DDrawer());
+            _componentDrawers.Add(new BoxCollider2DDrawer(_colliderDrawer));
+            _componentDrawers.Add(new CircleCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new CapsuleCollider2DDrawer());
             _componentDrawers.Add(new EdgeCollider2DDrawer());
             _componentDrawers.Add(new ShakeDrawer());
-            _componentDrawers.Add(new PolygonCollider2DDrawer());
+            _componentDrawers.Add(new PolygonCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new RadialSunburstDrawer());
         }
 
@@ -62,23 +73,23 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspe
                 Draw(_selectedObject);
         }
 
-        private void Draw(GameObject target)
+        private void Draw(Entity target)
         {
             _selectedObject = target;
 
             Clear();
 
-            var components = target.GetComponents<Component>();
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            //Получаем все компоненты
+            using NativeArray<ComponentType> types = entityManager.GetComponentTypes(target);
 
-            foreach (var component in components)
+            foreach (var drawer in _componentDrawers)
             {
-                foreach (var drawer in _componentDrawers)
+                var checkResult = drawer.GetComponent(types.ToList());
+                if (checkResult)
                 {
-                    if (drawer.GetComponent(component))
-                    {
-                        drawer.Setup(inspectorDrawer, _selectedTransform, keyframeCreator);
-                        drawer.Draw(component, target);
-                    }
+                    drawer.Setup(inspectorDrawer, _selectedTransform, keyframeCreator, _toolsController);
+                    drawer.Draw(target);
                 }
             }
 

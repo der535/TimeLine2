@@ -31,7 +31,6 @@ namespace TimeLine
         private void Start()
         {
             currentRotation = transform.eulerAngles.z;
-            
         }
 
         void Update()

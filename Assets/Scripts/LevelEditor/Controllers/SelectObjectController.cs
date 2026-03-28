@@ -10,7 +10,7 @@ namespace TimeLine.EventBus.Events.TrackObject
     {
         [SerializeField] private SelectLock _selectLock;
         private GameEventBus _gameEventBus;
-        private List<TrackObjectPacket> _trackObjects = new List<TrackObjectPacket>();
+        private List<TrackObjectPacket> _trackObjects = new();
 
         public List<TrackObjectPacket> SelectObjects => this._trackObjects;
 

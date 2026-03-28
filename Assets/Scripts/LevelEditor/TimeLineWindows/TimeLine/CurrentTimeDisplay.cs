@@ -26,7 +26,7 @@ public class CurrentTimeDisplay : MonoBehaviour
         _gameEventBus.SubscribeTo<TickExactTimeEvent>(UpdateText);
     }
 
-    public void UpdateText(ref TickExactTimeEvent timeEvent)
+    private void UpdateText(ref TickExactTimeEvent timeEvent)
     {
         double currentTimeInTicks = timeEvent.Time;
         

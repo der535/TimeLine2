@@ -34,7 +34,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Fields
 
             buttonText.text = lable;
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => { _selectColorController.Setup(_colorParameter, string.Empty); });
+            // button.onClick.AddListener(() => { _selectColorController.Setup(_colorParameter, string.Empty); });
         }
     }
 }

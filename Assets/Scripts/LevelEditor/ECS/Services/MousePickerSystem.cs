@@ -11,8 +11,6 @@ namespace TimeLine.LevelEditor.ECS.Services
         
         protected override void OnUpdate()
         {
-
-            
             // 1. Проверяем нажатие мыши (через обычный Input для простоты)
             if (!UnityEngine.Input.GetMouseButtonDown(0)) return;
 
@@ -44,13 +42,6 @@ namespace TimeLine.LevelEditor.ECS.Services
                     break; 
                 }
             }
-
-            if (selectedEntity != Entity.Null)
-            {
-                Debug.Log($"Выбрана сущность без коллайдера: {selectedEntity}");
-                // Передай эту сущность в свой Drawer
-            }
         }
-    
     }
 }

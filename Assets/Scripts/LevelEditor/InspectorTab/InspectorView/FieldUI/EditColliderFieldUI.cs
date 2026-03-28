@@ -2,7 +2,7 @@
 using EventBus;
 using TimeLine.CustomInspector.UI.FieldUI;
 using TimeLine.EventBus.Events.Misc;
-using TimeLine.LevelEditor.General;
+using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

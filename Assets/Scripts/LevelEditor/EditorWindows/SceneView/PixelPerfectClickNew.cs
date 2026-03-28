@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq; // Добавлено для сортировки
 using UnityEngine;
@@ -8,7 +9,12 @@ using EventBus;
 using EventBus.Events;
 using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.LevelEditor.General;
+using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Rendering;
+using Unity.Transforms;
 
 public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 {
@@ -20,20 +26,29 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
     private SelectObjectController _selectObjectController;
     private C_EditColliderState _cEditColliderState;
     private GameEventBus _gameEventBus;
+    private EntityManager _entityManager;
+    private EntityComponentController _entityComponentController;
 
-    
+
     // Поля для логики циклического выделения
     private List<TrackObjectPacket> _hitsAtLastPosition = new List<TrackObjectPacket>();
     private int _lastSelectedIndex = -1;
 
     [Inject]
     void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController,
-        GameEventBus gameEventBus, C_EditColliderState cEditColliderState)
+        GameEventBus gameEventBus, C_EditColliderState cEditColliderState,
+        EntityComponentController entityComponentController)
     {
         _trackObjectStorage = trackObjectStorage;
         _selectObjectController = selectObjectController;
         _gameEventBus = gameEventBus;
         _cEditColliderState = cEditColliderState;
+        _entityComponentController = entityComponentController;
+    }
+
+    private void Start()
+    {
+        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -42,7 +57,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         if (eventData.button != PointerEventData.InputButton.Left) return;
 
         if (IsOverlaidByOtherUI(eventData)) return;
-        
+
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 mapImage.rectTransform, eventData.position, eventData.pressEventCamera, out Vector2 localPoint))
             return;
@@ -56,8 +71,103 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         Vector3 viewportPos = new Vector3(uv.x, uv.y, mapCamera.nearClipPlane);
         Vector3 worldPos = mapCamera.ViewportToWorldPoint(viewportPos);
 
-        ProcessClickSelection(worldPos);
+        Check(worldPos);
+        // ProcessClickSelection(worldPos);
     }
+
+    void Check(float3 mouseWorldPos)
+    {
+        // 2. Получаем менеджер сущностей
+        var em = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+        // 3. Переводим координаты мыши в мировые
+        mouseWorldPos.z = 0;
+
+        Entity selectedEntity = Entity.Null;
+
+        // 4. Получаем доступ к запросу всех объектов с LocalToWorld
+        // В MonoBehaviour мы используем EntityManager.GetAllEntities или EntityQuery
+        var query = em.CreateEntityQuery(typeof(LocalToWorld));
+        var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
+        var transforms = query.ToComponentDataArray<LocalToWorld>(Unity.Collections.Allocator.Temp);
+
+        for (int i = 0; i < entities.Length; i++)
+        {
+            float4x4 ltw = transforms[i].Value;
+
+            // Получаем инвертированную матрицу для локального пространства объекта
+            float4x4 worldToLocal = math.inverse(ltw);
+            float3 localMousePos = math.transform(worldToLocal, mouseWorldPos);
+
+            // Здесь 0.5f - это дефолтный размер. Если у тебя есть компонент с размером, 
+            // получи его через em.GetComponentData<MySizeComponent>(entities[i])
+            float2 halfSize = new float2(0.5f, 0.5f);
+
+            if (localMousePos.x >= -halfSize.x && localMousePos.x <= halfSize.x &&
+                localMousePos.y >= -halfSize.y && localMousePos.y <= halfSize.y)
+            {
+                selectedEntity = entities[i];
+                break; // Нашли объект
+            }
+        }
+
+        // Очистка памяти
+        entities.Dispose();
+        transforms.Dispose();
+
+        if (selectedEntity != Entity.Null)
+        {
+            if (_entityComponentController.CheckComponentAvailability(selectedEntity, ComponentNames.SpriteRenderer))
+            {
+                Material currentMat = null;
+                if (_entityManager.HasComponent<MaterialMeshInfo>(selectedEntity))
+                {
+                    RenderMeshArray rma = _entityManager.GetSharedComponentManaged<RenderMeshArray>(selectedEntity);
+                    var meshInfo = _entityManager.GetComponentData<MaterialMeshInfo>(selectedEntity);
+
+                    // Получаем текущий материал  
+                    currentMat = rma.GetMaterial(meshInfo);
+                    if (IsPixelOpaque(selectedEntity, mouseWorldPos, (Texture2D)currentMat.mainTexture))
+                    {
+                        foreach (var VARIABLE in _trackObjectStorage.GetAllActiveTrackData())
+                        {
+                            if (VARIABLE.entity == selectedEntity)
+                            {
+                                _selectObjectController.SelectMultiple(VARIABLE);
+                            }
+                        }
+                        
+                        Debug.Log($"текстура: {selectedEntity}");
+                    }
+                }
+            }
+        }
+    }
+
+    public bool IsPixelOpaque(Entity entity, float3 worldPos, Texture2D tex)
+    {
+        // 1. Получаем трансформацию
+        var ltw = _entityManager.GetComponentData<LocalToWorld>(entity).Value;
+        float4x4 worldToLocal = math.inverse(ltw);
+        float3 localPos = math.transform(worldToLocal, worldPos);
+
+        // 2. Превращаем localPos (-0.5 .. 0.5) в UV (0 .. 1)
+        // Предполагаем, что объект в локальном пространстве имеет размер 1x1
+        float2 uv = new float2(localPos.x + 0.5f, localPos.y + 0.5f);
+
+        // Если клик вне границ спрайта (например, в прозрачном углу прямоугольника)
+        if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1) return false;
+
+        // 3. Вычисляем координаты пикселя
+        int pixelX = (int)(uv.x * tex.width);
+        int pixelY = (int)(uv.y * tex.height);
+
+        // 4. Получаем альфа-канал
+        Color color = tex.GetPixel(pixelX, pixelY);
+
+        return color.a > 0.1f; // Порог непрозрачности
+    }
+
     private bool IsOverlaidByOtherUI(PointerEventData eventData)
     {
         List<RaycastResult> results = new List<RaycastResult>();
@@ -66,126 +176,26 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         // ВЫВОДИМ СПИСОК ВСЕХ, КТО ПОД МЫШКОЙ
         foreach (var res in results)
         {
-            Debug.Log($"Под курсором: {res.gameObject.name} (Layer: {res.gameObject.layer})");
+            // Debug.Log($"Под курсором: {res.gameObject.name} (Layer: {res.gameObject.layer})");
         }
 
         if (results.Count > 0)
         {
             // Ищем индекс нашего mapImage в списке попаданий
             int myIndex = results.FindIndex(r => r.gameObject == mapImage.gameObject);
-        
+
             // Если индекс 0 — мы сверху. 
             // Если индекс > 0 — значит перед нами есть кто-то еще (results[0])
-            if (myIndex > 0) 
+            if (myIndex > 0)
             {
                 Debug.LogWarning($"Клик заблокирован объектом: {results[0].gameObject.name}");
-                return true; 
+                return true;
             }
-        
+
             // Если вообще не нашли mapImage в списке (индекс -1)
             if (myIndex == -1) return true;
         }
 
         return false;
-    }
-    private void ProcessClickSelection(Vector3 worldPos)
-    {
-        // 1. Находим все объекты под курсором
-        List<TrackObjectPacket> currentHits = new List<TrackObjectPacket>();
-        FindAllObjectsUnderCursor(worldPos, _trackObjectStorage.GetAllActiveTrackData(), currentHits);
-
-        // 2. Сортируем: сначала те, у кого SortingOrder выше
-        currentHits = currentHits
-            .Select(h => new { 
-                Data = h, 
-                SR = h.sceneObject.GetComponentInChildren<SpriteRenderer>() 
-            })
-            .OrderByDescending(x => x.SR != null ? x.SR.sortingLayerID : -1)
-            .ThenByDescending(x => x.SR != null ? x.SR.sortingOrder : -1)
-            .Select(x => x.Data)
-            .ToList();
-
-        if (currentHits.Count == 0)
-        {
-            _gameEventBus.Raise(new DeselectAllObjectEvent());
-            _hitsAtLastPosition.Clear();
-            _lastSelectedIndex = -1;
-            return;
-        }
-
-        // 3. Проверяем, совпадает ли набор объектов с прошлым разом (клик в то же место)
-        bool isSameSet = currentHits.SequenceEqual(_hitsAtLastPosition);
-
-        if (isSameSet)
-        {
-            _lastSelectedIndex = (_lastSelectedIndex + 1) % currentHits.Count;
-        }
-        else
-        {
-            _hitsAtLastPosition = currentHits;
-            _lastSelectedIndex = 0;
-        }
-
-        // 4. Выделяем нужный объект
-        var objectToSelect = _hitsAtLastPosition[_lastSelectedIndex];
-        
-        _gameEventBus.Raise(new ObjectUnderCursorEvent());
-        _selectObjectController.SelectMultiple(objectToSelect);
-    }
-
-    private void FindAllObjectsUnderCursor(Vector3 mousePosition, List<TrackObjectPacket> list, List<TrackObjectPacket> results, TrackObjectPacket parentGroup = null)
-    {
-        foreach (var trackObjectData in list)
-        {
-            if (trackObjectData is TrackObjectGroup group)
-            {
-                // Если это группа, рекурсивно ищем внутри, но передаем группу как потенциальную цель выделения
-                FindAllObjectsUnderCursor(mousePosition, group.TrackObjectDatas, results, parentGroup ?? group);
-            }
-            else
-            {
-                if (trackObjectData.sceneObject == null || !trackObjectData.sceneObject.activeSelf) continue;
-
-                var sr = trackObjectData.sceneObject.GetComponent<SpriteRenderer>();
-                if (IsPixelOpaque(mousePosition, sr, trackObjectData.sceneObject.transform))
-                {
-                    var target = parentGroup ?? trackObjectData;
-                    // Добавляем в результаты только если этого объекта (или его группы) еще нет в списке
-                    if (!results.Contains(target))
-                    {
-                        results.Add(target);
-                    }
-                }
-            }
-        }
-    }
-
-    // Метод IsPixelOpaque остается без изменений...
-    bool IsPixelOpaque(Vector2 worldPos, SpriteRenderer spriteRenderer, Transform objectTransform)
-    {
-        if (spriteRenderer == null || !spriteRenderer.enabled) return false;
-        if (!spriteRenderer.bounds.Contains(worldPos)) return false;
-        if (spriteRenderer.sprite == null) return true;
-
-        Sprite sprite = spriteRenderer.sprite;
-        Texture2D tex = sprite.texture;
-        
-        // Важно: для GetPixel текстура должна быть Readable в настройках импорта
-        Vector2 localPos = objectTransform.InverseTransformPoint(worldPos);
-        Vector2 extents = sprite.bounds.extents;
-        if (extents.x == 0 || extents.y == 0) return false;
-
-        Vector2 uv = new Vector2(
-            (localPos.x + extents.x) / (2f * extents.x),
-            (localPos.y + extents.y) / (2f * extents.y)
-        );
-
-        Rect rect = sprite.textureRect;
-        int x = Mathf.FloorToInt(uv.x * rect.width) + (int)rect.x;
-        int y = Mathf.FloorToInt(uv.y * rect.height) + (int)rect.y;
-
-        if (x < 0 || x >= tex.width || y < 0 || y >= tex.height) return false;
-
-        return tex.GetPixel(x, y).a > 0.1f;
     }
 }

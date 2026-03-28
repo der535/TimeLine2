@@ -21,7 +21,6 @@ namespace TimeLine.LevelEditor.Core
         [SerializeField] private OpenValueEditor _openValueEditor;
         [SerializeField] private SaveGraphToKeyFrame _saveGraphToKeyFrame;
         [SerializeField] private SaveNodes _saveNodes;
-        [SerializeField] private PlayerPosition _playerPosition;
         [SerializeField] private ValueEditorReferences _valueEditorReferences;
         public override void InstallBindings()
         {
@@ -35,7 +34,6 @@ namespace TimeLine.LevelEditor.Core
             Container.Bind<OpenValueEditor>().FromInstance(_openValueEditor);
             Container.Bind<SaveGraphToKeyFrame>().FromInstance(_saveGraphToKeyFrame);
             Container.Bind<SaveNodes>().FromInstance(_saveNodes);
-            Container.Bind<PlayerPosition>().FromInstance(_playerPosition);
             
             Container.Bind<LoadGraphLogic>().AsSingle();
             Container.Bind<FindField>().AsSingle();

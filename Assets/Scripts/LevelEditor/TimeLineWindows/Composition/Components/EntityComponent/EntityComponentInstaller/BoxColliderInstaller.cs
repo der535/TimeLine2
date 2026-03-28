@@ -1,80 +1,113 @@
-﻿using Unity.Entities;
-using Unity.Entities.Graphics;
-using Unity.Rendering;
-using UnityEngine;
-using UnityEngine.Rendering;
+﻿using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using Unity.Entities;
+using Unity.Physics;
+using Unity.Mathematics;
+using Collider = Unity.Physics.Collider;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.EntityComponentInstaller
 {
-    public class SpriteRendererInstaller : IComponentInstaller
+    public class BoxColliderInstaller : IComponentInstaller
     {
-        private readonly Material _baseMaterial;
-        private readonly Mesh _quadMesh;
-
-        // Передаем данные, необходимые для инициализации
-        public SpriteRendererInstaller(Material baseMaterial, Mesh quadMesh)
-        {
-            _baseMaterial = baseMaterial;
-            _quadMesh = quadMesh;
-        }
-
         public ComponentNames GetComponentName()
         {
-            return ComponentNames.SpriteRenderer;
+            return ComponentNames.BoxCollider;
         }
 
         public void Install(Entity entity)
         {
-            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-            // 1. Создаем инстанс материала для текстуры спрайта
-            Material instanceMat = new Material(_baseMaterial);
-
-            // 2. Описываем массив мешей и материалов
-            var renderMeshArray = new RenderMeshArray(new[] { instanceMat }, new[] { _quadMesh });
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             
-            var renderMeshDescription = new RenderMeshDescription
+            entityManager.AddComponentData(entity, new BoxColliderData()
             {
-                FilterSettings = RenderFilterSettings.Default,
-                LightProbeUsage = LightProbeUsage.Off
+                boxSize = new float3(1,1,100)
+            });
+
+            // Сделаем коробку потолще по Z для тестов (например, 1.0f)
+            // Если это 2D, это никак не помешает, но сделает физику стабильнее
+            var geometry = new BoxGeometry
+            {
+                Center = float3.zero,
+                Size = new float3(1), // 1x1x1 куб
+                Orientation = quaternion.identity,
+                BevelRadius = 0 // Небольшой скос помогает избежать "застревания" на стыках
             };
 
-            // 3. Используем утилиту для добавления пакета компонентов
-            RenderMeshUtility.AddComponents(
-                entity, 
-                entityManager, 
-                renderMeshDescription, 
-                renderMeshArray, 
-                MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0)
-            );
+            // "Всевидящий" фильтр: принадлежит всем (All), сталкивается со всеми (All)
+            var filter = new CollisionFilter
+            {
+                BelongsTo = ~0u,    // 0xffffffff
+                CollidesWith = ~0u, // 0xffffffff
+                GroupIndex = 0
+            };
+
+            BlobAssetReference<Collider> collider = BoxCollider.Create(geometry, filter);
+    
+            // Если на сущности уже есть коллайдер, его нужно сначала удалить (из памяти), 
+            // но для простоты пока просто добавляем:
+            entityManager.AddComponentData(entity, new PhysicsCollider { Value = collider });
+            entityManager.AddSharedComponentManaged(entity, new PhysicsWorldIndex
+            {
+                Value = 0
+            });
+
+        }
+
+        public void Install(Entity entity, BoxColliderData boxColliderData)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            
+            // Сделаем коробку потолще по Z для тестов (например, 1.0f)
+            // Если это 2D, это никак не помешает, но сделает физику стабильнее
+            var geometry = new BoxGeometry
+            {
+                Center = boxColliderData.boxCenter,
+                Size = boxColliderData.boxSize, // 1x1x1 куб
+                Orientation = quaternion.identity,
+                BevelRadius = 0 // Небольшой скос помогает избежать "застревания" на стыках
+            };
+
+            // "Всевидящий" фильтр: принадлежит всем (All), сталкивается со всеми (All)
+            var filter = new CollisionFilter
+            {
+                BelongsTo = ~0u,    // 0xffffffff
+                CollidesWith = ~0u, // 0xffffffff
+                GroupIndex = 0
+            };
+            
+                        
+            // 1. Создаем материал и помечаем его как триггер
+            var material = new Material
+            {
+                // Это превращает коллайдер в триггер
+                CollisionResponse = boxColliderData.isTrigger ? CollisionResponsePolicy.RaiseTriggerEvents : CollisionResponsePolicy.CollideRaiseCollisionEvents,
+                Friction = 0.5f,
+                Restitution = 0f,
+                CustomTags = 0
+            };
+
+
+            BlobAssetReference<Collider> collider = BoxCollider.Create(geometry, filter, material);
+    
+            // Если на сущности уже есть коллайдер, его нужно сначала удалить (из памяти), 
+            // но для простоты пока просто добавляем:
+            entityManager.AddComponentData(entity, new PhysicsCollider { Value = collider });
+            entityManager.AddSharedComponentManaged(entity, new PhysicsWorldIndex
+            {
+                Value = 0
+            });
+
         }
 
         public void Remove(Entity entity)
         {
-            Debug.Log("Remove");
-            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-            // 1. Очистка управляемых ресурсов (Материалы)
-            if (entityManager.HasComponent<RenderMeshArray>(entity))
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            
+            if (entityManager.HasComponent<PhysicsCollider>(entity))
             {
-                // Используем Managed метод для получения Shared компонента
-                var rma = entityManager.GetSharedComponentManaged<RenderMeshArray>(entity);
-                foreach (var mat in rma.Materials)
-                {
-                    if (mat != null) Object.Destroy(mat);
-                }
+                entityManager.RemoveComponent<PhysicsCollider>(entity);
+                entityManager.RemoveComponent<BoxColliderData>(entity);
+                entityManager.RemoveComponent<PhysicsWorldIndex>(entity);
             }
-
-            // 2. Удаление пакета компонентов
-            // Мы используем те типы, которые точно являются IComponentData
-            var typesToRemove = new ComponentTypeSet(
-                typeof(RenderMeshArray),
-                typeof(MaterialMeshInfo),
-                typeof(RenderFilterSettings),
-                typeof(WorldRenderBounds)
-            );
-
-            entityManager.RemoveComponent(entity, typesToRemove);
         }
     }
 }

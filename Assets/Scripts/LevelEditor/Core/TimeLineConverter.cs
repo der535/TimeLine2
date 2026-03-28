@@ -1,12 +1,17 @@
-using System;
 using System.IO;
 using NaughtyAttributes;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Core.MusicOffset;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Physics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Zenject;
+using Collider = UnityEngine.Collider;
+using Math = System.Math;
 
 namespace TimeLine.TimeLine
 {
@@ -71,6 +76,38 @@ namespace TimeLine.TimeLine
             double seconds = ticks * (60.0 / (_mMusicData.bpm * TICKS_PER_BEAT));
             return (float)(seconds * (_timeLineSettings.DistanceBetweenBeatLines + pan) *
                            (_mMusicData.bpm / 60.0));
+        }
+        
+        public static BlobAssetReference<Unity.Physics.Collider> InstallConvexTriangle(float2[] points)
+        {
+            int count = points.Length;
+            var vertices = new NativeArray<float3>(count * 2, Allocator.Temp);
+
+            for (int i = 0; i < count; i++)
+            {
+                // Передняя грань (индексы 0 .. count-1)
+                vertices[i] = new float3(points[i].x, points[i].y, 0.05f);
+
+                // Задняя грань (индексы count .. 2*count-1)
+                vertices[i + count] = new float3(points[i].x, points[i].y, -0.05f);
+            }
+
+            var hullParams = ConvexHullGenerationParameters.Default;
+            BlobAssetReference<Unity.Physics.Collider> triangleCollider = ConvexCollider.Create(
+                vertices,
+                hullParams,
+                CollisionFilter.Default
+            );
+
+            // vertices.Dispose(); // ПОДОЖДИ! 
+            // ВАЖНО: Если ConvexCollider.Create не делает внутреннюю копию данных сразу, 
+            // Dispose может вызвать краш. В Unity Physics BlobAsset обычно копирует данные, 
+            // но лучше убедиться, что Dispose стоит после создания коллайдера.
+
+            vertices.Dispose();
+            // points.Dispose(); // Не диспозь points здесь, если они были созданы снаружи!
+
+            return triangleCollider;
         }
 
         public float TicksToPositionXWithTimeLineOffset(double ticks, float pan = 0)

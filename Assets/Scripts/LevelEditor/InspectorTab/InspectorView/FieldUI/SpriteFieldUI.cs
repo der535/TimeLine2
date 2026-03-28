@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.SpriteLoader;
 using TMPro;
+using Unity.Rendering;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -38,6 +40,18 @@ namespace TimeLine.CustomInspector.UI.FieldUI
             });
             
             spriteParameter.OnValueChanged += () => { text.text = _getSpriteName.Get(spriteParameter); };
+        }
+        
+        public void Setup(Sprite spriteParameter, Action<Texture> onValueChanged)
+        {
+            string name = "Null";
+            if (spriteParameter != null) name = _getSpriteName.Get(spriteParameter.name);
+            text.text = name;
+        
+            button.onClick.AddListener(() =>
+            {
+                _selectSpriteController.Setup(spriteParameter, onValueChanged);
+            });
         }
 
         public float GetFieldHeight()

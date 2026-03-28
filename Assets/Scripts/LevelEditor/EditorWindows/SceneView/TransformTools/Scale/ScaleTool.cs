@@ -27,10 +27,14 @@ namespace TimeLine
         
         public Action VerticalDeltaStart;
         public Action HorizontalDeltaStart;
+        
+        public Action OnValueChanged;
 
         private void Awake()
         {
             CacheInitialSizes();
+            VerticalDelta += (_) => OnValueChanged?.Invoke();
+            HorizontalDelta += (_) => OnValueChanged?.Invoke();
         }
 
         private void CacheInitialSizes()

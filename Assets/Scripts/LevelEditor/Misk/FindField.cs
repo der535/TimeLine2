@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using Unity.Entities;
 using UnityEngine;
 using Zenject;
 
@@ -15,33 +16,16 @@ namespace TimeLine.LevelEditor.Misk
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public InspectableParameter Find(MapParameterComponen MapParameter, List<TrackObjectPacket> objects = null)
+        public Entity? Find(MapParameterComponen MapParameter, List<TrackObjectPacket> objects = null)
         {
-            List<TrackObjectPacket> researchedObjects = new List<TrackObjectPacket>();
-            
-            if (objects == null) researchedObjects = _trackObjectStorage.GetAllActiveTrackData();
-            else researchedObjects = objects;
+            var researchedObjects = objects ?? _trackObjectStorage.GetAllActiveTrackData();
             
             
             foreach (var VARIABLE in researchedObjects)
             {
                 if (VARIABLE.sceneObjectID == MapParameter.SceneObjectID)
                 {
-                    var components = VARIABLE.sceneObject.GetComponents<BaseParameterComponent>();
-                    foreach (var component in components)
-                    {
-                        if (component.GetID() == MapParameter.ComponentID)
-                        {
-                            var parameters = component.GetParameters();
-                            foreach (var param in parameters)
-                            {
-                                if (param.Id == MapParameter.ParameterID)
-                                {
-                                    return param;
-                                }
-                            }
-                        }
-                    }
+                    return VARIABLE.entity;
                 }
             }
 

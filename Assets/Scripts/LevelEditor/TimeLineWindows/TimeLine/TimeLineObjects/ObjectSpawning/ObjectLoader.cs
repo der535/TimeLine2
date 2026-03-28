@@ -8,12 +8,18 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
+using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using TimeLine.LevelEditor.ValueEditor.Save;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
 using TimeLine.TimeLine;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using Zenject;
 
@@ -32,12 +38,15 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private ParentLinkRestorer _parentLinkRestorer;
         private IMaxObjectIndexDataReading _maxObjectIndexDataReading;
         private SaveNodes _saveNodes;
+        private EntityComponentController _entityComponentController;
+        private EntityManager _entityManager;
 
         public ObjectLoader(ObjectFactory objectFactory, TrackStorage trackStorage,
             BranchCollection branchCollection, TrackObjectStorage trackObjectStorage,
             KeyframeTrackStorage keyframeTrackStorage, Main main, SaveComposition saveComposition,
             DiContainer container, ParentLinkRestorer parentLinkRestorer,
-            IMaxObjectIndexDataReading maxObjectIndexDataReading, SaveNodes saveNodes)
+            IMaxObjectIndexDataReading maxObjectIndexDataReading, SaveNodes saveNodes,
+            EntityComponentController entityComponentController)
         {
             _objectFactory = objectFactory;
             _trackStorage = trackStorage;
@@ -50,9 +59,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _parentLinkRestorer = parentLinkRestorer;
             _maxObjectIndexDataReading = maxObjectIndexDataReading;
             _saveNodes = saveNodes;
+            _entityComponentController = entityComponentController;
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
         }
 
-        public (TrackObjectPacket, GameObject, Branch, List<Track>) LoadObject(GameObjectSaveData data,
+        public (TrackObjectPacket, Branch, List<Track>) LoadObject(GameObjectSaveData data,
             bool addToStorage = true, bool generateNewSceneID = false, bool addToTitleCloneText = false,
             bool loadGraph = true, bool createTrackObject = true)
         {
@@ -69,7 +80,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             }
 
             // Создаем сценный объект
-            GameObject sceneObject = _objectFactory.CreateSceneObject().Item1;
+            var entity = _objectFactory.CreateSceneObject(data.branch.Name);
 
             // Создаем трек-объект
             TrackObjectComponents trackObject;
@@ -98,27 +109,20 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 // Добавляем в хранилище
                 trackObjectPacket =
-                    _trackObjectStorage.Add(sceneObject.gameObject, trackObject, branch, sceneId);
+                    _trackObjectStorage.Add(null, entity, trackObject, branch, sceneId);
             }
             else
             {
-                trackObjectPacket = new TrackObjectPacket(sceneObject.gameObject, trackObject, branch, sceneId);
+                trackObjectPacket = new TrackObjectPacket(null, entity, trackObject, branch, sceneId);
             }
 
-            //Добавляем необходимые компоненты
-            foreach (var component in data.Components)
-            {
-                IParameterComponent parameterComponent =
-                    (IParameterComponent)ComponentRules.GetOrAddComponentSafely(component.ComponentType, sceneObject,
-                        _container);
-                parameterComponent.SetParameterData(component.Parameters);
-                if (!string.IsNullOrEmpty(component.id)) parameterComponent.SetID(component.id);
-            }
+
+            _entityComponentController.Load(entity, data.EntityComponents);
 
             // Добавляем трек и ключевые кадры
             foreach (var track in data.tracks)
             {
-                Track trackm = new Track(sceneObject, track.branchPath, track.animationColor);
+                Track trackm = new Track(entity, track.branchPath, track.animationColor);
                 _keyframeTrackStorage.AddTrack(branch.FindNode(track.branchPath).node, trackm,
                     trackObjectPacket.components.Data,
                     branch.ID);
@@ -156,18 +160,18 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                             TypeToDataType.Convert(saveData.DataType));
                     }
 
+
                     Keyframe.Keyframe keyframe = Keyframe.Keyframe.FromSaveData(saveData, item1, item2);
                     trackm.AddKeyframe(keyframe);
                 }
             }
 
-            sceneObject.GetComponent<NameComponent>().Name.Value = branch.Name;
+            // sceneObject.GetComponent<NameComponent>().Name.Value = branch.Name;
 
             trackObjectPacket.components.Data.ParentID = data.parentObjectID;
-            sceneObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectPacket;
+            // sceneObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectPacket;
 
-
-            return (trackObjectPacket, sceneObject, branch, tracks);
+            return (trackObjectPacket, branch, tracks);
         }
 
         internal void GenerateNewSceneIDs(GroupGameObjectSaveData rootData)
@@ -243,10 +247,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
         private void UpdateMap(GroupGameObjectSaveData data, Dictionary<string, string> idMap)
         {
-            Debug.Log("UpdateMap");
-            Debug.Log(data.tracks.Count);
-            Debug.Log(JsonConvert.SerializeObject(data, Formatting.Indented));
-
             foreach (var VARIABLE in data.children)
             {
                 foreach (var track in VARIABLE.tracks)
@@ -319,6 +319,37 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
         private double _savedCurrentTime;
 
+
+        private void GetChildrenExample(Entity parentEntity, List<TrackObjectPacket> packets, float2 newOffset)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            // Проверяем, есть ли у сущности вообще дети
+
+
+            for (int i = 0; i < packets.Count; i++)
+            {
+                Entity childEntity = packets[i].entity; //Получаем существо
+
+                ObjectPositionOffsetData
+                    offsetData =
+                        entityManager
+                            .GetComponentData<ObjectPositionOffsetData>(childEntity); // Получаем компонент оффсета
+
+                offsetData.Offset = newOffset; //Задаём новый оффсет
+
+                entityManager.SetComponentData(childEntity, offsetData); //Применяем данные
+                LocalTransform
+                    localtransform =
+                        entityManager.GetComponentData<LocalTransform>(childEntity); //Получаем компонент трансформа
+                PositionData
+                    positionData =
+                        entityManager.GetComponentData<PositionData>(childEntity); //Получаем компонент трансформа
+                localtransform.Position = new float3(positionData.Position.x + offsetData.Offset.x,
+                    positionData.Position.y + offsetData.Offset.y, localtransform.Position.z);
+                entityManager.SetComponentData(childEntity, localtransform);
+            }
+        }
+
         /// <summary>
         /// Позволяет загружать композицию из сохранения
         /// </summary>
@@ -331,16 +362,23 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         internal (TrackObjectPacket, GameObject, Branch) LoadComposition(GroupGameObjectSaveData data,
             string compositionID,
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null,
-            bool generateNewSceneID = false, bool addToTitleCloneText = false, bool currentTimeSaved = false, bool createTrackObject = true)
+            bool generateNewSceneID = false, bool addToTitleCloneText = false, bool currentTimeSaved = false,
+            bool createTrackObject = true)
         {
-            var (groupTrackObject, groupGameObject, _, _) = LoadObject(data, false, createTrackObject:createTrackObject); //Загружаем объект группы
-            
+            var (groupTrackObject, _, _) =
+                LoadObject(data, false, createTrackObject: createTrackObject); //Загружаем объект группы
+
+
+            _entityManager.AddComponent<CompositionPositionOffsetData>(groupTrackObject.entity);
+
+
             if (currentTimeSaved == false) _savedCurrentTime = TimeLineConverter.Instance.TicksCurrentTime();
             _main.SetTimeInTicks(groupTrackObject.components.Data
                 .StartTimeInTicks); //Ставим время тамйлайна на старт группы что бы ничего не сьехало
 
             groupTrackObject.components.Data.ReducedLeft = data.reduceLeft;
             groupTrackObject.components.Data.ReducedRight = data.reduceRight;
+
 
             List<GameObjectSaveData> children; //Создаём список дочерных обьъектов
             if (compositionData == null)
@@ -358,11 +396,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             List<TrackObjectPacket>
                 trackObjectDatas = new List<TrackObjectPacket>(); //Пустой список дочерних объектов композиции
             List<Track> childAllTracks = new List<Track>();
+            List<TrackObjectPacket> childAllPacked = new List<TrackObjectPacket>();
             foreach (var childData in children.ToList()) //Перебираем детей из списка в сохранении
             {
                 //Инициализируем пустые поля
                 TrackObjectPacket childTrackObject = null;
-                GameObject childSceneObject = null;
+                // GameObject childSceneObject = null;
+                Entity childEntity;
                 Branch childBranch = null;
                 List<Track> childTracks = new List<Track>();
 
@@ -379,17 +419,19 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
                     if (groupChildData != null) //Если нашли, загружаем
                     {
-                        (childTrackObject, childSceneObject, childBranch) = LoadComposition(childGroupData,
+                        (childTrackObject, _, childBranch) = LoadComposition(childGroupData,
                             childGroupData.compositionID,
                             groupChildData, generateNewSceneID: false,
-                            addToTitleCloneText: addToTitleCloneText, currentTimeSaved: true,  createTrackObject:false); //Рекурсивная загружка
+                            addToTitleCloneText: addToTitleCloneText, currentTimeSaved: true,
+                            createTrackObject: false); //Рекурсивная загружкаX
                     }
                 }
                 else //Если дочерний объект не композиция
                 {
-                    (childTrackObject, childSceneObject, childBranch, childTracks) =
+                    (childTrackObject, childBranch, childTracks) =
                         LoadObject(childData, generateNewSceneID: false,
-                            addToTitleCloneText: addToTitleCloneText, loadGraph: false, createTrackObject:false); //Загружаем обычный объект
+                            addToTitleCloneText: addToTitleCloneText, loadGraph: false,
+                            createTrackObject: false); //Загружаем обычный объект
                 }
 
                 if (childTrackObject != null) //Если дочерний объект не пустой
@@ -402,20 +444,25 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     ////////////////////////////////
                     childTrackObject.components.Data.StartTimeInTicks += data.reduceLeft;
                     ////////////////////////////////
+                    /// 
 
 
-                    //Сохраняем трансформ дочернего объекта
-                    Vector3 pos = childSceneObject.transform.localPosition;
-                    Quaternion rot = childSceneObject.transform.localRotation;
-                    Vector3 sca = childSceneObject.transform.localScale;
+                    childEntity = childTrackObject.entity;
+                    SetParent(childEntity, groupTrackObject.entity);
 
-                    //Делаем парент дочернего объекта
-                    childSceneObject.transform.SetParent(groupGameObject.gameObject.transform);
 
-                    //Востанавливаем прежние значения
-                    childSceneObject.transform.localPosition = pos;
-                    childSceneObject.transform.localRotation = rot;
-                    childSceneObject.transform.localScale = sca;
+                    // //Сохраняем трансформ дочернего объекта
+                    // Vector3 pos = childSceneObject.transform.localPosition;
+                    // Quaternion rot = childSceneObject.transform.localRotation;
+                    // Vector3 sca = childSceneObject.transform.localScale;
+                    //
+                    // //Делаем парент дочернего объекта
+                    // childSceneObject.transform.SetParent(groupGameObject.gameObject.transform);
+                    //
+                    // //Востанавливаем прежние значения
+                    // childSceneObject.transform.localPosition = pos;
+                    // childSceneObject.transform.localRotation = rot;
+                    // childSceneObject.transform.localScale = sca;
 
                     foreach (var node in childBranch.Nodes) //Перебираем ноды в ветке анимации
                     {
@@ -426,7 +473,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     }
                 }
 
+
                 childAllTracks.AddRange(childTracks);
+                childAllPacked.Add(childTrackObject);
             }
 
 
@@ -434,50 +483,84 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 foreach (var saveData in track.Keyframes)
                 {
+                    Debug.Log(JsonConvert.SerializeObject(saveData, Formatting.Indented));
+                    Debug.Log(saveData.GetEntityData());
+                    Debug.Log(saveData.GetEntityData().Graph);
+                    Debug.Log(TypeToDataType.Convert(saveData.GetEntityData().GetType()));
                     (OutputLogic item1, List<IInitializedNode> item2) = _saveNodes.LoadLogicOnly(
-                        saveData.GetData().Graph,
-                        TypeToDataType.Convert(saveData.GetData().GetType()), trackObjectDatas);
-                    saveData.GetData().Logic = item1;
-                    saveData.GetData().initializedNodes = item2;
+                        saveData.GetEntityData().Graph,
+                        TypeToDataType.Convert(saveData.GetEntityData().GetType()), trackObjectDatas);
+                    saveData.GetEntityData().Logic = item1;
+                    saveData.GetEntityData().initializedNodes = item2;
                 }
             }
 
             ParentLinkRestorer.Restor(trackObjectDatas); //Восстанавливаем парент
-            
+
+
             if (compositionData == null)
             {
                 TrackObjectData TrackObjectData = new TrackObjectData((float)data.duractionTime, data.gameObjectName,
                     data.lineIndex,
                     data.parentObjectID, data.startTime, data.reduceLeft, data.reduceRight, true);
-                
-                
+
+
                 groupTrackObject.components.Setup(TrackObjectData); //
             }
             else
             {
-                TrackObjectData TrackObjectData = new TrackObjectData((float)data.duractionTime, compositionData.gameObjectName,
+                TrackObjectData TrackObjectData = new TrackObjectData((float)data.duractionTime,
+                    compositionData.gameObjectName,
                     data.lineIndex,
-                    data.parentObjectID, data.startTime, data.reduceLeft, data.reduceRight, true); 
-                
-                
+                    data.parentObjectID, data.startTime, data.reduceLeft, data.reduceRight, true);
+
+
                 groupTrackObject.components.Setup(TrackObjectData);
                 groupTrackObject.components.Data.UpdateDuraction(compositionData.duractionTime);
             }
-            
+
             TrackObjectGroup trackObjectGroup =
-                _trackObjectStorage.AddGroup(groupGameObject.gameObject, groupTrackObject.components,
+                _trackObjectStorage.AddGroup(null, groupTrackObject.entity,
+                    groupTrackObject.components,
                     groupTrackObject.branch, trackObjectDatas,
                     groupTrackObject.sceneObjectID, compositionID,
                     string.IsNullOrEmpty(data.lastEditID) ? compositionData?.lastEditID : data.lastEditID,
                     addToStorage); // ???????
 
-            groupGameObject.GetComponent<NameComponent>().Name.Value = groupTrackObject.branch.Name;
+            // groupGameObject.GetComponent<NameComponent>().Name.Value = groupTrackObject.branch.Name;
 
             _main.SetTimeInTicks(_savedCurrentTime); // Возвращяем время назад
 
-            groupGameObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectGroup;
-            
-            return (trackObjectGroup, groupGameObject, groupTrackObject.branch);
+            // groupGameObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectGroup;
+
+
+            CompositionPositionOffsetData compositionPositionOffsetData =
+                _entityManager.GetComponentData<CompositionPositionOffsetData>(groupTrackObject.entity);
+            // Получаем буфер (массив) детей
+
+            GetChildrenExample(groupTrackObject.entity, childAllPacked, compositionPositionOffsetData.Offset);
+
+
+            return (trackObjectGroup, null, groupTrackObject.branch);
+        }
+
+        public void SetParent(Entity child, Entity parent)
+        {
+            // 1. Добавляем компонент Parent и устанавливаем родителя
+            _entityManager.AddComponentData(child, new Unity.Transforms.Parent { Value = parent });
+
+            // 2. Добавляем LocalToParent (необходим для рендеринга и вычислений)
+            // Если его не добавить, ребенок будет игнорировать позицию родителя
+            _entityManager.AddComponentData(child, new Unity.Transforms.Parent { Value = parent });
+// Если хочешь, чтобы он наследовал трансформации родителя:
+            if (!_entityManager.HasComponent<LocalToWorld>(child))
+                _entityManager.AddComponent<LocalToWorld>(child);
+
+// Для родителя (обязательно!)
+            if (!_entityManager.HasComponent<LocalToWorld>(parent))
+                _entityManager.AddComponent<LocalToWorld>(parent);
+            // 3. Убедитесь, что у ребенка есть LocalTransform
+            // (обычно он уже есть, если объект виден на сцене)
         }
     }
 }

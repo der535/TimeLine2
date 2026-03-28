@@ -2,13 +2,13 @@
 
 namespace TimeLine.LevelEditor.Player
 {
-    public class PlayerInvulnerable : MonoBehaviour
+    public static class PlayerInvulnerable
     {
         // Хорошо: свойство с публичным get и приватным set
-        public bool IsInvulnerable { get; private set; }
+        public static bool IsInvulnerable { get; private set; }
 
         // Внутренний метод для изменения состояния
-        internal void SetActive(bool value)
+        internal static void SetActive(bool value)
         {
             IsInvulnerable = value;
         }

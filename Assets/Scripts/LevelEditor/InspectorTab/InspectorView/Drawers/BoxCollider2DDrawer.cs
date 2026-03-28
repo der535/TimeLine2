@@ -1,73 +1,105 @@
-﻿using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
-using TimeLine.Keyframe.AnimationDatas.BoxCollider.Scale;
-using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
-using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
+﻿using System.Collections.Generic;
+using TimeLine.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.ECS.Services;
+using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Transforms;
 using UnityEngine;
+using BoxCollider = Unity.Physics.BoxCollider;
+using Material = Unity.Physics.Material;
 
-namespace TimeLine.CustomInspector.UI.Drawers
+namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
 {
     public class BoxCollider2DDrawer : IComponentDrawer
     {
         private KeyframeCreator _keyframeCreator;
         private CustomInspectorDrawer _customInspectorDrawer = null;
         private TrackObjectStorage _trackObjectStorage;
+        private ColliderDrawer _colliderDrawer;
+
+        public BoxCollider2DDrawer(ColliderDrawer colliderDrawer)
+        {
+            _colliderDrawer = colliderDrawer;
+        }
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator)
+            KeyframeCreator keyframeCreator, ToolsController toolsController)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public bool GetComponent(Component component)
+        public bool GetComponent(List<ComponentType> component)
         {
-            return component.GetType() == typeof(BoxCollider2DComponent);
+            return CheckIfComponentTypeInList.Check(component, typeof(BoxColliderData));
         }
 
-        public void Draw(Component component, GameObject target)
+        public void Draw(Entity target)
         {
-            _customInspectorDrawer.CreateComponent(component, true);
-            string id = _trackObjectStorage.GetTrackObjectDataOrParentGroupBySceneObject(target).sceneObjectID;
-            SceneObjectLink link = target.GetComponent<SceneObjectLink>();
+            _customInspectorDrawer.CreateComponent(ComponentNames.BoxCollider, target, true);
 
-            if (component is BoxCollider2DComponent rendererComponent)
+            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            if (entityManager.HasComponent<PhysicsCollider>(target) &&
+                entityManager.HasComponent<BoxColliderData>(target))
             {
-                _customInspectorDrawer.CreateBoolField(rendererComponent.isActive);
-                
-                _customInspectorDrawer.CreateFloatField(
-                    rendererComponent.OffsetX,
-                    link.trackObjectPacket,
-                    (BaseParameterComponent)component,
-                    id,
-                    () => _keyframeCreator.CreateKeyframe(new XOffsetData(rendererComponent.OffsetX.Value),
-                        target,
-                        rendererComponent.GetType().Name, 
-                        rendererComponent.OffsetX));
-                
-                _customInspectorDrawer.CreateFloatField(rendererComponent.OffsetY,                     link.trackObjectPacket,
-                    (BaseParameterComponent)component, id,() =>
-                    _keyframeCreator.CreateKeyframe(new YOffsetData(rendererComponent.OffsetY.Value), target,
-                        rendererComponent.GetType().Name, rendererComponent.OffsetY));
-                
-                _customInspectorDrawer.AddSpace(5);
-                
-                _customInspectorDrawer.CreateFloatField(rendererComponent.SizeX,                    link.trackObjectPacket,
-                    (BaseParameterComponent)component, id,() =>
-                    _keyframeCreator.CreateKeyframe(new XSizeData(rendererComponent.SizeX.Value), target,
-                        rendererComponent.GetType().Name, rendererComponent.SizeX));
-                
-                _customInspectorDrawer.CreateFloatField(rendererComponent.SizeY,                    link.trackObjectPacket,
-                    (BaseParameterComponent)component, id,() =>
-                    _keyframeCreator.CreateKeyframe(new YSizeData(rendererComponent.SizeY.Value), target,
-                        rendererComponent.GetType().Name, rendererComponent.SizeY));
-                
-                _customInspectorDrawer.AddSpace(5);
-                
-                _customInspectorDrawer.CreateBoolField(rendererComponent.isDamageable);
-                _customInspectorDrawer.CreateBoolField(rendererComponent.isObstacle);
+                PhysicsCollider startPhysicsCollider = entityManager.GetComponentData<PhysicsCollider>(target);
+                BoxColliderData boxColliderData = entityManager.GetComponentData<BoxColliderData>(target);
+                TrackObjectPacket trackObjectPacket = _trackObjectStorage.GetTrackObjectData(target);
 
+
+                if (startPhysicsCollider.TryGetBox(out BoxGeometry geometry))
+                {
+                    float3 startCenter = geometry.Center;
+                    _colliderDrawer.AddCollider(Components.BoxCollider.ColliderType.BoxCollider, target);
+                    
+                    _customInspectorDrawer.CreateFloatField(boxColliderData.boxSize.x, "Size/X", null,
+                        (value) =>
+                        {
+                            boxColliderData.boxSize = new float3(value, boxColliderData.boxSize.y, 100);
+                            entityManager.SetComponentData(target, boxColliderData);
+                        }, trackObjectPacket, "BoxCollider.Size.X");
+
+                    _customInspectorDrawer.CreateFloatField(boxColliderData.boxSize.y, "Size/Y", null,
+                        (value) =>
+                        {
+                            boxColliderData.boxSize = new float3(boxColliderData.boxSize.y, value, 100);
+                            entityManager.SetComponentData(target, boxColliderData);
+                        }, trackObjectPacket, "BoxCollider.Size.Y");
+
+                    _customInspectorDrawer.CreateFloatField(startCenter.x, "Offset/X", null,
+                        (value) =>
+                        {
+                            boxColliderData.boxCenter = new float3(value, boxColliderData.boxCenter.y,
+                                boxColliderData.boxCenter.z);
+                            entityManager.SetComponentData(target, boxColliderData);
+                        }, trackObjectPacket, "BoxCollider.Offset.X");
+                    _customInspectorDrawer.CreateFloatField(startCenter.y, "Offset/Y", null,
+                        (value) =>
+                        {
+                            boxColliderData.boxCenter = new float3(boxColliderData.boxCenter.x, value,
+                                boxColliderData.boxCenter.z);
+                            entityManager.SetComponentData(target, boxColliderData);
+                        }, trackObjectPacket, "BoxCollider.Offset.Y");
+                    _customInspectorDrawer.CreateBoolField(false, "IsTrigger",
+                        (value) =>
+                        {
+                            boxColliderData.isTrigger = value;
+                            entityManager.SetComponentData(target, boxColliderData);
+                        });
+                    _customInspectorDrawer.CreateBoolField(false, "IsDangerous",
+                        (value) =>
+                        {
+                            boxColliderData.isDangerous = value;
+                            entityManager.SetComponentData(target, boxColliderData);
+                        });
+                }
             }
         }
     }

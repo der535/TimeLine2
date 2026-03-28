@@ -178,7 +178,7 @@ namespace TimeLine
             if (nextKey != null)
             {
                 double nextTime =  TimeLineConverter.Instance.TicksToSeconds(nextKey.Ticks);
-                double nextValue = nextKey.GetData().GetValue() is float nVal ? nVal : 0f;
+                double nextValue = nextKey.GetEntityData().GetValue() is float nVal ? nVal : 0f;
 
                 double deltaTime = nextTime - currentTime;
 

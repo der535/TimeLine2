@@ -4,11 +4,10 @@ using TimeLine.EventBus.Events.Grid;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
-using TimeLine.Keyframe.AnimationDatas.BoxCollider.Offset;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.View;
-using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.BoxCollider.Offset;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.TimeLine;
@@ -221,7 +220,7 @@ namespace TimeLine
                 for (var index = 0; index < data.Count; index++)
                 {
                     var keyframeData = data[index];
-                    if (keyframeData.GetData().GetValue() is not float value) continue;
+                    if (keyframeData.GetEntityData().GetValue() is not float value) continue;
 
                     BezierPoint point = _container.InstantiatePrefab(bizerPrefab, _keyframeReferences.rootPoints)
                         .GetComponent<BezierPoint>();
@@ -274,7 +273,7 @@ namespace TimeLine
                 list.Add(keyframe.Clone());
             }
 
-            switch (track.Keyframes[0].GetData().GetValue())
+            switch (track.Keyframes[0].GetEntityData().GetValue())
             {
                 case float value:
                     return track.Keyframes;
@@ -283,8 +282,8 @@ namespace TimeLine
                 case Color value:
                     foreach (var keyframe in list)
                     {
-                        Color color = (Color)keyframe.GetData().GetValue();
-                        keyframe.AddData(new XOffsetData((color.a + color.r + color.g + color.b) / 4));
+                        Color color = (Color)keyframe.GetEntityData().GetValue();
+                        keyframe.AddData(new EntityXPositionData((color.a + color.r + color.g + color.b) / 4));
                     }
 
                     return list;
@@ -335,7 +334,7 @@ namespace TimeLine
                         continue;
 
                     var keyframeData = point.BezierDragPoint._keyframe;
-                    if (keyframeData.GetData().GetValue() is not float value)
+                    if (keyframeData.GetEntityData().GetValue() is not float value)
                         continue;
 
                     Keyframe.Keyframe prevKey = index - 1 >= 0

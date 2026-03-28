@@ -63,7 +63,7 @@ namespace TimeLine.Input
                     out var localPoint))
             {
                 // 2. Проверяем, входит ли локальная точка в границы прямоугольника
-                if (clickArea.rect.Contains(localPoint)&& timeLineFocus.IsFocused && UnityEngine.Input.GetMouseButtonDown(0))
+                if (clickArea.rect.Contains(localPoint) && timeLineFocus.IsFocused && UnityEngine.Input.GetMouseButtonDown(0))
                 {
                     _isActive = true;
                 }
@@ -87,7 +87,7 @@ namespace TimeLine.Input
             else
             {
                 // Перетаскивание уже начато — обновляем, пока мышь удерживается
-                if (isMouseHeld)
+                if (_isActive && isMouseHeld)
                 {
                     if (_actionMap.Editor.LeftCtrl.IsPressed())
                         _audioPlaybackService.Play();
@@ -111,7 +111,7 @@ namespace TimeLine.Input
             float pixelX = cursorPos.x - _mainObjects.ContentRectTransform.offsetMin.x;
 
             double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT /
-                                   (timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom);
+                                   (_timeLineScroll.Zoom);
             double rawTicks = pixelX * ticksPerPixel;
 
             // 1. Сетка работает всегда (базовое поведение)

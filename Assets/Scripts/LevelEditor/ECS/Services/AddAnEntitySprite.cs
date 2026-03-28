@@ -38,7 +38,7 @@ public class AddAnEntitySprite : MonoBehaviour
             renderMeshArray, 
             MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0)
         );
-
+                
         // 4. Устанавливаем корректный масштаб на основе размеров спрайта (Pixels Per Unit)
         float3 spriteScale = new float3(
             sprite.rect.width / sprite.pixelsPerUnit,
@@ -54,5 +54,45 @@ public class AddAnEntitySprite : MonoBehaviour
         
         // Добавляем PostTransformMatrix, если нужно подогнать размер под спрайт без изменения LocalTransform
         manager.AddComponentData(entity, new PostTransformMatrix { Value = float4x4.Scale(spriteScale) });
+    }
+    
+    public void SetupSpriteRender(Entity entity, Texture texture, Material material)
+    {
+        var world = World.DefaultGameObjectInjectionWorld;
+        var manager = world.EntityManager;
+        // 1. Создаем уникальный экземпляр материала для этого спрайта
+        // Примечание: Если спрайтов много, лучше использовать Property Blocks, 
+        // но для начала создадим экземпляр:
+        Material instanceMat = material;
+        instanceMat.mainTexture = texture;
+
+        // 2. Описываем массив мешей и материалов
+        var renderMeshArray = new RenderMeshArray(new[] { instanceMat }, new[] { quadMesh });
+        
+        var renderMeshDescription = new RenderMeshDescription
+        {
+            FilterSettings = RenderFilterSettings.Default,
+            LightProbeUsage = LightProbeUsage.Off
+        };
+
+        // 3. Добавляем компоненты рендера на существующую сущность
+        RenderMeshUtility.AddComponents(
+            entity, 
+            manager, 
+            renderMeshDescription, 
+            renderMeshArray, 
+            MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0)
+        );
+                
+        // 4. Устанавливаем корректный масштаб на основе размеров спрайта (Pixels Per Unit)
+
+
+
+        manager.AddComponentData(entity, LocalTransform.FromPositionRotationScale(
+            float3.zero, 
+            quaternion.identity, 
+            1.0f // Базовый масштаб
+        ));
+
     }
 }

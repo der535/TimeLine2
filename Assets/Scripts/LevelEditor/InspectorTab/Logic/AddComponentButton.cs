@@ -1,5 +1,6 @@
 ﻿using TimeLine.Components;
 using TimeLine.CustomInspector.UI.FieldUI;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -22,7 +23,7 @@ namespace TimeLine
              _addComponentWindowsData = addComponentWindowsData;
          }
          
-         internal void Setup(GameObject target)
+         internal void Setup(Entity target)
          {
              button.onClick.AddListener(() =>
              {

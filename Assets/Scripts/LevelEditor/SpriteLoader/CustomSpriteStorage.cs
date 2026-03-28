@@ -6,7 +6,10 @@ using NaughtyAttributes;
 using Newtonsoft.Json;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.EditorWindows.SceneView.Outline;
 using TimeLine.LevelEditor.outline;
+using TimeLine.LevelEditor.Save;
+using Unity.Rendering;
 using UnityEngine;
 using Zenject;
 
@@ -23,6 +26,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         
         // Теперь словарь хранит СПИСОК параметров для каждого TextureData
         private Dictionary<TextureData, List<SpriteParameter>> _spriteRenderers = new();
+        private Dictionary<TextureData, List<MaterialMeshInfo>> _materialMeshInfo = new();
         public Dictionary<TextureData, SpriteParameter> TextureData = new();
         
         private static CustomSpriteStorage _instance;
@@ -158,6 +162,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
                 }
             }
         }
+        
 
         // Полностью удаляет спрайт и очищает все связанные рендереры
         public void RemoveSprite(TextureData textureData)

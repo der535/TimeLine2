@@ -12,7 +12,6 @@ using TimeLine.LevelEditor.CopyComponent;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.Core.MusicOffset;
-using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.CustomInspector;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Controller;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
@@ -21,8 +20,10 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Be
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
-using TimeLine.LevelEditor.General;
+using TimeLine.LevelEditor.EditorWindows.SceneView.Outline;
 using TimeLine.LevelEditor.GeneralEditor;
+using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
+using TimeLine.LevelEditor.InspectorTab.Logic;
 using TimeLine.LevelEditor.LevelEffects;
 using TimeLine.LevelEditor.LoadingScreen.Controllers;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
@@ -204,6 +205,7 @@ namespace TimeLine.LevelEditor.Core
             Container.BindInstance(tools.GroupEdit).AsSingle();
             Container.BindInstance(tools.GroupCreater).AsSingle();
             Container.BindInstance(tools.InitializedComponentController).AsSingle();
+            Container.BindInstance(tools.toolsController).AsSingle();
             Container.BindInstance(tools.VerticalBezierZoom).AsSingle();
             Container.BindInstance(tools.BezierLineDrawer).AsSingle();
             Container.BindInstance(tools.BezierController).AsSingle();
@@ -326,6 +328,7 @@ namespace TimeLine.LevelEditor.Core
         public GroupEdit GroupEdit;
         public GroupCreater GroupCreater;
         public InitializedComponentController InitializedComponentController;
+        public ToolsController toolsController;
 
         [FormerlySerializedAs("verticalBezierPan")]
         public VerticalBezierZoom VerticalBezierZoom;
@@ -358,7 +361,7 @@ namespace TimeLine.LevelEditor.Core
     public class CollidersPrefab
     {
         public BoxCollider2DOutline BoxCollider2DPrefab;
-        public CircleCollider2DOutline CircleCollider2DPrefab;
+        // public CircleCollider2DOutline CircleCollider2DPrefab;
         public CapsuleCollider2DOutline CapsuleCollider2DPrefab;
         public EdgeCollider2D edgeCollider2DPrefab;
         public PolygonCollider2D polygonCollider2DPrefab;

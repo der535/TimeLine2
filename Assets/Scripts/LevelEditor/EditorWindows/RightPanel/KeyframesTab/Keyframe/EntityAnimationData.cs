@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.NodeLogic;
+using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe
 {
-    public abstract class AnimationData : IAnimationApplyer
+    public abstract class EntityAnimationData : IAnimationApplyer
     {
         public OutputLogic Logic;
         public List<IInitializedNode> initializedNodes = new();
         public string Graph;
-        public abstract void Interpolate(AnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Component target);
-        public abstract void Apply(Component target, object value);
-        public abstract Type GetComponentType();
+        public abstract void Interpolate(EntityAnimationData other, double t, global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next, global::TimeLine.Keyframe.Keyframe.InterpolationType interpolationType, Entity target);
+        public abstract void Apply(Entity target, object value);
+        public abstract ComponentNames GetComponentType();
         public abstract float4 PackDataToFloat4();
-        public abstract AnimationData Clone();
+        public abstract EntityAnimationData Clone();
         public abstract object GetValue();
         public abstract void SetValue(object value);
         public abstract string GetDataType();
@@ -29,6 +32,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe
         public abstract void DeserializeData(JObject data);
     
         // Для кастомных параметров
-        public abstract void Apply(Component target, float4 value);
+        public abstract void Apply(Entity target, float4 value);
     }
 }

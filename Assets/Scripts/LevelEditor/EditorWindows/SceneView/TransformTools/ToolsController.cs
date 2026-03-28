@@ -1,6 +1,8 @@
+using System;
 using EventBus;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -23,6 +25,8 @@ namespace TimeLine
         public ActiveTool _activeTool;
         private GameEventBus _gameEventBus;
         private SelectObjectController _selectObjectController;
+
+        public Action OnValueChanged;
 
         public enum ActiveTool
         {
@@ -48,6 +52,12 @@ namespace TimeLine
 
         private void Start()
         {
+            positionController.OnValueChanged += () => OnValueChanged?.Invoke();
+            rotationController.OnValueChanged +=  () => OnValueChanged?.Invoke();
+            scaleController.OnValueChanged +=  () => OnValueChanged?.Invoke();
+
+
+
             positionButton.onClick.AddListener(() => ChangeTool(ActiveTool.Position));
             rotateButton.onClick.AddListener(() => ChangeTool(ActiveTool.Rotate));
             scaleButton.onClick.AddListener(() => ChangeTool(ActiveTool.Scale));

@@ -74,6 +74,7 @@ public class NullTrackObjectView : ITrackObjectView
 
     public void Rename(string name)
     {
+        
     }
 
     public bool GetActive() => false;

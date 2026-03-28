@@ -1,8 +1,9 @@
 using EventBus;
 using NaughtyAttributes;
-using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.CopyComponent;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TMPro;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -27,7 +28,7 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
 
         private bool _isVisible = true;
-        private Component _component;
+        private string _componentName;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, ComponentVisiblyStorage componentVisiblyStorage,
@@ -38,22 +39,19 @@ namespace TimeLine
             _trackObjectStorage = trackObjectStorage;
         }
 
-        public void Setup(Component component, bool isRemovable)
+        public void Setup(ComponentNames name,  Entity entity, bool isRemovable)
         {
             _height += text.rectTransform.sizeDelta.y;
-            _component = component;
-            text.text = component.GetType().Name;
+            _componentName = name.ToString();
+            text.text = name.ToString();
             
+            componentContextController.Setup(name, entity, isRemovable);
             
-            componentContextController.Setup((BaseParameterComponent)component, isRemovable);
-
-
-            
-            if (_componentVisiblyStorage.GetVisibility(component.GetType()) == null)
+            if (_componentVisiblyStorage.GetVisibility(name.ToString()) == null)
             {
-                _componentVisiblyStorage.SetVisibility(component.GetType(), true);
+                _componentVisiblyStorage.SetVisibility(name.ToString(), true);
             }
-            else if (_componentVisiblyStorage.GetVisibility(component.GetType()) == true)
+            else if (_componentVisiblyStorage.GetVisibility(name.ToString()) == true)
             {
                 Show();
             }
@@ -65,21 +63,19 @@ namespace TimeLine
 
         public void Hide()
         {
-            print("Hide");
             _isVisible = false;
             rootObject.gameObject.SetActive(false);
             componentTransform.sizeDelta = new Vector2(componentTransform.sizeDelta.x, text.rectTransform.sizeDelta.y);
-            _componentVisiblyStorage.SetVisibility(_component.GetType(), _isVisible);
-            print(_componentVisiblyStorage.GetVisibility(_component.GetType()));
+            _componentVisiblyStorage.SetVisibility(_componentName, _isVisible);
+            print(_componentVisiblyStorage.GetVisibility(_componentName));
         }
 
         public void Show()
         {
-            // print("Show");
             _isVisible = true;
             componentTransform.sizeDelta = new Vector2(componentTransform.sizeDelta.x, _height);
             rootObject.gameObject.SetActive(true);
-            _componentVisiblyStorage.SetVisibility(_component.GetType(), _isVisible);
+            _componentVisiblyStorage.SetVisibility(_componentName, _isVisible);
         }
 
         public void AddHeight(float height)

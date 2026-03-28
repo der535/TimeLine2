@@ -34,8 +34,8 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
                 if (thisKeyframe == keyframe) continue;
 
                 _activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.Ticks += tickDifferent;
-                _activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.GetData().SetValue(
-                    (float)((float)_activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.GetData()
+                _activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.GetEntityData().SetValue(
+                    (float)((float)_activeBezierPoints.GetFromKeyframe(keyframe).BezierDragPoint._keyframe.GetEntityData()
                         .GetValue() + valueDifferent));
             }
 

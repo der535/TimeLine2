@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
-using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
-using Unity.Mathematics;
+using Unity.Entities;
 using UnityEngine;
 
 namespace TimeLine.Keyframe
 {
     public class Track
     {
-        public GameObject TargetObject;
+        public Entity TargetEntity;
         public ActiveObjectControllerComponent activeObjectControllerComponent;
         public string TrackName;
         public Color AnimationColor;
@@ -21,16 +22,47 @@ namespace TimeLine.Keyframe
         public Component cachedComponent;
 
 
-        public Track(GameObject target, string trackName, Color animationColor)
+        // public Track(GameObject target, string trackName, Color animationColor)
+        // {
+        //     this.TrackName = trackName;
+        //     // TargetObject = target;
+        //     AnimationColor = animationColor;
+        //     // if(target != null)
+        //         // activeObjectControllerComponent = TargetObject.GetComponent<ActiveObjectControllerComponent>();
+        // }
+
+        public Track(Entity target, string trackName, Color animationColor)
         {
             this.TrackName = trackName;
-            TargetObject = target;
+            TargetEntity = target;
             AnimationColor = animationColor;
-            if(target != null)
-                activeObjectControllerComponent = TargetObject.GetComponent<ActiveObjectControllerComponent>();
         }
-
-        public Keyframe AddKeyframe(double time, AnimationData adata)
+        
+        // public Keyframe AddKeyframe(double time, AnimationData adata)
+        // {
+        //     // Debug.Log(time);
+        //     // Удаляем существующий ключевой кадр с таким же временем
+        //     var type = RemoveKeyframeAtTime(time);
+        //
+        //     Keyframe newKeyframe;
+        //     if (type is { } typ2e)
+        //         newKeyframe = new Keyframe(time, typ2e);
+        //     else
+        //         newKeyframe = new Keyframe(time, Keyframe.InterpolationType.Linear);
+        //     newKeyframe.AddData(adata);
+        //
+        //     Keyframes.Add(newKeyframe);
+        //     SortKeyframes();
+        //     if (cachedComponent == null)
+        //     {
+        //         Type t = adata.GetComponentType();
+        //         // cachedComponent = TargetObject.GetComponent(t);
+        //     }
+        //
+        //     return newKeyframe;
+        // }
+        
+        public Keyframe AddKeyframe(double time, EntityAnimationData adata)
         {
             // Debug.Log(time);
             // Удаляем существующий ключевой кадр с таким же временем
@@ -45,14 +77,10 @@ namespace TimeLine.Keyframe
 
             Keyframes.Add(newKeyframe);
             SortKeyframes();
-            if (cachedComponent == null)
-            {
-                Type t = adata.GetComponentType();
-                cachedComponent = TargetObject.GetComponent(t);
-            }
 
             return newKeyframe;
         }
+
 
         public void SetParent(TrackObjectData trackObject = null)
         {
@@ -61,7 +89,7 @@ namespace TimeLine.Keyframe
 
         public (IAnimationApplyer, Component) GetApplyer()
         {
-            return (Keyframes[0].GetData(), cachedComponent);
+            return (Keyframes[0].GetEntityData(), cachedComponent);
         }
 
         public void RemoveKeyframe(Keyframe keyframe)
@@ -74,15 +102,8 @@ namespace TimeLine.Keyframe
         {
             // Удаляем существующий ключевой кадр с таким же временем
             var type = RemoveKeyframeAtTime(newKeyframe.Ticks);
-            // Debug.Log(type);
             if (type is { } typ2e)
                 newKeyframe.Interpolation = typ2e;
-            // Debug.Log(newKeyframe.Interpolation);
-            if (cachedComponent == null)
-            {
-                Type t = newKeyframe.GetData().GetComponentType();
-                cachedComponent = TargetObject.GetComponent(t);
-            }
 
             Keyframes.Add(newKeyframe);
             SortKeyframes();
@@ -121,13 +142,17 @@ namespace TimeLine.Keyframe
 
         public void Evaluate(double time)
         {
-            if (Keyframes.Count == 0 || TargetObject == null) return;
+            if (Keyframes.Count == 0) return;
 
-            double offset = groupObject == null ? 0 : groupObject.GetKeyframeTrackOffset();
+            EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            double offset = groupObject?.GetKeyframeTrackOffset() ?? 0;
 
             // 1. Сброс всех флагов ТОЛЬКО при выключении объекта
             // Это позволит кадрам "переинициализироваться" при следующем включении
-            if (!activeObjectControllerComponent.IsActive)
+
+            bool isActive = manager.IsComponentEnabled<EntityActiveTag>(TargetEntity);
+            if (!isActive)
             {
                 for (int i = 0; i < Keyframes.Count; i++) 
                     Keyframes[i].IsInitialized = false;
@@ -160,20 +185,20 @@ namespace TimeLine.Keyframe
                 double end = next.Ticks + offset;
         
                 if (Math.Abs(start - end) < 0.0001)
-                    prev.Apply(cachedComponent);
+                    prev.Apply(TargetEntity);
                 else
                 {
                     double t = (time - start) / (end - start);
-                    prev.Interpolate(next, cachedComponent, t);
+                    prev.Interpolate(next, TargetEntity, t);
                 }
             }
             else if (prev != null)
             {
-                prev.Apply(cachedComponent);
+                prev.Apply(TargetEntity);
             }
             else if (next != null)
             {
-                next.Apply(cachedComponent);
+                next.Apply(TargetEntity);
             }
         }
         public void AddOffsetKeyframes(double ticks)
@@ -195,9 +220,9 @@ namespace TimeLine.Keyframe
             return keyframes;
         }
 
-        public AnimationData GetAnimationData() => Keyframes[0].GetData();
+        public EntityAnimationData GetAnimationData() => Keyframes[0].GetEntityData();
 
-        public Track Copy(GameObject target)
+        public Track Copy(Entity target)
         {
             Track newTrack = new Track(target, this.TrackName, this.AnimationColor);
             newTrack.Keyframes = this.Keyframes.Select(kf => kf.Clone()).ToList();
@@ -207,11 +232,6 @@ namespace TimeLine.Keyframe
         public void SortKeyframes()
         {
             Keyframes = Keyframes.OrderBy(k => k.Ticks).ToList();
-        }
-
-        public void Apply(float4 value)
-        {
-            Keyframes[0].GetData().Apply(cachedComponent, value);
         }
     }
 }

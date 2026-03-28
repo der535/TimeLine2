@@ -37,5 +37,41 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
             return String.Empty;
         }
+        
+        public string Get(string name)
+        {
+            // Check base storage
+            
+            foreach (var sprite in _spriteStorage.Sprites)
+            {
+                if (sprite.name == name) return sprite.name;
+            }
+            
+            // Check custom storage
+            foreach (var data in _customSpriteStorage.TextureData)
+            {
+                if (data.Value.Value.name == name) return data.Key.SpriteName;
+            }
+
+
+            return String.Empty;
+        }
+
+        public Sprite GetSpriteFromName(string name)
+        {
+                        
+            foreach (var sprite in _spriteStorage.Sprites)
+            {
+                if (sprite.name == name) return sprite;
+            }
+            
+            // Check custom storage
+            foreach (var data in _customSpriteStorage.TextureData)
+            {
+                if (data.Value.Value.name == name) return data.Value.Value;
+            }
+
+            return null;
+        }
     }
 }

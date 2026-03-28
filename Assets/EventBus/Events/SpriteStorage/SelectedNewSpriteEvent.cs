@@ -6,11 +6,11 @@ namespace TimeLine
 {
     public class SelectedNewSpriteEvent: IEvent
     {
-        public SpriteParameter SpriteParameter { get; }
+        public Sprite Sprite { get; }
 
-        public SelectedNewSpriteEvent(SpriteParameter spriteParameter)
+        public SelectedNewSpriteEvent(Sprite sprite)
         {
-            SpriteParameter = spriteParameter;
+            Sprite = sprite;
         }
     }
 }

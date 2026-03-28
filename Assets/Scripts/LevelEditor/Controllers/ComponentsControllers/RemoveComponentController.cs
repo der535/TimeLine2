@@ -1,5 +1,7 @@
 ﻿using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using Unity.Entities;
 using UnityEngine;
 using Zenject;
 
@@ -9,23 +11,22 @@ namespace TimeLine.Components
     {
         private GameEventBus _eventBus;
         private InitializedComponentController _initializedComponent;
+        private EntityComponentController _entityComponentController;
 
         [Inject]
-        private void Construct(GameEventBus eventBus, InitializedComponentController initializedComponent)
+        private void Construct(GameEventBus eventBus, InitializedComponentController initializedComponent, EntityComponentController entityComponentController)
         {
             _eventBus = eventBus;
             _initializedComponent = initializedComponent;
+            _entityComponentController = entityComponentController;
         }
 
         private void Start()
         {
             _eventBus.SubscribeTo((ref RemoveComponentEvent data) =>
             {
-                if (data.Component is IInitializedComponent initializedComponent)
-                    _initializedComponent.Remove(initializedComponent);
-                Destroy(data.Component);
-                print(data.Component);
-            });
+                _entityComponentController.RemoveComponent(data.Component, data.TrackObjectPacket.entity);
+            }, 1);
         }
     }
 }

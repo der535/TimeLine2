@@ -8,6 +8,8 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
+using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.ValueEditor.NodeLogic;
@@ -42,6 +44,7 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
         private DiContainer _container;
         private KeyframeTrackStorage _keyframeTrackStorage;
+        private EntityComponentController _entityComponentController;
 
         private List<(KeyframeSaveData, Track)> copyKeyframes = new();
         private double minTime;
@@ -51,7 +54,7 @@ namespace TimeLine
             KeyframeSelectedStorage selectedKeyframesStorage, KeyframeVizualizer keyframeVizualizer,
             M_KeyframeActiveTypeData mKeyframeActiveTypeData, SaveNodes saveNodes,
             TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController, DiContainer container,
-            KeyframeTrackStorage keyframeTrackStorage)
+            KeyframeTrackStorage keyframeTrackStorage, EntityComponentController entityComponentController)
         {
             _mKeyframeActiveTypeData = mKeyframeActiveTypeData;
             _gameEventBus = eventBus;
@@ -63,6 +66,7 @@ namespace TimeLine
             _selectObjectController = selectObjectController;
             _container = container;
             _keyframeTrackStorage = keyframeTrackStorage;
+            _entityComponentController = entityComponentController;
         }
 
         private void Start()
@@ -114,7 +118,7 @@ namespace TimeLine
                     {
                         CheckComponents();
                         CheckBranch();
-                        // Paste(keyframe.Item1, keyframe.Item2, _trackObjectStorage.selectedObject.trackObject, minTime);
+                        Paste(keyframe.Item1, keyframe.Item2, _trackObjectStorage.selectedObject.components.Data, minTime);
                     }
                 }
             };
@@ -123,18 +127,20 @@ namespace TimeLine
         private void CheckComponents()
         {
             foreach (var keyframe in copyKeyframes)
-            {
-                if (_selectObjectController.SelectObjects[^1].sceneObject.TryGetComponent(
-                        Keyframe.Keyframe.CreateAnimationData(keyframe.Item1.DataType).GetComponentType(),
-                        out Component component))
+            { 
+                ComponentNames name = Keyframe.Keyframe.CreateEntityAnimationData(keyframe.Item1.DataType)
+                    .GetComponentType();
+
+                if (_entityComponentController.CheckComponentAvailability(_selectObjectController.SelectObjects[^1].entity,
+                        name))
                 {
                     print(true);
                 }
                 else
                 {
                     print(false);
-                    ComponentRules.AddComponentSafely(component.GetType(),
-                        _selectObjectController.SelectObjects[^1].sceneObject, _container);
+                    _entityComponentController.AddComponentSafely(name,
+                        _selectObjectController.SelectObjects[^1].entity);
                 }
             }
         }
@@ -149,8 +155,11 @@ namespace TimeLine
                 var track = _keyframeTrackStorage.GetTrack(node);
                 if (track == null)
                 {
-                    track = new Track(_selectObjectController.SelectObjects[^1].sceneObject, trackData.Track.TrackName, trackData.Track.AnimationColor);
-                    _keyframeTrackStorage.AddTrack(node, track, _selectObjectController.SelectObjects[^1].components.Data, _selectObjectController.SelectObjects[^1].branch.ID);
+                    track = new Track(_selectObjectController.SelectObjects[^1].entity, trackData.Track.TrackName,
+                        trackData.Track.AnimationColor);
+                    _keyframeTrackStorage.AddTrack(node, track,
+                        _selectObjectController.SelectObjects[^1].components.Data,
+                        _selectObjectController.SelectObjects[^1].branch.ID);
                 }
 
                 (OutputLogic item1, List<IInitializedNode> item2) =
@@ -161,6 +170,7 @@ namespace TimeLine
                 loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() -
                                        _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks +
                                        difference;
+
                 track.AddKeyframe(loadedKeyframe);
                 _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
             }
@@ -173,16 +183,16 @@ namespace TimeLine
             copyKeyframes.Add((data, track));
         }
 
-        // private void Paste(KeyframeSaveData keyframe, Track track, TrackObject trackObject, double minTimeSelected)
-        // {
-        //     (OutputLogic item1, List<IInitializedNode> item2) =
-        //         _saveNodes.LoadLogicOnly(keyframe.Graph, TypeToDataType.Convert(keyframe.DataType));
-        //     Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe, item1, item2);
-        //     var difference = keyframe.Ticks - minTimeSelected;
-        //     loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.StartTimeInTicks +
-        //                            difference;
-        //     track.AddKeyframe(loadedKeyframe);
-        //     _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
-        // }
+        private void Paste(KeyframeSaveData keyframe, Track track, TrackObjectData trackObject, double minTimeSelected)
+        {
+            (OutputLogic item1, List<IInitializedNode> item2) =
+                _saveNodes.LoadLogicOnly(keyframe.Graph, TypeToDataType.Convert(keyframe.DataType));
+            Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe, item1, item2);
+            var difference = keyframe.Ticks - minTimeSelected;
+            loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.StartTimeInTicks +
+                                   difference;
+            track.AddKeyframe(loadedKeyframe);
+            _gameEventBus.Raise(new AddKeyframeEvent(loadedKeyframe));
+        }
     }
 }

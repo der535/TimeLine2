@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using DG.Tweening;
 using EventBus;
+using Newtonsoft.Json;
 using NUnit.Framework;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using UnityEngine;
@@ -29,6 +31,8 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
         private string _compositionID;
         private string _savedName;
+        
+        List<TrackObjectPacket> editObjects = new List<TrackObjectPacket>();
 
         [Inject]
         void Construct(GameEventBus gameEventBus, SetPositionInTimeline setPositionInTimeline)
@@ -44,20 +48,25 @@ namespace TimeLine
             _compositionID = compositionData.compositionID;
             _savedName = compositionData.gameObjectName;
             trackObjectStorage.HideAll();
-            var (_, game, _) =
-                facadeObjectSpawner.LoadComposition(compositionData, compositionData.compositionID, false);
-
-            var trackObject = (TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game);
             
-            List<TrackObjectPacket> datas = groupSeparate.SeparateSingle((TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game));
+            Debug.Log(JsonConvert.SerializeObject(compositionData.children, Formatting.Indented));
+
+            editObjects = facadeObjectSpawner.LoadObjects(compositionData.children);
+            
+            // var (_, game, _) =
+            //     facadeObjectSpawner.LoadComposition(compositionData, compositionData.compositionID, false);
+            //
+            // var trackObject = (TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game);
+            //
+            // List<TrackObjectPacket> datas = groupSeparate.SeparateSingle((TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game));
 
             double sum = 0;
             
-            foreach (var VARIABLE in datas)
+            foreach (var VARIABLE in editObjects)
             {
                 sum += VARIABLE.components.Data.StartTimeInTicks;
             }
-            sum /= datas.Count;
+            sum /= editObjects.Count;
             
 
             _setPositionInTimeline.SetPosition((float)sum);
@@ -66,11 +75,15 @@ namespace TimeLine
         public void EndEdit()
         {
             TrackObjectGroup trackObjectGroup =
-                groupCreater.Create(trackObjectStorage.GetAllActiveTrackData(), _compositionID);
-            trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
+                groupCreater.Create(editObjects, _compositionID);
+            // trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
             trackObjectStorage.ShowAll();
             composition.EditComposition(saveLevel.SaveGroup(trackObjectGroup), trackObjectGroup.compositionID);
             trackObjectRemover.SingleRemove(trackObjectGroup, false);
+            foreach (var ob in editObjects)
+            {
+                trackObjectRemover.SingleRemove(ob);
+            }
             compositionUpdater.UpdateCompositions(trackObjectGroup.compositionID);
             _gameEventBus.Raise(new EndCompositionEdit());
         }

@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.Save;
 using TimeLine.TimeLine;
 using UnityEngine;
 
@@ -92,8 +93,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private TrackObjectPacket PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true,
             bool addToTitleCloneText = false)
         {
-            Debug.Log(data.tracks.Count);
-
             foreach (var child in data.children)
             {
                 if (child is GroupGameObjectSaveData childGroup)
@@ -108,8 +107,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             dataCopyComposition.startTime = 0;
             dataCopyComposition.branch.Nodes = new List<TreeNodeSaveData>();
             dataCopyComposition.tracks = new List<TrackSaveData>();
-            dataCopyComposition.Components =
-                new List<ComponentData>(); // В сохраняемую композицию запихать стандартные компонеты из префаба
+            dataCopyComposition.EntityComponents = new();
 
 
             if (!string.IsNullOrEmpty(data.lastEditID) || !string.IsNullOrEmpty(composition.lastEditID))

@@ -2,6 +2,7 @@
 using EventBus;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -12,10 +13,10 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
     public class GetParameter : MonoBehaviour
     {
         [SerializeField] private Button button;
-        private InspectableParameter _parameter;
         private MapParameterComponen _mapParameterComponen;
         private GameEventBus _gameEventBus;
         private EventBinder eventBinder;
+        private TrackObjectPacket _trackObjectPacket;
 
         [Inject]
         private void Construct(GameEventBus parameter)
@@ -32,17 +33,16 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
             eventBinder.Add(_gameEventBus, (ref StopListeningParameterEvent _) => button.gameObject.SetActive(false));
         }
 
-        public void Setup(InspectableParameter parameter, TrackObjectPacket trackObjectPacket,
-            BaseParameterComponent component)
+        public void Setup(TrackObjectPacket trackObjectPacket, string parameterID)
         {
-            _parameter = parameter;
+            _trackObjectPacket = trackObjectPacket;
             _mapParameterComponen =
-                new MapParameterComponen(trackObjectPacket.sceneObjectID, component.GetID(), parameter.Id);
+                new MapParameterComponen(trackObjectPacket.sceneObjectID, parameterID);
         }
 
         public void Get()
         {
-            _gameEventBus.Raise(new GetParameterEvent((_parameter, _mapParameterComponen)));
+            _gameEventBus.Raise(new GetParameterEvent(_mapParameterComponen, _trackObjectPacket));
             _gameEventBus.Raise(new StopListeningParameterEvent());
         }
 
@@ -56,13 +56,11 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
 public class MapParameterComponen
 {
     public string SceneObjectID;
-    public string ComponentID;
     public string ParameterID;
 
-    public MapParameterComponen(string sceneObjectID, string componentID, string parameterID)
+    public MapParameterComponen(string sceneObjectID, string parameterID)
     {
         SceneObjectID = sceneObjectID;
-        ComponentID = componentID;
         ParameterID = parameterID;
     }
 }

@@ -31,6 +31,16 @@ namespace TimeLine
 
             UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe);
         }
+        
+        public void Setup(float startValue, string parameterName, Action<float> onValueChange, Action createKeyframe)
+        {
+            this.parameterName.text = parameterName;
+            inputField.text = startValue.ToString(CultureInfo.InvariantCulture);
+
+            _inputValidator = new IntInputValidator(inputField, value => onValueChange.Invoke(value), value => onValueChange.Invoke(value));
+
+            UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe);
+        }
 
         public float GetFieldHeight()
         {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Save;
 using UnityEngine;
 using Zenject;
 
@@ -53,10 +54,29 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             };
         }
 
-        internal (TrackObjectPacket, GameObject, Branch, List<Track>) LoadObject(GameObjectSaveData data,
-            bool addToStorage = true)
+        internal List<TrackObjectPacket> LoadObjects(List<GameObjectSaveData> data)
         {
-            return _loader.LoadObject(data, addToStorage, loadGraph: false);
+            var trackObjects = new List<TrackObjectPacket>();
+            
+            foreach (var saveData in data)
+            {
+                if (saveData is GroupGameObjectSaveData group)
+                {
+                    trackObjects.Add(LoadComposition(group, group.compositionID, false).Item1);
+                }
+                else
+                {
+                    trackObjects.Add(LoadObject(saveData, true, true).Item1);
+                }
+            }
+            
+            return trackObjects;
+        }
+
+        internal (TrackObjectPacket,  Branch, List<Track>) LoadObject(GameObjectSaveData data,
+            bool addToStorage = true, bool loadGraph = false)
+        {
+            return _loader.LoadObject(data, addToStorage, loadGraph: loadGraph);
         }
 
         internal void CreateSceneObjectAndAddSprite(Sprite sprite)

@@ -5,7 +5,7 @@ using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.EventBus.Events.EditroSceneCamera;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.Core;
-using TimeLine.LevelEditor.General;
+using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -65,7 +65,7 @@ namespace TimeLine.EdgeColliderEditor
 
         internal void Init(
             ListVector2Parameter parameter, 
-            EdgeCollider2DComponent edgeCollider2DComponent, 
+            // EdgeCollider2DComponent edgeCollider2DComponent, 
             GameObject edgeColliderObject,
             FloatParameter edgeRadius)
         {
@@ -73,7 +73,7 @@ namespace TimeLine.EdgeColliderEditor
             var lineRenderer = edgeColliderObject.GetComponent<LineRenderer>();
 
             // Setup Model
-            _model = new EdgeColliderModel(parameter, edgeCollider2DComponent, edgeCollider2D, edgeRadius);
+            // _model = new EdgeColliderModel(parameter, edgeCollider2DComponent, edgeCollider2D, edgeRadius);
             
             // Setup View
             _view = edgeColliderObject.AddComponent<EdgeColliderView>();

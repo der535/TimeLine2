@@ -16,7 +16,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
+  m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -24,19 +24,25 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: c1e1f7ef76f59f54bbde5162f2709794, type: 3}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: cd516d339f018dd489bc68586744a981, type: 3}
+        m_Scale: {x: 6.18, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _ColorMask: 15
     - _Falloff: 1.28
     - _InnerCutoff: 0.426
     - _LineSpacing: 10
-    - _LineWidth: 0.112
+    - _LineWidth: 0.285
     - _OutlineThickness: 0.01
     - _Smoothness: 0.0579
     - _Softness: 10
-    - _Speed: 0.1
+    - _Speed: 0.46
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
     - _Thickness: 0
     - _Threshold: 0.384
     m_Colors:

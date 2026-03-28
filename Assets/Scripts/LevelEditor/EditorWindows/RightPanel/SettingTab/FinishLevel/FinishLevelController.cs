@@ -9,6 +9,7 @@ using TimeLine.EventBus.Events.LevelFinishedEvent;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Player;
+using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
 using TimeLine.TimeLine;
 using TMPro;
@@ -21,7 +22,6 @@ namespace TimeLine
     {
         [SerializeField] private GameObject finishScreen;
         [SerializeField] private PlayModeController playModeController;
-        [SerializeField] private PlayerInvulnerable playerInvulnerable;
         [Space] 
         [SerializeField] private TMP_InputField inputField;
         
@@ -77,7 +77,7 @@ namespace TimeLine
                 
                 _actionMap.LevelFinished.CloseFinishScreen.started += _ =>
                 {
-                    playerInvulnerable.SetActive(false);
+                    PlayerInvulnerable.SetActive(false);
                     finishScreen.SetActive(false);
 
                     _actionMap.Player.Enable();
@@ -132,7 +132,7 @@ namespace TimeLine
         private void FinishLevel()
         {
             _gameEventBus.Raise(new LevelFinishedEvent());
-            playerInvulnerable.SetActive(true);
+            PlayerInvulnerable.SetActive(true);
             finishScreen.SetActive(true);
 
             _actionMap.Player.Disable();

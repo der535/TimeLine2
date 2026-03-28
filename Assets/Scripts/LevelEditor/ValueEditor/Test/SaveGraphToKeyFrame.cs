@@ -23,10 +23,10 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
         
         public void Save()
         {
-            Save(_openValueEditor.GetEditKeyframe().GetData(), _nodeCreator.GetInitializedNodes(), _saveNodes.SaveGraphToJson(_nodeCreator.GetNodes()));
+            Save(_openValueEditor.GetEditKeyframe().GetEntityData(), _nodeCreator.GetInitializedNodes(), _saveNodes.SaveGraphToJson(_nodeCreator.GetNodes()));
         }
         
-        private void Save(AnimationData keyframe, List<IInitializedNode> initialized, string saveJson)
+        private void Save(EntityAnimationData keyframe, List<IInitializedNode> initialized, string saveJson)
         {
             keyframe.Graph = saveJson;
             keyframe.initializedNodes = initialized;

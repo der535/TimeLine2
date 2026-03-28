@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using EventBus;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.Keyframe;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent.Position;
-using TimeLine.Keyframe.AnimationDatas.TransformComponent.Rotation;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
 using TimeLine.LevelEditor.GeneralEditor;
@@ -15,14 +11,12 @@ using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using TimeLine.TimeLine;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
-using UnityEngine.Profiling;
 using Zenject;
-using Debug = System.Diagnostics.Debug;
-using Random = UnityEngine.Random;
 
 namespace TimeLine.LevelEditor.Optimization
 {
@@ -69,19 +63,19 @@ namespace TimeLine.LevelEditor.Optimization
         }
 
         // --- Обычные списки для синхронных операций ---
-        private List<(IAnimationApplyer applyer, Component target, int resIdx)> _manualApplyers = new();
+        private List<(IAnimationApplyer applyer, Entity target, int resIdx)> _manualApplyers = new();
         private List<Component> _notifyTargets = new();
 
         private void Start()
         {
             // Подписка на событие тика времени
-            _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(UpdateTime);
+            // _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(UpdateTime);
 
             // Автоматический "запекание" данных при старте проигрывания
-            _gameEventBus.SubscribeTo((ref ChangePlayMode _) =>
-            {
-                if (_.IsPlaying) Bake();
-            });
+            // _gameEventBus.SubscribeTo((ref ChangePlayMode _) =>
+            // {
+            //     if (_.IsPlaying) Bake();
+            // });
         }
 
         private void OnDestroy()
@@ -277,7 +271,7 @@ namespace TimeLine.LevelEditor.Optimization
                 foreach (var key in track.Track.Keyframes)
                 {
                     totalKeysCount++;
-                    if (key.GetData().Logic != null) totalNodesCount += SortNodes(key.GetData().Logic).Count;
+                    if (key.GetEntityData().Logic != null) totalNodesCount += SortNodes(key.GetEntityData().Logic).Count;
                 }
             }
 
@@ -309,7 +303,7 @@ namespace TimeLine.LevelEditor.Optimization
                 for (int j = 0; j < src.Track.Keyframes.Count; j++)
                 {
                     var kf = src.Track.Keyframes[j];
-                    var data = kf.GetData();
+                    var data = kf.GetEntityData();
                     var jobKey = new JobKeyframe
                     {
                         Ticks = kf.Ticks,
@@ -408,7 +402,7 @@ namespace TimeLine.LevelEditor.Optimization
                 }
                 else if (src.Track.cachedComponent != null)
                 {
-                    _manualApplyers.Add((src.Track.GetApplyer().Item1, src.Track.cachedComponent, i));
+                    _manualApplyers.Add((src.Track.GetApplyer().Item1, src.Track.TargetEntity, i));
                 }
             }
 
@@ -482,13 +476,13 @@ namespace TimeLine.LevelEditor.Optimization
         {
             return animData switch
             {
-                XPositionData => TransformMask.PosX,
-                YPositionData => TransformMask.PosY,
-                XRotationData => TransformMask.RotX,
-                YRotationData => TransformMask.RotY,
-                ZRotationData => TransformMask.RotZ,
-                XScaleData => TransformMask.ScaleX,
-                YScaleData => TransformMask.ScaleY,
+                EntityXPositionData => TransformMask.PosX,
+                EntityYPositionData => TransformMask.PosY,
+                EntityXRotationData => TransformMask.RotX,
+                EntityYRotationData => TransformMask.RotY,
+                EntityZRotationData => TransformMask.RotZ,
+                EntityXScaleData => TransformMask.ScaleX,
+                EntityYScaleData => TransformMask.ScaleY,
                 _ => TransformMask.None
             };
         }
@@ -698,7 +692,7 @@ namespace TimeLine.LevelEditor.Optimization
 public interface IAnimationApplyer
 
 {
-    public void Apply(Component target, float4 value);
+    public void Apply(Entity target, float4 value);
 }
 
 public enum OpCode

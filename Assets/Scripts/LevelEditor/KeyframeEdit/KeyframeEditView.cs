@@ -10,9 +10,6 @@ namespace TimeLine.LevelEditor.KeyframeEdit
         [SerializeField] private TMP_InputField timeInput;
         [SerializeField] private TextMeshProUGUI timePlaceHolder;
         [Space] 
-        [SerializeField] private TMP_InputField valueInput;
-        [SerializeField] private TextMeshProUGUI valuePlaceHolder;
-        [Space] 
         [SerializeField] private TMP_Dropdown _dropDown;
 
         private void Start()
@@ -27,46 +24,22 @@ namespace TimeLine.LevelEditor.KeyframeEdit
             });
         }
 
-        internal void InputValueOnChange(Action<float> action)
-        {
-            new FloatInputValidator(timeInput, action);
-        }
-
-        internal void SetValueInputInteractable(bool active)
-        {
-            valueInput.interactable = active;
-        }
 
         internal void SetValueDropdown(int value)
         {
             _dropDown.value = value;
         }
         
-        internal void SetTextInputValuePlaceHolder(string placeholder)
-        {
-            valuePlaceHolder.text = placeholder;
-        }
 
-        internal void SetTextInputValue(object data)
-        {
-            if(data is string text)
-                valueInput.text = text;
-            if(data is float floatData)
-                valueInput.text = floatData.ToString();
-            if (data is int intData)
-                valueInput.text = intData.ToString();
-        }
+        
 
         internal void Clear()
         {
             timeInput.onEndEdit.RemoveAllListeners();
-            valueInput.onEndEdit.RemoveAllListeners();
             _dropDown.onValueChanged.RemoveAllListeners();
             timeInput.text = string.Empty;
-            valueInput.text = string.Empty;
-            timeInput.enabled = false;
-            valueInput.enabled = false;
-            _dropDown.enabled = false;
+            timeInput.interactable = false;
+            _dropDown.interactable = false;
         }
         
         internal void SelectType(Keyframe.Keyframe.InterpolationType type)
@@ -106,7 +79,6 @@ namespace TimeLine.LevelEditor.KeyframeEdit
         internal void SetInteractable(bool active)
         {
             timeInput.interactable = active;
-            valueInput.interactable = active;
             _dropDown.interactable = active;
         }
 

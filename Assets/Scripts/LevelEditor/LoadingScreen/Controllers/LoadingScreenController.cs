@@ -4,20 +4,21 @@ using EventBus;
 using TimeLine.LevelEditor.LoadingScreen.Model;
 using TimeLine.LevelEditor.LoadingScreen.View;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine.LevelEditor.LoadingScreen.Controllers
 {
     public class LoadingScreenController : MonoBehaviour
     {
-        [SerializeField] private LoadingViewBase _viewBase;
+        [FormerlySerializedAs("_viewBase")] [SerializeField] private LoadingViewBase viewBase;
         [SerializeField] private LoadingStepsStorage storage = new();
 
         private GameEventBus _eventBus;
         
         internal void Clear()
         {
-            _viewBase.UpdateUI(0, String.Empty);
+            viewBase.UpdateUI(0, String.Empty);
             storage.Value.Clear();
         }
 
@@ -53,7 +54,7 @@ namespace TimeLine.LevelEditor.LoadingScreen.Controllers
 
         private IEnumerator ExecuteLoading()
         {
-            _viewBase.ShowLoadingScreen();
+            viewBase.ShowLoadingScreen();
             
             float totalSteps = storage.GetCountSteps();
 
@@ -62,7 +63,7 @@ namespace TimeLine.LevelEditor.LoadingScreen.Controllers
                 var step = storage.GetStep(i);
 
                 // 1. Обновляем текст и прогресс
-                _viewBase.UpdateUI((float)i / totalSteps, step.Description);
+                viewBase.UpdateUI((float)i / totalSteps, step.Description);
 
                 // 2. Ждем один кадр, чтобы Unity отрисовала изменения на экране
                 yield return null;
@@ -71,9 +72,9 @@ namespace TimeLine.LevelEditor.LoadingScreen.Controllers
                 step.Action.Invoke();
             }
 
-            _viewBase.UpdateUI(1, "Загрузка завершена!");
+            viewBase.UpdateUI(1, "Загрузка завершена!");
             
-            _viewBase.HideLoadingScreen();
+            viewBase.HideLoadingScreen();
             _eventBus.Raise(new LevelLoadedEvent());
         }
     }
