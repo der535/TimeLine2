@@ -2,6 +2,7 @@
 using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics;
@@ -15,6 +16,7 @@ using MeshCollider = Unity.Physics.MeshCollider;
 
 public partial struct UpdateColliderSystem : ISystem
 {
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -68,6 +70,7 @@ public partial struct UpdateColliderSystem : ISystem
 
 public partial struct UpdateCircleColliderSystem : ISystem
 {
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         // Используем EntityCommandBuffer для безопасного изменения сущностей
@@ -124,6 +127,7 @@ public partial struct UpdateCircleColliderSystem : ISystem
 
 public partial struct UpdatePolygonColliderSystem : ISystem
 {
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);

@@ -1,4 +1,5 @@
-﻿using Unity.Entities;
+﻿using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using Unity.Entities;
 using Unity.Entities.Graphics;
 using Unity.Rendering;
 using UnityEngine;
@@ -26,6 +27,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         public void Install(Entity entity)
         {
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            
+            Debug.Log(GetComponentName());
+
+            entityManager.AddComponent<SpriteRendererTag>(entity);
 
             // 1. Создаем инстанс материала для текстуры спрайта
             Material instanceMat = new Material(_baseMaterial);
@@ -71,7 +76,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 typeof(RenderMeshArray),
                 typeof(MaterialMeshInfo),
                 typeof(RenderFilterSettings),
-                typeof(WorldRenderBounds)
+                typeof(WorldRenderBounds),
+                typeof(SpriteRendererTag)
             );
 
             entityManager.RemoveComponent(entity, typesToRemove);

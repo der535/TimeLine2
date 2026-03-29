@@ -1,7 +1,7 @@
 ﻿using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.TrackObjectSize.Data;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

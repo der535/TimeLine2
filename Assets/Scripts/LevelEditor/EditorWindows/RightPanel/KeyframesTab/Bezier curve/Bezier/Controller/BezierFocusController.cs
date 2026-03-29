@@ -6,7 +6,6 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Be
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.View;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
-using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;

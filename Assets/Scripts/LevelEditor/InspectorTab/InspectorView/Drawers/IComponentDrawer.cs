@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using Unity.Entities;
@@ -8,7 +9,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
 {
     public interface IComponentDrawer
     {
-        public void Setup(CustomInspectorDrawer drawer, TrackObjectStorage trackObjectStorage, KeyframeCreator keyframeCreator, ToolsController toolsController);
+        public void Setup(CustomInspectorDrawer drawer, TrackObjectStorage trackObjectStorage, KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder);
         /// <summary>
         /// Проверка есть ли в переденных компонентах тот компонент который необходим для отрисовки
         /// </summary>

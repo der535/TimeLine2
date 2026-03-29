@@ -3,7 +3,6 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.EntityComponentInstaller;
-using TimeLine.TimeLine;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;

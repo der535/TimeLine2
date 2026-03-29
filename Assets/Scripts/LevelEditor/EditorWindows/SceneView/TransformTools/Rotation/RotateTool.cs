@@ -20,6 +20,7 @@ namespace TimeLine
         private ActionMap _actionMap;
 
         public Action StartRotationAction;
+        public Action StopRotationAction;
 
         [Inject]
         private void Construct(ActionMap actionMap)
@@ -82,6 +83,7 @@ namespace TimeLine
         public void StopRotation()
         {
             isRotating = false;
+            StopRotationAction.Invoke();
         }
     }
 }

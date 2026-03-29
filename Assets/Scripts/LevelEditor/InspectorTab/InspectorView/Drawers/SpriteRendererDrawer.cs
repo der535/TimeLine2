@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
@@ -16,7 +19,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         private TrackObjectStorage _trackObjectStorage = null;
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
@@ -27,7 +30,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         {
             return
             (
-                CheckIfComponentTypeInList.Check(component, typeof(RenderMeshArray))
+                CheckIfComponentTypeInList.Check(component, typeof(SpriteRendererTag))
             );
         }
 
@@ -52,11 +55,31 @@ namespace TimeLine.CustomInspector.UI.Drawers
 
                     // Получаем текущий материал
                     Material currentMat = rma.GetMaterial(meshInfo);
-
-                    _customInspectorDrawer.CreateSpriteField(currentMat.mainTexture.name,
-                        (value) => { currentMat.mainTexture = value; });
                     
-                    _customInspectorDrawer.CreateColorField(value => currentMat.color = value,  currentMat.color,null );
+                    _customInspectorDrawer.CreateSpriteField(currentMat.mainTexture.name,
+                        (value) =>
+                        {
+                            Debug.Log(value.name);
+                            currentMat.mainTexture = value;
+                        });
+                    
+                    
+                                            
+
+                    
+                    _customInspectorDrawer.CreateColorField(value => currentMat.color = value,  currentMat.color, () =>
+                    {
+                        Material currentMat = null;  
+                        RenderMeshArray rma = manager.GetSharedComponentManaged<RenderMeshArray>(target);  
+                        if (manager.HasComponent<MaterialMeshInfo>(target))  
+                        {  
+                            var meshInfo = manager.GetComponentData<MaterialMeshInfo>(target);  
+  
+                            // Получаем текущий материал  
+                            currentMat = rma.GetMaterial(meshInfo);  
+                        }
+                        _keyframeCreator.CreateKeyframe(new EntitySpriteRendererColor(currentMat.color), target, "Color", Color.white, "SpriteRenderer");
+                    }  );
                     
                     
                     _customInspectorDrawer.CreateIntField(manager.GetComponentData<LocalTransform>(target).Position.z, "Order in layer",
@@ -66,12 +89,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
                             localTransform.Position.z = value / 100;
                             manager.SetComponentData<LocalTransform>(target, localTransform);
                         }, null);
-
-                    if (currentMat != null)
-                    {
-                        // Debug.Log($"Текущий материал: {currentMat.mainTexture.name}");
-                        // Твоя отрисовка UI
-                    }
+                    
                 }
             }
         }

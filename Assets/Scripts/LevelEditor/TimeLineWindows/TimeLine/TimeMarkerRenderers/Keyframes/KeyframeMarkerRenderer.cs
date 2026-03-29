@@ -5,8 +5,8 @@ using NaughtyAttributes;
 using TimeLine;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

@@ -1,7 +1,7 @@
 ﻿using EventBus;
 using TimeLine;
 using TimeLine.EventBus.Events.Input;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using Zenject;
 
 public class SetPositionInTimeline

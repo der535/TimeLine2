@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TimeLine
 {
-    public class ShakeCameraData
+    public class ShakeCameraDataOLD
     {
         public Tween ShakeTween;
         public Vector3 OriginalPos;

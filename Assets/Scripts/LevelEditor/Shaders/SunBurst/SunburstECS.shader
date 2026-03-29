@@ -2,6 +2,7 @@
 {
     Properties
     {
+        _MainTex ("Mask Texture", 2D) = "white" {} // текстура, из которой берётся альфа для маски
         [MainColor] _BaseColor ("Background Color", Color) = (1,1,1,1)
         _LineColor ("Line Color", Color) = (0,0,0,1)
         _LineCount ("Line Count", Float) = 36

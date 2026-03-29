@@ -1,5 +1,5 @@
-﻿using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
-using TimeLine.TimeLine;
+﻿using TimeLine.LevelEditor.Core;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics;

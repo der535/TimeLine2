@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.Bezier;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Data;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

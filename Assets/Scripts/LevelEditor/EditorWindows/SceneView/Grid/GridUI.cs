@@ -1,5 +1,5 @@
 using System;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using UnityEngine;
 
 namespace TimeLine

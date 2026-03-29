@@ -31,6 +31,8 @@ namespace TimeLine.LevelEditor.SpriteLoader
             // Check custom storage
             foreach (var data in _customSpriteStorage.TextureData)
             {
+                Debug.Log(data.Value.Value.name);
+                Debug.Log( spriteParameter.Value.name);
                 if (data.Value.Value.name == spriteParameter.Value.name) return data.Key.SpriteName;
             }
 
@@ -68,6 +70,8 @@ namespace TimeLine.LevelEditor.SpriteLoader
             // Check custom storage
             foreach (var data in _customSpriteStorage.TextureData)
             {
+                // Debug.Log(data.Value.Value.name);
+                // Debug.Log( name);
                 if (data.Value.Value.name == name) return data.Value.Value;
             }
 

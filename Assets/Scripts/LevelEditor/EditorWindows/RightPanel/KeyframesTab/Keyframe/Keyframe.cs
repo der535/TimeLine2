@@ -179,6 +179,8 @@ namespace TimeLine.Keyframe
                 nameof(EntityZRotationData) => new EntityZRotationData(0),
                 nameof(EntityXScaleData) => new EntityXScaleData(0),
                 nameof(EntityYScaleData) => new EntityYScaleData(0),
+                
+                nameof(EntitySpriteRendererColor) => new EntitySpriteRendererColor(Color.white),
 
                 _ => null
             };

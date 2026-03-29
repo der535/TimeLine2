@@ -3,7 +3,6 @@ using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.Service;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve.Bezier.View;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

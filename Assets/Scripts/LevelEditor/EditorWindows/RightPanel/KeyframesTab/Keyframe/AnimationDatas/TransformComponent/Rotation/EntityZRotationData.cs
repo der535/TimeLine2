@@ -1,10 +1,10 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.ECS;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.Test;
-using TimeLine.TimeLine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;

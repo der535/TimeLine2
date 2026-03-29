@@ -100,7 +100,7 @@ namespace TimeLine.LevelEditor.ValueEditor
         public void AddInputDynamic(string label, DataType type)
         {
             // Добовляет в логику порт
-            Logic.AddInputDefinition();
+            Logic.AddInputDefinition(type);
 
             //Создаем визуальный порт
             AddPort(label, true, type);

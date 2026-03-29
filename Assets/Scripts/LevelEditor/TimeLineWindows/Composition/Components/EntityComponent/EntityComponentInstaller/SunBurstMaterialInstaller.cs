@@ -13,11 +13,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
     {
         private Material _sunBurstMaterialTemplate;
         private Mesh _quadMesh;
+        private Sprite _quadSprite;
 
-        public SunBurstMaterialInstaller(Material sunBurstMaterialTemplate, Mesh quadMesh)
+        public SunBurstMaterialInstaller(Material sunBurstMaterialTemplate, Mesh quadMesh, Sprite quadSprite)
         {
             _sunBurstMaterialTemplate = sunBurstMaterialTemplate;
             _quadMesh = quadMesh;
+            _quadSprite = quadSprite;
         }
 
         public ComponentNames GetComponentName()
@@ -40,6 +42,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             
             SetupMaterial(entity, data);
         }
+        
+        public void Install(Entity entity, SunBurstMaterialData sunBurstMaterialData)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            entityManager.AddComponent<SunBurstMaterialData>(entity);
+            entityManager.SetComponentData(entity, sunBurstMaterialData);
+            
+            SetupMaterial(entity, sunBurstMaterialData);
+        }
 
 
         public void SetupMaterial(Entity entity, SunBurstMaterialData sunBurstMaterialData)
@@ -54,8 +66,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             instanceMat.SetColor("_LineColor", sunBurstMaterialData.Color2);
             instanceMat.SetFloat("_LineCount", sunBurstMaterialData.LineCount);
             instanceMat.SetFloat("_Twist", sunBurstMaterialData.TwistFactor);
-            
-            // instanceMat.mainTexture = sprite.texture;
+            instanceMat.mainTexture = _quadSprite.texture;
 
             // 2. Описываем массив мешей и материалов
             var renderMeshArray = new RenderMeshArray(new[] { instanceMat }, new[] { _quadMesh });

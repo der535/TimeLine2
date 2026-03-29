@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using Unity.Entities;
 
@@ -11,7 +12,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         private TrackObjectStorage _trackObjectStorage = null;
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;

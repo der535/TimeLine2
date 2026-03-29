@@ -1,5 +1,4 @@
 using System.IO;
-using NaughtyAttributes;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Core.MusicOffset;
@@ -10,10 +9,9 @@ using Unity.Physics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Zenject;
-using Collider = UnityEngine.Collider;
 using Math = System.Math;
 
-namespace TimeLine.TimeLine
+namespace TimeLine.LevelEditor.Core
 {
     public class TimeLineConverter : MonoBehaviour
     {

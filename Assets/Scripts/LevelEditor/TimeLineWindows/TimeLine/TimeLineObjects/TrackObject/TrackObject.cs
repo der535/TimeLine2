@@ -6,7 +6,7 @@ using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Zenject;

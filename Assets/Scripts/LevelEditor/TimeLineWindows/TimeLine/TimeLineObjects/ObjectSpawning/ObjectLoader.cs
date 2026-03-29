@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using TimeLine.Components;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.GeneralServices;
@@ -16,7 +17,6 @@ using TimeLine.LevelEditor.ValueEditor.NodeLogic;
 using TimeLine.LevelEditor.ValueEditor.Save;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
-using TimeLine.TimeLine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -483,13 +483,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 foreach (var saveData in track.Keyframes)
                 {
-                    Debug.Log(JsonConvert.SerializeObject(saveData, Formatting.Indented));
-                    Debug.Log(saveData.GetEntityData());
-                    Debug.Log(saveData.GetEntityData().Graph);
-                    Debug.Log(TypeToDataType.Convert(saveData.GetEntityData().GetType()));
                     (OutputLogic item1, List<IInitializedNode> item2) = _saveNodes.LoadLogicOnly(
                         saveData.GetEntityData().Graph,
                         TypeToDataType.Convert(saveData.GetEntityData().GetType()), trackObjectDatas);
+    
                     saveData.GetEntityData().Logic = item1;
                     saveData.GetEntityData().initializedNodes = item2;
                 }

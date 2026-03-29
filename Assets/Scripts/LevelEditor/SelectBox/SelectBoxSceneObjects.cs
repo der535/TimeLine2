@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using UnityEngine;
 using Zenject;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.ECS;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.Save;
@@ -10,7 +11,6 @@ using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponen
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
-using TimeLine.TimeLine;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;

@@ -1,5 +1,5 @@
 ﻿using NaughtyAttributes;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;

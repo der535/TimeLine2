@@ -6,37 +6,40 @@ using Zenject;
 
 namespace TimeLine.LevelEditor.LevelEffects
 {
-    public class ShakeCameraController : MonoBehaviour
+    public class ShakeCameraController : IInitializable
     {
-        private ShakeCameraData _playCameraData = new();
-        private ShakeCameraData _editorCameraData = new();
+        private ShakeCameraDataOLD _playCameraDataOld = new();
+        private ShakeCameraDataOLD _editorCameraDataOld = new();
         private CameraReferences _cameraReferences;
+        
+        private bool isInitialized;
 
         [Inject]
         private void Construct(CameraReferences references)
         {
             _cameraReferences = references;
         }
-
-        private void Start()
-        {
-            _playCameraData.SaveStartPosition(_cameraReferences.playCamera.transform);
-            _editorCameraData.SaveStartPosition(_cameraReferences.editSceneCamera.transform);
-        }
-
-
-        [Button]
+        
         public void Shake(Vector2 shakeStrength, float duration, int vibrato, float randomness)
         {
-            if(_playCameraData.ShakeTween == null || !_playCameraData.ShakeTween.IsPlaying())
-                _playCameraData.SaveStartPosition(_cameraReferences.playCamera.transform);
-            if(_editorCameraData.ShakeTween == null || !_editorCameraData.ShakeTween.IsPlaying())
-                _editorCameraData.SaveStartPosition(_cameraReferences.editSceneCamera.transform);
+            if(!isInitialized) return;
             
-            ShakeCameraService.Shake(_playCameraData, _cameraReferences.playCamera.transform, shakeStrength, duration, vibrato,
+            if(_playCameraDataOld.ShakeTween == null || !_playCameraDataOld.ShakeTween.IsPlaying())
+                _playCameraDataOld.SaveStartPosition(_cameraReferences.playCamera.transform);
+            if(_editorCameraDataOld.ShakeTween == null || !_editorCameraDataOld.ShakeTween.IsPlaying())
+                _editorCameraDataOld.SaveStartPosition(_cameraReferences.editSceneCamera.transform);
+            
+            ShakeCameraService.Shake(_playCameraDataOld, _cameraReferences.playCamera.transform, shakeStrength, duration, vibrato,
                 randomness);
-            ShakeCameraService.Shake(_editorCameraData, _cameraReferences.editSceneCamera.transform, shakeStrength, duration, vibrato,
+            ShakeCameraService.Shake(_editorCameraDataOld, _cameraReferences.editSceneCamera.transform, shakeStrength, duration, vibrato,
                 randomness);
+        }
+
+        public void Initialize()
+        {
+            _playCameraDataOld.SaveStartPosition(_cameraReferences.playCamera.transform);
+            _editorCameraDataOld.SaveStartPosition(_cameraReferences.editSceneCamera.transform);
+            isInitialized = true;
         }
     }
 }

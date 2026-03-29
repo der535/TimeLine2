@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using EventBus;
 using EventBus.Events.Settings;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using TMPro;
 using UnityEngine;
 using Zenject;

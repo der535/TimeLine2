@@ -6,6 +6,7 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components.ComponentsLogic;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;

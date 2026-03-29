@@ -1,8 +1,7 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace TimeLine.LevelEditor.GeneralEditor
+namespace TimeLine.LevelEditor.General
 {
     public class TimeLineRecorder : MonoBehaviour
     {
@@ -24,6 +23,7 @@ namespace TimeLine.LevelEditor.GeneralEditor
         
         private void Start()
         {
+            _isRecordingTemp = true;
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {

@@ -119,6 +119,8 @@ namespace TimeLine
                     }
                     else
                     {
+                        Debug.Log(card.sprite.texture.name);
+
                         onValueChanged.Invoke(card.sprite.texture);
                     }
 

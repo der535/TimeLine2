@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace TimeLine
 {
@@ -44,6 +45,8 @@ namespace TimeLine
             
             BuildCache();
         }
+
+        public string GetDefaultSpriteName() => _spriteCache.First().Key;
         
         private void BuildCache()
         {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
@@ -29,7 +30,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         }
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;

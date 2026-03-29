@@ -1,5 +1,4 @@
-﻿using TimeLine.TimeLine;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 namespace TimeLine.General.Installers

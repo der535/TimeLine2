@@ -46,6 +46,8 @@ namespace TimeLine
         private EntityManager _entityManager;
 
         public Action OnValueChanged;
+        public Action OnStopScaleX;
+        public Action OnStopScaleY;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus,
@@ -58,6 +60,8 @@ namespace TimeLine
 
         private void Awake()
         {
+            scaleTool.OnStopX += () => OnStopScaleX?.Invoke(); 
+            scaleTool.OnStopY += () => OnStopScaleY?.Invoke(); 
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
             _eventBus.SubscribeTo(((ref SelectObjectEvent data) => { SetPosition(data.Tracks); }));

@@ -5,8 +5,8 @@ using Zenject;
 using System;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
 using TimeLine.LevelEditor.Controllers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Core.MusicOffset;
-using TimeLine.TimeLine;
 
 namespace TimeLine
 {

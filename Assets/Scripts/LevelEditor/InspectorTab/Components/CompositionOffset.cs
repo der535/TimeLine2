@@ -84,7 +84,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Components
                 EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
                 CompositionPositionOffsetData compositionPositionOffsetData = entityManager.GetComponentData<CompositionPositionOffsetData>(_selectedEntity);
-                compositionPositionOffsetData.Offset.x = value;
+                compositionPositionOffsetData.Offset.y = value;
                 entityManager.SetComponentData(_selectedEntity, compositionPositionOffsetData);
 
                 if (entityManager.HasBuffer<Child>(_selectedEntity))

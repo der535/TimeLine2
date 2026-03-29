@@ -44,6 +44,7 @@ namespace TimeLine
         private EntityManager _entityManager;
 
         public Action OnValueChanged;
+        public Action OnStopRotation;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, GridScene gridScene,
@@ -57,6 +58,7 @@ namespace TimeLine
 
         private void Awake()
         {
+            rotateTool.StopRotationAction += () => OnStopRotation.Invoke();
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => Select(data.Tracks)));

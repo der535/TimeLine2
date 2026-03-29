@@ -35,7 +35,8 @@ namespace TimeLine
         private Quaternion _inverseRotation;
 
         public Action<RectTransform> OnChangePosition;
-        public Action OnDragEnd; // ⭐ НОВОЕ: событие завершения перетаскивания
+        public Action OnDragEndX; // ⭐ НОВОЕ: событие завершения перетаскивания
+        public Action OnDragEndY; // ⭐ НОВОЕ: событие завершения перетаскивания
 
         public bool isGlobal;
 
@@ -113,7 +114,7 @@ namespace TimeLine
         {
             if (!isMovingY && _isMovingY)
             {
-                OnDragEnd?.Invoke(); // Вызываем при отпускании
+                OnDragEndY?.Invoke(); // Вызываем при отпускании
                 Log("SetMoveY(false) called → OnDragEnd invoked");
             }
             _isMovingY = isMovingY;
@@ -125,7 +126,7 @@ namespace TimeLine
         {
             if (!isMovingX && _isMovingX)
             {
-                OnDragEnd?.Invoke();
+                OnDragEndX?.Invoke();
                 Log("SetMoveX(false) called → OnDragEnd invoked");
             }
             _isMovingX = isMovingX;
@@ -137,7 +138,8 @@ namespace TimeLine
         {
             if (!isFreeMoving && _isFreeMoving)
             {
-                OnDragEnd?.Invoke();
+                OnDragEndY?.Invoke();
+                OnDragEndX?.Invoke();
                 Log("SetFreeMove(false) called → OnDragEnd invoked");
             }
             _isFreeMoving = isFreeMoving;

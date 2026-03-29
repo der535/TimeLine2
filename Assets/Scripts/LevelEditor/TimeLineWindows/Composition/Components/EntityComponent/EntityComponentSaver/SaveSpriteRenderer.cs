@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using TimeLine.LevelEditor.SpriteLoader;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
 using Unity.Rendering;
 using UnityEngine;
@@ -13,7 +14,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         private readonly BaseSpriteStorage _baseSpriteStorage;
         private readonly CustomSpriteStorage _customSpriteStorage;
 
-        public SaveSpriteRenderer(AddAnEntitySprite addAnEntitySprite, BaseSpriteStorage baseSpriteStorage, CustomSpriteStorage customSpriteStorage)
+        public SaveSpriteRenderer(AddAnEntitySprite addAnEntitySprite, BaseSpriteStorage baseSpriteStorage,
+            CustomSpriteStorage customSpriteStorage)
         {
             _addAnEntitySprite = addAnEntitySprite;
             _baseSpriteStorage = baseSpriteStorage;
@@ -24,7 +26,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         {
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-            if (entityManager.HasComponent<MaterialMeshInfo>(entity))
+            if (entityManager.HasComponent<MaterialMeshInfo>(entity) &&
+                entityManager.HasComponent<SpriteRendererTag>(entity))
             {
                 Material currentMat = null;
                 RenderMeshArray rma = entityManager.GetSharedComponentManaged<RenderMeshArray>(entity);
@@ -53,12 +56,19 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 return;
             }
 
-            
+            entityManager.AddComponent<SpriteRendererTag>(target);
+
             // 1. Загрузка спрайта
             string spriteName = data["Sprite name"]?.ToString();
+            if (string.IsNullOrEmpty(spriteName))
+            {
+                spriteName = _baseSpriteStorage.GetDefaultSpriteName();
+            }
+
             Sprite sprite = _baseSpriteStorage.GetSprite(spriteName);
             if (sprite == null)
                 sprite = _customSpriteStorage.GetSpriteFromID(spriteName);
+
 
             _addAnEntitySprite.SetupSpriteRender(target, sprite);
 
@@ -70,7 +80,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             // 3. БЕЗОПАСНАЯ загрузка цвета
             if (data.TryGetValue("Color", out object colorValue))
             {
-                if (colorValue is Color directColor) 
+                if (colorValue is Color directColor)
                 {
                     // Если мы копируем в памяти (Clipboard), это уже Color
                     currentMat.color = directColor;
@@ -85,7 +95,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                     // Если это реально строка с JSON
                     currentMat.color = JsonConvert.DeserializeObject<Color>(jsonString);
                 }
-                else 
+                else
                 {
                     Debug.LogWarning($"Unknown color format: {colorValue.GetType()}");
                 }

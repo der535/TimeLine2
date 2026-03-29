@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.LevelEffects;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 
@@ -17,8 +17,6 @@ namespace TimeLine
         public FloatParameter Randomness = new("Randomness", 90, Color.magenta);
 
         private ShakeCameraController _shakeCameraController;
-        private TrackObjectStorage _trackObjectStorage;
-        private Main _main;
         
         private SceneObjectLink _sceneObjectLink;
         private InitializedComponentController _initializedComponentController;
@@ -29,8 +27,6 @@ namespace TimeLine
         private void Construct(ShakeCameraController shakeCameraController, TrackObjectStorage trackObjectStorage, Main main, InitializedComponentController initializedComponentController)
         {
             _shakeCameraController = shakeCameraController;
-            _trackObjectStorage = trackObjectStorage;
-            _main = main;
             _initializedComponentController = initializedComponentController;
         }
 

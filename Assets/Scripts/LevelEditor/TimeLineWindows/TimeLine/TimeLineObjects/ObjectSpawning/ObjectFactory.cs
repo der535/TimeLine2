@@ -1,4 +1,5 @@
 ﻿using System;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.ECS;
 using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.GeneralServices;
@@ -7,7 +8,6 @@ using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponen
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.TrackObjectSize.Data;
-using TimeLine.TimeLine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -67,6 +67,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         {
             // Создаем сценный объект
             var entity = CreateSceneObject(sprite.name);
+            
+            _entityManager.AddComponent<SpriteRendererTag>(entity);
+
 
             string name = $"{sprite.name} {_maxObjectIndexDataReading.GetNextIndex()}";
 

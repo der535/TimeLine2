@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.Test;
-using TimeLine.TimeLine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;

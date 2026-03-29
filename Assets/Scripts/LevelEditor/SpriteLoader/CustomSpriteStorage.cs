@@ -70,6 +70,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
         public void AddSprite(Sprite sprite, TextureData textureData)
         {
+            sprite.texture.name = sprite.name;
             var param = new SpriteParameter(textureData.Id, sprite, Color.black);
             if (!TextureData.ContainsKey(textureData))
             {

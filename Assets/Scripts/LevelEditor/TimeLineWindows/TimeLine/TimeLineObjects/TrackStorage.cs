@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

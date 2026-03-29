@@ -5,6 +5,7 @@ using EventBus;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.Drawers;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
@@ -35,15 +36,17 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
         private TrackObjectStorage _selectedTransform;
         private ColliderDrawer _colliderDrawer;
         private ToolsController _toolsController;
+        private TimeLineRecorder _timeLineRecorder;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
-            ColliderDrawer colliderDrawer, ToolsController toolsController)
+            ColliderDrawer colliderDrawer, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
         {
             _gameEventBus = gameEventBus;
             _selectedTransform = trackObjectStorage;
             _colliderDrawer = colliderDrawer;
             _toolsController = toolsController;
+            _timeLineRecorder = timeLineRecorder;
         }
 
         private void Awake()
@@ -57,6 +60,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new NameDrawer());
             _componentDrawers.Add(new SpriteRendererDrawer());
+            _componentDrawers.Add(new SunBurstMaterialDrawer());
             _componentDrawers.Add(new BoxCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new CircleCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new CapsuleCollider2DDrawer());
@@ -64,6 +68,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _componentDrawers.Add(new ShakeDrawer());
             _componentDrawers.Add(new PolygonCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new RadialSunburstDrawer());
+            _componentDrawers.Add(new ShakeCameraDrawer());
         }
 
         internal IEnumerator Redraw()
@@ -88,7 +93,8 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
                 var checkResult = drawer.GetComponent(types.ToList());
                 if (checkResult)
                 {
-                    drawer.Setup(inspectorDrawer, _selectedTransform, keyframeCreator, _toolsController);
+                    drawer.Setup(inspectorDrawer, _selectedTransform, keyframeCreator, _toolsController,
+                        _timeLineRecorder);
                     drawer.Draw(target);
                 }
             }

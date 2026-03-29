@@ -21,6 +21,7 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Keyfra
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.LevelEditor.EditorWindows.SceneView.Outline;
+using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
 using TimeLine.LevelEditor.InspectorTab.Logic;
@@ -38,7 +39,6 @@ using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.TrackObjectSize.Data;
 using TimeLine.LevelEditor.UIAnimation;
 using TimeLine.Parent;
-using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
@@ -161,7 +161,6 @@ namespace TimeLine.LevelEditor.Core
             Container.BindInstance(render.keyframeVizualizer).AsSingle();
             Container.BindInstance(render.TimeLineMarkersController).AsSingle();
             Container.BindInstance(render.SpriteOutlineBuffer).AsSingle();
-            Container.BindInstance(render.ShakeComponent).AsSingle();
             Container.BindInstance(render.VerticalBezierScroll).AsSingle();
         }
 
@@ -291,7 +290,6 @@ namespace TimeLine.LevelEditor.Core
         [FormerlySerializedAs("KeyfeameVizualizer")] public KeyframeVizualizer keyframeVizualizer;
         public TimeLineMarkersController TimeLineMarkersController;
         public SpriteOutlineBuffer SpriteOutlineBuffer;
-        public ShakeCameraController ShakeComponent;
         public VerticalBezierScroll VerticalBezierScroll;
     }
 

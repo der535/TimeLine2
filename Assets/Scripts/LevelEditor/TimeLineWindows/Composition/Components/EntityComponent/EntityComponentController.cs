@@ -24,6 +24,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         CircleCollider,
         PolygonCollider,
         SunBurstMaterial,
+        ShakeCamera,
     }
 
     public class EntityComponentController
@@ -43,7 +44,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                     typeof(RenderMeshArray),
                     typeof(MaterialMeshInfo),
                     typeof(RenderFilterSettings),
-                    typeof(WorldRenderBounds)
+                    typeof(WorldRenderBounds),
+                    typeof(SpriteRendererTag)
                 }
             },
             {
@@ -78,6 +80,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 {
                     typeof(SunBurstMaterialData)
                 }
+            },
+            {
+                ComponentNames.ShakeCamera, new ComponentType[]
+                {
+                    typeof(ShakeCameraData)
+                }
             }
             
         };
@@ -93,6 +101,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             SaveCircleCollider saveCircleCollider,
             SavePolygonCollider savePolygonCollider,
             SaveCompositionOffset saveCompositionOffset,
+            SaveSunBurstMaterial saveSunBurstMaterial,
+            SaveShakeCamera saveShakeCamera,
+            ShakeCameraInstaller shakeCameraInstaller,
             SaveTransform saveTransform) 
         {
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -102,7 +113,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 boxColliderInstaller, 
                 circleColliderInstaller, 
                 polygoneColliderInstaller,
-                sunBurstMaterialInstaller
+                sunBurstMaterialInstaller,
+                shakeCameraInstaller
             };
             _entityComponentSaves = new IEntityComponentSave[]
             {
@@ -111,7 +123,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 saveBoxCollider, 
                 saveCircleCollider, 
                 savePolygonCollider,
-                saveCompositionOffset
+                saveCompositionOffset,
+                saveSunBurstMaterial,
+                saveShakeCamera
             };
         }
 

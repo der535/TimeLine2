@@ -50,6 +50,8 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position
         private EntityManager _entityManager;
 
         public Action OnValueChanged;
+        public Action OnStopPositionX;
+        public Action OnStopPositionY;
 
         [Inject]
         private void Construct(GameEventBus eventBus, MainObjects mainObjects)
@@ -62,6 +64,9 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position
         private void Start()
         {
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            
+            positionTool.OnDragEndY += () => OnStopPositionY?.Invoke();
+            positionTool.OnDragEndX += () => OnStopPositionX?.Invoke();
             
             _gameEventBus.SubscribeTo(((ref SelectObjectEvent data) => SelectObject(data.Tracks)));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => { SelectObject(data.SelectedObjects); });

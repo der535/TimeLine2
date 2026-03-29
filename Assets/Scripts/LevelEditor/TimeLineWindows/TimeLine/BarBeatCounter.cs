@@ -1,7 +1,7 @@
 using System;
 using EventBus;
 using TimeLine.EventBus.Events.TimeLine;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using TMPro;
 using UnityEngine;
 using Zenject;

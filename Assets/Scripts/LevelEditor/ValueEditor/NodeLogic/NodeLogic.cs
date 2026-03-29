@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TimeLine.LevelEditor.ValueEditor;
+using UnityEngine;
 
 /// <summary>
 /// Базовый класс для создания логиги других нод
@@ -55,10 +56,10 @@ public abstract class NodeLogic
     /// <summary>
     /// Добовляе новый инпут в логику
     /// </summary>
-    public void AddInputDefinition()
+    public void AddInputDefinition(DataType dataType)
     {
         // Добавляем новое описание входа, чтобы GetValue видел его в цикле
-        InputDefinitions.Add(($"Input {InputDefinitions.Count}", DataType.Float));
+        InputDefinitions.Add(($"Input {InputDefinitions.Count}", dataType));
     }
     
     /// <summary>
@@ -90,7 +91,7 @@ public abstract class NodeLogic
         {
             return conn.node.GetValue(conn.outputIndex);
         }
-
+        
         // 2. Если провода нет — проверяем, ввел ли пользователь что-то вручную
         return ManualValues.GetValueOrDefault(index, fallback);
 

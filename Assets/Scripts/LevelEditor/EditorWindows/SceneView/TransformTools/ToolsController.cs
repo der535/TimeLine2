@@ -27,6 +27,11 @@ namespace TimeLine
         private SelectObjectController _selectObjectController;
 
         public Action OnValueChanged;
+        public Action OnStopPositionX;
+        public Action OnStopPositionY;
+        public Action OnStopRotation;
+        public Action OnStopScaleX;
+        public Action OnStopScaleY;
 
         public enum ActiveTool
         {
@@ -55,6 +60,12 @@ namespace TimeLine
             positionController.OnValueChanged += () => OnValueChanged?.Invoke();
             rotationController.OnValueChanged +=  () => OnValueChanged?.Invoke();
             scaleController.OnValueChanged +=  () => OnValueChanged?.Invoke();
+            
+            positionController.OnStopPositionX += () => OnStopPositionX?.Invoke();
+            positionController.OnStopPositionY += () => OnStopPositionY?.Invoke();
+            rotationController.OnStopRotation += () => OnStopRotation?.Invoke();
+            scaleController.OnStopScaleX += () => OnStopScaleX?.Invoke();
+            scaleController.OnStopScaleY += () => OnStopScaleY?.Invoke();
 
 
 

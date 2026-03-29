@@ -4,7 +4,7 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
-using TimeLine.TimeLine;
+using TimeLine.LevelEditor.Core;
 using UnityEngine;
 using Zenject;
 

@@ -1,9 +1,9 @@
 ﻿using System;
 using TimeLine.Installers;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curve;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine;
-using TimeLine.TimeLine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;

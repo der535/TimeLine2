@@ -19,6 +19,7 @@ public class AddAnEntitySprite : MonoBehaviour
         // Примечание: Если спрайтов много, лучше использовать Property Blocks, 
         // но для начала создадим экземпляр:
         Material instanceMat = new Material(baseMaterial);
+
         instanceMat.mainTexture = sprite.texture;
 
         // 2. Описываем массив мешей и материалов

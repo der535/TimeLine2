@@ -29,6 +29,8 @@ namespace TimeLine
         public Action HorizontalDeltaStart;
         
         public Action OnValueChanged;
+        public Action OnStopX;
+        public Action OnStopY;
 
         private void Awake()
         {
@@ -180,6 +182,7 @@ namespace TimeLine
             _yHandle.sizeDelta = new Vector2(_yHandle.sizeDelta.x, _initialYSize);
             _yHandle.anchoredPosition = new Vector2(_yHandle.anchoredPosition.x, _initialYSize / 2);
             SetDefaultAnchor(_yHandleCube, true);
+            OnStopY.Invoke();
         }
 
         private void ResetX()
@@ -187,6 +190,7 @@ namespace TimeLine
             _xHandle.sizeDelta = new Vector2(_initialXSize, _xHandle.sizeDelta.y);
             _xHandle.anchoredPosition = new Vector2(_initialXSize / 2, _xHandle.anchoredPosition.y);
             SetDefaultAnchor(_xHandleCube, false);
+            OnStopX.Invoke();
         }
 
         private void ResetAll()

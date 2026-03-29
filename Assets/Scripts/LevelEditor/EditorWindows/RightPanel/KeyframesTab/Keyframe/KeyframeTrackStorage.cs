@@ -4,10 +4,10 @@ using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
-using TimeLine.TimeLine;
 using UnityEngine;
 using Zenject;
 

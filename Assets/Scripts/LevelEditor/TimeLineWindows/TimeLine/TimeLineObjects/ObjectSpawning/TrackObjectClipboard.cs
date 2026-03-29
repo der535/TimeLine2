@@ -5,8 +5,8 @@ using System.Linq;
 using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Save;
-using TimeLine.TimeLine;
 using UnityEngine;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning

@@ -7,6 +7,7 @@ using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Core.MusicLoader;
 using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
@@ -15,7 +16,6 @@ using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
-using TimeLine.TimeLine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -160,6 +160,7 @@ namespace TimeLine
                     return objectData;
                 }
             }
+            
 
             Debug.LogWarning($"Не найден объект {id}");
             return null;
