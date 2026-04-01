@@ -65,7 +65,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
-                var trackObjectData = GetTrackObjectData(data.Tracks[^1].components.trackObject);
+                var trackObjectData = GetTrackObjectData(data.Tracks[^1].components.TrackObject);
                 if (trackObjectData != null)
                 {
                     InternalSelectObject(trackObjectData);
@@ -73,7 +73,7 @@ namespace TimeLine
 
                 foreach (var track in data.Tracks)
                 {
-                    SelectObject(track.components.trackObject);
+                    SelectObject(track.components.TrackObject);
                 }
             });
 
@@ -334,7 +334,10 @@ namespace TimeLine
             foreach (var track in trackObjectDatas)
             {
                 track.components.Data.GroupOffsetTrack(trackObject);
-                trackObject.trackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
+                trackObject.TrackObject.Rezise += (value) =>
+                {
+                    track.components.Data.GroupOffset(value);
+                };
             }
 
             _composition.AddComposition(group);
@@ -487,17 +490,17 @@ namespace TimeLine
         internal TrackObjectPacket GetTrackObjectData(TrackObject trackObject)
         {
             TrackObjectPacket packet =
-                _trackObjects.FirstOrDefault(trackObject2 => trackObject2.components.trackObject == trackObject);
+                _trackObjects.FirstOrDefault(trackObject2 => trackObject2.components.TrackObject == trackObject);
             if (packet != null) return packet;
 
             packet = _trackObjectGroups.FirstOrDefault(trackObject2 =>
-                trackObject2.components.trackObject == trackObject);
+                trackObject2.components.TrackObject == trackObject);
             if (packet != null) return packet;
 
             foreach (var group in _trackObjectGroups)
             {
                 packet = group.TrackObjectDatas.FirstOrDefault(trackObject2 =>
-                    trackObject2.components.trackObject == trackObject);
+                    trackObject2.components.TrackObject == trackObject);
                 if (packet != null)
                 {
                     //Debug.Log($"[GetTrackObjectData] Found TrackObject '{trackObject.Name}' inside group '{group.trackObject.Name}'.");
@@ -724,7 +727,7 @@ namespace TimeLine
                         if (group.compositionID == compositionUpdateID)
                         {
                             Debug.Log(group.compositionID == compositionUpdateID);
-                            remover.SingleRemoveNoStorage(VARIABLE, false);
+                            remover.ListRemove(group);
                             TrackObjectDatas.Remove(VARIABLE);
                         }
                     }
@@ -738,7 +741,10 @@ namespace TimeLine
             {
                 foreach (var data in TrackObjectDatas)
                 {
-                    remover.SingleRemoveNoStorage(data, false);
+                    if (data is TrackObjectGroup group)
+                        remover.ListRemove(group);
+                    else 
+                        remover.SingleRemoveNoStorage(data);
                 }
 
                 TrackObjectDatas = trackObjectDatas;
@@ -755,7 +761,7 @@ namespace TimeLine
                 track.components.Data.GroupOffsetTrack(components); ////
                 track.components.Data.StartTimeInTicks += components.Data.ReducedLeft;
 
-                components.trackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
+                components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
 
                 track.components.View.Hide();
             }
@@ -776,15 +782,6 @@ namespace TimeLine
                     // Для родителя (обязательно!)
                     if (!_entityManager.HasComponent<LocalToWorld>(entity))
                         _entityManager.AddComponent<LocalToWorld>(entity);
-
-
-                    // Vector3 pos = selectObject.sceneObject.transform.localPosition;
-                    // Quaternion rot = selectObject.sceneObject.transform.localRotation;
-                    // Vector3 scale = selectObject.sceneObject.transform.localScale;
-                    // selectObject.sceneObject.transform.SetParent(sceneObject.transform);
-                    // selectObject.sceneObject.transform.localPosition = pos;
-                    // selectObject.sceneObject.transform.localRotation = rot;
-                    // selectObject.sceneObject.transform.localScale = scale;
                 }
 
 
@@ -804,6 +801,16 @@ namespace TimeLine
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             GetChildrenExample(_trackObjectDatas.Select(x => x.entity).ToList(),
                 entityManager.GetComponentData<CompositionPositionOffsetData>(entity).Offset);
+
+            components.TrackObject.Rezise = null;
+            
+            foreach (var track in TrackObjectDatas)
+            {
+                components.TrackObject.Rezise += (value) =>
+                {
+                    track.components.Data.GroupOffset(value);
+                };
+            }
         }
 
         private void GetChildrenExample(List<Entity> children, float2 newOffset)

@@ -80,7 +80,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             _trackObjectStorage.Remove(select);
         }
 
-        internal void SingleRemoveNoStorage(TrackObjectPacket select, bool disassemble = true)
+        internal void SingleRemoveNoStorage(TrackObjectPacket select)
         {
             // if(disassemble) Disassemble(select.sceneObject);
 
@@ -91,14 +91,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
             select.components.Dispose();
             _entityManager.DestroyEntity(select.entity);
-            if (_entityManager.Exists(select.entity))
-            {
-                Debug.Log($"[DEBUG] Сущность {select.entity.Index}:{select.entity.Version} найдена в мире: {World.DefaultGameObjectInjectionWorld.Name}");
-            }
+
         }
 
 
-        internal void SingleRemove(TrackObjectGroup select, bool disassemble = true)
+        internal void SingleRemove(TrackObjectGroup select, bool removeFromStorage)
         {
             foreach (var nodes in select.branch.Nodes)
             {
@@ -107,7 +104,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
             select.components.Dispose();
             _entityManager.DestroyEntity(select.entity);
-            _trackObjectStorage.Remove(select);
+            if(removeFromStorage)_trackObjectStorage.Remove(select);
         }
 
         internal void ListRemove(TrackObjectGroup list)
@@ -117,12 +114,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 if (item is TrackObjectGroup group)
                 {
                     ListRemove(group);
-                    SingleRemove(item);
+                    
                 }
-                else
-                {
-                    SingleRemove(item);
-                }
+                
+                Debug.Log($"remove {item.entity.Version}:{item.entity.Index}");
+                SingleRemove(item);
             }
 
             SingleRemove(list);

@@ -75,7 +75,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _state = state;
             _trackObjectView = View;
             _trackObjectView.Rename(trackObjectData.Name);
-            _data.OnChangeDuration += _ => UpdateVisuals();
+            // _data.OnChangeDuration += _ => UpdateVisuals();
 
             UpdateVisuals();
         }

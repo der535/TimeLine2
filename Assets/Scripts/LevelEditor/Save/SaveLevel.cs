@@ -85,12 +85,6 @@ namespace TimeLine.LevelEditor.Save
             _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) => { _levelBaseInfo = eventData.LevelInfo; });
         }
 
-        public void Save2()
-        {
-            _entityComponentController.Save(trackObjectStorage.TrackObjects[0].entity);
-        }
-
-
         public void Save()
         {
             _saveButtonAnimation.Saving();
@@ -306,6 +300,9 @@ namespace TimeLine.LevelEditor.Save
 
             groupData.reduceRight = group.components.Data.ReducedRight;
             groupData.reduceLeft = group.components.Data.ReducedLeft;
+            
+            Debug.Log(groupData.reduceRight);
+            Debug.Log(groupData.reduceLeft);
 
             foreach (var child in group.TrackObjectDatas)
             {
@@ -331,7 +328,8 @@ namespace TimeLine.LevelEditor.Save
                 {
                     branchPath = $"{node.Path}",
                     animationColor = track.AnimationColor,
-                    keyframeSaveData = track.SaveKeyframes()
+                    keyframeSaveData = track.SaveKeyframes(),
+                    componentNames = track.ComponentNames
                 });
             }
 
@@ -491,6 +489,7 @@ namespace TimeLine.LevelEditor.Save
     public class TrackSaveData
     {
         public string branchPath;
+        public ComponentNames componentNames;
         public Color animationColor;
         public List<KeyframeSaveData> keyframeSaveData = new();
     }

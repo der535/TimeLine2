@@ -49,7 +49,6 @@ namespace TimeLine.LevelEditor.SpriteLoader
             {
                 if (filterMode.options[i].text == mode)
                 {
-                    print(i);
                     filterMode.value = i;
                     return;
                 }

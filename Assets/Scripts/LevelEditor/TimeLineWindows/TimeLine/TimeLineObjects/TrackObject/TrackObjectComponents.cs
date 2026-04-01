@@ -13,7 +13,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         // private TrackObjectView _trackObjectView;
 
 
-        public TrackObject trackObject;
+        public TrackObject TrackObject;
         public TrackObjectData Data;
         public TrackObjectGlobalTime GlobalTime;
         public TrackObjectState State;
@@ -21,7 +21,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         private DiContainer _container;
         private TickableManager _tickableManager;
 
-        private bool isSetuped = false;
+        private bool _isSetuped;
 
         [Inject]
         private void Construct(DiContainer container, TickableManager tickableManager)
@@ -39,9 +39,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             Visual = visual;
             CustomizationController = customizationController;
             
-            if (!isSetuped)
+            if (!_isSetuped)
             {
-                isSetuped = true;
+                _isSetuped = true;
             }
             else
             {
@@ -51,25 +51,25 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
             Data = data;
             State = new TrackObjectState();
-            trackObject = new TrackObject();
-            _container.Inject(trackObject);
-            _container.BindInterfacesAndSelfTo<TrackObject>().FromInstance(trackObject).NonLazy();
+            TrackObject = new TrackObject();
+            _container.Inject(TrackObject);
+            _container.BindInterfacesAndSelfTo<TrackObject>().FromInstance(TrackObject).NonLazy();
             // ВРУЧНУЮ добавляем в менеджер обновлений, если объект реализует ITickable
-            if (trackObject is ITickable tickable && _tickableManager != null)
+            if (TrackObject is ITickable tickable && _tickableManager != null)
             {
                 _tickableManager.Add(tickable);
             }
 
-            trackObject.Setup(data, view, State);
+            TrackObject.Setup(data, view, State);
             GlobalTime = new TrackObjectGlobalTime(this, Data);
-            Select.Setup(trackObject, State, Data, view);
+            Select.Setup(TrackObject, State, Data, view);
         }
 
         public void Setup(TrackObjectData data)
         {
-            if (!isSetuped)
+            if (!_isSetuped)
             {
-                isSetuped = true;
+                _isSetuped = true;
             }
             else
             {
@@ -78,23 +78,23 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
             Data = data;
             State = new TrackObjectState();
-            trackObject = new TrackObject();
-            _container.Inject(trackObject);
-            _container.BindInterfacesAndSelfTo<TrackObject>().FromInstance(trackObject).NonLazy();
+            TrackObject = new TrackObject();
+            _container.Inject(TrackObject);
+            _container.BindInterfacesAndSelfTo<TrackObject>().FromInstance(TrackObject).NonLazy();
             // ВРУЧНУЮ добавляем в менеджер обновлений, если объект реализует ITickable
-            if (trackObject is ITickable tickable && _tickableManager != null)
+            if (TrackObject is ITickable tickable && _tickableManager != null)
             {
                 _tickableManager.Add(tickable);
             }
 
-            trackObject.Setup(data,  new NullTrackObjectView(), State);
+            TrackObject.Setup(data,  new NullTrackObjectView(), State);
             GlobalTime = new TrackObjectGlobalTime(this, Data);
         }
 
         public void Dispose()
         {
             Data = null;
-            trackObject.Dispose();
+            TrackObject.Dispose();
         }
     }
 }

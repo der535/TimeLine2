@@ -77,7 +77,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             {
                 Logic.Initialize(DataType.Color);
                 Logic.ManualValues[0] = token.ToObject<Color>();
-               Debug.Log( Logic.ManualValues[0].GetType());
                 Graph = SaveGraph.ToJson(Logic);
             }
         }

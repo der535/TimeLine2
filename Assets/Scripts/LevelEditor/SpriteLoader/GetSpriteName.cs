@@ -20,7 +20,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         public string Get(SpriteParameter spriteParameter)
         {
             // Check base storage
-
+            
             if(spriteParameter == null || spriteParameter.Value == null) return string.Empty;
             
             foreach (var sprite in _spriteStorage.Sprites)
@@ -31,8 +31,6 @@ namespace TimeLine.LevelEditor.SpriteLoader
             // Check custom storage
             foreach (var data in _customSpriteStorage.TextureData)
             {
-                Debug.Log(data.Value.Value.name);
-                Debug.Log( spriteParameter.Value.name);
                 if (data.Value.Value.name == spriteParameter.Value.name) return data.Key.SpriteName;
             }
 

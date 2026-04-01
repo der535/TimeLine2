@@ -118,9 +118,9 @@ namespace TimeLine.EventBus.Events.TrackObject
         public void StartMultipleMove(
             global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
-                trackObjectData.components.trackObject.SavePosition();
+                trackObjectData.components.TrackObject.SavePosition();
             }
         }
 
@@ -129,9 +129,9 @@ namespace TimeLine.EventBus.Events.TrackObject
         {
             if (_trackObjects.Count <= 1 || ticks == 0) return;
 
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
-                trackObjectData.components.trackObject.AddTicksMove(ticks);
+                trackObjectData.components.TrackObject.AddTicksMove(ticks);
             }
         }
 
@@ -140,36 +140,36 @@ namespace TimeLine.EventBus.Events.TrackObject
         {
             if (_trackObjects.Count <= 1) return;
 
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
-                trackObjectData.components.trackObject.AddLineTrackIndex(deltaIndex);
+                trackObjectData.components.TrackObject.AddLineTrackIndex(deltaIndex);
             }
         }
 
         public void SaveResizingData(
             global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
-                trackObjectData.components.trackObject.SaveResizingData();
+                trackObjectData.components.TrackObject.SaveResizingData();
             }
         }
 
         public void MultipleResizingRight(
             global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, double ticks)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
-                trackObjectData.components.trackObject.MultipleRightResize(ticks);
+                trackObjectData.components.TrackObject.MultipleRightResize(ticks);
             }
         }
 
         public void MultipleResizingLeft(
             global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, double ticks)
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.trackObject != self))
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
-                trackObjectData.components.trackObject.MultipleLeftResize(ticks);
+                trackObjectData.components.TrackObject.MultipleLeftResize(ticks);
             }
         }
     }

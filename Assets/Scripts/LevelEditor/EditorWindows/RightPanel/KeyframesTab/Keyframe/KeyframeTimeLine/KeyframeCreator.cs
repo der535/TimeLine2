@@ -3,6 +3,7 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using Unity.Entities;
 using UnityEngine;
 using Zenject;
@@ -40,7 +41,7 @@ namespace TimeLine
         //         animationData);
         // }
         
-        public void CreateKeyframe(EntityAnimationData animationData, Entity target, string trackName, Color animationColor, string componentName)
+        public void CreateKeyframe(EntityAnimationData animationData, Entity target, string trackName, Color animationColor, string componentName, ComponentNames componentNames)
         {
             TrackObjectPacket trackObjectPacket = _trackObjectStorage.GetTrackObjectData(target);
         
@@ -48,7 +49,7 @@ namespace TimeLine
                 componentName+"/"+trackName);
             
             if (_keyframeTrackStorage.GetTrack(node) == null)
-                _keyframeTrackStorage.AddTrack(node, new Track(target, trackName, animationColor),
+                _keyframeTrackStorage.AddTrack(node, new Track(target, trackName, animationColor, componentNames),
                     trackObjectPacket.components.Data, trackObjectPacket.branch.ID);
             
             _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectPacket.components.Data.StartTimeInTicks,

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
@@ -40,6 +41,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                     // Превращаем в массивы, которые JSON проглотит без проблем
                     { "Sprite name", currentMat.mainTexture.name },
                     { "Color", currentMat.color },
+                    { "ColorBlendMode", currentMat.GetInt("_ColorBlendMode") },
                 });
             }
 
@@ -60,6 +62,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
 
             // 1. Загрузка спрайта
             string spriteName = data["Sprite name"]?.ToString();
+            
             if (string.IsNullOrEmpty(spriteName))
             {
                 spriteName = _baseSpriteStorage.GetDefaultSpriteName();
@@ -76,6 +79,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             RenderMeshArray rma = entityManager.GetSharedComponentManaged<RenderMeshArray>(target);
             var meshInfo = entityManager.GetComponentData<MaterialMeshInfo>(target);
             Material currentMat = rma.GetMaterial(meshInfo);
+
+            if (data.TryGetValue("ColorBlendMode", out object value))
+            {
+                // Безопасное приведение любого числового типа к int
+                int blendMode = Convert.ToInt32(value);
+    
+                currentMat.SetInt("_ColorBlendMode", blendMode);
+            }
 
             // 3. БЕЗОПАСНАЯ загрузка цвета
             if (data.TryGetValue("Color", out object colorValue))

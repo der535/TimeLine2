@@ -112,7 +112,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 LocalTransform transform2 = manager.GetComponentData<LocalTransform>(target);
                 _keyframeCreator.CreateKeyframe(new EntityXPositionData(transform2.Position.x), target, "Position/X",
                     Color.red,
-                    "Transform");
+                    "Transform", ComponentNames.Transform);
             };
                 
             _customInspectorDrawer.CreateFloatField(transform.Position.x, "Position/X",
@@ -139,7 +139,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 LocalTransform transform2 = manager.GetComponentData<LocalTransform>(target);
                 _keyframeCreator.CreateKeyframe(new EntityYPositionData(transform2.Position.y), target, "Position/Y",
                     Color.blue,
-                    "Transform");
+                    "Transform", ComponentNames.Transform);
             };
             
             _customInspectorDrawer.CreateFloatField(transform.Position.y, "Position/Y", createKeyFramePositionY, (newValue) =>
@@ -182,7 +182,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 _keyframeCreator.CreateKeyframe(new EntityZRotationData(rotationData2.RotateZ),
                     target, "Rotation/z",
                     Color.green,
-                    "Transform");
+                    "Transform", ComponentNames.Transform);
             };
             
             _customInspectorDrawer.CreateFloatField(rotationData.RotateZ, "Rotation/Z", createKeyFrameRotationZ, (newValue) =>
@@ -233,11 +233,11 @@ namespace TimeLine.CustomInspector.UI.Drawers
                     new float3(postMatrix2.Value.c0.x, postMatrix2.Value.c1.y, postMatrix2.Value.c2.z);
                 _keyframeCreator.CreateKeyframe(new EntityXScaleData(nonUniformScale2.x), target, "Scale/X",
                     Color.red,
-                    "Transform");
+                    "Transform", ComponentNames.Transform);
             };
 
             
-            _customInspectorDrawer.CreateFloatField(nonUniformScale.x, "Scale/X", createKeyFrameRotationZ, (newValue) =>
+            _customInspectorDrawer.CreateFloatField(nonUniformScale.x, "Scale/X", createKeyFrameScaleX, (newValue) =>
             {
                 transform = manager.GetComponentData<LocalTransform>(target);
                 nonUniformScale.x = newValue;
@@ -256,7 +256,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
                     new float3(postMatrix2.Value.c0.x, postMatrix2.Value.c1.y, postMatrix2.Value.c2.z);
                 _keyframeCreator.CreateKeyframe(new EntityYScaleData(nonUniformScale2.y), target, "Scale/Y",
                     Color.blue,
-                    "Transform");
+                    "Transform", ComponentNames.Transform);
             };
             
             _customInspectorDrawer.CreateFloatField(nonUniformScale.y, "Scale/Y", createKeyFrameScaleY, (newValue) =>

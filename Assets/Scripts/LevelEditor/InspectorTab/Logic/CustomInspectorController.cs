@@ -8,6 +8,7 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.D
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
+using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using Unity.Collections;
 using Unity.Entities;
@@ -37,16 +38,18 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
         private ColliderDrawer _colliderDrawer;
         private ToolsController _toolsController;
         private TimeLineRecorder _timeLineRecorder;
+        private CustomSpriteStorage _customInspectorDrawer;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
-            ColliderDrawer colliderDrawer, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+            ColliderDrawer colliderDrawer, ToolsController toolsController, TimeLineRecorder timeLineRecorder, CustomSpriteStorage customSpriteStorage)
         {
             _gameEventBus = gameEventBus;
             _selectedTransform = trackObjectStorage;
             _colliderDrawer = colliderDrawer;
             _toolsController = toolsController;
             _timeLineRecorder = timeLineRecorder;
+            _customInspectorDrawer = customSpriteStorage;
         }
 
         private void Awake()
@@ -59,7 +62,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
 
             _componentDrawers.Add(new TransformComponentDrawer());
             _componentDrawers.Add(new NameDrawer());
-            _componentDrawers.Add(new SpriteRendererDrawer());
+            _componentDrawers.Add(new SpriteRendererDrawer(_customInspectorDrawer));
             _componentDrawers.Add(new SunBurstMaterialDrawer());
             _componentDrawers.Add(new BoxCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new CircleCollider2DDrawer(_colliderDrawer));

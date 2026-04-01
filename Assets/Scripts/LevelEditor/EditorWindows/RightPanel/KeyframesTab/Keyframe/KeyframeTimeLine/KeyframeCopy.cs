@@ -156,7 +156,7 @@ namespace TimeLine
                 if (track == null)
                 {
                     track = new Track(_selectObjectController.SelectObjects[^1].entity, trackData.Track.TrackName,
-                        trackData.Track.AnimationColor);
+                        trackData.Track.AnimationColor, trackData.Track.ComponentNames);
                     _keyframeTrackStorage.AddTrack(node, track,
                         _selectObjectController.SelectObjects[^1].components.Data,
                         _selectObjectController.SelectObjects[^1].branch.ID);

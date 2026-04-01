@@ -5,6 +5,7 @@ using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using Unity.Entities;
 using UnityEngine;
@@ -19,48 +20,16 @@ namespace TimeLine.Keyframe
         public Color AnimationColor;
         public List<Keyframe> Keyframes = new();
         public TrackObjectData groupObject;
-        public Component cachedComponent;
+        public ComponentNames ComponentNames;
 
-
-        // public Track(GameObject target, string trackName, Color animationColor)
-        // {
-        //     this.TrackName = trackName;
-        //     // TargetObject = target;
-        //     AnimationColor = animationColor;
-        //     // if(target != null)
-        //         // activeObjectControllerComponent = TargetObject.GetComponent<ActiveObjectControllerComponent>();
-        // }
-
-        public Track(Entity target, string trackName, Color animationColor)
+        
+        public Track(Entity target, string trackName, Color animationColor, ComponentNames componentNames)
         {
             this.TrackName = trackName;
             TargetEntity = target;
             AnimationColor = animationColor;
+            ComponentNames = componentNames;
         }
-        
-        // public Keyframe AddKeyframe(double time, AnimationData adata)
-        // {
-        //     // Debug.Log(time);
-        //     // Удаляем существующий ключевой кадр с таким же временем
-        //     var type = RemoveKeyframeAtTime(time);
-        //
-        //     Keyframe newKeyframe;
-        //     if (type is { } typ2e)
-        //         newKeyframe = new Keyframe(time, typ2e);
-        //     else
-        //         newKeyframe = new Keyframe(time, Keyframe.InterpolationType.Linear);
-        //     newKeyframe.AddData(adata);
-        //
-        //     Keyframes.Add(newKeyframe);
-        //     SortKeyframes();
-        //     if (cachedComponent == null)
-        //     {
-        //         Type t = adata.GetComponentType();
-        //         // cachedComponent = TargetObject.GetComponent(t);
-        //     }
-        //
-        //     return newKeyframe;
-        // }
         
         public Keyframe AddKeyframe(double time, EntityAnimationData adata)
         {
@@ -69,8 +38,8 @@ namespace TimeLine.Keyframe
             var type = RemoveKeyframeAtTime(time);
 
             Keyframe newKeyframe;
-            if (type is { } typ2e)
-                newKeyframe = new Keyframe(time, typ2e);
+            if (type is { } typ2E)
+                newKeyframe = new Keyframe(time, typ2E);
             else
                 newKeyframe = new Keyframe(time, Keyframe.InterpolationType.Linear);
             newKeyframe.AddData(adata);
@@ -86,12 +55,7 @@ namespace TimeLine.Keyframe
         {
             groupObject = trackObject;
         }
-
-        public (IAnimationApplyer, Component) GetApplyer()
-        {
-            return (Keyframes[0].GetEntityData(), cachedComponent);
-        }
-
+        
         public void RemoveKeyframe(Keyframe keyframe)
         {
             Keyframes.Remove(keyframe);
@@ -224,7 +188,7 @@ namespace TimeLine.Keyframe
 
         public Track Copy(Entity target)
         {
-            Track newTrack = new Track(target, this.TrackName, this.AnimationColor);
+            Track newTrack = new Track(target, this.TrackName, this.AnimationColor, ComponentNames);
             newTrack.Keyframes = this.Keyframes.Select(kf => kf.Clone()).ToList();
             return newTrack;
         }

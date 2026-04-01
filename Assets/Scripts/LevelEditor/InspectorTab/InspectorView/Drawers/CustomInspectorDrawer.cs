@@ -33,6 +33,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         [SerializeField] private CompositionFieldUI compositionField;
         [SerializeField] private KeyCodeFieldUI fieldUI;
         [Space] [SerializeField] private EditColliderFieldUI editColliderButton;
+        [Space] [SerializeField] private ButtonFieldUI buttonFieldUI;
         [Space] [SerializeField] private AddComponentButton button;
 
         private ComponentUI _currentComponent;
@@ -147,13 +148,21 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
                 .GetComponent<EditColliderFieldUI>();
             button.Setup();
         }
-
-        // public void CreateBoolField(BoolParameter field)
-        // {
-        //     var parameter = Instantiate(boolField, _currentComponent.RootObject);
-        //     parameter.Setup(field);
-        //     _currentComponent.AddHeight(parameter.GetFieldHeight());
-        // }
+        
+        public void CreateButton(Action action, string buttonText)
+        {
+            var button = _container.InstantiatePrefab(buttonFieldUI, _currentComponent.RootObject)
+                .GetComponent<ButtonFieldUI>();
+            button.Setup(action,  buttonText);
+            _currentComponent.AddHeight(button.GetFieldHeight());
+        }
+        
+        public void CreateDropDown(int startValue, List<string> options, Action<int> onValueChanged)
+        {
+            var downField = _container.InstantiatePrefab(dropDownFieldUI, _currentComponent.RootObject).GetComponent<DropDownFieldUI>();
+            downField.Setup(startValue, options, onValueChanged);
+            _currentComponent.AddHeight(button.GetFieldHeight());
+        }
 
         /// <summary>
         /// Создаёт переключатель в инспекторе

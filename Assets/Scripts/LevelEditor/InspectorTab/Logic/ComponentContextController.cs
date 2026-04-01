@@ -44,11 +44,9 @@ namespace TimeLine.LevelEditor.CopyComponent
                             new RemoveComponentEvent(_trackObjectStorage.GetTrackObjectData(entity),
                                 componentName));
                     }, "Remove component", isRemoveble),
-                    // (() => { _copyComponentController.Copy(component); }, "Copy Component", true),
-                    // (() => { _copyComponentController.PasteNewComponent(component.gameObject); },
-                    //     "Past component as new", ComponentRules.CanAdd(_copyComponentController.GetCopyComponent(), component.gameObject)),
-                    // (() => { _copyComponentController.PasteValues(component.gameObject, component); },
-                    //     "Past component values and animation", _copyComponentController.CompareTypes(component)),
+                    (() => { _copyComponentController.Copy(componentName, entity); }, "Copy Component", true),
+                    (() => { _copyComponentController.PasteNewComponent(entity); }, "Past component as new", !_copyComponentController.CheckAvailabilityType(componentName)),
+                    (() => { _copyComponentController.PasteValues(componentName, entity); }, "Past component values and animation", _copyComponentController.CompareTypes(componentName))
                 });
 
                 _contextMenuController.ShowMenu();

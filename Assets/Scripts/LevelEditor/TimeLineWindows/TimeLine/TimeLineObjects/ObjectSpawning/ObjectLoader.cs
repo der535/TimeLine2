@@ -122,7 +122,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             // Добавляем трек и ключевые кадры
             foreach (var track in data.tracks)
             {
-                Track trackm = new Track(entity, track.branchPath, track.animationColor);
+                Track trackm = new Track(entity, track.branchPath, track.animationColor, track.componentNames);
                 _keyframeTrackStorage.AddTrack(branch.FindNode(track.branchPath).node, trackm,
                     trackObjectPacket.components.Data,
                     branch.ID);
@@ -379,6 +379,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             groupTrackObject.components.Data.ReducedLeft = data.reduceLeft;
             groupTrackObject.components.Data.ReducedRight = data.reduceRight;
 
+            groupTrackObject.components.Data.EnableResizeLimits = true;
+            
 
             List<GameObjectSaveData> children; //Создаём список дочерных обьъектов
             if (compositionData == null)

@@ -43,6 +43,7 @@ namespace TimeLine
             onValueChanged = () =>
             {
                 sprite = spriteParameter.Value;
+                sprite.texture.name = spriteParameter.Value.name;
                 image.sprite = spriteParameter.Value;
                 text.text = textureData.SpriteName;
             };

@@ -9,6 +9,7 @@ namespace TimeLine.LevelEditor.Player.New
 {
     public class PlayerMover : MonoBehaviour
     {
+        public float zposition;
         public float speed;
         private ActionMap _actionMap;
         private PlayerComponents _playerComponents;
@@ -28,7 +29,7 @@ namespace TimeLine.LevelEditor.Player.New
             var moveVector = _actionMap.Player.PlayerMove.ReadValue<Vector2>() * speed;
 
             LocalTransform localTransform = entityManager.GetComponentData<LocalTransform>(_playerComponents.Player);
-            localTransform.Position.z = 0;
+            localTransform.Position.z = zposition;
             entityManager.SetComponentData(_playerComponents.Player, localTransform);
 
             // ПРОВЕРКА: Есть ли у сущности физика?

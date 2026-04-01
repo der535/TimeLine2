@@ -29,13 +29,21 @@ public partial struct UpdateColliderSystem : ISystem
                      
         {
             float3 scaleObject = GetScaleFromMatrix.Get(ltw.ValueRO.Value);
-
+            bool colliderIsActive = !(scaleObject.x <= 0 || scaleObject.y <= 0);
+            
+            float3 effectiveScale = colliderIsActive ? scaleObject : new float3(1f);
+            float3 finalSize = boxColliderTag.ValueRO.boxSize * effectiveScale;
+            
+            // Он должен быть не больше половины самой маленькой стороны
+            float minSide = math.min(finalSize.x, math.min(finalSize.y, finalSize.z));
+            float safeBevel = math.min(0.02f, minSide * 0.45f); // 0.45, чтобы был запас
+            
             var geometry = new BoxGeometry
             {
                 Center = boxColliderTag.ValueRO.boxCenter,
-                Size = boxColliderTag.ValueRO.boxSize * scaleObject,
+                Size = finalSize,
                 Orientation = quaternion.identity,
-                BevelRadius = 0.02f
+                BevelRadius =safeBevel
             };
 
             var material = new Material
@@ -47,10 +55,14 @@ public partial struct UpdateColliderSystem : ISystem
                 Restitution = 0f
             };
 
+            var filter = colliderIsActive
+                ? CollisionFilter.Default 
+                : CollisionFilter.Zero; // Zero не имеет установленных бит в BelongsTo и CollidesWith
+            
             // Создаем новый. 
             // УДАЛЯЕМ ручной .Dispose() старого colliderRef.ValueRO.Value!
             // Unity сама очистит память, когда вы перезапишете ссылку ниже.
-            var newCollider = BoxCollider.Create(geometry, CollisionFilter.Default, material);
+            var newCollider = BoxCollider.Create(geometry, filter, material);
 
             // Присваиваем новую ссылку
             colliderRef.ValueRW.Value = newCollider;

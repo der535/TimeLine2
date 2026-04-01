@@ -59,6 +59,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     dataCopy.Add(data);
                 }
             }
+            
+            GUIUtility.systemCopyBuffer = JsonConvert.SerializeObject(dataCopy);
 
             _main.SetTimeInTicks(savedTime);
         }

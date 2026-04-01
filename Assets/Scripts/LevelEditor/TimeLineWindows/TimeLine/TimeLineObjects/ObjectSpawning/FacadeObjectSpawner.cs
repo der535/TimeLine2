@@ -17,6 +17,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         
         private EditingCompositionController _editingCompositionController;
         private SelectObjectController _selectObjectController;
+        private SaveComposition _saveComposition;
         
         private ActionMap _actionMap;
 
@@ -27,7 +28,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             ObjectLoader loader,
             ActionMap actionMap,
             EditingCompositionController editingCompositionController,
-            SelectObjectController selectObjectController)
+            SelectObjectController selectObjectController, SaveComposition saveComposition)
         {
             _clipboard = clipboard;
             _factory = factory;
@@ -35,6 +36,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _actionMap = actionMap;
             _editingCompositionController = editingCompositionController;
             _selectObjectController = selectObjectController;
+            _saveComposition = saveComposition;
         }
 
         private void Start()
@@ -62,7 +64,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 if (saveData is GroupGameObjectSaveData group)
                 {
-                    trackObjects.Add(LoadComposition(group, group.compositionID, false).Item1);
+                    Debug.Log("is group");
+                    
+                    trackObjects.Add(LoadComposition(group, group.compositionID, false, compositionData:_saveComposition.FindCompositionDataById(group.compositionID)).Item1);
                 }
                 else
                 {

@@ -1,7 +1,8 @@
-﻿using TimeLine.CustomInspector.UI.FieldUI;
+﻿using System;
+using System.Collections.Generic;
+using TimeLine.CustomInspector.UI.FieldUI;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace TimeLine
 {
@@ -10,13 +11,15 @@ namespace TimeLine
         [SerializeField] private RectTransform fieldRect;
         [Space]
         [SerializeField] private TextMeshProUGUI parameterName;
-        [FormerlySerializedAs("inputField")] [SerializeField] private TMP_Dropdown dropdown;
+        [SerializeField] private TMP_Dropdown dropdown;
 
-        public TMP_Dropdown Setup(string name)
+        public void Setup(int startValue, List<string> options, Action<int> onValueChanged)
         {
             parameterName.text = name;
-            print(dropdown);
-            return dropdown;
+            dropdown.ClearOptions();
+            dropdown.AddOptions(options);
+            dropdown.value = startValue;
+            dropdown.onValueChanged.AddListener(onValueChanged.Invoke);
         }
 
         public float GetFieldHeight()

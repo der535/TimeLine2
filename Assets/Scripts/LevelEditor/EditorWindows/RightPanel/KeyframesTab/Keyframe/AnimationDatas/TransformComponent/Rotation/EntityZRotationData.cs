@@ -46,7 +46,11 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
 
         public override void SetValue(object value)
         {
-            if (value is float f) Logic.ManualValues[0] = f;
+            if (value is float f)
+            {
+                Logic.ManualValues[0] = f;
+                Graph = SaveGraph.ToJson(Logic);
+            }
             else
             {
                 Debug.LogWarning("[TimeLine.Keyframe] Cannot set XPositionData value to a float");

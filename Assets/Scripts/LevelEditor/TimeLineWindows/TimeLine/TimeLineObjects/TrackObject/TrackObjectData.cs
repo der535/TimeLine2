@@ -30,12 +30,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public bool IsActive = true;
 
         public TrackObjectComponents offsetObject;
-        public Action<double> OnChangeDuration;
+        // public Action<double> OnChangeDuration;
         
         public void ChangeDurationInTicks(double durationInTicks)
         {
             TimeDurationInTicks = Mathf.Round((float)durationInTicks);
-            OnChangeDuration.Invoke(TimeDurationInTicks);
+            // OnChangeDuration.Invoke(TimeDurationInTicks);
         }
         
         internal void UpdateDuraction(double newDuractionInTicks)
@@ -66,6 +66,28 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
             return StartTimeInTicks +
                    (offsetObject != null ? offsetObject.Data.GetKeyframeTrackOffset() : 0);
+        }
+
+        internal double GetGlobalTicksPosition()
+        {
+            var start = StartTimeInTicks;
+            // Ограничиваем глубину, например, 100 итерациями
+            return start + offsetObject.Data.GetReducedLeft(100);
+        }
+
+        internal double GetReducedLeft(int depthLimit = 100)
+        {
+            if (depthLimit <= 0)
+            {
+                // Логируем ошибку или возвращаем текущее значение, чтобы прервать цикл
+                Debug.LogWarning("Detected potential infinite recursion in offsetObject hierarchy!");
+                return ReducedLeft;
+            }
+
+            if (offsetObject != null)
+                return ReducedLeft + offsetObject.Data.GetReducedLeft(depthLimit - 1);
+            
+            return ReducedLeft + StartTimeInTicks;
         }
         
         internal void GroupOffset(double tickOffset)

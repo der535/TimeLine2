@@ -49,7 +49,7 @@ namespace TimeLine
 
                         trackObject.components.View.Show();
 
-                        trackObject.components.trackObject.CalculatePosition();
+                        trackObject.components.TrackObject.CalculatePosition();
                     }
 
                     _trackObjectStorage.SeparetaGroup(group);
@@ -80,7 +80,7 @@ namespace TimeLine
                 }
 
                 trackObject.components.View.Show();
-                trackObject.components.trackObject.CalculatePosition();
+                trackObject.components.TrackObject.CalculatePosition();
                 trackObjects.Add(trackObject);
             }
 
@@ -110,7 +110,7 @@ namespace TimeLine
 
                 trackObject.components.View.Show();
 
-                trackObject.components.trackObject.CalculatePosition();
+                trackObject.components.TrackObject.CalculatePosition();
             }
             
 

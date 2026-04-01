@@ -87,6 +87,15 @@ namespace TimeLine.LevelEditor.SpriteLoader
             }
             return null;
         }
+        
+        public float GetPPU(string id)
+        {
+            foreach (var data in TextureData)
+            {
+                if(data.Key.Id == id) return data.Key.PixelsPerUnit;
+            }
+            return 0;
+        }
 
         [Button]
         public void Save()
@@ -100,15 +109,15 @@ namespace TimeLine.LevelEditor.SpriteLoader
         [Button]
         public void Load(Action onFinish)
         {
-            onLoaded = onFinish;
+            _onLoaded = onFinish;
             string galleryPath = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Gallery.json";
             
             if (File.Exists(galleryPath))
             {
                 var sprites = JsonConvert.DeserializeObject<List<TextureData>>(File.ReadAllText(galleryPath));
-                coutTask = sprites?.Count ?? 0;
+                _coutTask = sprites?.Count ?? 0;
                 
-                if (coutTask <= 0)
+                if (_coutTask <= 0)
                 {
                     onFinish?.Invoke();
                     return;
@@ -125,15 +134,15 @@ namespace TimeLine.LevelEditor.SpriteLoader
             }
         }
 
-        private Action onLoaded;
-        private int coutTask;
+        private Action _onLoaded;
+        private int _coutTask;
         
         private void CheckTasks()
         {
-            coutTask--;
-            if (coutTask <= 0)
+            _coutTask--;
+            if (_coutTask <= 0)
             {
-                onLoaded?.Invoke();
+                _onLoaded?.Invoke();
             }
         }
 

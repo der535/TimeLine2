@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Zenject;
 
 namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
@@ -40,6 +42,14 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
             {
                 _dictionary.Remove(data.DeselectedObject.entity);
             });
+            _gameEventBus.SubscribeTo((ref StartCompositionEdit data) =>
+            {
+                Clear();
+            });
+            _gameEventBus.SubscribeTo((ref EndCompositionEdit data) =>
+            {
+                Clear();
+            });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => { _dictionary.Clear(); });
         }
 
@@ -57,6 +67,16 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
             _dictionary.Add(entity, colliderType);
         }
 
+        private void Clear()
+        {
+            foreach (var VARIABLE in _lineRenderer)
+            {
+                Destroy(VARIABLE.gameObject);
+            }
+
+            _lineRenderer.Clear();
+            _dictionary.Clear();
+        }
 
         public void Update()
         {
@@ -71,6 +91,11 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
 
             foreach (var pair in _dictionary)
             {
+                float4x4 ltw = em.GetComponentData<LocalToWorld>(pair.Key).Value;
+                float3 scale = GetScaleFromMatrix.Get(ltw);
+
+                if(scale.x <= 0 || scale.y <= 0) break;
+                
                 LineRenderer lineRenderer = Instantiate(linePrefab).GetComponent<LineRenderer>();
                 _lineRenderer.Add(lineRenderer);
 
@@ -79,7 +104,8 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
                 if (!em.HasComponent<LocalToWorld>(entity)) continue;
 
                 // 1. Берем сырую матрицу
-                float4x4 ltw = em.GetComponentData<LocalToWorld>(entity).Value;
+                
+
 
                 // 2. ОЧИЩАЕМ МАТРИЦУ ОТ СКЕЙЛА (Вставлять СЮДА)
                 float3 position = em.GetComponentData<LocalToWorld>(entity).Position;
@@ -106,10 +132,10 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
                                 float3 halfSize = boxGeometry.Size * 0.5f;
                                 float3[] vertices =
                                 {
-                                    new float3(-halfSize.x, -halfSize.y, 0),
-                                    new float3(halfSize.x, -halfSize.y, 0),
-                                    new float3(halfSize.x, halfSize.y, 0),
-                                    new float3(-halfSize.x, halfSize.y, 0)
+                                    new(-halfSize.x, -halfSize.y, 0),
+                                    new(halfSize.x, -halfSize.y, 0),
+                                    new(halfSize.x, halfSize.y, 0),
+                                    new(-halfSize.x, halfSize.y, 0)
                                 };
 
                                 lineRenderer.positionCount = 4;

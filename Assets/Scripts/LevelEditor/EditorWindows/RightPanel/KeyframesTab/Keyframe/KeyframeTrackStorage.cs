@@ -121,12 +121,6 @@ namespace TimeLine.Keyframe
             return null;
         }
 
-        // public void AddKeyframe(TreeNode treeNode, double time, AnimationData data)
-        // {
-        //     Track track = GetTrack(treeNode);
-        //     _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));
-        // }
-        //
         public void AddKeyframe(TreeNode treeNode, double time, EntityAnimationData data)
         {
             Track track = GetTrack(treeNode);

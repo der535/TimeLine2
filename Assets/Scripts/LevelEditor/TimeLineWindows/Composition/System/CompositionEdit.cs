@@ -49,8 +49,6 @@ namespace TimeLine
             _savedName = compositionData.gameObjectName;
             trackObjectStorage.HideAll();
             
-            Debug.Log(JsonConvert.SerializeObject(compositionData.children, Formatting.Indented));
-
             editObjects = facadeObjectSpawner.LoadObjects(compositionData.children);
             
             // var (_, game, _) =
@@ -79,7 +77,7 @@ namespace TimeLine
             // trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
             trackObjectStorage.ShowAll();
             composition.EditComposition(saveLevel.SaveGroup(trackObjectGroup), trackObjectGroup.compositionID);
-            trackObjectRemover.SingleRemove(trackObjectGroup, false);
+            trackObjectRemover.ListRemove(trackObjectGroup);
             foreach (var ob in editObjects)
             {
                 trackObjectRemover.SingleRemove(ob);

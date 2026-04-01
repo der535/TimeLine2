@@ -16,15 +16,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
 {
     public enum ComponentNames
     {
-        SpriteRenderer,
-        NameComponent,
-        Transform,
-        CompositionOffset,
-        BoxCollider,
-        CircleCollider,
-        PolygonCollider,
-        SunBurstMaterial,
-        ShakeCamera,
+        _Empty_ = 0,
+        SpriteRenderer = 1,
+        NameComponent = 2,
+        Transform = 3,
+        CompositionOffset = 4,
+        BoxCollider = 5,
+        CircleCollider= 6,
+        PolygonCollider= 7,
+        SunBurstMaterial= 8,
+        ShakeCamera= 9,
     }
 
     public class EntityComponentController
@@ -146,6 +147,24 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
 
             return data;
         }
+        
+        /// <summary>
+        /// Сохранение конкретного компонента
+        /// </summary>
+        /// <param name="entity"></param>
+        public Dictionary<string, object> Save(Entity entity, ComponentNames componentName)
+        {
+            foreach (var componentSaves in _entityComponentSaves)
+            {
+                if (componentSaves.Check() == componentName)
+                {
+                    var (_, save) = componentSaves.Save(entity);
+                    if (save != null)  return save;
+                }
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Загрузка
@@ -156,8 +175,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         {
             foreach (var componentSaves in _entityComponentSaves)
             {
-                // Debug.Log(dataList.ContainsKey(componentSaves.Check()));
-                // Debug.Log(componentSaves.Check());
                 if (dataList.ContainsKey(componentSaves.Check()))
                     componentSaves.Load(dataList[componentSaves.Check()], entity);
             }

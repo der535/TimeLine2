@@ -84,7 +84,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 return;
             }
 
-            
             // 2. Собираем LocalTransform
             LocalTransform lt = new LocalTransform
             {
@@ -107,6 +106,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             if (entityManager.HasComponent<LocalTransform>(target))
                 entityManager.SetComponentData(target, lt);
 
+            if (entityManager.HasComponent<RotationData>(target))
+            {
+                RotationData rot = entityManager.GetComponentData<RotationData>(target);
+                rot.RotateZ = rotData[2];
+                entityManager.SetComponentData(target, rot);
+            }
+            
             if (entityManager.HasComponent<PositionData>(target))
             {
                 PositionData positionData = new PositionData
