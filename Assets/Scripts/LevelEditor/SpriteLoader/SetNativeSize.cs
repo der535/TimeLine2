@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NaughtyAttributes;
+using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -9,6 +10,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         [SerializeField] private Image image;
         [SerializeField] private RectTransform rectTransform;
 
+        [Button]
         public void Init()
         {
             if (image == null || image.sprite == null || rectTransform == null)

@@ -11,11 +11,13 @@ namespace TimeLine.CustomInspector.UI.Drawers
     public class NameDrawer : IComponentDrawer
     {
         private CustomInspectorDrawer _customInspectorDrawer;
+        private TrackObjectStorage _trackObjectStorage;
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
             KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
         {
             _customInspectorDrawer = customInspectorDrawer;
+            _trackObjectStorage = trackObjectStorage;
         }
 
         public bool GetComponent(Component component)
@@ -53,6 +55,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
             {
                 // 1. Получаем копию данных из сущности (для структур)
                 var nameData = manager.GetComponentData<LevelEditor.ECS.NameComponent>(target);
+                
 
                 // 2. Рисуем поле, передавая текущее значение
                 _customInspectorDrawer.CreateStringField(nameData.Value.ToString(), "Name", (newValue) =>
@@ -60,6 +63,9 @@ namespace TimeLine.CustomInspector.UI.Drawers
                     // 3. Когда текст изменился, создаем обновленную структуру
                     var updatedData = new LevelEditor.ECS.NameComponent { Value = newValue };
         
+                    _trackObjectStorage.GetTrackObjectData(target).branch.Rename(newValue);
+                    _trackObjectStorage.GetTrackObjectData(target).components.View.Rename(newValue);
+
                     // 4. ОБЯЗАТЕЛЬНО записываем данные обратно в EntityManager
                     // Без этого шага изменения останутся только в локальной переменной
                     manager.SetComponentData(target, updatedData);

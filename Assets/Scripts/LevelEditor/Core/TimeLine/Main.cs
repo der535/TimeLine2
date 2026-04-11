@@ -117,11 +117,13 @@ namespace TimeLine
                 // Update exact time from audio source
                 _state.ExactTimeInTicks = TimeLineConverter.Instance.SecondsToTicks(_audioPlaybackService.CurrentTime);
 
+                double visualOffsetTicks = TimeLineConverter.Instance.SecondsToTicks(_musicOffsetData.Value);
+
                 // Update smooth time using Time.deltaTime
                 _state.SmoothTimeInTicks += TimeLineConverter.Instance.SecondsToTicks(Time.deltaTime) * TimeLineSpeedController.CurrentSpeed;
+                _state.SmoothTimeInTicksReal = _state.SmoothTimeInTicks - visualOffsetTicks;
 
                 // Apply offset to get the visual position
-                double visualOffsetTicks = TimeLineConverter.Instance.SecondsToTicks(_musicOffsetData.Value);
                 double exactVisualTimeInTicks = _state.ExactTimeInTicks - visualOffsetTicks;
                 double smoothVisualTimeInTicks = _state.SmoothTimeInTicks - visualOffsetTicks;
 

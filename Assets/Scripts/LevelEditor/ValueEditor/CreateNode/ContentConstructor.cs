@@ -10,6 +10,7 @@ namespace TimeLine.LevelEditor.ValueEditor
     public class ContentConstructor : MonoBehaviour
     {
         [SerializeField] private ContentInputColor contentInputColor;
+        [SerializeField] private ContentInputSprite contentInputSprite;
         [SerializeField] private ContentInputFloat contentInputFloatPrefab;
         [SerializeField] private ContentButton contentButton;
 
@@ -31,6 +32,11 @@ namespace TimeLine.LevelEditor.ValueEditor
         private ContentInputColor CreateContentInputColor(RectTransform root)
         {
             return _diContainer.InstantiatePrefab(contentInputColor, root).GetComponent<ContentInputColor>();
+        }
+        
+        private ContentInputSprite CreateContentInputSprite(RectTransform root)
+        {
+            return _diContainer.InstantiatePrefab(contentInputSprite, root).GetComponent<ContentInputSprite>();
         }
 
         private ContentButton CreateButton(RectTransform root)
@@ -65,7 +71,7 @@ namespace TimeLine.LevelEditor.ValueEditor
                         componentFieldLogic._Map = data._map;
                         componentFieldLogic.Entity = data._trackObjectPacket.entity;
                         node.AddOutPutDynamic(data._map.ParameterID,
-                            TypeToDataType.Convert(typeof(float)));
+                            TypeToDataType.Convert(typeof(float))); //Стоит float по умолчанию
                         binder.Dispose();
                     });
                     selectField.SetActiveButton(false);
@@ -101,7 +107,8 @@ namespace TimeLine.LevelEditor.ValueEditor
 
                 // Проверка: если в порту уже есть инпут, не создаем дубликат
                 if (port.GetInputValueRoot().childCount > 0) continue;
-
+                
+                Debug.Log(port.type);
                 if (port.type == DataType.Float)
                 {
                     SetupManualInputFloat(logic, port, index);
@@ -110,6 +117,11 @@ namespace TimeLine.LevelEditor.ValueEditor
                 if (port.type == DataType.Color)
                 {
                     SetupManualInputColor(logic, port, index);
+                }
+                
+                if (port.type == DataType.Sprite)
+                {
+                    SetupManualInputSprite(logic, port, index);
                 }
             }
         }
@@ -128,6 +140,8 @@ namespace TimeLine.LevelEditor.ValueEditor
             }
 
             // Устанавливаем начальное значение в UI
+            Debug.Log(nodeLogic.ManualValues[index]);
+            Debug.Log(nodeLogic.ManualValues[index].GetType());
             input.Setup((float)nodeLogic.ManualValues[index], (value) => { nodeLogic.ManualValues[index] = value; });
 
             port.SetActiveDefaultInputValue(true);
@@ -148,6 +162,26 @@ namespace TimeLine.LevelEditor.ValueEditor
 
             // Устанавливаем начальное значение в UI
             input.Setup((Color)nodeLogic.ManualValues[index], "Color",
+                (value) => { nodeLogic.ManualValues[index] = value; });
+
+            port.SetActiveDefaultInputValue(true);
+        }
+        
+        internal void SetupManualInputSprite(global::NodeLogic nodeLogic, Port port, int index)
+        {
+            var input = CreateContentInputSprite(port.GetInputValueRoot());
+
+            RectTransform rectTransform = input.transform as RectTransform;
+            rectTransform.anchoredPosition = new Vector2(-rectTransform.sizeDelta.x / 2, 0);
+
+            // Инициализируем значение в логике, если его там еще нет
+            if (!nodeLogic.ManualValues.ContainsKey(index))
+            {
+                nodeLogic.ManualValues[index] = new Color(1, 1, 1);
+            }
+
+            // Устанавливаем начальное значение в UI
+            input.Setup((string)nodeLogic.ManualValues[index], "Sprite",
                 (value) => { nodeLogic.ManualValues[index] = value; });
 
             port.SetActiveDefaultInputValue(true);

@@ -33,7 +33,10 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
 
         private void Start()
         {
-            _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) => { _selectedKeyframe = data.Keyframe; });
+            _gameEventBus.SubscribeTo((ref SelectKeyframeEvent data) =>
+            {
+                _selectedKeyframe = data.Keyframe;
+            });
         }
 
         public void Open()

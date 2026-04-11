@@ -15,7 +15,7 @@ namespace TimeLine.LevelEditor.ECS.System
             // Ищем только тех, кто в процессе деактивации
             foreach (var (shakeCameraData, entity) in SystemAPI.Query<RefRW<ShakeCameraData>>().WithEntityAccess())
             {
-                double time = ECSServiceLocator.Instance.TrackObjectStorage.GetTrackObjectData(entity).components.Data.StartTimeInTicks;
+                double time = ECSServiceLocator.Instance.TrackObjectStorage.GetTrackObjectData(entity).components.Data.GetGlobalTicksPosition();
                 double currentTime = ECSServiceLocator.Instance.M_PlaybackState.SmoothTimeInTicks;
             
                 if (currentTime >= time)

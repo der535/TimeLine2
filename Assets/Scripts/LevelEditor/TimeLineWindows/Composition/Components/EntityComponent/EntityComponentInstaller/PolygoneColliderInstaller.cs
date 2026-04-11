@@ -46,9 +46,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             // 3. Создаем Blob с точками и вешаем компонент-тег
             entityManager.AddComponentData(entity, data);
 
-
-            Debug.Log("Polygon Collider and Tag installed successfully");
-
+            
             entityManager.AddSharedComponentManaged(entity, new PhysicsWorldIndex
             {
                 Value = 0

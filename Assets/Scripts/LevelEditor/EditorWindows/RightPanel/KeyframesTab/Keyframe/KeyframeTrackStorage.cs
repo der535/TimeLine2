@@ -70,7 +70,7 @@ namespace TimeLine.Keyframe
                 {
                     // print(variable.Track.Keyframes.Count);
                     UpdatingFromAnimation.isUpdatingFromAnimation = true;
-                    variable.Track.Evaluate(time - variable.TrackObjectData.StartTimeInTicks);
+                    variable.Track.Evaluate(time - variable.TrackObjectData.GetGlobalTicksPosition());
                     UpdatingFromAnimation.isUpdatingFromAnimation = false;
                 }
             }

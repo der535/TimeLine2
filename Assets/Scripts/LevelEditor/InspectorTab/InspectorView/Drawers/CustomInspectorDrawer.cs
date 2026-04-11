@@ -178,20 +178,13 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         }
 
 
-        public void CreateSpriteField(SpriteParameter field)
-        {
-            // print("CreateSpriteField");
-            var parameter = _container.InstantiatePrefab(spriteField, _currentComponent.RootObject)
-                .GetComponent<SpriteFieldUI>();
-            parameter.Setup(field);
-            _currentComponent.AddHeight(parameter.GetFieldHeight());
-        }
 
-        public void CreateSpriteField(string spriteName, Action<Texture> onValueChanged)
+
+        public void CreateSpriteField(string spriteName, Action<Texture> onValueChanged, Action createKeyframe)
         {
             var parameter = _container.InstantiatePrefab(spriteField, _currentComponent.RootObject)
                 .GetComponent<SpriteFieldUI>();
-            parameter.Setup(_getSpriteName.GetSpriteFromName(spriteName), onValueChanged);
+            parameter.Setup(_getSpriteName.GetSpriteFromName(spriteName), onValueChanged,createKeyframe);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
 

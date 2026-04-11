@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Globalization;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.LevelEditor.Helpers;
 using TimeLine.LevelEditor.SpriteLoader;
 using TMPro;
 using Unity.Rendering;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Zenject;
@@ -17,6 +19,8 @@ namespace TimeLine.CustomInspector.UI.FieldUI
         [Space]
         [FormerlySerializedAs("_button")] [SerializeField] private Button button;
         [FormerlySerializedAs("_text")] [SerializeField] private TextMeshProUGUI text;
+        [SerializeField] private EventTrigger createKeyframeButton;
+
 
         private SelectSpriteController _selectSpriteController;
         private CustomSpriteStorage _customSpriteStorage;
@@ -30,19 +34,8 @@ namespace TimeLine.CustomInspector.UI.FieldUI
             _getSpriteName = getSpriteName;
         }
         
-        public void Setup(SpriteParameter spriteParameter)
-        {
-            text.text = _getSpriteName.Get(spriteParameter);
 
-            button.onClick.AddListener(() =>
-            {
-                _selectSpriteController.Setup(spriteParameter);
-            });
-            
-            spriteParameter.OnValueChanged += () => { text.text = _getSpriteName.Get(spriteParameter); };
-        }
-        
-        public void Setup(Sprite spriteParameter, Action<Texture> onValueChanged)
+        public void Setup(Sprite spriteParameter, Action<Texture> onValueChanged, Action createKeyframe)
         {
             string name = "Null";
             if (spriteParameter != null) name = _getSpriteName.Get(spriteParameter.name);
@@ -52,6 +45,8 @@ namespace TimeLine.CustomInspector.UI.FieldUI
             {
                 _selectSpriteController.Setup(spriteParameter, onValueChanged);
             });
+            UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe);
+
         }
 
         public float GetFieldHeight()

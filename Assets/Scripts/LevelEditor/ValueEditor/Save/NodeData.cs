@@ -1,9 +1,18 @@
 ﻿using System.Collections.Generic;
+using TimeLine.LevelEditor.ValueEditor;
 using UnityEngine;
 
 [System.Serializable]
 public class GraphSaveData
 {
+    public GraphSaveData(DataType outputType, List<NodeSaveEntry> nodes, List<ConnectionSaveEntry> connections )
+    {
+        OutputType = outputType;
+        Nodes = nodes;
+        Connections = connections;
+    }
+    
+    public DataType OutputType;
     public List<NodeSaveEntry> Nodes = new();
     public List<ConnectionSaveEntry> Connections = new();
 }

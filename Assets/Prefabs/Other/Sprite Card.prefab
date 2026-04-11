@@ -32,10 +32,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 6699374996453051393}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 8.9}
-  m_SizeDelta: {x: -34.18, y: -34.18}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.01751709, y: 7.9925003}
+  m_SizeDelta: {x: 127.8854, y: 127.8272}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9140807200575827638
 CanvasRenderer:
@@ -88,6 +88,7 @@ GameObject:
   - component: {fileID: 7261550100620458506}
   - component: {fileID: 5356582351056450371}
   - component: {fileID: 2281269067867564640}
+  - component: {fileID: -8582998090327952138}
   m_Layer: 5
   m_Name: Sprite Card
   m_TagString: Untagged
@@ -113,8 +114,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 250, y: 39.1847}
+  m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8313376760130770115
 CanvasRenderer:
@@ -213,7 +214,22 @@ MonoBehaviour:
   image: {fileID: 7237790905917528363}
   text: {fileID: 6741517747020363825}
   button: {fileID: 5356582351056450371}
+  setNativeSize: {fileID: -8582998090327952138}
   sprite: {fileID: 0}
+--- !u!114 &-8582998090327952138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6702978856380365029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0657b94e282e4cf1a3fb836515eebf0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeLine.LevelEditor.SpriteLoader.SetNativeSize
+  image: {fileID: 7237790905917528363}
+  rectTransform: {fileID: 6000534472235852103}
 --- !u!1 &7667586999297080357
 GameObject:
   m_ObjectHideFlags: 0
@@ -249,8 +265,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0.000030517578, y: 0}
-  m_SizeDelta: {x: -16.13, y: 25.99}
+  m_AnchoredPosition: {x: 0.01751709, y: 0}
+  m_SizeDelta: {x: -16.09502, y: 25.99}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &8592387878074741206
 CanvasRenderer:
@@ -307,7 +323,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 5.8
+  m_fontSize: 21.45
   m_fontSizeBase: 16.3
   m_fontWeight: 400
   m_enableAutoSizing: 1

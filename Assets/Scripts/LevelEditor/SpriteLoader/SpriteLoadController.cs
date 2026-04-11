@@ -31,7 +31,6 @@ namespace TimeLine.LevelEditor.SpriteLoader
                 foreach (var VARIABLE in value)
                 {
                     var sourcePath = VARIABLE;
-                    print(VARIABLE);
                     string fileName = Path.GetFileNameWithoutExtension(VARIABLE);
                     
                     var id = System.Guid.NewGuid().ToString("N");

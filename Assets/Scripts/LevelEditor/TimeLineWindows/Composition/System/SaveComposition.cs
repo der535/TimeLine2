@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 using EventBus;
 using TimeLine.LevelEditor;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.LevelJson;
 using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
@@ -34,13 +35,15 @@ namespace TimeLine
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
         private SavePathController _savePathController;
+        private M_PlaybackState _playbackState;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, ActionMap actionMap, SavePathController savePathController)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap, SavePathController savePathController, M_PlaybackState playbackState)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
             _savePathController = savePathController;
+            _playbackState = playbackState;
         }
 
         internal List<GroupGameObjectSaveData> GetCompositionData() => _compositionData;
@@ -153,7 +156,11 @@ namespace TimeLine
             CompositionCard card = Instantiate(compositionCard, cardContainer);
 
             card.Setup(this,
-                () => { spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID, true); },
+                () =>
+                {
+                    spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID, true, startTime: TimeLineConverter.Instance.TicksCurrentTime());
+                    
+                },
                 () => { compositionEdit.Edit(FindCompositionDataById(data.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
@@ -196,7 +203,10 @@ namespace TimeLine
             CompositionCard card = Instantiate(compositionCard, cardContainer);
 
             card.Setup(this,
-                () => { spawner.LoadComposition(FindCompositionDataById(group.compositionID), group.compositionID, true); },
+                () =>
+                {
+                   spawner.LoadComposition(FindCompositionDataById(group.compositionID), group.compositionID, true,startTime: TimeLineConverter.Instance.TicksCurrentTime());
+                },
                 () => { compositionEdit.Edit(FindCompositionDataById(group.compositionID)); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);

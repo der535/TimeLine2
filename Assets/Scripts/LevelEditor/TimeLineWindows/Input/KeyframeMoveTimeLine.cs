@@ -107,7 +107,7 @@ namespace TimeLine.Input
 
             
             double ticksPerPixel = TimeLineConverter.TICKS_PER_BEAT / (_timeLineKeyframeZoom.Zoom);
-            double rawTicks = pixelX * ticksPerPixel + _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks;
+            double rawTicks = pixelX * ticksPerPixel + _selectObjectController.SelectObjects[^1].components.Data.GetGlobalTicksPosition();
 
             // 1. Сетка работает всегда (базовое поведение)
             double gridSizeInTicks = gridUI.GetGridSizeInTicks();
@@ -149,7 +149,7 @@ namespace TimeLine.Input
             }
 
             foreach (var wrap in _keyframeVizualizer.GetAllKeyframesList())
-                Check(wrap.Ticks + _selectObjectController.SelectObjects[^1].components.Data.StartTimeInTicks);
+                Check(wrap.Ticks + _selectObjectController.SelectObjects[^1].components.Data.GetGlobalTicksPosition());
 
 
             // Только в самом конце присваиваем результат out параметру

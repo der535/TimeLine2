@@ -123,6 +123,8 @@ namespace TimeLine.EventBus.Events.TrackObject
                 trackObjectData.components.TrackObject.SavePosition();
             }
         }
+        
+
 
         public void MultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self,
             double ticks)
@@ -170,6 +172,15 @@ namespace TimeLine.EventBus.Events.TrackObject
             foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
             {
                 trackObjectData.components.TrackObject.MultipleLeftResize(ticks);
+            }
+        }
+        
+        public void MultipleStopResizingLeft(
+            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
+        {
+            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
+            {
+                trackObjectData.components.TrackObject.ApplyKeyframeOffset();
             }
         }
     }

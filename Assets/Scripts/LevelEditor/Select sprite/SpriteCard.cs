@@ -11,12 +11,20 @@ namespace TimeLine
         [SerializeField] private Image image;
         [SerializeField] private TMPro.TextMeshProUGUI text;
         [SerializeField] private Button button;
+        [SerializeField] private SetNativeSize setNativeSize;
         
         public Sprite sprite;
         
         private Action onValueChanged;
         public SpriteParameter SpriteParameter;
         public TextureData textureData;
+
+        private Vector2 startSize;
+
+        private void Awake()
+        {
+            startSize = ((RectTransform)image.transform).sizeDelta;
+        }
 
         internal void Setup(Sprite sprite, Action onClick)
         {
@@ -30,6 +38,7 @@ namespace TimeLine
             }
         }
         
+
         internal void Setup(SpriteParameter spriteParameter, TextureData textureData, Action onClick)
         {
             this.SpriteParameter = spriteParameter;
@@ -37,6 +46,7 @@ namespace TimeLine
             sprite = spriteParameter.Value;
             image.sprite = spriteParameter.Value;
             text.text = textureData.SpriteName;
+            setNativeSize.Init();
             
             SpriteParameter.OnValueChanged -= onValueChanged;
             
@@ -46,6 +56,7 @@ namespace TimeLine
                 sprite.texture.name = spriteParameter.Value.name;
                 image.sprite = spriteParameter.Value;
                 text.text = textureData.SpriteName;
+                setNativeSize.Init();
             };
            
             spriteParameter.OnValueChanged += onValueChanged;

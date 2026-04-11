@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
@@ -29,11 +30,13 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
         private List<LineRenderer> _lineRenderer = new ();
 
         private GameEventBus _gameEventBus;
+        private CameraReferences _cameraReferences;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus)
+        private void Constructor(GameEventBus gameEventBus, CameraReferences cameraReferences)
         {
             _gameEventBus = gameEventBus;
+            _cameraReferences = cameraReferences;
         }
 
         private void Start()
@@ -78,6 +81,30 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
             _dictionary.Clear();
         }
 
+        void SetLineWidth(LineRenderer lineRenderer)
+        {
+            // Средняя дистанция от камеры до объекта
+            float distance = Vector3.Distance(_cameraReferences.editSceneCamera.transform.position, transform.position);
+        
+            float pixelWidth = 2.0f; // Желаемая ширина в пикселях
+            float worldWidth;
+
+            if (_cameraReferences.editSceneCamera.orthographic)
+            {
+                // Для ортогональной камеры все просто
+                worldWidth = pixelWidth * (_cameraReferences.editSceneCamera.orthographicSize * 2 / Screen.height);
+            }
+            else
+            {
+                // Для перспективной камеры учитываем FOV и дистанцию
+                float frustumHeight = 2.0f * distance * Mathf.Tan(_cameraReferences.editSceneCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+                worldWidth = (pixelWidth * frustumHeight) / Screen.height;
+            }
+
+            lineRenderer.startWidth = worldWidth;
+            lineRenderer.endWidth = worldWidth;
+        }
+
         public void Update()
         {
             EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -97,6 +124,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.BoxCollider
                 if(scale.x <= 0 || scale.y <= 0) break;
                 
                 LineRenderer lineRenderer = Instantiate(linePrefab).GetComponent<LineRenderer>();
+                SetLineWidth(lineRenderer);
                 _lineRenderer.Add(lineRenderer);
 
                 Entity entity = pair.Key;

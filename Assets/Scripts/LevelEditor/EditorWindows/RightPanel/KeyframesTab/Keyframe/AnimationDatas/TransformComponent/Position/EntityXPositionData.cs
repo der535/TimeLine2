@@ -24,7 +24,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             Logic = new OutputLogic();
             Logic.Initialize(DataType.Float);
             Logic.ManualValues[0] = value;
-            Graph = SaveGraph.ToJson(Logic);
+            Graph = SaveGraph.ToJson(Logic, DataType.Float);
         }
 
         public override ComponentNames GetComponentType()
@@ -45,6 +45,16 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
         public override object GetValue()
         {
             return (float)Logic.GetValue();
+        }
+
+        public override DataType? GetValueType(JObject data)
+        {
+            if (data.TryGetValue("transform-position-x", out JToken token))
+            {
+                return DataType.Float;
+            }
+
+            return null;
         }
 
         public override void SetValue(object value)
@@ -75,7 +85,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             {
                 Logic.Initialize(DataType.Float);
                 Logic.ManualValues[0] = token.ToObject<float>();
-                Graph = SaveGraph.ToJson(Logic);
+                Graph = SaveGraph.ToJson(Logic, DataType.Float);
             }
         }
 

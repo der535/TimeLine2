@@ -6,6 +6,7 @@ using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.Save;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using UnityEngine;
@@ -83,8 +84,10 @@ namespace TimeLine
                     {
                         if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
                         {
+                            Debug.Log(keyframe.GetEntityData().Graph);
+                            Debug.Log("ЧЕЕЕЕЕЕК");
                             keyframe.GetEntityData().Logic = _saveNodes.LoadGraph(keyframe.GetEntityData().Graph,
-                                TypeToDataType.Convert(keyframe.GetEntityData().GetType()),
+                                DataType.Color,
                                 keyframe.GetEntityData().initializedNodes, trackObjectDatas);
                         }
                     }

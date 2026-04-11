@@ -67,7 +67,11 @@ namespace TimeLine.CustomInspector.UI.Drawers
                     Material currentMat = rma.GetMaterial(meshInfo);
 
                     _customInspectorDrawer.CreateSpriteField(currentMat.mainTexture.name,
-                        (value) => { currentMat.mainTexture = value; });
+                        (value) => { currentMat.mainTexture = value; }, () =>
+                        {
+                            _keyframeCreator.CreateKeyframe(new EntitySpriteRendererSprite(currentMat.mainTexture.name), target,
+                                "Sprite", Color.white, "SpriteRenderer", ComponentNames.SpriteRenderer);
+                        });
 
 
                     _customInspectorDrawer.CreateButton(() =>

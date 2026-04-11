@@ -10,6 +10,18 @@ namespace TimeLine.LevelEditor.SpriteLoader
         private BaseSpriteStorage _spriteStorage;
         private CustomSpriteStorage _customSpriteStorage;
 
+        public static GetSpriteName Instance;
+
+        private void Awake()
+        {
+            if (Instance != null)
+                Destroy(this);
+            else
+            {
+                Instance = this;
+            }
+        }
+
         [Inject]
         private void Constructor(CustomSpriteStorage customSpriteStorage, BaseSpriteStorage baseSpriteStorage)
         {
@@ -20,14 +32,14 @@ namespace TimeLine.LevelEditor.SpriteLoader
         public string Get(SpriteParameter spriteParameter)
         {
             // Check base storage
-            
-            if(spriteParameter == null || spriteParameter.Value == null) return string.Empty;
-            
+
+            if (spriteParameter == null || spriteParameter.Value == null) return string.Empty;
+
             foreach (var sprite in _spriteStorage.Sprites)
             {
                 if (sprite.name == spriteParameter.Value.name) return sprite.name;
             }
-            
+
             // Check custom storage
             foreach (var data in _customSpriteStorage.TextureData)
             {
@@ -37,16 +49,16 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
             return String.Empty;
         }
-        
+
         public string Get(string name)
         {
             // Check base storage
-            
+
             foreach (var sprite in _spriteStorage.Sprites)
             {
                 if (sprite.name == name) return sprite.name;
             }
-            
+
             // Check custom storage
             foreach (var data in _customSpriteStorage.TextureData)
             {
@@ -59,12 +71,11 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
         public Sprite GetSpriteFromName(string name)
         {
-                        
             foreach (var sprite in _spriteStorage.Sprites)
             {
                 if (sprite.name == name) return sprite;
             }
-            
+
             // Check custom storage
             foreach (var data in _customSpriteStorage.TextureData)
             {

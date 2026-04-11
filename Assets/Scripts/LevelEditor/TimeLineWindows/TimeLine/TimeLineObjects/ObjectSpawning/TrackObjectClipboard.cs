@@ -18,7 +18,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private SaveLevel _saveLevel;
         private Main _main;
         private SaveComposition _saveComposition;
-        private ObjectFactory _objectFactory;
         private ObjectLoader _objectLoader;
         private SelectObjectController _selectObjectController;
 
@@ -27,23 +26,27 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             SaveLevel saveLevel,
             Main main,
             SaveComposition saveComposition,
-            ObjectFactory objectFactory,
             ObjectLoader objectLoader,
             SelectObjectController selectObjectController)
         {
             _saveLevel = saveLevel;
             _main = main;
             _saveComposition = saveComposition;
-            _objectFactory = objectFactory;
             _objectLoader = objectLoader;
             _selectObjectController = selectObjectController;
         }
 
-        internal void CopyObjects(List<TrackObjectPacket> selectedObjects)
+        internal void CopyObjectsWithSaving(List<TrackObjectPacket> selectedObjects)
         {
-            dataCopy = new List<GameObjectSaveData>();
-            var minTicks = selectedObjects.Min(x => x.components.Data.StartTimeInTicks);
+            dataCopy = CopyObjects(selectedObjects);
+            GUIUtility.systemCopyBuffer = JsonConvert.SerializeObject(dataCopy);
+        }
+
+        internal List<GameObjectSaveData> CopyObjects(List<TrackObjectPacket> selectedObjects)
+        {
             var savedTime = TimeLineConverter.Instance.TicksCurrentTime();
+            var gameObjectSaveData = new List<GameObjectSaveData>();
+            var minTicks = selectedObjects.Min(x => x.components.Data.StartTimeInTicks);
             _main.SetTimeInTicks(minTicks);
             foreach (var sObject in selectedObjects)
             {
@@ -51,38 +54,43 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                 {
                     GroupGameObjectSaveData saveData = _saveLevel.FullSave(group);
                     saveData.compositionID = group.compositionID;
-                    dataCopy.Add(saveData);
+                    gameObjectSaveData.Add(saveData);
                 }
                 else
                 {
                     var data = _saveLevel.SaveGameObject(sObject, "");
-                    dataCopy.Add(data);
+                    gameObjectSaveData.Add(data);
                 }
             }
-            
-            GUIUtility.systemCopyBuffer = JsonConvert.SerializeObject(dataCopy);
 
             _main.SetTimeInTicks(savedTime);
+
+            return gameObjectSaveData;
         }
 
-        internal void PasteObjects()
+        internal List<TrackObjectPacket> PasteObjectsFromSave(List<GameObjectSaveData> copydata, double startTime, bool useCurrentTime = false)
         {
             CommandHistory.IsRecording = false;
-            if (dataCopy == null) return;
-            var minTime = GetMinTime(dataCopy);
+            if (copydata == null) return null;
+            var minTime = GetMinTime(copydata);
 
             List<TrackObjectPacket> pastedObjects = new();
 
-            foreach (var data in dataCopy)
+            foreach (var data in copydata)
             {
-                data.startTime = data.startTime - minTime + TimeLineConverter.Instance.TicksCurrentTime();
+                if (useCurrentTime == false)
+                {
+                    data.startTime = data.startTime - minTime + startTime;
+                }
+
                 if (data is GroupGameObjectSaveData group)
                 {
                     pastedObjects.Add(PasteGroup(group, addToTitleCloneText: true));
                 }
                 else
                 {
-                    pastedObjects.Add(_objectLoader.LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true).Item1);
+                    pastedObjects.Add(_objectLoader
+                        .LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true).Item1);
                 }
             }
 
@@ -90,7 +98,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _selectObjectController.SelectMultiple(pastedObjects);
 
             CommandHistory.IsRecording = true;
+            return pastedObjects;
         }
+
+        internal void PasteObjects()
+        {
+            PasteObjectsFromSave(dataCopy,TimeLineConverter.Instance.TicksCurrentTime());
+        }
+
 
         private TrackObjectPacket PasteGroup(GroupGameObjectSaveData data, bool addToStorage = true,
             bool addToTitleCloneText = false)

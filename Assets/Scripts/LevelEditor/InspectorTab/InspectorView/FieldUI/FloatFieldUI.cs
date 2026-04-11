@@ -25,11 +25,6 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.FieldUI
         private TrackObjectStorage _trackObjectStorage;
         private float _previousValue;
 
-        [Inject]
-        private void Construct(TrackObjectStorage trackObjectStorage)
-        {
-            _trackObjectStorage = trackObjectStorage;
-        }
 
         public void Setup(TrackObjectPacket trackObjectPacket, BaseParameterComponent component, FloatParameter floatParameter, string gameObjectID, Action createKeyframe, string fieldID)
         {

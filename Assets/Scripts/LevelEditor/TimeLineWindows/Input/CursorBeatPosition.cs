@@ -162,14 +162,14 @@ namespace TimeLine.Input
             if (_trackObjectStorage.TrackObjects != null)
             {
                 foreach (var wrap in _trackObjectStorage.TrackObjects)
-                    Process(wrap.components.Data.StartTimeInTicks, wrap.components.Data.TimeDurationInTicks);
+                    Process(wrap.components.Data.GetGlobalTicksPosition(), wrap.components.Data.TimeDurationInTicks);
             }
 
             // Проходим по всем группам
             if (_trackObjectStorage.TrackObjectGroups != null)
             {
                 foreach (var wrap in _trackObjectStorage.TrackObjectGroups)
-                    Process(wrap.components.Data.StartTimeInTicks, wrap.components.Data.TimeDurationInTicks);
+                    Process(wrap.components.Data.GetGlobalTicksPosition(), wrap.components.Data.TimeDurationInTicks);
             }
 
             // Только в самом конце присваиваем результат out параметру

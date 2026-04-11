@@ -7,10 +7,11 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
 {
     public static class SaveGraph
     {
-        public static string ToJson(OutputLogic cogic)
+        public static string ToJson(OutputLogic cogic, DataType outputType)
         {
-            var graphData = new GraphSaveData();
+            var graphData = new GraphSaveData(DataType.Color, new List<NodeSaveEntry>(), new List<ConnectionSaveEntry>());
 
+            graphData.OutputType = outputType;
 
             // 1. Формируем запись о ноде
             var nEntry = new NodeSaveEntry

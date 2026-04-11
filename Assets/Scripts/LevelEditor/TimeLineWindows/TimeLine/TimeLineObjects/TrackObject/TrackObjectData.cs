@@ -25,25 +25,25 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public int TrackLineIndex;
         public double StartTimeInTicks;
         public double TimeDurationInTicks;
-        public double ReducedLeft; 
+        public double ReducedLeft;
         public double ReducedRight;
         public bool IsActive = true;
 
         public TrackObjectComponents offsetObject;
-        // public Action<double> OnChangeDuration;
-        
+        public Action<double> OnChangeDuration;
+
         public void ChangeDurationInTicks(double durationInTicks)
         {
             TimeDurationInTicks = Mathf.Round((float)durationInTicks);
-            // OnChangeDuration.Invoke(TimeDurationInTicks);
+            OnChangeDuration.Invoke(TimeDurationInTicks);
         }
-        
+
         internal void UpdateDuraction(double newDuractionInTicks)
         {
             var delta = newDuractionInTicks - (TimeDurationInTicks - ReducedRight - ReducedLeft);
             ReducedRight -= delta;
         }
-        
+
         internal void GroupOffsetTrack(TrackObjectComponents track)
         {
             offsetObject = track;
@@ -64,33 +64,62 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             if (depth == maxDepth)
                 Debug.Log("Предупреждение: достигнут лимит глубины — возможна циклическая ссылка.");
 
-            return StartTimeInTicks +
-                   (offsetObject != null ? offsetObject.Data.GetKeyframeTrackOffset() : 0);
+            // Debug.Log(GetGlobalTicksPosition());
+            // Debug.Log(
+                // (offsetObject != null ? offsetObject.Data.GetKeyframeTrackOffset() : 0));
+            return (offsetObject != null ? offsetObject.Data.GetKeyframeTrackOffset() : 0);
         }
 
         internal double GetGlobalTicksPosition()
         {
             var start = StartTimeInTicks;
-            // Ограничиваем глубину, например, 100 итерациями
-            return start + offsetObject.Data.GetReducedLeft(100);
+            if (offsetObject != null)
+            {
+                // Начинаем цепочку логов
+                double offsetResult = offsetObject.Data.GetReducedLeft(100);
+                double finalResult = Math.Round(start + offsetResult);
+
+                // Debug.Log($"[Root] StartTime: {start} | OffsetResult: {offsetResult} | Final (Rounded): {finalResult}");
+                return finalResult;
+            }
+
+            return Math.Round(start);
         }
 
         internal double GetReducedLeft(int depthLimit = 100)
         {
             if (depthLimit <= 0)
             {
-                // Логируем ошибку или возвращаем текущее значение, чтобы прервать цикл
-                Debug.LogWarning("Detected potential infinite recursion in offsetObject hierarchy!");
-                return ReducedLeft;
+                // Debug.LogWarning("Detected potential infinite recursion in offsetObject hierarchy!");
+                return StartTimeInTicks;
             }
 
+            // Текущие значения этого звена
+            double currentLayerValue = StartTimeInTicks + ReducedLeft;
+
             if (offsetObject != null)
-                return ReducedLeft + offsetObject.Data.GetReducedLeft(depthLimit - 1);
-            
-            return ReducedLeft + StartTimeInTicks;
+            {
+                // Рекурсивный вызов
+                double nextLayerValue = offsetObject.Data.GetReducedLeft(depthLimit - 1);
+                double total = currentLayerValue + nextLayerValue;
+
+                // Debug.Log($"[Depth {depthLimit}] Object: {this.GetType().Name} | " +
+                // $"StartTime: {StartTimeInTicks} | ReducedLeft: {ReducedLeft} | " +
+                // $"Layer Sum: {currentLayerValue} | Accumulated from Parents: {nextLayerValue} | Total: {total}");
+
+                return total;
+            }
+
+            // Debug.Log($"[Leaf/End] Object: {this.GetType().Name} | StartTime: {StartTimeInTicks} | ReducedLeft: {ReducedLeft} | Total: {currentLayerValue}");
+            return currentLayerValue;
         }
-        
+
         internal void GroupOffset(double tickOffset)
+        {
+            // StartTimeInTicks -= tickOffset;
+        }
+
+        internal void GroupOffsetNew(double tickOffset)
         {
             StartTimeInTicks -= tickOffset;
         }

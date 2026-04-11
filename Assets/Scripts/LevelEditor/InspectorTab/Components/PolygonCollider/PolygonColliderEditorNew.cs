@@ -32,7 +32,8 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.PolygonCollider
         private int _selectedPointIndex = -1;
 
         [Inject]
-        private void Construct(GameEventBus eventBus, SceneToRawImageConverter sceneToRawImageConverter,  C_EditColliderState editColliderState)
+        private void Construct(GameEventBus eventBus, SceneToRawImageConverter sceneToRawImageConverter,
+            C_EditColliderState editColliderState)
         {
             _eventBus = eventBus;
             _sceneToRawImageConverter = sceneToRawImageConverter;
@@ -87,7 +88,6 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.PolygonCollider
                 GetScaleFromMatrix.Get(_entityManager.GetComponentData<LocalToWorld>(_selectedEntity).Value);
             var entityRotation = _entityManager.GetComponentData<LocalToWorld>(_selectedEntity).Rotation;
 
-
             var mousePosition = _sceneToRawImageConverter.ScreenPointToWorldScene(UnityEngine.Input.mousePosition);
             mousePosition.z = 0; // На всякий случай фиксируем Z в 0
 
@@ -118,7 +118,8 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.PolygonCollider
 
                 // Визуальное обновление кубика при перетаскивании
                 selectCube.transform.position = mousePosition;
-                selectCube.transform.localScale = new Vector3(cornerScale, cornerScale, 1);
+                selectCube.transform.localScale = new Vector3(_camera.orthographicSize * startScale,
+                    _camera.orthographicSize * startScale, 1);
 
                 return; // Прерываем Update, так как вычислять ближайшие грани сейчас не нужно
             }
@@ -147,14 +148,14 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.PolygonCollider
                 var positionOnLine = GetClosestPointOnSegment(p1, p2, mousePosition);
                 float distToLine = Vector3.Distance(mousePosition, positionOnLine);
 
-                if (distToLine < distanceToEdge)
+                if (distToLine < distanceToEdge * _camera.orthographicSize)
                 {
                     minDistance = distToLine;
                     closedPosition = positionOnLine;
                     firstPointOfTheSegment = i;
 
-                    bool closeToP1 = Vector3.Distance(closedPosition, p1) < distanceToEdge;
-                    bool closeToP2 = Vector3.Distance(closedPosition, p2) < distanceToEdge;
+                    bool closeToP1 = Vector3.Distance(closedPosition, p1) < distanceToEdge * _camera.orthographicSize;
+                    bool closeToP2 = Vector3.Distance(closedPosition, p2) < distanceToEdge * _camera.orthographicSize;
 
 
                     if (closeToP1)
@@ -187,6 +188,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Components.PolygonCollider
             if (minDistance < distanceToEdge)
             {
                 float targetScale = localSelectedPointIndex != -1 ? cornerScale : startScale;
+                targetScale *= _camera.orthographicSize;
                 selectCube.transform.localScale = new Vector3(targetScale, targetScale, 1);
             }
             else

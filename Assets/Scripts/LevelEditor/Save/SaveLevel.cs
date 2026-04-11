@@ -110,7 +110,6 @@ namespace TimeLine.LevelEditor.Save
 
             string filePath = $"{directoryPath}/LevelObjects.json";
             string json = JsonConvert.SerializeObject(saveLevelDto, Formatting.Indented);
-            Debug.Log(json);
             File.WriteAllText(filePath, json);
 
             string levelBaseInfoPath =
@@ -210,7 +209,6 @@ namespace TimeLine.LevelEditor.Save
         public GroupGameObjectSaveData SaveGroup(TrackObjectGroup group, bool saveGroupID = false)
         {
             var baseData = SaveGameObject(group, "");
-            Debug.Log(baseData.gameObjectName);
             GroupGameObjectSaveData groupData;
             if (saveGroupID == false)
             {
@@ -247,7 +245,7 @@ namespace TimeLine.LevelEditor.Save
                 };
             }
             
-            Debug.Log(groupData.gameObjectName);
+            // Debug.Log(groupData.gameObjectName);
 
 
             groupData.reduceRight = group.components.Data.ReducedRight;
@@ -272,7 +270,6 @@ namespace TimeLine.LevelEditor.Save
                 }
             }
 
-            Debug.Log(groupData.gameObjectName);
 
             return groupData;
         }

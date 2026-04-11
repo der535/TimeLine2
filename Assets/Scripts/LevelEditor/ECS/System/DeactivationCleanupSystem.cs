@@ -1,4 +1,5 @@
 ﻿using TimeLine.LevelEditor.ECS.Components;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
@@ -14,6 +15,22 @@ public partial struct DeactivationCleanupSystem : ISystem
         {
             // Убираем временный тег, чтобы не повторять действие
             ecb.RemoveComponent<DeactivatingRequestTag>(entity);
+
+            if (SystemAPI.HasComponent<BoxColliderData>(entity))
+            {
+               var colliderData = SystemAPI.GetComponent<BoxColliderData>(entity);
+               SystemAPI.SetComponent(entity, colliderData);
+            }          
+            if (SystemAPI.HasComponent<CircleColliderData>(entity))
+            {
+               var colliderData = SystemAPI.GetComponent<CircleColliderData>(entity);
+               SystemAPI.SetComponent(entity, colliderData);
+            }
+            if (SystemAPI.HasComponent<PolygonColliderData>(entity))
+            {
+                var colliderData = SystemAPI.GetComponent<PolygonColliderData>(entity);
+                SystemAPI.SetComponent(entity, colliderData);
+            }
             
             // Если нужно выключить графику вручную (если она не смотрит на EntityActiveTag)
             if (SystemAPI.HasComponent<MaterialMeshInfo>(entity))
@@ -32,11 +49,31 @@ public partial struct ActivationCleanupSystem : ISystem
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
+
+        
         // Ищем только тех, кто в процессе деактивации
-        foreach (var (tag, entity) in SystemAPI.Query<ActivatingRequestTag>().WithEntityAccess())
+        foreach (var (tag, entity) in SystemAPI.Query<RefRO<ActivatingRequestTag>>().WithEntityAccess())
         {
             // Убираем временный тег, чтобы не повторять действие
             ecb.RemoveComponent<ActivatingRequestTag>(entity);
+            
+                    
+            if (SystemAPI.HasComponent<BoxColliderData>(entity))
+            {
+                var colliderData = SystemAPI.GetComponent<BoxColliderData>(entity);
+                SystemAPI.SetComponent(entity, colliderData);
+            }          
+            if (SystemAPI.HasComponent<CircleColliderData>(entity))
+            {
+                var colliderData = SystemAPI.GetComponent<CircleColliderData>(entity);
+                SystemAPI.SetComponent(entity, colliderData);
+            }
+            if (SystemAPI.HasComponent<PolygonColliderData>(entity))
+            {
+                var colliderData = SystemAPI.GetComponent<PolygonColliderData>(entity);
+                SystemAPI.SetComponent(entity, colliderData);
+            }
+
             
             // Если нужно выключить графику вручную (если она не смотрит на EntityActiveTag)
             if (SystemAPI.HasComponent<MaterialMeshInfo>(entity))

@@ -226,6 +226,33 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CutRight"",
+                    ""type"": ""Button"",
+                    ""id"": ""ac13e439-2e7f-4d20-a09c-df33f45b5d60"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CutLeft"",
+                    ""type"": ""Button"",
+                    ""id"": ""e4770872-4742-4a19-8f18-31e5cc696e2c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CutHalf"",
+                    ""type"": ""Button"",
+                    ""id"": ""79dc2130-24d7-4fc2-8ded-aa24f79ade85"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -415,6 +442,39 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""action"": ""Delete"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""23ccaf79-bcbb-4ace-90b7-7a00d900b112"",
+                    ""path"": ""<Keyboard>/period"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CutRight"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e4c2554b-aa76-4d28-a8d7-5307e92332a0"",
+                    ""path"": ""<Keyboard>/comma"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CutLeft"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""75ae0f86-1586-4b9b-a824-3e6ea3a4689e"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CutHalf"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -564,6 +624,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         m_Editor_ESC = m_Editor.FindAction("ESC", throwIfNotFound: true);
         m_Editor_S = m_Editor.FindAction("S", throwIfNotFound: true);
         m_Editor_Delete = m_Editor.FindAction("Delete", throwIfNotFound: true);
+        m_Editor_CutRight = m_Editor.FindAction("CutRight", throwIfNotFound: true);
+        m_Editor_CutLeft = m_Editor.FindAction("CutLeft", throwIfNotFound: true);
+        m_Editor_CutHalf = m_Editor.FindAction("CutHalf", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_PlayerMove = m_Player.FindAction("PlayerMove", throwIfNotFound: true);
@@ -668,6 +731,9 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     private readonly InputAction m_Editor_ESC;
     private readonly InputAction m_Editor_S;
     private readonly InputAction m_Editor_Delete;
+    private readonly InputAction m_Editor_CutRight;
+    private readonly InputAction m_Editor_CutLeft;
+    private readonly InputAction m_Editor_CutHalf;
     /// <summary>
     /// Provides access to input actions defined in input action map "Editor".
     /// </summary>
@@ -740,6 +806,18 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Delete => m_Wrapper.m_Editor_Delete;
         /// <summary>
+        /// Provides access to the underlying input action "Editor/CutRight".
+        /// </summary>
+        public InputAction @CutRight => m_Wrapper.m_Editor_CutRight;
+        /// <summary>
+        /// Provides access to the underlying input action "Editor/CutLeft".
+        /// </summary>
+        public InputAction @CutLeft => m_Wrapper.m_Editor_CutLeft;
+        /// <summary>
+        /// Provides access to the underlying input action "Editor/CutHalf".
+        /// </summary>
+        public InputAction @CutHalf => m_Wrapper.m_Editor_CutHalf;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Editor; }
@@ -810,6 +888,15 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @Delete.started += instance.OnDelete;
             @Delete.performed += instance.OnDelete;
             @Delete.canceled += instance.OnDelete;
+            @CutRight.started += instance.OnCutRight;
+            @CutRight.performed += instance.OnCutRight;
+            @CutRight.canceled += instance.OnCutRight;
+            @CutLeft.started += instance.OnCutLeft;
+            @CutLeft.performed += instance.OnCutLeft;
+            @CutLeft.canceled += instance.OnCutLeft;
+            @CutHalf.started += instance.OnCutHalf;
+            @CutHalf.performed += instance.OnCutHalf;
+            @CutHalf.canceled += instance.OnCutHalf;
         }
 
         /// <summary>
@@ -866,6 +953,15 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @Delete.started -= instance.OnDelete;
             @Delete.performed -= instance.OnDelete;
             @Delete.canceled -= instance.OnDelete;
+            @CutRight.started -= instance.OnCutRight;
+            @CutRight.performed -= instance.OnCutRight;
+            @CutRight.canceled -= instance.OnCutRight;
+            @CutLeft.started -= instance.OnCutLeft;
+            @CutLeft.performed -= instance.OnCutLeft;
+            @CutLeft.canceled -= instance.OnCutLeft;
+            @CutHalf.started -= instance.OnCutHalf;
+            @CutHalf.performed -= instance.OnCutHalf;
+            @CutHalf.canceled -= instance.OnCutHalf;
         }
 
         /// <summary>
@@ -1227,6 +1323,27 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDelete(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "CutRight" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCutRight(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "CutLeft" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCutLeft(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "CutHalf" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCutHalf(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Player" which allows adding and removing callbacks.

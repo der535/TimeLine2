@@ -5,6 +5,6 @@ namespace TimeLine.LevelEditor.ECS.Components
 {
     public struct EntityActiveTag : IComponentData, IEnableableComponent 
     {
-        
+        public bool IsActive;
     }
 }

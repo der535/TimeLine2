@@ -27,16 +27,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         [Inject]
         private void Construct(SelectObjectController state, MainObjects mainObjects, GameEventBus eventBus,
-            SelectObjectController select, TrackObjectStorage trackObjectStorage,
+            TrackObjectStorage trackObjectStorage,
             KeyframeTrackStorage keyframeTrackStorage, GridUI gridUI)
         {
             _select = state;
             _eventBus = eventBus;
             _mainObjects = mainObjects;
-            _selectController = select;
             _trackObjectStorage = trackObjectStorage;
             _keyframeTrackStorage = keyframeTrackStorage;
             _gridUI = gridUI;
+            _selectController = state;
         }
 
         public void Setup(TrackObject trackObject, TrackObjectState state, TrackObjectData data, ITrackObjectView view)
@@ -96,6 +96,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         public void SetResizeLeft(bool isResizing)
         {
+            _selectController.MultipleStopResizingLeft(_trackObject);
             _state.StartResizingDuractionInTicks = _data.TimeDurationInTicks;
             _state.StartResizingTimeInTicks = _data.StartTimeInTicks;
             _state.IsRightResizing = false;
@@ -122,6 +123,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                 _state.InitialStartTimeInTicks = _data.StartTimeInTicks;
             }
 
+            
             _selectController.SaveResizingData(_trackObject);
         }
 

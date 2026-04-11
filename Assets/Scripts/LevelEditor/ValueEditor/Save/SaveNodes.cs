@@ -27,8 +27,9 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
 
         public string SaveGraphToJson(List<Node> activeNodes)
         {
-            var graphData = new GraphSaveData();
+            var graphData = new GraphSaveData(DataType.Float, new List<NodeSaveEntry>(), new List<ConnectionSaveEntry>());
 
+            
             foreach (var node in activeNodes)
             {
                 // 1. Формируем запись о ноде
@@ -44,6 +45,11 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 if (node.Logic is ComponentFieldLogic componentFieldLogic)
                 {
                     componentFieldLogic.OnSave(nEntry.AdditionalData);
+                }
+
+                if (node.Logic is OutputLogic nodeLogic)
+                {
+                    graphData.OutputType = nodeLogic.DataType;
                 }
                 
                 graphData.Nodes.Add(nEntry);
@@ -79,7 +85,8 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 TypeNameHandling = TypeNameHandling.Auto // Позволяет восстанавливать типы, если они указаны в JSON
             };
             
-            _nodeCreator.SetListIInitializedNodes(initializedNodes);
+            if(initializedNodes != null)
+                _nodeCreator.SetListIInitializedNodes(initializedNodes);
 
             var data = JsonConvert.DeserializeObject<GraphSaveData>(json, settings);
             var idToNode = new Dictionary<string, Node>();
@@ -94,7 +101,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
 
                 if (logic is OutputLogic output)
                 {
-                    output.Initialize(type);
+                    output.Initialize(data.OutputType);
                     outputLogic = output;
                 }
 
@@ -126,8 +133,6 @@ namespace TimeLine.LevelEditor.ValueEditor.Save
                 outputLogic.Initialize(type);
                 return (_nodeCreator.CreateNode(outputLogic), null);
             }
-            
-            
             
             List<IInitializedNode> listNodes = new List<IInitializedNode>();
             var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };

@@ -138,7 +138,8 @@ namespace TimeLine
 
             foreach (var selectObject in _selectObjectController.SelectObjects)
             {
-                selectObject.components.Data.GroupOffset(minTime);
+                // selectObject.components.Data.GroupOffset(minTime);
+                selectObject.components.Data.GroupOffsetNew(minTime);
                 selectObject.components.Data.GroupOffsetTrack(components);
                 // print(string.IsNullOrEmpty(selectObject.components.Data.ParentID));
 
@@ -210,7 +211,7 @@ namespace TimeLine
 
             foreach (var selectObject in trackObjects)
             {
-                selectObject.components.Data.GroupOffset(minTime);
+                selectObject.components.Data.GroupOffsetNew(minTime);
                 selectObject.components.Data.GroupOffsetTrack(components);
 
                 // if (selectObject.sceneObject.transform.parent == null)

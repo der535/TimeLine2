@@ -52,7 +52,7 @@ namespace TimeLine
                 _keyframeTrackStorage.AddTrack(node, new Track(target, trackName, animationColor, componentNames),
                     trackObjectPacket.components.Data, trackObjectPacket.branch.ID);
             
-            _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectPacket.components.Data.StartTimeInTicks,
+            _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectPacket.components.Data.GetGlobalTicksPosition(),
                 animationData);
         }
     }

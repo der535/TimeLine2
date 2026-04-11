@@ -68,7 +68,7 @@ namespace TimeLine
             _trackObjectData = trackObject;
 
             // Конвертируем StartTime трек-объекта в тики
-            double startTimeTicks = trackObject.StartTimeInTicks;
+            double startTimeTicks = trackObject.GetGlobalTicksPosition();
 
             // Вычисляем разницу во времени в тиках
             double timeDiffTicks = ticks - startTimeTicks;

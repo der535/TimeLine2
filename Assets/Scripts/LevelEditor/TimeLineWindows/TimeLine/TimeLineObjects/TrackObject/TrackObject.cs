@@ -75,7 +75,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _state = state;
             _trackObjectView = View;
             _trackObjectView.Rename(trackObjectData.Name);
-            // _data.OnChangeDuration += _ => UpdateVisuals();
+            _data.OnChangeDuration += _ => UpdateVisuals();
 
             UpdateVisuals();
         }
@@ -103,6 +103,38 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             return currentLocalPosition;
         }
 
+        private void ApplyKeyframeOffset(double offset)
+        {
+            // double offset = Math.Round(_data.StartTimeInTicks - _state.InitialStartTimeInTicks);
+            if (offset != 0)
+            {
+                foreach (var node in _trackObjectStorage.GetTrackObjectData(this).branch.Nodes)
+                {
+                    foreach (var node2 in node.Children)
+                    {
+                        _keyframeTrackStorage.GetTrack(node2)?.AddOffsetKeyframes(-offset);
+                    }
+                }
+            }
+        }
+        
+                
+        public void ApplyKeyframeOffset()
+        {
+            double offset = Math.Round(_data.StartTimeInTicks - _state.InitialStartTimeInTicks);
+            Debug.Log(offset);
+            if (offset != 0)
+            {
+                foreach (var node in _trackObjectStorage.GetTrackObjectData(this).branch.Nodes)
+                {
+                    foreach (var node2 in node.Children)
+                    {
+                        _keyframeTrackStorage.GetTrack(node2)?.AddOffsetKeyframes(-offset);
+                    }
+                }
+            }
+        }
+
 
         public void SaveResizingData()
         {
@@ -127,7 +159,26 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _data.StartTimeInTicks = newStartTimeInTicks;
             _data.ChangeDurationInTicks(newDurationInTicks);
         }
+        
+        
 
+        public void RightResize(double duraction)
+        {
+            _data.ChangeDurationInTicks(
+                Math.Max(RoundTicksToGrid(duraction), 1));
+        }
+        
+        public void LeftResize(double startTime)
+        {
+            var endTime = _data.StartTimeInTicks + _data.TimeDurationInTicks;
+            var newDuraction = endTime - startTime;
+            var duractionDelta = _data.TimeDurationInTicks - newDuraction;
+            
+            _data.StartTimeInTicks = startTime;
+            _data.ChangeDurationInTicks(newDuraction);
+            ApplyKeyframeOffset(duractionDelta);
+
+        }
 
         public void Tick()
         {

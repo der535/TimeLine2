@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using EventBus;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using TimeLine.Components;
+using TimeLine.EventBus.Events.Input;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
@@ -40,13 +43,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private SaveNodes _saveNodes;
         private EntityComponentController _entityComponentController;
         private EntityManager _entityManager;
+        private GameEventBus _gameEventBus;
+        private TimeLineScroll _timeLineScroll;
+        private M_PlaybackState _playbackState;
 
         public ObjectLoader(ObjectFactory objectFactory, TrackStorage trackStorage,
             BranchCollection branchCollection, TrackObjectStorage trackObjectStorage,
             KeyframeTrackStorage keyframeTrackStorage, Main main, SaveComposition saveComposition,
             DiContainer container, ParentLinkRestorer parentLinkRestorer,
             IMaxObjectIndexDataReading maxObjectIndexDataReading, SaveNodes saveNodes,
-            EntityComponentController entityComponentController)
+            EntityComponentController entityComponentController, TimeLineScroll timeLineScroll, GameEventBus gameEventBus, M_PlaybackState playbackState)
         {
             _objectFactory = objectFactory;
             _trackStorage = trackStorage;
@@ -61,6 +67,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _saveNodes = saveNodes;
             _entityComponentController = entityComponentController;
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            _timeLineScroll = timeLineScroll;
+            _gameEventBus = gameEventBus;
+            _playbackState = playbackState;
         }
 
         public (TrackObjectPacket, Branch, List<Track>) LoadObject(GameObjectSaveData data,
@@ -157,7 +166,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     if (loadGraph)
                     {
                         (item1, item2) = _saveNodes.LoadLogicOnly(saveData.Graph,
-                            TypeToDataType.Convert(saveData.DataType));
+                            TypeToDataType.Convert(saveData.Data));
                     }
 
 
@@ -251,17 +260,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 foreach (var track in VARIABLE.tracks)
                 {
-                    Debug.Log(data.tracks.Count);
                     foreach (var kdata in track.keyframeSaveData)
                     {
-                        Debug.Log(kdata);
 
                         if (!string.IsNullOrEmpty(kdata.Graph))
                         {
                             GraphSaveData graph = JsonConvert.DeserializeObject<GraphSaveData>(kdata.Graph);
                             foreach (var node in graph.Nodes)
                             {
-                                Debug.Log(graph.Nodes.Count);
 
                                 foreach (var keypair in node.AdditionalData)
                                 {
@@ -363,16 +369,21 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             string compositionID,
             GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null,
             bool generateNewSceneID = false, bool addToTitleCloneText = false, bool currentTimeSaved = false,
-            bool createTrackObject = true)
+            bool createTrackObject = true, double startTime = double.MinValue)
         {
+            if (currentTimeSaved == false)
+            {
+                _savedCurrentTime =TimeLineConverter.Instance.TicksCurrentTime();
+            }
+            
             var (groupTrackObject, _, _) =
                 LoadObject(data, false, createTrackObject: createTrackObject); //Загружаем объект группы
-
-
+            
             _entityManager.AddComponent<CompositionPositionOffsetData>(groupTrackObject.entity);
-
-
-            if (currentTimeSaved == false) _savedCurrentTime = TimeLineConverter.Instance.TicksCurrentTime();
+            
+            if(Math.Abs(startTime - double.MinValue) > 0.1f)
+                groupTrackObject.components.Data.StartTimeInTicks = startTime;
+            
             _main.SetTimeInTicks(groupTrackObject.components.Data
                 .StartTimeInTicks); //Ставим время тамйлайна на старт группы что бы ничего не сьехало
 
@@ -386,7 +397,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             if (compositionData == null)
             {
                 children = data.children; //Если один объект сохранения то загружаем из основного
-                Debug.Log(children.Count);
                 if (generateNewSceneID) GenerateNewSceneIDs(data);
             }
             else
@@ -444,7 +454,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     // Debug.Log($"childTrackObject StartTimeInTicks{ childTrackObject.trackObject.StartTimeInTicks}");
                     // Debug.Log($"data.reduceLeft{ data.reduceLeft}");
                     ////////////////////////////////
-                    childTrackObject.components.Data.StartTimeInTicks += data.reduceLeft;
+                    // childTrackObject.components.Data.StartTimeInTicks += data.reduceLeft;
                     ////////////////////////////////
                     /// 
 
@@ -539,6 +549,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
 
             GetChildrenExample(groupTrackObject.entity, childAllPacked, compositionPositionOffsetData.Offset);
 
+            if(Math.Abs(startTime - double.MinValue) > 0.1f)
+                groupTrackObject.components.Data.StartTimeInTicks = startTime;
+            
+            _gameEventBus.Raise(new ScrollTimeLineEvent(0));
 
             return (trackObjectGroup, null, groupTrackObject.branch);
         }

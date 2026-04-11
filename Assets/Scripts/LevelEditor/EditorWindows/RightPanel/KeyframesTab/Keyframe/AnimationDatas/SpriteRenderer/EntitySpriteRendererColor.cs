@@ -25,7 +25,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             Logic = new OutputLogic();
             Logic.Initialize(DataType.Color);
             Logic.ManualValues[0] = value;
-            Graph = SaveGraph.ToJson(Logic);
+            Graph = SaveGraph.ToJson(Logic, DataType.Color);
         }
 
         public override ComponentNames GetComponentType()
@@ -49,6 +49,16 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             return (Color)Logic.GetValue();
         }
 
+        public override DataType? GetValueType(JObject data)
+        {
+            if (data.TryGetValue("spriterenderer-color", out JToken token))
+            {
+                return DataType.Color;
+            }
+
+            return null;
+        }
+
         public override void SetValue(object value)
         {
             if (value is Color f) Logic.ManualValues[0] = f;
@@ -70,6 +80,8 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
                 ["spriterenderer-color"] = JToken.FromObject((Color)Logic.GetValue())
             };
         }
+        
+        
 
         public override void DeserializeData(JObject data)
         {
@@ -77,7 +89,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
             {
                 Logic.Initialize(DataType.Color);
                 Logic.ManualValues[0] = token.ToObject<Color>();
-                Graph = SaveGraph.ToJson(Logic);
+                Graph = SaveGraph.ToJson(Logic, DataType.Color);
             }
         }
 

@@ -25,7 +25,6 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
 
         public float GetFieldHeight()
         {
-            Debug.Log(fieldRect.sizeDelta.y);
             return fieldRect.sizeDelta.y;
         }
     }

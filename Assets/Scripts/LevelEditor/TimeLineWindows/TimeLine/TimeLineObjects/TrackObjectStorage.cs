@@ -82,8 +82,8 @@ namespace TimeLine
 
         internal double GetMinTime()
         {
-            var minFromObjects = _trackObjects.Select(f => f.components.Data.StartTimeInTicks);
-            var minFromGroups = _trackObjectGroups.Select(f => f.components.Data.StartTimeInTicks);
+            var minFromObjects = _trackObjects.Select(f => f.components.Data.GetGlobalTicksPosition());
+            var minFromGroups = _trackObjectGroups.Select(f => f.components.Data.GetGlobalTicksPosition());
             var allTimes = minFromObjects.Concat(minFromGroups);
 
             var enumerable = allTimes.ToList();
@@ -195,8 +195,9 @@ namespace TimeLine
                     if (isActive == true) return;
                 }
 
-                manager.AddComponent<ActivatingRequestTag>(entity);
                 manager.SetComponentEnabled<EntityActiveTag>(entity, true);
+                manager.SetComponentData(entity, new EntityActiveTag(){IsActive = true});
+                manager.AddComponent<ActivatingRequestTag>(entity);
             }
             else
             {
@@ -206,8 +207,9 @@ namespace TimeLine
                     if (isActive == false) return;
                 }
 
-                manager.AddComponent<DeactivatingRequestTag>(entity);
                 manager.SetComponentEnabled<EntityActiveTag>(entity, false);
+                manager.SetComponentData(entity, new EntityActiveTag(){IsActive = false});
+                manager.AddComponent<DeactivatingRequestTag>(entity);
             }
         }
 
@@ -215,9 +217,9 @@ namespace TimeLine
         {
             if (trackObject.components.View.GetActive())
             {
-                bool shouldBeActive = trackObject.components.Data.StartTimeInTicks <= time &&
+                bool shouldBeActive = trackObject.components.Data.GetGlobalTicksPosition() <= time &&
                                       trackObject.components.Data.TimeDurationInTicks +
-                                      trackObject.components.Data.StartTimeInTicks > time;
+                                      trackObject.components.Data.GetGlobalTicksPosition() > time;
 
                 // trackObject.activeObjectController?.Turn(trackObject.components.Data.IsActive && shouldBeActive);
                 ToggleEntity(trackObject.entity, shouldBeActive);
@@ -232,7 +234,8 @@ namespace TimeLine
         private void CheckActiveGroup(TrackObjectGroup group, double time, bool enchanted = false,
             bool activeGroup = true)
         {
-            double groupStart = group.components.Data.StartTimeInTicks;
+            // Debug.Log($" {group.components.Data.Name} --------------------------------------");
+            double groupStart = group.components.Data.GetGlobalTicksPosition();
             double groupEnd = groupStart + group.components.Data.TimeDurationInTicks;
             bool isGroupActive = time >= groupStart && time < groupEnd;
 
@@ -245,7 +248,7 @@ namespace TimeLine
                 {
                     if (trackObject is TrackObjectGroup nestedGroup)
                     {
-                        CheckActiveGroup(nestedGroup, time - groupStart, true, false);
+                        CheckActiveGroup(nestedGroup, time, true, false);
                         continue;
                     }
 
@@ -270,11 +273,13 @@ namespace TimeLine
 
                 if (trackObject is TrackObjectGroup nestedGroup)
                 {
-                    CheckActiveGroup(nestedGroup, time - groupStart, true, isGroupActive);
+                    CheckActiveGroup(nestedGroup, time, true, isGroupActive);
                     continue;
                 }
 
-                double objStart = trackObject.components.Data.StartTimeInTicks + groupStart;
+                // Debug.Log($" {trackObject.components.Data.Name} --------------------------------------");
+
+                double objStart = trackObject.components.Data.GetGlobalTicksPosition();
                 double objEnd = objStart + trackObject.components.Data.TimeDurationInTicks;
                 bool isObjectActive = time >= objStart && time < objEnd;
 
@@ -759,7 +764,7 @@ namespace TimeLine
             foreach (var track in updateTrackObjectDatas)
             {
                 track.components.Data.GroupOffsetTrack(components); ////
-                track.components.Data.StartTimeInTicks += components.Data.ReducedLeft;
+                // track.components.Data.StartTimeInTicks += components.Data.ReducedLeft;
 
                 components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
 

@@ -44,7 +44,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _actionMap.Editor.C.started += _ =>
             {
                 if (_actionMap.Editor.LeftCtrl.IsPressed() && timeLineFocus.IsFocused)
-                    _clipboard.CopyObjects(_selectObjectController.SelectObjects); //Todo потом сделать по нормальному
+                       _clipboard.CopyObjectsWithSaving(_selectObjectController.SelectObjects); //Todo потом сделать по нормальному
             };
             _actionMap.Editor.V.started += _ =>
             {
@@ -90,9 +90,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         
         internal (TrackObjectPacket, GameObject, Branch) LoadComposition(GroupGameObjectSaveData data,
             string compositionID, bool generateNewSceneID,
-            GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null)
+            GroupGameObjectSaveData compositionData = null, bool addToStorage = true, string lastEditID = null, double startTime = double.MinValue)
         {
-            return _loader.LoadComposition(data, compositionID, compositionData, addToStorage, lastEditID, generateNewSceneID: generateNewSceneID);
+            return _loader.LoadComposition(data, compositionID, compositionData, addToStorage, lastEditID, generateNewSceneID: generateNewSceneID, startTime:startTime);
         }
     }
 }

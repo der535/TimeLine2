@@ -27,6 +27,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
             }
             
             _nodeCreator.GetNodes().Clear();
+            
             _nodeCreator.GetInitializedNodes().Clear();
             _nodeConnector.GetConnections().Clear();
         }

@@ -16,7 +16,7 @@ using MeshCollider = Unity.Physics.MeshCollider;
 
 public partial struct UpdateColliderSystem : ISystem
 {
-    [BurstCompile]
+ 
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -26,7 +26,6 @@ public partial struct UpdateColliderSystem : ISystem
         foreach (var (colliderRef, boxColliderTag, ltw, entity) in SystemAPI
                      .Query<RefRW<PhysicsCollider>, RefRO<BoxColliderData>, RefRO<LocalToWorld>>()
                      .WithChangeFilter<LocalToWorld, BoxColliderData>().WithEntityAccess())
-                     
         {
             float3 scaleObject = GetScaleFromMatrix.Get(ltw.ValueRO.Value);
             bool colliderIsActive = !(scaleObject.x <= 0 || scaleObject.y <= 0);
@@ -35,17 +34,17 @@ public partial struct UpdateColliderSystem : ISystem
             float3 finalSize = boxColliderTag.ValueRO.boxSize * effectiveScale;
             
             // Он должен быть не больше половины самой маленькой стороны
-            float minSide = math.min(finalSize.x, math.min(finalSize.y, finalSize.z));
-            float safeBevel = math.min(0.02f, minSide * 0.45f); // 0.45, чтобы был запас
+            float minSide = Mathf.Min(finalSize.x, Mathf.Min(finalSize.y, finalSize.z));
+            float safeBevel = Mathf.Min(0.02f, minSide * 0.45f); // 0.45, чтобы был запас
             
             var geometry = new BoxGeometry
             {
                 Center = boxColliderTag.ValueRO.boxCenter,
                 Size = finalSize,
                 Orientation = quaternion.identity,
-                BevelRadius =safeBevel
+                BevelRadius = safeBevel
             };
-
+            
             var material = new Material
             {
                 CollisionResponse = boxColliderTag.ValueRO.isTrigger
@@ -55,9 +54,13 @@ public partial struct UpdateColliderSystem : ISystem
                 Restitution = 0f
             };
 
-            var filter = colliderIsActive
-                ? CollisionFilter.Default 
-                : CollisionFilter.Zero; // Zero не имеет установленных бит в BelongsTo и CollidesWith
+            var filter = CollisionFilter.Zero;
+            
+            if (SystemAPI.IsComponentEnabled<EntityActiveTag>(entity) && colliderIsActive)
+            {
+                
+                filter = CollisionFilter.Default;
+            }
             
             // Создаем новый. 
             // УДАЛЯЕМ ручной .Dispose() старого colliderRef.ValueRO.Value!
@@ -82,7 +85,7 @@ public partial struct UpdateColliderSystem : ISystem
 
 public partial struct UpdateCircleColliderSystem : ISystem
 {
-    [BurstCompile]
+
     public void OnUpdate(ref SystemState state)
     {
         // Используем EntityCommandBuffer для безопасного изменения сущностей
@@ -116,8 +119,14 @@ public partial struct UpdateCircleColliderSystem : ISystem
                 CustomTags = 0
             };
 
-            var filter = CollisionFilter.Default; // Или ваш кастомный
-
+            var filter = CollisionFilter.Zero;
+            
+            bool colliderIsActive = !(scaleObject.x <= 0 || scaleObject.y <= 0);
+            
+            if (SystemAPI.IsComponentEnabled<EntityActiveTag>(entity) && colliderIsActive)
+            {
+                filter = CollisionFilter.Default;
+            }
             // 1. Создаем НОВЫЙ BlobAsset
             var newCollider = Unity.Physics.SphereCollider.Create(geometry, filter, material);
 
@@ -139,13 +148,12 @@ public partial struct UpdateCircleColliderSystem : ISystem
 
 public partial struct UpdatePolygonColliderSystem : ISystem
 {
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-        foreach (var (tag, collider, ltw, entity) in SystemAPI
-                     .Query<RefRW<PolygonColliderData>, RefRW<PhysicsCollider>, RefRO<LocalToWorld>>()
+        foreach (var (tag, collider, ltw, ptm, entity) in SystemAPI
+                     .Query<RefRW<PolygonColliderData>, RefRW<PhysicsCollider>, RefRO<LocalToWorld>, RefRO<PostTransformMatrix>>()
                      .WithChangeFilter<LocalToWorld, PolygonColliderData>().WithEntityAccess())
         {
             float3 scale = new float3(
@@ -171,8 +179,23 @@ public partial struct UpdatePolygonColliderSystem : ISystem
             // Это массив индексов точек из scaledPoints, которые образуют треугольники (по 3 на каждый).
             int[] triangles = TriangulatePolygon(scaledPoints);
 
+            
+            
+            
+            float3 scaleObject = GetScaleFromMatrix.Get(ptm.ValueRO.Value);
+            
+            var filter = CollisionFilter.Zero;
+            
+            bool colliderIsActive = !(scaleObject.x <= 0 || scaleObject.y <= 0);
+            
+            if (SystemAPI.IsComponentEnabled<EntityActiveTag>(entity) && colliderIsActive)
+            {
+                filter = CollisionFilter.Default;
+            }
+            
+            
             // Создаем вогнутый меш-коллайдер
-            collider.ValueRW.Value = InstallConcaveMesh(scaledPoints, triangles, tag.ValueRO.IsTrigger);
+            collider.ValueRW.Value = InstallConcaveMesh(scaledPoints, triangles, tag.ValueRO.IsTrigger, filter);
             
             bool hasTag = SystemAPI.HasComponent<DangerousObjectTag>(entity);
             if (tag.ValueRO.IsDangerous && !hasTag)
@@ -185,7 +208,7 @@ public partial struct UpdatePolygonColliderSystem : ISystem
         ecb.Dispose();
     }
 
-    public BlobAssetReference<Collider> InstallConcaveMesh(float3[] points, int[] triangles2D, bool isTrigger)
+    public BlobAssetReference<Collider> InstallConcaveMesh(float3[] points, int[] triangles2D, bool isTrigger, CollisionFilter colliderFilter)
     {
         int pointCount = points.Length;
         int triangleCount2D = triangles2D.Length / 3;
@@ -254,9 +277,11 @@ public partial struct UpdatePolygonColliderSystem : ISystem
             Restitution = 0f,
             CustomTags = 0
         };
+        
 
+        
         // Создаем сам коллайдер
-        var newCollider = MeshCollider.Create(vertices, indices, CollisionFilter.Default, material);
+        var newCollider = MeshCollider.Create(vertices, indices, colliderFilter, material);
 
         vertices.Dispose();
         indices.Dispose();

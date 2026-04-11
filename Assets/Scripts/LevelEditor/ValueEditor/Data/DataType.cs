@@ -2,11 +2,12 @@
 {
     public enum DataType
     {
-        Float,
-        Color,
-        Int,
-        Vector3,
-        Vector2,
-        String
+        Float = 0,
+        Color = 1,
+        Int = 2,
+        Vector3 = 3,
+        Vector2 = 4,
+        String = 5,
+        Sprite = 6
     }
 }

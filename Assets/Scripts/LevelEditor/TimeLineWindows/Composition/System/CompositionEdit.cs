@@ -3,6 +3,7 @@ using DG.Tweening;
 using EventBus;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
@@ -29,9 +30,10 @@ namespace TimeLine
         private SetPositionInTimeline _setPositionInTimeline;
 
         private GameEventBus _gameEventBus;
+        private EventBinder _eventBinder;
         private string _compositionID;
         private string _savedName;
-        
+
         List<TrackObjectPacket> editObjects = new List<TrackObjectPacket>();
 
         [Inject]
@@ -48,40 +50,42 @@ namespace TimeLine
             _compositionID = compositionData.compositionID;
             _savedName = compositionData.gameObjectName;
             trackObjectStorage.HideAll();
-            
+
             editObjects = facadeObjectSpawner.LoadObjects(compositionData.children);
             
-            // var (_, game, _) =
-            //     facadeObjectSpawner.LoadComposition(compositionData, compositionData.compositionID, false);
-            //
-            // var trackObject = (TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game);
-            //
-            // List<TrackObjectPacket> datas = groupSeparate.SeparateSingle((TrackObjectGroup)trackObjectStorage.GetTrackObjectData(game));
-
             double sum = 0;
-            
+
             foreach (var VARIABLE in editObjects)
             {
-                sum += VARIABLE.components.Data.StartTimeInTicks;
+                sum += VARIABLE.components.Data.GetGlobalTicksPosition();
             }
+
             sum /= editObjects.Count;
-            
+
+            _eventBinder = new EventBinder();
+            _eventBinder.Add(_gameEventBus, (ref AddTrackObjectDataEvent data) => editObjects.Add(data.TrackObjectPacket));
+            _eventBinder.Add(_gameEventBus, (ref RemoveTrackObjectDataEvent data) => editObjects.Remove(data.TrackObjectPacket));
+
 
             _setPositionInTimeline.SetPosition((float)sum);
         }
 
         public void EndEdit()
         {
+            _eventBinder.Dispose();
             TrackObjectGroup trackObjectGroup =
                 groupCreater.Create(editObjects, _compositionID);
             // trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
             trackObjectStorage.ShowAll();
-            composition.EditComposition(saveLevel.SaveGroup(trackObjectGroup), trackObjectGroup.compositionID);
+            GroupGameObjectSaveData data = saveLevel.SaveGroup(trackObjectGroup);
+            data.gameObjectName = _savedName;
+            composition.EditComposition(data, trackObjectGroup.compositionID);
             trackObjectRemover.ListRemove(trackObjectGroup);
             foreach (var ob in editObjects)
             {
                 trackObjectRemover.SingleRemove(ob);
             }
+
             compositionUpdater.UpdateCompositions(trackObjectGroup.compositionID);
             _gameEventBus.Raise(new EndCompositionEdit());
         }

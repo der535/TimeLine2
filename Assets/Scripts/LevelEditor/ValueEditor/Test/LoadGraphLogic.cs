@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.ValueEditor.Save;
-using UnityEngine;
 using Zenject;
 
 namespace TimeLine.LevelEditor.ValueEditor.Test

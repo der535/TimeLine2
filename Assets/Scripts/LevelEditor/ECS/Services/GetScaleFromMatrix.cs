@@ -2,7 +2,7 @@
 
 namespace TimeLine.LevelEditor.ECS.Services
 {
-    public class GetScaleFromMatrix
+    public struct GetScaleFromMatrix
     {
         public static float3 Get(float4x4 matrix)
         {
