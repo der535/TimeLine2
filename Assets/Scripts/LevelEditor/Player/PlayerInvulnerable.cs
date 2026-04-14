@@ -4,13 +4,12 @@ namespace TimeLine.LevelEditor.Player
 {
     public static class PlayerInvulnerable
     {
-        // Хорошо: свойство с публичным get и приватным set
-        public static bool IsInvulnerable { get; private set; }
+        public static bool IsInvulnerableAfterDamage { get; set; }
+        public static bool IsInvulnerableAfterDash { get; set; }
 
-        // Внутренний метод для изменения состояния
-        internal static void SetActive(bool value)
+        internal static bool IsInvulnerable()
         {
-            IsInvulnerable = value;
+            return IsInvulnerableAfterDamage || IsInvulnerableAfterDash;
         }
     }
 }

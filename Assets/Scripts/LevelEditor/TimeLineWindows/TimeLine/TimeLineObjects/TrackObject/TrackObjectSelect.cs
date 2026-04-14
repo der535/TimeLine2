@@ -1,5 +1,6 @@
 ﻿using System;
 using EventBus;
+using TimeLine.Cursor;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
@@ -24,11 +25,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         private TrackObjectStorage _trackObjectStorage;
         private KeyframeTrackStorage _keyframeTrackStorage;
         private GridUI _gridUI;
+        private CursorController _cursorController;
 
         [Inject]
         private void Construct(SelectObjectController state, MainObjects mainObjects, GameEventBus eventBus,
             TrackObjectStorage trackObjectStorage,
-            KeyframeTrackStorage keyframeTrackStorage, GridUI gridUI)
+            KeyframeTrackStorage keyframeTrackStorage, GridUI gridUI, CursorController cursorController)
         {
             _select = state;
             _eventBus = eventBus;
@@ -37,6 +39,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _keyframeTrackStorage = keyframeTrackStorage;
             _gridUI = gridUI;
             _selectController = state;
+            _cursorController = cursorController;
         }
 
         public void Setup(TrackObject trackObject, TrackObjectState state, TrackObjectData data, ITrackObjectView view)
@@ -94,6 +97,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _selectController.SaveResizingData(_trackObject);
         }
 
+        public void SetResizeCursor(bool isResizing)
+        {
+            if(isResizing) _cursorController.SetResizeHorizontal();
+            else _cursorController.SetIdel();
+        }
+        
         public void SetResizeLeft(bool isResizing)
         {
             _selectController.MultipleStopResizingLeft(_trackObject);

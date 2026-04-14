@@ -14,7 +14,7 @@ namespace TimeLine.LevelEditor.ECS.System
             // Мы ищем сущности, у которых есть HitEventTag
             foreach (var (_, entity) in SystemAPI.Query<RefRO<HitEventTag>>().WithEntityAccess())
             {
-                if (PlayerInvulnerable.IsInvulnerable == false)
+                if (PlayerInvulnerable.IsInvulnerable() == false)
                     ECSServiceLocator.Instance.GameEventBus.Raise(new PlayerTakeDamageEvent());
 
                 // 2. Помечаем тег на удаление, чтобы анимация не срабатывала каждый кадр

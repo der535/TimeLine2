@@ -77,7 +77,7 @@ namespace TimeLine
                 
                 _actionMap.LevelFinished.CloseFinishScreen.started += _ =>
                 {
-                    PlayerInvulnerable.SetActive(false);
+                    PlayerInvulnerable.IsInvulnerableAfterDamage = false;
                     finishScreen.SetActive(false);
 
                     _actionMap.Player.Enable();
@@ -132,7 +132,7 @@ namespace TimeLine
         private void FinishLevel()
         {
             _gameEventBus.Raise(new LevelFinishedEvent());
-            PlayerInvulnerable.SetActive(true);
+            PlayerInvulnerable.IsInvulnerableAfterDamage = true;
             finishScreen.SetActive(true);
 
             _actionMap.Player.Disable();

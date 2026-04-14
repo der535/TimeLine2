@@ -1,11 +1,20 @@
+using TimeLine.LevelEditor.Core;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 public class SceneToRawImageConverter : MonoBehaviour
 {
     [Header("Ссылки")] public Camera mapCamera; // Камера, которая рендерит 3D сцену
     public RawImage rawImageDisplay; // UI элемент, где отображается эта сцена
     public Canvas mainUiCanvas; // Основной Canvas, где лежит RawImage (для проверки RenderMode)
+    private CameraReferences _cameraReferences;
+
+    [Inject]
+    private void Construct(CameraReferences references)
+    {
+        _cameraReferences = references;
+    }
 
     /// <summary>
     /// Переводит точку из 3D мира сцены в позицию UI инструмента (World Space UI)
@@ -25,7 +34,7 @@ public class SceneToRawImageConverter : MonoBehaviour
         // 3. Локальные RawImage -> Мировые координаты UI (учитывает позицию и наклон RawImage)
         return rt.TransformPoint(new Vector2(localX, localY));
     }
-    
+
     public Vector2 WorldToUIAnchoredPosition(Vector3 worldScenePosition, RectTransform parentRect)
     {
         if (!mapCamera || !rawImageDisplay) return Vector2.zero;
@@ -105,5 +114,32 @@ public class SceneToRawImageConverter : MonoBehaviour
 
         Vector3 smoothWorldPosition3D = mapCamera.ViewportToWorldPoint(viewportPoint);
         return smoothWorldPosition3D;
+    }
+
+
+    public Vector3 GetWorldPositionFromMouseOnRawImage()
+    {
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rawImageDisplay.rectTransform,
+                Input.mousePosition,
+                _cameraReferences.editUICamera, // Используйте камеру UI, если Canvas в режиме Render Mode: Camera
+                out Vector2 localPoint))
+        {
+            // 1. Получаем размеры Rect
+            Rect r = rawImageDisplay.rectTransform.rect;
+
+            // 2. Преобразуем локальную точку в нормализованные координаты Viewport (0.0 - 1.0)
+            // Приводим координаты так, чтобы левый нижний угол RawImage был (0,0)
+            float viewportX = (localPoint.x - r.x) / r.width;
+            float viewportY = (localPoint.y - r.y) / r.height;
+
+
+            Vector3 viewportPoint = new Vector3(viewportX, viewportY, 10);
+
+            // 3. Преобразуем из Viewport в World Space
+            return _cameraReferences.editSceneCamera.ViewportToWorldPoint(viewportPoint);
+        }
+
+        return Vector3.zero;
     }
 }

@@ -29,7 +29,7 @@ namespace TimeLine.LevelEditor.Parent.New
 
         public void Initialize()
         {
-            
+            return;
             _parentView.SetActivePanel(false);
             
             _parentView.SelectNewParent += () =>

@@ -56,7 +56,6 @@ namespace TimeLine
             editCamera.gameObject.SetActive(false);
             playCamera.gameObject.SetActive(true);
             _gameEventBus.Raise(new TurnToPlayModeEvent());
-            print((float)trackObjectStorage.GetMinTime());
             _main.SetTimeInTicks((float)trackObjectStorage.GetMinTime());
             Invoke(nameof(Play), startDelay);
         }

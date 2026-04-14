@@ -86,28 +86,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _trackObjectStorage.Add(null, entity, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
         }
 
-        // internal TrackObjectPacket CreateFullObject(string name)
-        // {
-        //     string id = UniqueIDGenerator.GenerateUniqueID();
-        //
-        //     // Создаем сценный объект
-        //     var entity = CreateSceneObject();
-        //
-        //     // Создаем трек-объект
-        //     TrackObjectComponents trackObject = CreateTrackObject(_trackObjectSizeReader.GetSize(), name,
-        //         0, TimeLineConverter.Instance.TicksCurrentTime());
-        //
-        //     // Создаем ветку
-        //     Branch branch = _branchCollection.AddBranch(id, name);
-        //
-        //     // Добавляем в хранилище
-        //     var TrackObjectData =
-        //         _trackObjectStorage.Add(null, entity, trackObject, branch, UniqueIDGenerator.GenerateUniqueID());
-        //
-        //     // sceneObject.GetComponent<NameComponent>().Name.Value = name;
-        //
-        //     return TrackObjectData;
-        // }
 
         /// <summary>
         /// Создаёт объект на сцене

@@ -25,9 +25,9 @@ namespace TimeLine
             // Подписка на событие получения урона
             _gameEventBus.SubscribeTo((ref PlayerTakeDamageEvent _) =>
             {
-                PlayerInvulnerable.SetActive(true); // Включаем неуязвимость
+                PlayerInvulnerable.IsInvulnerableAfterDamage = true; // Включаем неуязвимость
                 _playerHitAnimation.Play(TimeOfInvulnerability,
-                    () => PlayerInvulnerable.SetActive(false)); // Запускаем анимацию с колбэком
+                    () => PlayerInvulnerable.IsInvulnerableAfterDamage = false); // Запускаем анимацию с колбэком
             });
             // todo НЕТ ОТПИСКИ ОТ СОБЫТИЙ!
         }
