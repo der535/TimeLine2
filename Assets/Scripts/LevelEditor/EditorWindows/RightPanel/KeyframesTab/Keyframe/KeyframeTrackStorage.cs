@@ -105,10 +105,10 @@ namespace TimeLine.Keyframe
             }
         }
 
-        public void AddTrack(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId)
+        public void AddTrack(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId, bool updateTreeUI)
         {
             tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
-            _gameEventBus.Raise(new AddTrackEvent(track));
+           if(updateTreeUI) _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
         public Track GetTrack(TreeNode treeNode)

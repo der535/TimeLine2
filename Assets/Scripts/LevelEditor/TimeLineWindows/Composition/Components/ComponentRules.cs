@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.InspectorTab.Components;
 using UnityEngine;
 using Zenject;
 

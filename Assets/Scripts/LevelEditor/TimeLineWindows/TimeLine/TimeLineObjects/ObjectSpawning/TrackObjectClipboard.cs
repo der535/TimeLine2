@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TrackObject;
@@ -8,6 +10,7 @@ using TimeLine.LevelEditor.ActionHistory;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Save;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning
 {
@@ -21,6 +24,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private ObjectLoader _objectLoader;
         private SelectObjectController _selectObjectController;
 
+        List<TrackObjectPacket> pastedObjects = new();
 
         public TrackObjectClipboard(
             SaveLevel saveLevel,
@@ -68,18 +72,42 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             return gameObjectSaveData;
         }
 
-        internal List<TrackObjectPacket> PasteObjectsFromSave(List<GameObjectSaveData> copydata, double startTime, bool useCurrentTime = false)
+        internal void PasteObjectsFromSave(List<GameObjectSaveData> copydata, double startTime,
+            Action<List<TrackObjectPacket>> onCompleted = null, bool useCurrentTime = false)
         {
             CommandHistory.IsRecording = false;
-            if (copydata == null) return null;
+            if (copydata == null) return;
             var minTime = GetMinTime(copydata);
 
-            List<TrackObjectPacket> pastedObjects = new();
 
+            CoroutineRunner.Instance.StartCoroutine(ProcessLargeData(copydata, minTime, startTime, list =>
+                {
+                    _selectObjectController.DeselectAll();
+                    _selectObjectController.SelectMultiple(pastedObjects);
+
+                    CommandHistory.IsRecording = true;
+                    onCompleted?.Invoke(list);
+                }));
+        }
+
+        IEnumerator ProcessLargeData(List<GameObjectSaveData> copydata, double minTime, double startTime, Action<List<TrackObjectPacket>> onCompleted, bool useCurrentTime = false)
+        {
+            pastedObjects = new();
+            float maxTimePerFrame = 5f; // Бюджет 2мс
+
+            Stopwatch sw = new Stopwatch();
+    
+            sw.Start();
+            
             foreach (var data in copydata)
             {
+               
+                // 1. Фиксируем время начала обработки ЭТОГО кадра
+                float frameStepStart = Time.realtimeSinceStartup;
+
                 if (useCurrentTime == false)
                 {
+                    // Здесь используем твою переменную startTime из параметров
                     data.startTime = data.startTime - minTime + startTime;
                 }
 
@@ -92,18 +120,25 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     pastedObjects.Add(_objectLoader
                         .LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true).Item1);
                 }
+
+                // 2. Проверяем: сколько времени прошло с начала обработки ТЕКУЩЕГО кадра
+                if (Time.realtimeSinceStartup - frameStepStart > maxTimePerFrame)
+                {
+                    yield return null;
+                    // После возврата из yield выполнение продолжится отсюда в следующем кадре
+                }
             }
+            
+            sw.Stop();
 
-            _selectObjectController.DeselectAll();
-            _selectObjectController.SelectMultiple(pastedObjects);
-
-            CommandHistory.IsRecording = true;
-            return pastedObjects;
+            UnityEngine.Debug.Log($"Время выполнения: {sw.ElapsedMilliseconds} мс ({sw.ElapsedTicks} тиков)");
+    
+            onCompleted?.Invoke(pastedObjects);
         }
 
         internal void PasteObjects()
         {
-            PasteObjectsFromSave(dataCopy,TimeLineConverter.Instance.TicksCurrentTime());
+            PasteObjectsFromSave(dataCopy, TimeLineConverter.Instance.TicksCurrentTime());
         }
 
 

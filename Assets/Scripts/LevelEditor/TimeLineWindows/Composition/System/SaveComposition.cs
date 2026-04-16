@@ -34,15 +34,13 @@ namespace TimeLine
 
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap;
-        private SavePathController _savePathController;
         private M_PlaybackState _playbackState;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, ActionMap actionMap, SavePathController savePathController, M_PlaybackState playbackState)
+        private void Construct(GameEventBus gameEventBus, ActionMap actionMap, M_PlaybackState playbackState)
         {
             _gameEventBus = gameEventBus;
             _actionMap = actionMap;
-            _savePathController = savePathController;
             _playbackState = playbackState;
         }
 
@@ -52,7 +50,7 @@ namespace TimeLine
         public void Save()
         {
             string json = JsonConvert.SerializeObject(_compositionData, Formatting.Indented);
-            File.WriteAllText(_savePathController.GetJsonPath(LevelJsonStorage.Compositions), json);
+            File.WriteAllText(SavePathController.GetJsonPath(LevelJsonStorage.Compositions), json);
             print(json);
         }
 
@@ -60,7 +58,7 @@ namespace TimeLine
         public void Load()
         {
             string path =
-                _savePathController.GetJsonPath(LevelJsonStorage.Compositions);
+                SavePathController.GetJsonPath(LevelJsonStorage.Compositions);
 
             if (!File.Exists(path))
                 return;

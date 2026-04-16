@@ -4,5 +4,6 @@
     {
         public const string Compositions = "Compositions";
         public const string MaxObjectIndex = "MaxObjectIndex";
+        public const string MapParameters = "MapParameters";
     }
 }

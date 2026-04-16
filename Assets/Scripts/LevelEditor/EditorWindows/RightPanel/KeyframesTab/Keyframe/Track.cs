@@ -64,13 +64,42 @@ namespace TimeLine.Keyframe
 
         public void AddKeyframe(Keyframe newKeyframe)
         {
-            // Удаляем существующий ключевой кадр с таким же временем
-            var type = RemoveKeyframeAtTime(newKeyframe.Ticks);
-            if (type is { } typ2e)
-                newKeyframe.Interpolation = typ2e;
+            // 1. Быстрый поиск существующего кадра через BinarySearch
+            int index = FindKeyframeIndex(newKeyframe.Ticks);
 
-            Keyframes.Add(newKeyframe);
-            SortKeyframes();
+            if (index >= 0)
+            {
+                // Кадр на этом времени уже есть — заменяем его
+                newKeyframe.Interpolation = Keyframes[index].Interpolation;
+                Keyframes[index] = newKeyframe;
+            }
+            else
+            {
+                // Кадра нет, BinarySearch вернул (~index), где index - позиция для вставки
+                int insertIndex = ~index;
+                Keyframes.Insert(insertIndex, newKeyframe);
+            }
+    
+            // Сортировка больше не нужна — список всегда упорядочен!
+        }
+
+// Вспомогательный метод для поиска индекса (с учетом погрешности 0.1)
+        private int FindKeyframeIndex(double time)
+        {
+            int low = 0;
+            int high = Keyframes.Count - 1;
+
+            while (low <= high)
+            {
+                int mid = low + ((high - low) >> 1);
+                double midTicks = Keyframes[mid].Ticks;
+
+                if (Math.Abs(midTicks - time) < 0.1) return mid;
+                if (midTicks < time) low = mid + 1;
+                else high = mid - 1;
+            }
+
+            return ~low; // Возвращаем побитовое дополнение для позиции вставки
         }
 
         // Новый метод для удаления ключевых кадров по времени

@@ -57,6 +57,8 @@ public class MapParameterComponen
 {
     public string SceneObjectID;
     public string ParameterID;
+    
+    public Entity Entity {get; private set;}
 
     public MapParameterComponen(string sceneObjectID, string parameterID)
     {

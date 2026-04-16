@@ -12,6 +12,7 @@ using TimeLine.LevelEditor.InspectorTab.InspectorView.FieldUI;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
+using TimeLine.LevelEditor.TransformationSquare;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -25,6 +26,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         private CustomInspectorDrawer _customInspectorDrawer;
         private TrackObjectStorage _trackObjectStorage;
         private ToolsController _toolsController;
+        private TransformationSquareController _transformationSquareController;
         private TimeLineRecorder _timeLineRecorder;
 
         public Action ToolsControllerAction;
@@ -34,7 +36,17 @@ namespace TimeLine.CustomInspector.UI.Drawers
         public Action OnStopRotation;
         public Action OnStopScaleX;
         public Action OnStopScaleY;
-        
+
+        public TransformComponentDrawer (TransformationSquareController transformationSquareController)
+        {
+            _transformationSquareController = transformationSquareController;
+            
+            _transformationSquareController.OnStopPositionX += () => OnStopPositionX?.Invoke();
+            _transformationSquareController.OnStopPositionY += () => OnStopPositionY?.Invoke();
+            _transformationSquareController.OnStopRotation += () => OnStopRotation?.Invoke();
+            _transformationSquareController.OnStopScaleX += () => OnStopScaleX?.Invoke();
+            _transformationSquareController.OnStopScaleY += () => OnStopScaleY?.Invoke();
+        }
         
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
@@ -46,13 +58,9 @@ namespace TimeLine.CustomInspector.UI.Drawers
             _toolsController = toolsController;
             _timeLineRecorder = timeLineRecorder;
             
-            _toolsController.OnValueChanged += () => ToolsControllerAction.Invoke();
+            // _toolsController.OnValueChanged += () => ToolsControllerAction.Invoke();
             
-            _toolsController.OnStopPositionX += () => OnStopPositionX?.Invoke();
-            _toolsController.OnStopPositionY += () => OnStopPositionY?.Invoke();
-            _toolsController.OnStopRotation += () => OnStopRotation?.Invoke();
-            _toolsController.OnStopScaleX += () => OnStopScaleX?.Invoke();
-            _toolsController.OnStopScaleY += () => OnStopScaleY?.Invoke();
+
         }
 
         public bool GetComponent(ComponentType component)

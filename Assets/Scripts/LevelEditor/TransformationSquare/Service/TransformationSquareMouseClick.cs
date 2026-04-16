@@ -38,12 +38,14 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
         
         public void Click(List<Entity> selectedEntity)
         {
+            if( selectedEntity == null) return;
+            
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             
             
             float3 mouseWorld = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
             // Угол от центра группы до мышки
-            _data._initialMouseAngle = math.atan2(mouseWorld.y - _data._groupCenter.y, mouseWorld.x - _data._groupCenter.x);
+            _data.InitialMouseAngle = math.atan2(mouseWorld.y - _data.GroupCenter.y, mouseWorld.x - _data.GroupCenter.x);
 
             _data.LastMousePosition = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
 
@@ -57,7 +59,7 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
                 _data._selectedEntities.Add(new TransformationSquareData.SelectedEntityData
                 {
                     Entity = entity,
-                    RotationOffsetWorld = lt.Position - _data._groupCenter,
+                    RotationOffsetWorld = lt.Position - _data.GroupCenter,
                     // Важно: сохраняем позицию объекта в пространстве повернутой рамки
                     LocalPosInBox = math.transform(_data.WorldToPivotMatrix, lt.Position),
                     InitialWorldPos = lt.Position,
@@ -66,9 +68,9 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
                 });
             }
             
-            _data._initialBoxSize = _data.CurrentLocalMax - _data.CurrentLocalMin;
-            _data._initialBoxLocalMin = _data.CurrentLocalMin;
-            _data._initialBoxLocalMax = _data.CurrentLocalMax;
+            _data.InitialBoxSize = _data.CurrentLocalMax - _data.CurrentLocalMin;
+            _data.InitialBoxLocalMin = _data.CurrentLocalMin;
+            _data.InitialBoxLocalMax = _data.CurrentLocalMax;
             
             if (_distanceCheck.CheckMouseAllPointsDistanceToRotate())
                 _data.IsRotating = true;
@@ -91,8 +93,6 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
 
             bool anyResizeOrRotate = _data.IsResizingLeft || _data.IsResizingRight || 
                                      _data.IsResizingUp || _data.IsResizingDown || _data.IsRotating;
-
-            Debug.Log(_distanceCheck.IsMouseInsideBox());
             
             _data.IsDragging = !anyResizeOrRotate && _distanceCheck.IsMouseInsideBox();
         }

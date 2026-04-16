@@ -82,13 +82,11 @@ namespace TimeLine
                 {
                     foreach (var keyframe in track.Keyframes)
                     {
-                        if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
+                        if (keyframe.GetEntityData().Graph != null)
                         {
-                            Debug.Log(keyframe.GetEntityData().Graph);
-                            Debug.Log("ЧЕЕЕЕЕЕК");
-                            keyframe.GetEntityData().Logic = _saveNodes.LoadGraph(keyframe.GetEntityData().Graph,
+                            keyframe.GetEntityData().Logic = _saveNodes.LoadLogicOnly(keyframe.GetEntityData().Graph,
                                 DataType.Color,
-                                keyframe.GetEntityData().initializedNodes, trackObjectDatas);
+                                keyframe.GetEntityData().initializedNodes, trackObjectDatas).Item1;
                         }
                     }
                 }

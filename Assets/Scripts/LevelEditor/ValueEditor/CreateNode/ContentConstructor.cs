@@ -68,7 +68,7 @@ namespace TimeLine.LevelEditor.ValueEditor
                     EventBinder binder = new EventBinder();
                     binder.Add(_gameEventBus, (ref GetParameterEvent data) =>
                     {
-                        componentFieldLogic._Map = data._map;
+                        MapParameterStorage.Add(componentFieldLogic.idMap, data._map);
                         componentFieldLogic.Entity = data._trackObjectPacket.entity;
                         node.AddOutPutDynamic(data._map.ParameterID,
                             TypeToDataType.Convert(typeof(float))); //Стоит float по умолчанию
@@ -80,7 +80,7 @@ namespace TimeLine.LevelEditor.ValueEditor
                 removeField.Setup("Remove field", () =>
                 {
                     node.RemoveOutputDynamic(logic.OutputDefinitions.Count-1);
-                    componentFieldLogic._Map = null;
+                    MapParameterStorage.Remove(componentFieldLogic.idMap);
                     selectField.SetActiveButton(true);
                     removeField.SetActiveButton(false);
                 });
@@ -108,7 +108,7 @@ namespace TimeLine.LevelEditor.ValueEditor
                 // Проверка: если в порту уже есть инпут, не создаем дубликат
                 if (port.GetInputValueRoot().childCount > 0) continue;
                 
-                Debug.Log(port.type);
+                // Debug.Log(port.type);
                 if (port.type == DataType.Float)
                 {
                     SetupManualInputFloat(logic, port, index);
@@ -140,8 +140,8 @@ namespace TimeLine.LevelEditor.ValueEditor
             }
 
             // Устанавливаем начальное значение в UI
-            Debug.Log(nodeLogic.ManualValues[index]);
-            Debug.Log(nodeLogic.ManualValues[index].GetType());
+            // Debug.Log(nodeLogic.ManualValues[index]);
+            // Debug.Log(nodeLogic.ManualValues[index].GetType());
             input.Setup((float)nodeLogic.ManualValues[index], (value) => { nodeLogic.ManualValues[index] = value; });
 
             port.SetActiveDefaultInputValue(true);

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using TimeLine;
+using TimeLine.LevelEditor.GeneralServices;
 using TimeLine.LevelEditor.Misk;
-using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
+using TimeLine.LevelEditor.ValueEditor;
 using Unity.Entities;
 using UnityEngine;
 using Zenject;
@@ -10,66 +12,73 @@ using Zenject;
 public class ComponentFieldLogic : NodeLogic
 {
     public Entity Entity;
-    public MapParameterComponen _Map;
+    public string idMap; //Сохраняемый 
+    
+    bool isInitialized = false;
 
     private FindField _FindField;
 
     [Inject]
     private void Constructor(FindField findField)
     {
-        _FindField = findField;
+        if (isInitialized == false)
+        {
+            _FindField = findField;
+            idMap = UniqueIDGenerator.GenerateUniqueID();
+            Debug.Log($"Start Id {idMap}");
+            isInitialized = true;
+        }
     }
 
     public override void OnSave(Dictionary<string, object> data)
     {
-        data["Map"] = _Map; // Сохраняем наш объект под ключом "Map"
+        data["IDMap"] = idMap; // Сохраняем наш объект под ключом "IDMap"
     }
 
-    public (Entity, MapParameterComponen) GetField()
+    public string GetField()
     {
-        return (Entity, _Map);
-    }
-
-    public override void OnLoad(Dictionary<string, object> data)
-    {
-        if (data.TryGetValue("Map", out var mapObj))
-        {
-            // Newtonsoft восстанавливает вложенные объекты как JObject
-            if (mapObj is Newtonsoft.Json.Linq.JObject jObj)
-                _Map = jObj.ToObject<MapParameterComponen>();
-            else
-                _Map = (MapParameterComponen)mapObj;
-            
-            var entity = _FindField.Find(_Map);
-            
-            if (_Map != null && entity != null)
-                Entity = (Entity)entity;
-        }
+        return idMap;
     }
 
     public void Load(Dictionary<string, object> data, List<TrackObjectPacket> objects = null)
     {
-        if (objects == null)
+        // Безопасное получение значения из словаря (игнорируя регистр для надежности)
+        var key = data.Keys.FirstOrDefault(k => k.Equals("IDMap", StringComparison.OrdinalIgnoreCase));
+    
+        if (key != null && data.TryGetValue(key, out var mapObj))
         {
-            OnLoad(data);
-            return;
-        }
-
-        if (data.TryGetValue("Map", out var mapObj))
-        {
-            // Newtonsoft восстанавливает вложенные объекты как JObject
-            if (mapObj is Newtonsoft.Json.Linq.JObject jObj)
-                _Map = jObj.ToObject<MapParameterComponen>();
+            // 1. Извлекаем строку максимально надежно
+            if (mapObj is Newtonsoft.Json.Linq.JToken jToken)
+            {
+                idMap = jToken.ToString(); // JToken сам знает, как превратиться в строку
+            }
             else
-                _Map = (MapParameterComponen)mapObj;
-            
-            var entity = _FindField.Find(_Map, objects);
-            
-            if (_Map != null && entity != null)
-                Entity = (Entity)entity;
+            {
+                idMap = mapObj?.ToString();
+            }
+
+            Debug.Log($"Loaded Id: {idMap}");
+
+            // 2. Логика поиска сущности
+            if (!string.IsNullOrEmpty(idMap))
+            {
+                var storageValue = MapParameterStorage.Get(idMap);
+                if (storageValue != null)
+                {
+                    var foundEntity = _FindField.Find(storageValue, objects);
+                    if (foundEntity != null)
+                    {
+                        Entity = foundEntity.Value;
+                    }
+                }
+            }
+        }
+        else 
+        {
+            Debug.LogError("Key 'IDMap' not found in dictionary!");
         }
     }
 
-    public override object GetValue(int outputIndex = 0) => AnimationDataResolver.GetValue(_Map.ParameterID, Entity,
+    public override object GetValue(int outputIndex = 0) => AnimationDataResolver.GetValue(MapParameterStorage.Get(idMap).ParameterID, Entity,
         World.DefaultGameObjectInjectionWorld.EntityManager);
 }

@@ -9,6 +9,7 @@ using TimeLine.Installers;
 using TimeLine.LevelEditor.EditorWindows.SceneView.Outline;
 using TimeLine.LevelEditor.outline;
 using TimeLine.LevelEditor.Save;
+using TimeLine.Select_levels;
 using Unity.Rendering;
 using UnityEngine;
 using Zenject;
@@ -17,8 +18,6 @@ namespace TimeLine.LevelEditor.SpriteLoader
 {
     public class CustomSpriteStorage : MonoBehaviour
     {
-        private SaveLevel _saveLevel;
-        private Main _main;
         private SpriteLoadController _spriteLoadController;
         private GameEventBus _eventBus; 
         private SpriteOutlineBuffer _outlineBuffer;
@@ -48,10 +47,8 @@ namespace TimeLine.LevelEditor.SpriteLoader
         }
 
         [Inject]
-        private void Constructor(SaveLevel saveLevel, GameEventBus eventBus, Main main, SpriteLoadController spriteLoadController, SpriteOutlineBuffer spriteOutlineBuffer, OutlineController outlineController)
+        private void Constructor(GameEventBus eventBus, SpriteLoadController spriteLoadController, SpriteOutlineBuffer spriteOutlineBuffer, OutlineController outlineController)
         {
-            _saveLevel = saveLevel;
-            _main = main;
             _eventBus = eventBus;
             _spriteLoadController = spriteLoadController;
             _outlineBuffer = spriteOutlineBuffer;
@@ -102,7 +99,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         {
             List<TextureData> sprites = new List<TextureData>(TextureData.Keys);
             string json = JsonConvert.SerializeObject(sprites);
-            string galleryPath = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Gallery.json";
+            string galleryPath = $"{Application.persistentDataPath}/Levels/{LevelBaseInfoStorage.levelBaseInfo.levelName}/Gallery.json";
             File.WriteAllText(galleryPath, json);
         }
 
@@ -110,7 +107,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         public void Load(Action onFinish)
         {
             _onLoaded = onFinish;
-            string galleryPath = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Gallery.json";
+            string galleryPath = $"{Application.persistentDataPath}/Levels/{LevelBaseInfoStorage.levelBaseInfo.levelName}/Gallery.json";
             
             if (File.Exists(galleryPath))
             {
@@ -208,7 +205,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         public void UpdateCard(TextureData textureData)
         {
             // Загружаем новый спрайт и обновляем ВСЕ связанные объекты
-            string path = $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Pictures/{textureData.Id}.png";
+            string path = $"{Application.persistentDataPath}/Levels/{LevelBaseInfoStorage.levelBaseInfo.levelName}/Pictures/{textureData.Id}.png";
             
             StartCoroutine(SpriteLoad.LoadSpriteFromPath(path, textureData, (newSprite) =>
             {

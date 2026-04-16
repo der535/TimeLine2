@@ -7,7 +7,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
 {
     public static class SaveGraph
     {
-        public static string ToJson(OutputLogic cogic, DataType outputType)
+        public static GraphSaveData ToJson(OutputLogic cogic, DataType outputType)
         {
             var graphData = new GraphSaveData(DataType.Color, new List<NodeSaveEntry>(), new List<ConnectionSaveEntry>());
 
@@ -33,7 +33,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
                 TypeNameHandling = TypeNameHandling.Auto // Это сохранит информацию о типах внутри object
             };
 
-            return JsonConvert.SerializeObject(graphData, settings);
+            return graphData;
         }
     }
 }

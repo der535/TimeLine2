@@ -12,6 +12,7 @@ using TimeLine.LevelEditor.Core.MusicData;
 using TimeLine.LevelEditor.Player;
 using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
+using TimeLine.Select_levels;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -31,7 +32,6 @@ namespace TimeLine
         private TimeLineMarkersController _timeLineMarkersController;
         private TimeLineConverter _timeLineConverter;
         private FloatInputValidator _inputValidator;
-        private SaveLevel _saveLevel;
         private M_MusicData _musicData;
 
         private TimeLineMarker _timeLineMarker;
@@ -46,14 +46,13 @@ namespace TimeLine
             Main main,
             TimeLineMarkersController timeLineMarkersController, 
             TimeLineConverter timeLineConverter,
-            SaveLevel saveLevel, M_MusicData musicData)
+             M_MusicData musicData)
         {
             _gameEventBus = gameEventBus;
             _main = main;
             _actionMap = actionMap;
             _timeLineMarkersController = timeLineMarkersController;
             _timeLineConverter = timeLineConverter;
-            _saveLevel = saveLevel;
             _musicData = musicData;
             
         }
@@ -112,7 +111,7 @@ namespace TimeLine
         internal void Load()
         {
             string path =
-                $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/FinishData.json";
+                $"{Application.persistentDataPath}/Levels/{LevelBaseInfoStorage.levelBaseInfo.levelName}/FinishData.json";
             if (File.Exists(path))
             {
                 var json = File.ReadAllText(path);
@@ -124,7 +123,7 @@ namespace TimeLine
         internal void Save()
         {
             string path =
-                $"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/FinishData.json";
+                $"{Application.persistentDataPath}/Levels/{LevelBaseInfoStorage.levelBaseInfo.levelName}/FinishData.json";
             string json = JsonConvert.SerializeObject(_finishTime, Formatting.Indented);
             File.WriteAllText(path, json);
         }

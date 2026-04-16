@@ -91,45 +91,15 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             
         };
 
+        // Принимаем списки интерфейсов вместо 15 конкретных классов
         EntityComponentController(
-            SpriteRendererInstaller spriteRendererInstaller,
-            SunBurstMaterialInstaller sunBurstMaterialInstaller,
-            BoxColliderInstaller boxColliderInstaller,
-            CircleColliderInstaller circleColliderInstaller,
-            PolygoneColliderInstaller polygoneColliderInstaller,
-            SaveSpriteRenderer saveSpriteRenderer,
-            SaveBoxCollider saveBoxCollider,
-            SaveCircleCollider saveCircleCollider,
-            SavePolygonCollider savePolygonCollider,
-            SaveCompositionOffset saveCompositionOffset,
-            SaveSunBurstMaterial saveSunBurstMaterial,
-            SaveShakeCamera saveShakeCamera,
-            ShakeCameraInstaller shakeCameraInstaller,
-            SaveTransform saveTransform) 
+            List<IComponentInstaller> installers,
+            List<IEntityComponentSave> savers) 
         {
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _componentInstallers = new IComponentInstaller[]
-            {
-                spriteRendererInstaller, 
-                boxColliderInstaller, 
-                circleColliderInstaller, 
-                polygoneColliderInstaller,
-                sunBurstMaterialInstaller,
-                shakeCameraInstaller
-            };
-            _entityComponentSaves = new IEntityComponentSave[]
-            {
-                saveSpriteRenderer, 
-                saveTransform, 
-                saveBoxCollider, 
-                saveCircleCollider, 
-                savePolygonCollider,
-                saveCompositionOffset,
-                saveSunBurstMaterial,
-                saveShakeCamera
-            };
+            _componentInstallers = installers.ToArray();
+            _entityComponentSaves = savers.ToArray();
         }
-
         /// <summary>
         /// Сохранение данных
         /// </summary>

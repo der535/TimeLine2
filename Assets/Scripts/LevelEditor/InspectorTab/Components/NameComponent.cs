@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Generic;
-using TimeLine.CustomInspector.Logic;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.Logic;
-using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.InspectorTab.Components
 {
     public class NameComponent : BaseParameterComponent
     {

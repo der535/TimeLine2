@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.ECS;
 using TimeLine.LevelEditor.ECS.Components;
@@ -8,6 +9,7 @@ using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponen
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TimeLine.LevelEditor.TrackObjectSize.Data;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -30,6 +32,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private ITrackObjectSizeReader _trackObjectSizeReader;
         private IMaxObjectIndexDataReading _maxObjectIndexDataReading;
         private AddAnEntitySprite _addAnEntitySprite;
+        private CreateEntityPrefab _createEntityPrefab;
+
 
         private EntityManager _entityManager;
 
@@ -58,6 +62,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _maxObjectIndexDataReading = maxObjectIndexDataReading;
             _addAnEntitySprite = addAnEntitySprite;
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            _createEntityPrefab = new CreateEntityPrefab();
         }
 
         /// <summary>
@@ -106,7 +111,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _entityManager.AddComponent<PositionData>(entity);
             _entityManager.AddComponent<RotationData>(entity);
             
-            EntityName.SetupName(entity, name); // сетапаем имя
+            entityManager.AddComponentData(entity, new NameComponent { Value = name });
 
             var transform = LocalTransform.Identity;
             // Вместо пустой матрицы ставим единичную
@@ -118,6 +123,33 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _entityManager.SetComponentData(entity, transform);
 
             return (entity);
+        }
+        
+        // МЕТОД ДЛЯ СОЗДАНИЯ ОДНОЙ СУЩЕСТВА
+        public Entity SpawnSingle(string name)
+        {
+            // Создает копию, у которой АВТОМАТИЧЕСКИ удален компонент Prefab
+            Entity newEntity = _entityManager.Instantiate(_createEntityPrefab.EntityPrefab);
+            
+            // Устанавливаем индивидуальную позицию
+            _entityManager.SetComponentData(newEntity, new NameComponent(){Value = name});
+            
+            return newEntity;
+        }
+
+        // МЕТОД ДЛЯ МАССОВОГО СОЗДАНИЯ (1000+)
+        public List<Entity> SpawnThousand(int count)
+        {
+            // Используем Temp, так как мы всё равно скопируем данные в List
+            NativeArray<Entity> instances = new NativeArray<Entity>(count, Allocator.Temp);
+    
+            _entityManager.Instantiate(_createEntityPrefab.EntityPrefab, instances);
+
+            // Создаем обычный список нужной емкости
+            List<Entity> result = new List<Entity>(count);
+
+            instances.Dispose();
+            return result;
         }
 
         /// <summary>

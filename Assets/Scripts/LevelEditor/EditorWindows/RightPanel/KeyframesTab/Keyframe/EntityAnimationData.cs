@@ -15,7 +15,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe
     {
         public OutputLogic Logic;
         public List<IInitializedNode> initializedNodes = new();
-        public string Graph;
+        public GraphSaveData Graph;
 
         public abstract void Interpolate(EntityAnimationData other, double t,
             global::TimeLine.Keyframe.Keyframe current, global::TimeLine.Keyframe.Keyframe next,

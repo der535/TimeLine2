@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
 using TimeLine.Cursor;
+using TimeLine.EventBus.Events.EditroSceneCamera;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Core;
+using TimeLine.LevelEditor.ECS;
+using TimeLine.LevelEditor.ECS.Services;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TransformationSquare.Service;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -28,7 +33,13 @@ namespace TimeLine.LevelEditor.TransformationSquare
         private CameraReferences _cameraReferences;
         private CursorController _cursorController;
         private ActionMap _actionMap;
-        private List<Entity> _selectedEntits;
+        private List<Entity> _selectedEntits = new List<Entity>();
+
+        public Action OnStopPositionY;
+        public Action OnStopPositionX;
+        public Action OnStopScaleX;
+        public Action OnStopScaleY;
+        public Action OnStopRotation;
 
         [Inject]
         private void Construct(SceneToRawImageConverter sceneToRawImageConverter, GameEventBus eventBus,
@@ -44,7 +55,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
         private void Awake()
         {
             _mousePosition = new TransformationSquareMousePosition(view, _cameraReferences);
-            _mouseDistanceCheck = new TransformationSquareMouseDistanceCheck(_mousePosition, _data, _sceneToRawImageConverter);
+            _mouseDistanceCheck =
+                new TransformationSquareMouseDistanceCheck(_mousePosition, _data, _sceneToRawImageConverter);
             _updateSquare = new TransformationSquareUpdateSquare(_sceneToRawImageConverter, view, _data);
             _mouseClick = new TransformationSquareMouseClick(_data, _sceneToRawImageConverter, _mouseDistanceCheck);
         }
@@ -56,17 +68,74 @@ namespace TimeLine.LevelEditor.TransformationSquare
                 _selectedEntits = data.Tracks.Select(x => x.entity).ToList();
                 _updateSquare.UpdateGroupOBB(data.Tracks.Select(x => x.entity).ToList());
             });
+            
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
+            {
+                _selectedEntits = data.SelectedObjects.Select(x => x.entity).ToList();
+                _updateSquare.UpdateGroupOBB(data.SelectedObjects.Select(x => x.entity).ToList());
+            });
 
-            _actionMap.Editor.MouseLeft.started += context => { _mouseClick.Click(_selectedEntits); };
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+            {
+                _selectedEntits.Clear();
+            });
+            
+            _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) =>
+            {
+                _updateSquare.UpdateGroupOBB(_data._selectedEntities.Select(x => x.Entity).ToList(), true);
+            });
+
+            _actionMap.Editor.MouseLeft.started += context =>
+            {
+                _mouseClick.Click(_selectedEntits);
+            };
 
             _actionMap.Editor.MouseLeft.canceled += _ =>
             {
+                foreach (var entity in _data._selectedEntities)
+                {
+                    EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
+                    LocalTransform localTransform = manager.GetComponentData<LocalTransform>(entity.Entity);
+                    PostTransformMatrix postTransform = manager.GetComponentData<PostTransformMatrix>(entity.Entity);
+                    RotationData rotationData = manager.GetComponentData<RotationData>(entity.Entity);
+                    var scale = GetScaleFromMatrix.Get(postTransform.Value);
+
+                    if (!Mathf.Approximately(entity.InitialWorldPos.x, localTransform.Position.x))
+                    {
+                        OnStopPositionX?.Invoke();
+                    }
+
+                    if (!Mathf.Approximately(entity.InitialWorldPos.y, localTransform.Position.y))
+                    {
+                        OnStopPositionY?.Invoke();
+                    }
+
+                    if (!Mathf.Approximately(scale.x, entity.InitialScale.x))
+                    {
+                        OnStopScaleX?.Invoke();
+                    }
+
+                    if (!Mathf.Approximately(scale.y, entity.InitialScale.y))
+                    {
+                        OnStopScaleY?.Invoke();
+                    }
+
+                    if (!Mathf.Approximately(GetDegree.FromQuaternion(localTransform.Rotation).z,
+                            GetDegree.FromQuaternion(entity.InitialRotation).z))
+                    {
+                        rotationData.RotateZ = GetDegree.FromQuaternion(localTransform.Rotation).z;
+                        manager.SetComponentData(entity.Entity, rotationData);
+                        OnStopRotation?.Invoke();
+                    }
+                }
+                
                 _data.IsResizingRight = false;
                 _data.IsResizingLeft = false;
                 _data.IsResizingUp = false;
                 _data.IsResizingDown = false;
                 _data.IsRotating = false;
                 _data.IsDragging = false;
+                
                 _updateSquare.UpdateGroupOBB(_selectedEntits);
             };
         }
@@ -88,43 +157,43 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
             if (_data.IsResizingLeft && _data.IsResizingUp)
             {
-                ReziseObject(_data._initialBoxLocalMax.x, _data._initialBoxLocalMin.y, false, true);
+                ReziseObject(_data.InitialBoxLocalMax.x, _data.InitialBoxLocalMin.y, false, true);
             }
 
             if (_data.IsResizingRight && _data.IsResizingUp)
             {
-                ReziseObject(_data._initialBoxLocalMin.x, _data._initialBoxLocalMin.y, true, true);
+                ReziseObject(_data.InitialBoxLocalMin.x, _data.InitialBoxLocalMin.y, true, true);
             }
 
             if (_data.IsResizingRight && _data.IsResizingDown)
             {
-                ReziseObject(_data._initialBoxLocalMin.x, _data._initialBoxLocalMax.y, true, false);
+                ReziseObject(_data.InitialBoxLocalMin.x, _data.InitialBoxLocalMax.y, true, false);
             }
 
             if (_data.IsResizingLeft && _data.IsResizingDown)
             {
-                ReziseObject(_data._initialBoxLocalMax.x, _data._initialBoxLocalMax.y, false, false);
+                ReziseObject(_data.InitialBoxLocalMax.x, _data.InitialBoxLocalMax.y, false, false);
             }
 
             // В методе Update, когда считаете масштаб для правой стороны:
             if (_data.IsResizingRight && !_data.IsResizingDown && !_data.IsResizingUp)
             {
-                ReziseObject(_data._initialBoxLocalMin.x, 0, true, true, applyScaleY: false);
+                ReziseObject(_data.InitialBoxLocalMin.x, 0, true, true, applyScaleY: false);
             }
 
             if (_data.IsResizingLeft && !_data.IsResizingDown && !_data.IsResizingUp)
             {
-                ReziseObject(_data._initialBoxLocalMax.x, 0, false, true, applyScaleY: false);
+                ReziseObject(_data.InitialBoxLocalMax.x, 0, false, true, applyScaleY: false);
             }
 
             if (_data.IsResizingUp && !_data.IsResizingLeft && !_data.IsResizingRight)
             {
-                ReziseObject(0, _data._initialBoxLocalMin.y, true, true, applyScaleX: false);
+                ReziseObject(0, _data.InitialBoxLocalMin.y, true, true, applyScaleX: false);
             }
 
             if (_data.IsResizingDown && !_data.IsResizingLeft && !_data.IsResizingRight)
             {
-                ReziseObject(0, _data._initialBoxLocalMax.y, true, false, applyScaleX: false);
+                ReziseObject(0, _data.InitialBoxLocalMax.y, true, false, applyScaleX: false);
             }
 
             // В конце метода Click после всех проверок на Resize и Rotate:
@@ -132,18 +201,51 @@ namespace TimeLine.LevelEditor.TransformationSquare
             {
                 EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-                // 1. Получаем текущую позицию мыши в мире
                 float3 currentMouseWorld = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
+                float3 startMouseWorld = new float3(_data.LastMousePosition.x, _data.LastMousePosition.y, 0);
 
-                // 2. Считаем дельту (разницу) между текущей мышью и той, что была при клике
-                // ВАЖНО: Мышь при клике (_data.LastMousePosition) тоже должна быть в мировых координатах
-                float3 moveDelta = currentMouseWorld -
-                                   new float3(_data.LastMousePosition.x, _data.LastMousePosition.y, 0);
+                // 1. Считаем чистую мировую дельту
+                float3 moveDelta = currentMouseWorld - startMouseWorld;
+
+                if (_actionMap.Editor.LeftShift.IsPressed())
+                {
+                    // 2. Переводим мировую дельту в локальное направление рамки
+                    // Используем только вращение (rotate), так как дельта — это вектор, а не точка
+                    if (_actionMap.Editor.LeftAlt.IsPressed())
+                    {
+                        float3 localDelta = math.rotate(math.inverse(_data.PivotToWorldMatrix.Rotation()), moveDelta);
+
+
+                        // 3. Выбираем доминирующую локальную ось
+                        if (math.abs(localDelta.x) > math.abs(localDelta.y))
+                        {
+                            localDelta.y = 0;
+                        }
+                        else
+                        {
+                            localDelta.x = 0;
+                        }
+
+                        // 4. Переводим локальную дельту обратно в мировую
+                        moveDelta = math.rotate(_data.PivotToWorldMatrix.Rotation(), localDelta);
+                    }
+                    else
+                    {
+                        // 3. Выбираем доминирующую локальную ось
+                        if (math.abs(moveDelta.x) > math.abs(moveDelta.y))
+                        {
+                            moveDelta.y = 0;
+                        }
+                        else
+                        {
+                            moveDelta.x = 0;
+                        }
+                    }
+                }
 
                 foreach (var snap in _data._selectedEntities)
                 {
-                    // 3. Новая позиция = Исходная мировая позиция объекта + дельта мыши
-                    // Для этого добавьте в SelectedEntityData поле InitialWorldPos
+                    // 5. Применяем уже скорректированную дельту
                     float3 newWorldPos = snap.InitialWorldPos + moveDelta;
 
                     var lt = em.GetComponentData<LocalTransform>(snap.Entity);
@@ -151,8 +253,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
                     em.SetComponentData(snap.Entity, lt);
                 }
 
-                // 4. Обновляем центр группы и рамку, чтобы она ехала за объектами
-                _data._groupCenter = _data._groupCenter + moveDelta;
+                // ВАЖНО: Прибавление moveDelta к центру должно быть после коррекции
+                // Но так как мы используем InitialWorldPos, центр тоже лучше считать от стартового
                 _updateSquare.UpdateGroupOBB(_selectedEntits, false);
             }
 
@@ -163,8 +265,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
                 // 1. Считаем угол относительно ТОГО ЖЕ центра, что и при клике
                 float currentMouseAngle =
-                    math.atan2(mouseWorld.y - _data._groupCenter.y, mouseWorld.x - _data._groupCenter.x);
-                float angleDelta = currentMouseAngle - _data._initialMouseAngle;
+                    math.atan2(mouseWorld.y - _data.GroupCenter.y, mouseWorld.x - _data.GroupCenter.x);
+                float angleDelta = currentMouseAngle - _data.InitialMouseAngle;
                 quaternion rotationOffset = quaternion.AxisAngle(new float3(0, 0, 1), angleDelta);
 
                 foreach (var snap in _data._selectedEntities)
@@ -173,7 +275,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
                     float3 rotatedOffset = math.rotate(rotationOffset, snap.RotationOffsetWorld);
 
                     // 3. Новая позиция = Центр + повернутый рычаг
-                    float3 newWorldPos = _data._groupCenter + rotatedOffset;
+                    float3 newWorldPos = _data.GroupCenter + rotatedOffset;
 
                     // 4. Новый поворот самого объекта
                     quaternion newWorldRot = math.mul(rotationOffset, snap.InitialRotation);
@@ -214,9 +316,9 @@ namespace TimeLine.LevelEditor.TransformationSquare
             if (applyScaleX)
             {
                 if (scaleXPlusDelta)
-                    scaleX = (_data._initialBoxSize.x + deltaX) / _data._initialBoxSize.x;
+                    scaleX = (_data.InitialBoxSize.x + deltaX) / _data.InitialBoxSize.x;
                 else
-                    scaleX = (_data._initialBoxSize.x - deltaX) / _data._initialBoxSize.x;
+                    scaleX = (_data.InitialBoxSize.x - deltaX) / _data.InitialBoxSize.x;
 
                 scaleX = math.max(scaleX, 0.01f);
             }
@@ -224,9 +326,9 @@ namespace TimeLine.LevelEditor.TransformationSquare
             if (applyScaleY)
             {
                 if (scaleYPlusDelta)
-                    scaleY = (_data._initialBoxSize.y + deltaY) / _data._initialBoxSize.y;
+                    scaleY = (_data.InitialBoxSize.y + deltaY) / _data.InitialBoxSize.y;
                 else
-                    scaleY = (_data._initialBoxSize.y - deltaY) / _data._initialBoxSize.y;
+                    scaleY = (_data.InitialBoxSize.y - deltaY) / _data.InitialBoxSize.y;
 
                 scaleY = math.max(scaleY, 0.01f);
             }

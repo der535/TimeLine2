@@ -23,7 +23,10 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
 
         public void UpdateGroupOBB(List<Entity> _selectedEntities, bool writeRecaculatedPitot = true)
         {
+            if( _selectedEntities == null || _selectedEntities.Count == 0) return;
             EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
+            if(!em.Exists(_selectedEntities[^1])) return;
+            
             LocalTransform activeLT = em.GetComponentData<LocalTransform>(_selectedEntities[^1]);
 
             // Создаем матрицу, которая "обнуляет" поворот для расчетов
@@ -94,7 +97,7 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
             _view.circleLeftBottom.anchoredPosition = uiPoints[3];
             
             float3 localCenter = (min + max) * 0.5f;
-            _data._groupCenter = math.transform(_data.PivotToWorldMatrix, localCenter);
+            _data.GroupCenter = math.transform(_data.PivotToWorldMatrix, localCenter);
 
         }
 

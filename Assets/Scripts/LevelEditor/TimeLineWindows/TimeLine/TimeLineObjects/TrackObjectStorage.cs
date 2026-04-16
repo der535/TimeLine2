@@ -766,7 +766,7 @@ namespace TimeLine
                 track.components.Data.GroupOffsetTrack(components); ////
                 // track.components.Data.StartTimeInTicks += components.Data.ReducedLeft;
 
-                components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
+                // components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
 
                 track.components.View.Hide();
             }

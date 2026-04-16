@@ -26,14 +26,14 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public Vector2 LastMousePosition;
         public float LastAngle;
         
-        public float3 _groupCenter;
+        public float3 GroupCenter;
         
-        public float _initialMouseAngle;
+        public float InitialMouseAngle;
         
         
-        public float3 _initialBoxSize;
-        public float3 _initialBoxLocalMin;
-        public float3 _initialBoxLocalMax;
+        public float3 InitialBoxSize;
+        public float3 InitialBoxLocalMin;
+        public float3 InitialBoxLocalMax;
         
         public float3 CurrentLocalMin; // Сохраняем вычисленный min
         public float3 CurrentLocalMax; // Сохраняем вычисленный max
@@ -46,6 +46,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
             public float3 RotationOffsetWorld; // Для вращения (вектор ПозицияОбъекта - ЦентрГруппы)
             public float3 InitialWorldPos;
             public float3 InitialScale;
+            
             public quaternion InitialRotation;
         }
 

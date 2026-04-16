@@ -10,6 +10,7 @@ using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.TransformationSquare;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -39,10 +40,11 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
         private ToolsController _toolsController;
         private TimeLineRecorder _timeLineRecorder;
         private CustomSpriteStorage _customInspectorDrawer;
+        private TransformationSquareController _transformationSquareController;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
-            ColliderDrawer colliderDrawer, ToolsController toolsController, TimeLineRecorder timeLineRecorder, CustomSpriteStorage customSpriteStorage)
+            ColliderDrawer colliderDrawer, ToolsController toolsController, TimeLineRecorder timeLineRecorder, CustomSpriteStorage customSpriteStorage, TransformationSquareController transformationSquareController)
         {
             _gameEventBus = gameEventBus;
             _selectedTransform = trackObjectStorage;
@@ -50,6 +52,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _toolsController = toolsController;
             _timeLineRecorder = timeLineRecorder;
             _customInspectorDrawer = customSpriteStorage;
+            _transformationSquareController = transformationSquareController;
         }
 
         private void Awake()
@@ -60,7 +63,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _gameEventBus.SubscribeTo((ref AddComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
             _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
 
-            _componentDrawers.Add(new TransformComponentDrawer());
+            _componentDrawers.Add(new TransformComponentDrawer(_transformationSquareController));
             _componentDrawers.Add(new NameDrawer());
             _componentDrawers.Add(new SpriteRendererDrawer(_customInspectorDrawer));
             _componentDrawers.Add(new SunBurstMaterialDrawer());

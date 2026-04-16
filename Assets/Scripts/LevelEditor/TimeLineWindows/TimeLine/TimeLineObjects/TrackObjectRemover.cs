@@ -117,7 +117,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                     
                 }
                 
-                Debug.Log($"remove {item.entity.Version}:{item.entity.Index}");
+                // Debug.Log($"remove {item.entity.Version}:{item.entity.Index}");
                 SingleRemove(item);
             }
 

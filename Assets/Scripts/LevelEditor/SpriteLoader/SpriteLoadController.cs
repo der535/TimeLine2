@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using TimeLine.LevelEditor.Save;
+using TimeLine.Select_levels;
 using UnityEngine;
 using Zenject;
 using Object = UnityEngine.Object;
@@ -12,14 +13,12 @@ namespace TimeLine.LevelEditor.SpriteLoader
     {
         [SerializeField] private FileBrowserSelectPicture fileBrowser;
         [SerializeField] private SpriteGallery gallery;
-
-        private SaveLevel _saveLevel;
+        
         private CustomSpriteStorage _customSpriteStorage;
 
         [Inject]
-        private void Constructor(SaveLevel saveLevel, CustomSpriteStorage customSpriteStorage)
+        private void Constructor(CustomSpriteStorage customSpriteStorage)
         {
-            _saveLevel = saveLevel;
             _customSpriteStorage = customSpriteStorage;
         }
 
@@ -35,7 +34,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
                     
                     var id = System.Guid.NewGuid().ToString("N");
                     var pngFileName = $"{id}.png";
-                    var destinationDir = Path.Combine(Application.persistentDataPath, "Levels", _saveLevel.LevelBaseInfo.levelName, "Pictures");
+                    var destinationDir = Path.Combine(Application.persistentDataPath, "Levels", LevelBaseInfoStorage.levelBaseInfo.levelName, "Pictures");
                     Directory.CreateDirectory(destinationDir);
                     var destinationPath = Path.Combine(destinationDir, pngFileName);
 
@@ -74,7 +73,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
         public void LoadTextureFromSave(TextureData textureData, Action onLoaded)
         {
             // print("load sprite from save");
-            string filePath =$"{Application.persistentDataPath}/Levels/{_saveLevel.LevelBaseInfo.levelName}/Pictures/{textureData.Id}.png";
+            string filePath =$"{Application.persistentDataPath}/Levels/{LevelBaseInfoStorage.levelBaseInfo.levelName}/Pictures/{textureData.Id}.png";
             // print(filePath);
             StartCoroutine(SpriteLoad.LoadSpriteFromPath(filePath, textureData, (sprite) =>
             {

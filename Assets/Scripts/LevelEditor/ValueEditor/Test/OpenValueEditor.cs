@@ -44,7 +44,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
             _editKeyframe = _selectedKeyframe;
             _clearWorkPlace.Clear();
             panel.gameObject.SetActive(true);
-            if (!string.IsNullOrEmpty(_editKeyframe.GetEntityData().Graph))
+            if (_editKeyframe.GetEntityData().Graph != null)
             {
                 _editKeyframe.GetEntityData().Logic = _saveNodes.LoadGraph(_editKeyframe.GetEntityData().Graph, 
                     _editKeyframe.GetEntityData().Logic.DataType, _editKeyframe.GetEntityData().initializedNodes);

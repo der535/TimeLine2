@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using EventBus;
 using Newtonsoft.Json;
@@ -16,11 +17,14 @@ using TimeLine.LevelEditor.SpriteLoader;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using TimeLine.LevelEditor.UIAnimation;
+using TimeLine.LevelEditor.ValueEditor;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using TimeLine.Parent;
+using TimeLine.Select_levels;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
+using Debug = UnityEngine.Debug;
 
 namespace TimeLine.LevelEditor.Save
 {
@@ -41,7 +45,6 @@ namespace TimeLine.LevelEditor.Save
         [SerializeField] private GroupCreater groupCreater;
 
         // === Private Fields ===
-        private LevelBaseInfo _levelBaseInfo;
         private GameEventBus _gameEventBus;
         private CustomSpriteStorage _customSpriteStorage;
         private ParentLinkRestorer _parentLinkRestorer;
@@ -50,7 +53,6 @@ namespace TimeLine.LevelEditor.Save
         private SaveButtonAnimation _saveButtonAnimation;
         private LoadGraphLogic _loadGraphLogic;
         private EntityComponentController _entityComponentController;
-        public LevelBaseInfo LevelBaseInfo => _levelBaseInfo;
 
         [Inject]
         private void Construct(GameEventBus gameEventBus,
@@ -80,15 +82,15 @@ namespace TimeLine.LevelEditor.Save
                 TypeNameHandling = TypeNameHandling.Auto
             };
 
-            _gameEventBus.SubscribeTo((ref SetBPMEvent data) => { LevelBaseInfo.bpm = data.BPM; });
-            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) => { LevelBaseInfo.offset = data.Offset; });
-            _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) => { _levelBaseInfo = eventData.LevelInfo; });
+            _gameEventBus.SubscribeTo((ref SetBPMEvent data) => { LevelBaseInfoStorage.levelBaseInfo.bpm = data.BPM; });
+            _gameEventBus.SubscribeTo((ref SetOffsetEvent data) => { LevelBaseInfoStorage.levelBaseInfo.offset = data.Offset; });
+            _gameEventBus.SubscribeTo((ref OpenEditorEvent eventData) => { LevelBaseInfoStorage.levelBaseInfo = eventData.LevelInfo; });
         }
 
         public void Save()
         {
             _saveButtonAnimation.Saving();
-            BackupManager.CreateRollingBackup($"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}",
+            BackupManager.CreateRollingBackup($"{Application.persistentDataPath}/Levels/{ LevelBaseInfoStorage.levelBaseInfo.levelName}",
                 maxBackups: 5);
 
             editorSettings.Save();
@@ -105,7 +107,7 @@ namespace TimeLine.LevelEditor.Save
             foreach (var track in trackObjectStorage.TrackObjects)
                 saveLevelDto.gameObjectSaveData.Add(SaveGameObject(track, ""));
 
-            string directoryPath = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}";
+            string directoryPath = $"{Application.persistentDataPath}/Levels/{ LevelBaseInfoStorage.levelBaseInfo.levelName}";
             Directory.CreateDirectory(directoryPath);
 
             string filePath = $"{directoryPath}/LevelObjects.json";
@@ -113,19 +115,20 @@ namespace TimeLine.LevelEditor.Save
             File.WriteAllText(filePath, json);
 
             string levelBaseInfoPath =
-                $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelBaseInfo.json";
+                $"{Application.persistentDataPath}/Levels/{ LevelBaseInfoStorage.levelBaseInfo.levelName}/LevelBaseInfo.json";
 
-            File.WriteAllText(levelBaseInfoPath, JsonConvert.SerializeObject(LevelBaseInfo, Formatting.Indented));
+            File.WriteAllText(levelBaseInfoPath, JsonConvert.SerializeObject(LevelBaseInfoStorage.levelBaseInfo, Formatting.Indented));
             _saveButtonAnimation.Saved();
         }
 
         internal void Load(LevelBaseInfo levelBaseInfo)
         {
-            _levelBaseInfo = levelBaseInfo;
+            LevelBaseInfoStorage.levelBaseInfo = levelBaseInfo;
 
             _loadingScreenController.Clear();
             // Сбрасываем старое состояние
             _loadingScreenController.AddStep("Загрузка настроек", () => editorSettings.Load());
+            _loadingScreenController.AddStep("Загрузка карт", () => MapParameterStorage.Load());
             _loadingScreenController.AddStep("Загрузка настроек", () => finishLevelController.Load());
             _loadingScreenController.AddStep("Загрузка настроек", () => _maxObjectIndexController.Load());
             _loadingScreenController.AddStep("Загрузка композиций", () => composition.Load());
@@ -143,18 +146,28 @@ namespace TimeLine.LevelEditor.Save
 
         private void LoadLevelObjects()
         {
-            string path = $"{Application.persistentDataPath}/Levels/{_levelBaseInfo.levelName}/LevelObjects.json";
+            string path = $"{Application.persistentDataPath}/Levels/{ LevelBaseInfoStorage.levelBaseInfo.levelName}/LevelObjects.json";
             if (!File.Exists(path)) return;
 
             string json = File.ReadAllText(path);
             var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
+            
+            
 
+            Stopwatch sw = new Stopwatch();
+    
+            sw.Start();
+            
             // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
             foreach (var saveData in saveLevelDto.gameObjectSaveData)
             {
                 facadeObjectSpawner.LoadObject(saveData);
             }
 
+            sw.Stop();
+
+            Debug.Log($"Время выполнения: {sw.ElapsedMilliseconds} мс ({sw.ElapsedTicks} тиков)");
+            
             // 2. Загружаем корневые ГРУППЫ в правильном порядке
             foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
             {
@@ -298,8 +311,8 @@ namespace TimeLine.LevelEditor.Save
             groupData.reduceRight = group.components.Data.ReducedRight;
             groupData.reduceLeft = group.components.Data.ReducedLeft;
             
-            Debug.Log(groupData.reduceRight);
-            Debug.Log(groupData.reduceLeft);
+            // Debug.Log(groupData.reduceRight);
+            // Debug.Log(groupData.reduceLeft);
 
             foreach (var child in group.TrackObjectDatas)
             {
@@ -472,6 +485,7 @@ namespace TimeLine.LevelEditor.Save
     public class KeyframeSaveData
     {
         public string Graph;
+        public GraphSaveData GraphNew;
         public double Ticks;
         public Keyframe.Keyframe.InterpolationType InterpolationType;
         public double OutTangent;

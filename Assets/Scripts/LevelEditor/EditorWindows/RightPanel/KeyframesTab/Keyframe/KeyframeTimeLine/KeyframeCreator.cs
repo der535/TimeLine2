@@ -50,7 +50,7 @@ namespace TimeLine
             
             if (_keyframeTrackStorage.GetTrack(node) == null)
                 _keyframeTrackStorage.AddTrack(node, new Track(target, trackName, animationColor, componentNames),
-                    trackObjectPacket.components.Data, trackObjectPacket.branch.ID);
+                    trackObjectPacket.components.Data, trackObjectPacket.branch.ID, true);
             
             _keyframeTrackStorage.AddKeyframe(node, TimeLineConverter.Instance.TicksCurrentTime() - trackObjectPacket.components.Data.GetGlobalTicksPosition(),
                 animationData);

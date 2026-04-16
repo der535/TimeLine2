@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using EventBus;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
+using TimeLine.Select_levels;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -93,6 +94,7 @@ namespace TimeLine
                 _songName,
                 float.Parse(_bpm.text, NumberStyles.Float, CultureInfo.InvariantCulture), 
                 0);
+            LevelBaseInfoStorage.levelBaseInfo = levelInfo;
             string info = JsonUtility.ToJson(levelInfo, true);
             File.WriteAllText($"{Application.persistentDataPath}/Levels/{_name.text}/LevelBaseInfo.json", info);
             _gameEventBus.Raise(new OpenEditorEvent(levelInfo));

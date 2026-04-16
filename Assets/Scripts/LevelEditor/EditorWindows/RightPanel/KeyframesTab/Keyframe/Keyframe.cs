@@ -122,7 +122,7 @@ namespace TimeLine.Keyframe
                 OutWeight = OutWeight,
                 DataType = entityAnimationData?.GetDataType(),
                 Data = entityAnimationData?.SerializeData(),
-                Graph = entityAnimationData?.Graph
+                GraphNew = entityAnimationData?.Graph
             };
         }
 
@@ -146,13 +146,13 @@ namespace TimeLine.Keyframe
                 EntityAnimationData data = CreateEntityAnimationData(saveData.DataType);
                 if (data != null)
                 {
-                    data.DeserializeData(saveData.Data);
+                    // data.DeserializeData(saveData.Data);
                     keyframe.AddData(data);
                     
                     
-                    if (saveData.Graph != null)
+                    if (saveData.GraphNew != null)
                     {
-                        data.Graph = saveData.Graph;
+                        data.Graph = saveData.GraphNew;
                         data.Logic = logic;
                         data.initializedNodes = initializedNodes;
                     }

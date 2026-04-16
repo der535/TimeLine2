@@ -182,7 +182,6 @@ namespace TimeLine.LevelEditor.Core
             var trackObjectSizeData = new TrackObjectSizeData();
             Container.Bind<ITrackObjectSizeReader>().FromInstance(trackObjectSizeData).AsSingle();
             Container.Bind<TrackObjectSizeData>().FromInstance(trackObjectSizeData).AsSingle();
-            Container.Bind<SavePathController>().AsSingle();
             Container.Bind<MaxObjectIndexController>().AsSingle();
             Container.Bind(typeof(ActiveBezierPointsData), typeof(IReadActiveBezierPointsData))
                 .To<ActiveBezierPointsData>()

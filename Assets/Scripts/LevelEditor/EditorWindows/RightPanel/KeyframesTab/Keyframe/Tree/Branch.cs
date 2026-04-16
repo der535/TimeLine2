@@ -98,7 +98,7 @@ public class Branch
 
         // 1. Находим родителя
         string parentPath = GetParentPathFromPath(nodeToRemove.Path);
-        TreeNode parentNode = FindNode(parentPath).node;
+        TreeNode parentNode = FindNode(parentPath);
 
         if (parentNode != null)
         {
@@ -121,7 +121,7 @@ public class Branch
         if (node == Root) return;
 
         string parentPath = GetParentPathFromPath(node.Path);
-        TreeNode parentNode = FindNode(parentPath).node;
+        TreeNode parentNode = FindNode(parentPath);
 
         if (parentNode != null)
         {
@@ -154,10 +154,10 @@ public class Branch
         Debug.Log(node.Path);
         if (!string.IsNullOrEmpty(parentPath))
         {
-            var node3 = FindNode(parentPath).node;
+            var node3 = FindNode(parentPath);
             node3.Children.Remove(node);
             Nodes.Remove(node);
-            RemovePath(FindNode(parentPath).node);
+            RemovePath(FindNode(parentPath));
         }
 
         PrintTree();
@@ -170,48 +170,98 @@ public class Branch
         Nodes.Remove(node);
     }
 
-    public (TreeNode node, int childCount) FindNode(string path)
+    // public (TreeNode node, int childCount) FindNode(string path)
+    // {
+    //     // Debug.Log($"[FindNode] Начало поиска по пути: '{path}'");
+    //
+    //     if (string.IsNullOrEmpty(path))
+    //     {
+    //         // Debug.Log("[FindNode] Путь пуст, возвращаю Root.");
+    //         return (Root, 0);
+    //     }
+    //
+    //     string[] parts = path.Split('/');
+    //     TreeNode currentNode = Root;
+    //     int childCount = 0;
+    //
+    //     foreach (string part in parts)
+    //     {
+    //         // Пропускаем пустые части, если путь начинается с '/' или содержит '//'
+    //         if (string.IsNullOrEmpty(part)) continue;
+    //
+    //         bool found = false;
+    //         // Debug.Log($"[FindNode] Ищу дочерний узел '{part}' в узле '{currentNode.Name}'");
+    //
+    //         foreach (TreeNode child in currentNode.Children)
+    //         {
+    //             if (child.Name == part)
+    //             {
+    //                 childCount = currentNode.Children.Count;
+    //                 currentNode = child;
+    //                 found = true;
+    //                 break;
+    //             }
+    //         }
+    //
+    //         if (!found)
+    //         {
+    //             // Debug.LogWarning($"[FindNode] Ошибка: Узел '{part}' не найден в '{currentNode.Name}'. Поиск прерван.");
+    //             return (null, 0);
+    //         }
+    //     }
+    //
+    //     // Debug.Log($"[FindNode] Успешно найден узел: '{currentNode.Name}' по пути '{path}'");
+    //     return (currentNode, childCount);
+    // }
+    
+    public TreeNode FindNode(string path)
     {
-        // Debug.Log($"[FindNode] Начало поиска по пути: '{path}'");
+        if (string.IsNullOrEmpty(path)) return Root;
 
-        if (string.IsNullOrEmpty(path))
-        {
-            // Debug.Log("[FindNode] Путь пуст, возвращаю Root.");
-            return (Root, 0);
-        }
-
-        string[] parts = path.Split('/');
         TreeNode currentNode = Root;
-        int childCount = 0;
+        int start = 0;
 
-        foreach (string part in parts)
+        while (start < path.Length)
         {
-            // Пропускаем пустые части, если путь начинается с '/' или содержит '//'
-            if (string.IsNullOrEmpty(part)) continue;
+            // Находим индекс следующего слеша
+            int nextSlash = path.IndexOf('/', start);
+            int length = (nextSlash == -1) ? path.Length - start : nextSlash - start;
 
-            bool found = false;
-            // Debug.Log($"[FindNode] Ищу дочерний узел '{part}' в узле '{currentNode.Name}'");
-
-            foreach (TreeNode child in currentNode.Children)
+            if (length > 0)
             {
-                if (child.Name == part)
+                // Извлекаем имя части пути без выделения строки (через Span, если C# 8.0+)
+                // Или используем оптимизированный поиск:
+                bool found = false;
+                foreach (var child in currentNode.Children)
                 {
-                    childCount = currentNode.Children.Count;
-                    currentNode = child;
-                    found = true;
-                    break;
+                    // Сравниваем часть строки напрямую, чтобы не делать Substring()
+                    if (ComparePart(path, start, length, child.Name))
+                    {
+                        currentNode = child;
+                        found = true;
+                        break;
+                    }
                 }
+
+                if (!found) return null;
             }
 
-            if (!found)
-            {
-                // Debug.LogWarning($"[FindNode] Ошибка: Узел '{part}' не найден в '{currentNode.Name}'. Поиск прерван.");
-                return (null, 0);
-            }
+            if (nextSlash == -1) break;
+            start = nextSlash + 1;
         }
 
-        // Debug.Log($"[FindNode] Успешно найден узел: '{currentNode.Name}' по пути '{path}'");
-        return (currentNode, childCount);
+        return currentNode;
+    }
+
+// Вспомогательный метод: сравнивает сегмент строки с именем узла без аллокаций
+    private bool ComparePart(string path, int start, int length, string name)
+    {
+        if (name.Length != length) return false;
+        for (int i = 0; i < length; i++)
+        {
+            if (path[start + i] != name[i]) return false;
+        }
+        return true;
     }
 
     /// <summary>
@@ -221,44 +271,53 @@ public class Branch
     /// <returns></returns>
     public TreeNode AddNode(string path)
     {
-        // Объединяем путь и имя, чтобы корректно обработать все '/'
-        // Учитываем пустой путь, чтобы не плодить лишние слэши в начале
-        string fullPath = path;
-
-        // StringSplitOptions.RemoveEmptyEntries уберет пустые части при случайных double slash "//"
-        string[] parts = fullPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        if (string.IsNullOrEmpty(path)) return Root;
 
         TreeNode currentNode = Root;
-        string currentCumulativePath = "";
+        int start = 0;
 
-        for (int i = 0; i < parts.Length; i++)
+        while (start < path.Length)
         {
-            string partName = parts[i];
+            int nextSlash = path.IndexOf('/', start);
+            int length = (nextSlash == -1) ? path.Length - start : nextSlash - start;
 
-            // Формируем путь для текущего узла (нужен для конструктора AddChild)
-            currentCumulativePath = i == 0 ? partName : $"{currentCumulativePath}/{partName}";
-
-            TreeNode nextNode = null;
-            foreach (var child in currentNode.Children)
+            if (length > 0)
             {
-                if (child.Name == partName)
+                // Используем ReadOnlySpan для сравнения без выделения строк (C# 8.0+)
+                // Если версия C# старая, используем ComparePart, как в прошлом ответе
+                string partName = path.Substring(start, length); // Увы, для Dictionary/Name нужна строка
+
+                TreeNode nextNode = null;
+            
+                // Оптимизация: поиск через foreach (или через Dictionary, если добавите его в TreeNode)
+                foreach (var child in currentNode.Children)
                 {
-                    nextNode = child;
-                    break;
+                    if (child.Name == partName)
+                    {
+                        nextNode = child;
+                        break;
+                    }
                 }
+
+                if (nextNode == null)
+                {
+                    // Формируем путь только ПРИ СОЗДАНИИ, а не на каждой итерации
+                    string newPath = (currentNode == Root) 
+                        ? partName 
+                        : $"{currentNode.Path}/{partName}";
+
+                    nextNode = currentNode.AddChild(partName, newPath);
+                    Nodes.Add(nextNode);
+                }
+
+                currentNode = nextNode;
             }
 
-            if (nextNode == null)
-            {
-                // Создаем узел, если его нет. Путь передаем накопленный до этого момента.
-                nextNode = currentNode.AddChild(partName, currentCumulativePath);
-                Nodes.Add(nextNode);
-            }
-
-            currentNode = nextNode;
+            if (nextSlash == -1) break;
+            start = nextSlash + 1;
         }
 
-        return currentNode; // Возвращаем последний созданный или найденный узел
+        return currentNode;
     }
 
     public BranchSaveData ToSaveData()

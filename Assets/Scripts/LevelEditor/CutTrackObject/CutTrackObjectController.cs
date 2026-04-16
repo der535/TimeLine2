@@ -135,33 +135,36 @@ namespace TimeLine.LevelEditor.CutTrackObject
                     
 
 
-                    var pastedObjects = _clipboard.PasteObjectsFromSave(copyData, 0, true);
-                    
-                    
-                    foreach (var trackObject in pastedObjects)
+                    _clipboard.PasteObjectsFromSave(copyData, 0, (List<TrackObjectPacket> list) =>
                     {
-                        if (trackObject is TrackObjectGroup _)
+                        foreach (var trackObject in list)
                         {
-                            var realStartPosition = trackObject.components.Data.StartTimeInTicks +
-                                                    trackObject.components.Data.ReducedLeft;
-                            Debug.Log(realStartPosition);
-                            var realDuraction = trackObject.components.Data.TimeDurationInTicks +
-                                                math.abs(trackObject.components.Data.ReducedLeft);
-                            Debug.Log(realDuraction);
-                            Debug.Log($"min {realStartPosition}");
-                            Debug.Log($"min {realStartPosition + realDuraction - 1}");
-                            var setNewTimeClamped = math.clamp(_playbackState.SmoothTimeInTicks, realStartPosition,
-                                realStartPosition + realDuraction - 1);
-                            Debug.Log(setNewTimeClamped);
+                            if (trackObject is TrackObjectGroup _)
+                            {
+                                var realStartPosition = trackObject.components.Data.StartTimeInTicks +
+                                                        trackObject.components.Data.ReducedLeft;
+                                Debug.Log(realStartPosition);
+                                var realDuraction = trackObject.components.Data.TimeDurationInTicks +
+                                                    math.abs(trackObject.components.Data.ReducedLeft);
+                                Debug.Log(realDuraction);
+                                Debug.Log($"min {realStartPosition}");
+                                Debug.Log($"min {realStartPosition + realDuraction - 1}");
+                                var setNewTimeClamped = math.clamp(_playbackState.SmoothTimeInTicks, realStartPosition,
+                                    realStartPosition + realDuraction - 1);
+                                Debug.Log(setNewTimeClamped);
 
-                            trackObject.components.TrackObject.LeftResize(setNewTimeClamped);
-                            trackObject.components.Data.ReducedLeft = -setNewTimeClamped + realStartPosition;
+                                trackObject.components.TrackObject.LeftResize(setNewTimeClamped);
+                                trackObject.components.Data.ReducedLeft = -setNewTimeClamped + realStartPosition;
+                            }
+                            else
+                            {
+                                trackObject.components.TrackObject.LeftResize(_playbackState.SmoothTimeInTicks);
+                            }
                         }
-                        else
-                        {
-                            trackObject.components.TrackObject.LeftResize(_playbackState.SmoothTimeInTicks);
-                        }
-                    }
+                    },true);
+                    
+                    
+                    
                 }
             };
         }

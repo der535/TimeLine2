@@ -20,13 +20,15 @@ namespace TimeLine.LevelEditor.Core
         [SerializeField] private Sprite quadSprite;
         public override void InstallBindings()
         {
-            Container.Bind<SpriteRendererInstaller>().AsSingle().WithArguments(baseMaterial, baseMesh);
-            Container.Bind<SunBurstMaterialInstaller>().AsSingle().WithArguments(subBurstMaterial, baseMesh, quadSprite);
-            Container.Bind<BoxColliderInstaller>().AsSingle();
-            Container.Bind<CircleColliderInstaller>().AsSingle();
-            Container.Bind<PolygoneColliderInstaller>().AsSingle();
-            Container.Bind<ShakeCameraInstaller>().AsSingle();
-            Container.Bind<EntityComponentController>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SpriteRendererInstaller>().AsSingle().WithArguments(baseMaterial, baseMesh);
+            Container.BindInterfacesAndSelfTo<SunBurstMaterialInstaller>().AsSingle().WithArguments(subBurstMaterial, baseMesh, quadSprite);
+            Container.BindInterfacesAndSelfTo<BoxColliderInstaller>().AsSingle();
+            Container.BindInterfacesAndSelfTo<CircleColliderInstaller>().AsSingle();
+            Container.BindInterfacesAndSelfTo<PolygoneColliderInstaller>().AsSingle();
+            Container.BindInterfacesAndSelfTo<ShakeCameraInstaller>().AsSingle();
+            Container.BindInterfacesAndSelfTo<EntityComponentController>().AsSingle();
+            
+            
             Container.Bind<ColliderDrawer>().FromInstance(colliderDrawer).AsSingle();
             
             
@@ -34,14 +36,14 @@ namespace TimeLine.LevelEditor.Core
             Container.BindInterfacesAndSelfTo<ShakeCameraController>().AsSingle().NonLazy();
 
             
-            Container.Bind<SaveSpriteRenderer>().AsSingle();
-            Container.Bind<SaveBoxCollider>().AsSingle();
-            Container.Bind<SaveCircleCollider>().AsSingle();
-            Container.Bind<SavePolygonCollider>().AsSingle();
-            Container.Bind<SaveCompositionOffset>().AsSingle();
-            Container.Bind<SaveSunBurstMaterial>().AsSingle();
-            Container.Bind<SaveShakeCamera>().AsSingle();
-            Container.Bind<SaveTransform>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveSpriteRenderer>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveBoxCollider>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveCircleCollider>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SavePolygonCollider>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveCompositionOffset>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveSunBurstMaterial>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveShakeCamera>().AsSingle();
+            Container.BindInterfacesAndSelfTo<SaveTransform>().AsSingle();
         }
     }
 }

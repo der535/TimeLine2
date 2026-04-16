@@ -94,7 +94,7 @@ namespace TimeLine.LevelEditor.CopyComponent
                     newTreeNode,
                     newTrackData,
                     trackObjectData.components.Data,
-                    trackObjectData.branch.ID
+                    trackObjectData.branch.ID, false
                 );
             }
         }
@@ -124,7 +124,7 @@ namespace TimeLine.LevelEditor.CopyComponent
             {
                 var searchResult = trackObjectData.branch.FindNode(path);
         
-                if (searchResult.node == null)
+                if (searchResult == null)
                 {
                     // СЛУЧАЙ А: Трека еще нет — создаем полностью
                     TreeNode newTreeNode = trackObjectData.branch.AddNode(path);
@@ -137,13 +137,13 @@ namespace TimeLine.LevelEditor.CopyComponent
                         newTreeNode,
                         newTrackData,
                         trackObjectData.components.Data,
-                        trackObjectData.branch.ID
+                        trackObjectData.branch.ID, false
                     );
                 }
                 else
                 {
                     // СЛУЧАЙ Б: Трек уже есть — обновляем только ключевые кадры
-                    var existingTrack = _keyframeTrackStorage.GetTrack(searchResult.node);
+                    var existingTrack = _keyframeTrackStorage.GetTrack(searchResult);
                     if (existingTrack != null)
                     {
                         // Важно: копируем именно список кадров, чтобы не было ссылочной связи с оригиналом

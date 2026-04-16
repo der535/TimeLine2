@@ -25,7 +25,7 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
             {
                 foreach (var keyframe in track.Track.Keyframes)
                 {
-                    if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
+                    if (keyframe.GetEntityData().Graph != null)
                     {
                         (keyframe.GetEntityData().Logic, keyframe.GetEntityData().initializedNodes)=_saveNodes.LoadLogicOnly(keyframe.GetEntityData().Graph,
                             TypeToDataType.Convert(keyframe.GetEntityData().GetType()));
@@ -50,11 +50,11 @@ namespace TimeLine.LevelEditor.ValueEditor.Test
                 if (track?.Track.Keyframes != null)
                     foreach (var keyframe in track.Track.Keyframes)
                     {
-                        if (!string.IsNullOrEmpty(keyframe.GetEntityData().Graph))
+                        if (keyframe.GetEntityData().Graph != null)
                         {
                             (keyframe.GetEntityData().Logic, keyframe.GetEntityData().initializedNodes) = _saveNodes.LoadLogicOnly(
                                 keyframe.GetEntityData().Graph,
-                                TypeToDataType.Convert(keyframe.GetEntityData().GetType()), trackObjectDatas);
+                                TypeToDataType.Convert(keyframe.GetEntityData().GetType()),objects:  trackObjectDatas);
                         }
                     }
             }

@@ -114,10 +114,11 @@ namespace TimeLine
                     copyKeyframes != null &&
                     copyKeyframes.Count > 0)
                 {
+                    CheckComponents();
+                    CheckBranch();
+                    
                     foreach (var keyframe in copyKeyframes)
                     {
-                        CheckComponents();
-                        CheckBranch();
                         Paste(keyframe.Item1, keyframe.Item2, _trackObjectStorage.selectedObject.components.Data, minTime);
                     }
                 }
@@ -134,11 +135,11 @@ namespace TimeLine
                 if (_entityComponentController.CheckComponentAvailability(_selectObjectController.SelectObjects[^1].entity,
                         name))
                 {
-                    print(true);
+                    // print(true);
                 }
                 else
                 {
-                    print(false);
+                    // print(false);
                     _entityComponentController.AddComponentSafely(name,
                         _selectObjectController.SelectObjects[^1].entity);
                 }
@@ -159,11 +160,11 @@ namespace TimeLine
                         trackData.Track.AnimationColor, trackData.Track.ComponentNames);
                     _keyframeTrackStorage.AddTrack(node, track,
                         _selectObjectController.SelectObjects[^1].components.Data,
-                        _selectObjectController.SelectObjects[^1].branch.ID);
+                        _selectObjectController.SelectObjects[^1].branch.ID, true);
                 }
 
                 (OutputLogic item1, List<IInitializedNode> item2) =
-                    _saveNodes.LoadLogicOnly(copykeyframe.Item1.Graph,
+                    _saveNodes.LoadLogicOnly(copykeyframe.Item1.GraphNew,
                         TypeToDataType.Convert(copykeyframe.Item1.Data));
                 Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(copykeyframe.Item1, item1, item2);
                 var difference = copykeyframe.Item1.Ticks - minTime;
@@ -186,7 +187,7 @@ namespace TimeLine
         private void Paste(KeyframeSaveData keyframe, Track track, TrackObjectData trackObject, double minTimeSelected)
         {
             (OutputLogic item1, List<IInitializedNode> item2) =
-                _saveNodes.LoadLogicOnly(keyframe.Graph, TypeToDataType.Convert(keyframe.Data));
+                _saveNodes.LoadLogicOnly(keyframe.GraphNew, TypeToDataType.Convert(keyframe.Data));
             Keyframe.Keyframe loadedKeyframe = Keyframe.Keyframe.FromSaveData(keyframe, item1, item2);
             var difference = keyframe.Ticks - minTimeSelected;
             loadedKeyframe.Ticks = TimeLineConverter.Instance.TicksCurrentTime() - trackObject.GetGlobalTicksPosition() +
