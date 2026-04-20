@@ -26,6 +26,8 @@ namespace TimeLine.LevelEditor.SelectBox
         private M_SelectBoxState _state = new();
         private M_SelectBoxDelta _delta = new();
 
+        private List<TrackObjectPacket> allObjects;
+        private List<TrackObjectPacket> selectedObjects = new List<TrackObjectPacket>();
 
         [Inject]
         private void Constructor(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
@@ -39,12 +41,10 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent selectBox) => { _state.IsActive = false; });
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent deselectBox) => { _state.IsActive = true; });
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent all) => { _state.IsActive = true; });
-            _gameEventBus.SubscribeTo((ref TrackObjectResizing all) =>
-            {
-                _state.IsActive = all.IsResizing == false && _state.IsActive; });
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => { _state.IsActive = false; });
+            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => { _state.IsActive = true; });
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => { _state.IsActive = true; });
+            _gameEventBus.SubscribeTo((ref TrackObjectResizing all) => { _state.IsActive = all.IsResizing == false && _state.IsActive; });
         }
 
         private void Update()
@@ -107,6 +107,8 @@ namespace TimeLine.LevelEditor.SelectBox
             selectBox.gameObject.SetActive(false);
             _state.IsDragging = false;
             _state.HasExceededDeadZone = false;
+            _selectObjectController.SelectMultiple(selectedObjects);
+            _selectObjectController.UpdateSelection();
         }
 
         private void SelectBoxCalculate()
@@ -124,49 +126,57 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private void UpdateSelection()
         {
+            selectedObjects.Clear();
             // Кэшируем данные, чтобы не обращаться к свойствам в каждой итерации
-            var currentSelection = _selectObjectController.SelectObjects; 
-            var allObjects = new List<TrackObjectPacket>(_trackObjectStorage.GetAllActiveTrackData());
-            // allObjects.AddRange(_trackObjectStorage.TrackObjectGroups);
-    
+            var currentSelection = _selectObjectController.SelectObjectsHash;
+            
             // Если selectBox вычисляется динамически, лучше сохранить его в переменную
-            var box = selectBox; 
+            var box = selectBox;
+
+            allObjects = _trackObjectStorage.GetAllActiveTrackData();
+
+            
+            // Получаем 4 угла рамки выделения в мировых координатах
+            box.GetWorldCorners(_selectionCorners);
 
             foreach (var trackObject in allObjects)
             {
                 bool isInside = CheckIsSelected(trackObject.components.View.GetRectTransform(), box);
                 bool isAlreadySelected = currentSelection.Contains(trackObject);
 
+
                 if (isInside && !isAlreadySelected)
                 {
-                    _selectObjectController.SelectNoClear(trackObject);
+                    selectedObjects.Add(trackObject);
+                    // trackObject.components.View.SetColor(Color.yellow);
+                    _selectObjectController.SelectNoClearNoEvent(trackObject);
                 }
                 else if (!isInside && isAlreadySelected)
                 {
-                    _selectObjectController.Deselect(trackObject);
+                    selectedObjects.Remove(trackObject);
+                    _selectObjectController.DeselectVihoutEvent(trackObject);
                 }
             }
         }
 
+        private readonly Vector3[] _targetCorners = new Vector3[4];
+        private readonly Vector3[] _selectionCorners = new Vector3[4];
+
         private bool CheckIsSelected(RectTransform target, RectTransform selectionBox)
         {
             // Получаем 4 угла целевого объекта в мировых координатах
-            Vector3[] targetCorners = new Vector3[4];
-            target.GetWorldCorners(targetCorners);
+            target.GetWorldCorners(_targetCorners);
 
-            // Получаем 4 угла рамки выделения в мировых координатах
-            Vector3[] selectionCorners = new Vector3[4];
-            selectionBox.GetWorldCorners(selectionCorners);
 
             // Создаем Bounds (границы) для рамки
             // Минимальный угол [0], Максимальный угол [2]
-            Bounds selectionBounds = new Bounds(selectionCorners[0], Vector3.zero);
-            selectionBounds.Encapsulate(selectionCorners[2]);
+            Bounds selectionBounds = new Bounds(_selectionCorners[0], Vector3.zero);
+            selectionBounds.Encapsulate(_selectionCorners[2]);
 
             // Проверяем, попадает ли центр или углы цели в границы рамки
             // Для точности лучше проверить, пересекаются ли Bounds
-            Bounds targetBounds = new Bounds(targetCorners[0], Vector3.zero);
-            targetBounds.Encapsulate(targetCorners[2]);
+            Bounds targetBounds = new Bounds(_targetCorners[0], Vector3.zero);
+            targetBounds.Encapsulate(_targetCorners[2]);
 
             return selectionBounds.Intersects(targetBounds);
         }

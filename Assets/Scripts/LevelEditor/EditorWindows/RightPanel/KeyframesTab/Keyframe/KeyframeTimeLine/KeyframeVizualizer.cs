@@ -117,7 +117,11 @@ namespace TimeLine
 
             _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => Build());
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
+            {
+                if(data.UpdateVisual)
+                    Build();
+            });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) =>
             {
 

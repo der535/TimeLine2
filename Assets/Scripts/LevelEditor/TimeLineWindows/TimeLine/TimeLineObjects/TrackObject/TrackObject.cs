@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
 using TimeLine.EventBus.Events.KeyframeTimeLine;
@@ -7,6 +8,7 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Installers;
 using TimeLine.Keyframe;
 using TimeLine.LevelEditor.Core;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Zenject;
@@ -63,6 +65,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _timeLineScroll = timeLineScroll;
             _keyframeTrackStorage = keyframeTrackStorage;
             _selectObjectController = selectObjectController;
+            _actionMap = actionMap;
         }
 
         internal void Setup(TrackObjectData trackObjectData, ITrackObjectView View, TrackObjectState state)
@@ -75,8 +78,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _state = state;
             _trackObjectView = View;
             _trackObjectView.Rename(trackObjectData.Name);
-            _data.OnChangeDuration += _ => UpdateVisuals();
+            _data.OnChangeDuration += _ =>
+            {
+                _gameEventBus.Raise(new TrackObjectChangeDuractionEvent());
+                UpdateVisuals();
+            };
 
+            
+            
             UpdateVisuals();
         }
 
@@ -117,12 +126,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                 }
             }
         }
-        
-                
+
+
         public void ApplyKeyframeOffset()
         {
             double offset = Math.Round(_data.StartTimeInTicks - _state.InitialStartTimeInTicks);
-            Debug.Log(offset);
+            // Debug.Log(offset);
             if (offset != 0)
             {
                 foreach (var node in _trackObjectStorage.GetTrackObjectData(this).branch.Nodes)
@@ -159,25 +168,23 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _data.StartTimeInTicks = newStartTimeInTicks;
             _data.ChangeDurationInTicks(newDurationInTicks);
         }
-        
-        
+
 
         public void RightResize(double duraction)
         {
             _data.ChangeDurationInTicks(
                 Math.Max(RoundTicksToGrid(duraction), 1));
         }
-        
+
         public void LeftResize(double startTime)
         {
             var endTime = _data.StartTimeInTicks + _data.TimeDurationInTicks;
             var newDuraction = endTime - startTime;
             var duractionDelta = _data.TimeDurationInTicks - newDuraction;
-            
+
             _data.StartTimeInTicks = startTime;
             _data.ChangeDurationInTicks(newDuraction);
             ApplyKeyframeOffset(duractionDelta);
-
         }
 
         public void Tick()
@@ -309,15 +316,13 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             Vector2 currentMousePos = GetMousePosition();
             float currentMouseXLocal = currentMousePos.x;
             float mouseDeltaXLocal = currentMouseXLocal - _state.StartMouseXLocal;
-            double deltaTicks = AnchorPositionDeltaToTicks(mouseDeltaXLocal);
+            double deltaTicks = RoundTicksToGrid(AnchorPositionDeltaToTicks(mouseDeltaXLocal));
             if (Mathf.Abs(mouseDeltaXLocal) < _deathZone && _state.DeathZonePass == false)
             {
                 return;
             }
-            else
-            {
-                _state.DeathZonePass = true;
-            }
+            else _state.DeathZonePass = true;
+
 
             int oldIndex = _data.TrackLineIndex;
             _data.TrackLineIndex = _trackStorage.CheckTracks(_data.TrackLineIndex);
@@ -325,9 +330,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             if (oldIndex != -1 && newIndex != -1 && Mathf.Abs(oldIndex - newIndex) > 0)
                 _selectObjectController.MultipleChangeTrackLine(this, oldIndex - newIndex);
 
-            _selectObjectController.MultipleMove(this, deltaTicks);
-            _data.StartTimeInTicks = RoundTicksToGrid(_state.StartTrackObjectTicks + deltaTicks);
-            _trackObjectStorage.UpdatePositionSelectedTrackObject();
+            _selectObjectController.MultipleMove(null, deltaTicks);
+            var targetPosition = _state.StartTrackObjectTicks + deltaTicks;
+
+
+            // _data.StartTimeInTicks = PositionBinding(targetPosition, _data);
+
+
+            // _trackObjectStorage.UpdatePositionSelectedTrackObject();
 
             double AnchorPositionDeltaToTicks(float deltaAnchorPosition)
             {
@@ -335,6 +345,53 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                 float beatsDelta = deltaAnchorPosition / pixelsPerBeat;
                 return beatsDelta * TimeLineConverter.TICKS_PER_BEAT;
             }
+        }
+
+
+        internal double PositionBinding(double position, TrackObjectData self)
+        {
+            if(!_actionMap.Editor.LeftShift.IsPressed()) return position;
+            // 1. Задаем желаемый визуальный радиус в пикселях (например, 10-15 пикселей)
+            float visualPixelRadius = 15f; 
+
+            // 2. Рассчитываем, сколько пикселей сейчас занимает один бит
+            // Важно: используем ту же формулу, что в UpdateVisuals
+            float pixelsPerBeat = _timeLineSettings.DistanceBetweenBeatLines + _timeLineScroll.Zoom;
+
+            // 3. Конвертируем пиксели в тики
+            // Формула: (Пиксели / ПикселиНаБит) * ТиковВБите
+            double bindRadiusInTicks = (visualPixelRadius / pixelsPerBeat) * TimeLineConverter.TICKS_PER_BEAT;
+            
+            List<TrackObjectPacket> packets = new List<TrackObjectPacket>();
+            
+            packets.AddRange(_trackObjectStorage.TrackObjects);
+            packets.AddRange(_trackObjectStorage.TrackObjectGroups);
+
+            foreach (var trackObject in packets)
+            {
+                var otherData = trackObject.components.Data;
+        
+                // Пропускаем самого себя
+                if (otherData == self) continue;
+
+                // Проверяем дистанцию в тиках, используя динамический радиус
+                double distance = math.abs(otherData.StartTimeInTicks - position);
+        
+                if (distance <= bindRadiusInTicks) 
+                {
+                    // Возвращаем позицию объекта, к которому магнетимся
+                    return otherData.StartTimeInTicks;
+                }
+        
+                // Также можно добавить проверку примагничивания к КОНЦУ объекта
+                double endPosition = otherData.StartTimeInTicks + otherData.TimeDurationInTicks;
+                if (math.abs(endPosition - position) <= bindRadiusInTicks)
+                {
+                    return endPosition;
+                }
+            }
+
+            return position;
         }
 
         internal void AddTicksMove(double deltaTicks)

@@ -10,6 +10,7 @@ namespace TimeLine.LevelEditor.CutTrackObject
 {
     public class CutTrackObjectController : MonoBehaviour
     {
+        [SerializeField] private WindowsFocus _windowsFocus;
         SelectObjectController _selectObjectController;
         ActionMap _actionMap;
         M_PlaybackState _playbackState;
@@ -29,6 +30,8 @@ namespace TimeLine.LevelEditor.CutTrackObject
         {
             _actionMap.Editor.CutRight.started += context =>
             {
+                if(!_windowsFocus.IsFocused) return;
+                
                 foreach (var trackObject in _selectObjectController.SelectObjects)
                 {
                     var endPosition = trackObject.components.Data.TimeDurationInTicks +
@@ -59,6 +62,8 @@ namespace TimeLine.LevelEditor.CutTrackObject
 
             _actionMap.Editor.CutLeft.started += context =>
             {
+                if(!_windowsFocus.IsFocused) return;
+                
                 foreach (var trackObject in _selectObjectController.SelectObjects)
                 {
                     if (trackObject is TrackObjectGroup _)

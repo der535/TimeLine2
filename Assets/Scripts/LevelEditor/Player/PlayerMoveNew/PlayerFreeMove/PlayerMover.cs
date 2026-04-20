@@ -18,13 +18,13 @@ namespace TimeLine.LevelEditor.Player.PlayerMoveNew.PlayerFreeMove
         public float dashDuraction = 1;
         private float currentSpeed;
         private bool _isDashing;
-        
+
         private PlayerComponents _playerComponents;
         private PlayerInputView _playerInputView;
         [SerializeField] DashAnimation _dashAnimation;
-
         private Action<Vector2> _onMovePerformed;
         private Vector2 _savedVelocity;
+        private Vector2 _moveVector;
 
         [Inject]
         private void Construct(PlayerComponents playerComponents, PlayerInputView playerInputView)
@@ -36,7 +36,7 @@ namespace TimeLine.LevelEditor.Player.PlayerMoveNew.PlayerFreeMove
         private void Start()
         {
             currentSpeed = speed;
-            
+
             _playerInputView.OnSpacePerformed += () =>
             {
                 currentSpeed = dashSpeed;
@@ -53,30 +53,36 @@ namespace TimeLine.LevelEditor.Player.PlayerMoveNew.PlayerFreeMove
                 });
                 _onMovePerformed.Invoke(_savedVelocity);
             };
-            
+
             _onMovePerformed += vector2 =>
             {
                 if (!_playerComponents.PlayerInitialized) return;
                 EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-                
-                var moveVector = vector2 * currentSpeed;
+
+                _moveVector = vector2 * currentSpeed;
                 _savedVelocity = vector2;
 
                 LocalTransform localTransform = entityManager.GetComponentData<LocalTransform>(_playerComponents.Player);
                 localTransform.Position.z = zposition;
                 entityManager.SetComponentData(_playerComponents.Player, localTransform);
-                
-                if (entityManager.HasComponent<PhysicsVelocity>(_playerComponents.Player))
-                {
-                    entityManager.SetComponentData(_playerComponents.Player, new PhysicsVelocity
-                    {
-                        Linear = new float3(moveVector.x, moveVector.y, 0),
-                        Angular = float3.zero
-                    });
-                }
             };
 
             _playerInputView.OnMovePerformed += _onMovePerformed;
+        }
+
+        private void Update()
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+
+            if (entityManager.HasComponent<PhysicsVelocity>(_playerComponents.Player))
+            {
+                entityManager.SetComponentData(_playerComponents.Player, new PhysicsVelocity
+                {
+                    Linear = new float3(_moveVector.x, _moveVector.y, 0),
+                    Angular = float3.zero
+                });
+            }
         }
     }
 }

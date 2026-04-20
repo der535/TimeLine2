@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using Unity.Entities;

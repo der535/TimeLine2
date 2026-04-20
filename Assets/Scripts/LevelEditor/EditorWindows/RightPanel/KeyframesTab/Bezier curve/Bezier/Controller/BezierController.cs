@@ -19,7 +19,7 @@ namespace TimeLine
     public class BezierController : MonoBehaviour
     {
         [SerializeField] private BezierPoint bizerPrefab;
-        
+
 
         [FormerlySerializedAs("timeLineKeyframeScroll")]
         [FormerlySerializedAs("_timeLineKeyframeScroll")]
@@ -62,16 +62,49 @@ namespace TimeLine
             _verticalZoom = verticalZoom;
         }
 
+        public void TangleUpdate(Vector2 deltaTangent, BezierDragPoint self, bool isRight)
+        {
+            foreach (var point in _keyframeSelectedStorage.Keyframes)
+            {
+                var bezeir = _activeBezierPoints.GetFromKeyframe(point);
+
+                if (isRight)
+                {
+                    if (bezeir.NextKey != null)
+                        bezeir.BezierDragPoint.UpdateTangent(bezeir.BezierDragPoint.tangentRight, bezeir.NextKey, true,
+                            deltaTangent, self);
+                }
+                else
+                {
+                    if (bezeir.PrevKey != null)
+                        bezeir.BezierDragPoint.UpdateTangent(bezeir.BezierDragPoint.tangentLeft, bezeir.PrevKey, false,
+                            deltaTangent, self);
+                }
+            }
+            
+            // Внутри BezierDragPoint.Update()
+            // if (_isDraggingTangleRight)
+            // {
+            //     UpdateTangent(tangentRight, bezierPoint.NextKey, true);
+            // }
+            //
+            // if (_isDraggingTangleLeft)
+            // {
+            //     UpdateTangent(tangentLeft, bezierPoint.PrevKey, false);
+            // }
+        }
+
         private void Start()
         {
             _lineDrawer?.ClearLines();
 
-            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) =>
-            {
-                Build();
-            }, -1);
+            _gameEventBus.SubscribeTo((ref AddKeyframeEvent _) => { Build(); }, -1);
             _gameEventBus.SubscribeTo((ref RemoveKeyframeEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => Build());
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
+            {
+                if(data.UpdateVisual)
+                    Build();
+            });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) =>
             {
                 _activeBezierPoints.Value.Clear();
@@ -87,11 +120,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollBezier _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ZoomBezier _) => UpdatePositions());
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) =>
-            {
-                
-                Clear();
-            });
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => { Clear(); });
             _gameEventBus.SubscribeTo((ref KeyframeTypeChangeEvent data) =>
             {
                 ActiveKeyframes(data.ActiveType == M_KeyframeType.Bezier);
@@ -169,7 +198,7 @@ namespace TimeLine
         private void Build()
         {
             // selectPointsController.Deselect();
-            
+
             if (!_active || !gameObject.activeInHierarchy)
             {
                 return;
@@ -294,7 +323,7 @@ namespace TimeLine
         private void Clear()
         {
             _activeBezierPoints.Value.Clear();
-            
+
             foreach (var group in groupPoints)
             {
                 foreach (var point in group)
@@ -349,7 +378,7 @@ namespace TimeLine
                     // Обновляем X-позицию
                     float positionX =
                         TimeLineConverter.Instance.TicksToPositionX(keyframeData.Ticks, timeLineKeyframeZoom.Zoom) +
-                       _keyframeReferences.rootObjects.offsetMin.x;
+                        _keyframeReferences.rootObjects.offsetMin.x;
 
                     // Обновляем Y-позицию
                     float scrollFactor = _verticalZoom.Zoom;

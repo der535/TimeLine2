@@ -17,6 +17,11 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public bool IsResizingDown;
         public bool IsRotating;
         public bool IsDragging;
+
+        public bool GetIsEditingObject()
+        {
+            return IsResizingRight || IsResizingLeft || IsResizingUp || IsResizingDown || IsRotating || IsDragging;
+        }
         
         public float4x4 WorldToPivotMatrix; // Матрица перевода из мира в пространство рамки
         public float4x4 PivotToWorldMatrix; // Матрица обратно

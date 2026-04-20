@@ -89,6 +89,10 @@ namespace TimeLine.LevelEditor.SelectBox
 
                 _state.IsActive = false;
             });
+            _gameEventBus.SubscribeTo((ref DragTangentEvent data) =>
+            {
+                _state.IsActive = !data.IsDraging;
+            });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent deselectBox) => { _state.IsActive = false; });
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent all) => { _state.IsActive = false; });
         }

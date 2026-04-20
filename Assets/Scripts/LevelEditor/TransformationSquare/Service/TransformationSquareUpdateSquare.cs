@@ -31,8 +31,8 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
 
             // Создаем матрицу, которая "обнуляет" поворот для расчетов
             // Мы берем позицию центра активного объекта и его поворот
-            var PivotToWorldMatrix = float4x4.TRS(activeLT.Position, activeLT.Rotation, new float3(1));
-            var WorldToPivotMatrix  = math.inverse(PivotToWorldMatrix);
+            var pivotToWorldMatrix = float4x4.TRS(activeLT.Position, activeLT.Rotation, new float3(1));
+            var worldToPivotMatrix  = math.inverse(pivotToWorldMatrix);
             
             
             float3 min = new float3(float.MaxValue);
@@ -50,7 +50,7 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
                 foreach (var wc in worldCorners)
                 {
                     // Переводим мировой угол в локальное пространство нашей рамки
-                    float3 localP = math.transform(WorldToPivotMatrix, wc);
+                    float3 localP = math.transform(worldToPivotMatrix, wc);
 
                     min = math.min(min, localP);
                     max = math.max(max, localP);
@@ -59,8 +59,8 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
             
             if (writeRecaculatedPitot)
             {
-                _data.PivotToWorldMatrix = PivotToWorldMatrix;
-                _data.WorldToPivotMatrix = WorldToPivotMatrix;
+                _data.PivotToWorldMatrix = pivotToWorldMatrix;
+                _data.WorldToPivotMatrix = worldToPivotMatrix;
                 _data.CurrentLocalMin = min; // Сохраняем вычисленный min
                 _data.CurrentLocalMax = max; // Сохраняем вычисленный max
             }
@@ -82,7 +82,7 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
 
             for (int i = 0; i < 4; i++)
             {
-                float3 worldP = math.transform(PivotToWorldMatrix, obbCorners[i]);
+                float3 worldP = math.transform(pivotToWorldMatrix, obbCorners[i]);
                 uiPoints[i] = _sceneToRawImageConverter.WorldToUIAnchoredPosition(worldP, rectTrans);
             }
 

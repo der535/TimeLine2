@@ -16,7 +16,6 @@ public class GraphSaveData
     public List<NodeSaveEntry> Nodes = new();
     public List<ConnectionSaveEntry> Connections = new();
     
-    public MapParameterComponen mapParameterComponen;
 }
 
 [System.Serializable]

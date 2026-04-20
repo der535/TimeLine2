@@ -144,6 +144,7 @@ namespace TimeLine.LevelEditor.Save
             _loadingScreenController.StartLoading();
         }
 
+
         private void LoadLevelObjects()
         {
             string path = $"{Application.persistentDataPath}/Levels/{ LevelBaseInfoStorage.levelBaseInfo.levelName}/LevelObjects.json";
@@ -152,6 +153,8 @@ namespace TimeLine.LevelEditor.Save
             string json = File.ReadAllText(path);
             var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
             
+            // SaveDataRestorer.RestoreAllGraphs(saveLevelDto);
+            // Debug.Log("Восстановлено");
             
 
             Stopwatch sw = new Stopwatch();

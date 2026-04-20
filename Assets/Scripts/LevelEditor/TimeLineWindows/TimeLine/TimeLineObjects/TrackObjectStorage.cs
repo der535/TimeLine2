@@ -160,7 +160,7 @@ namespace TimeLine
                     return objectData;
                 }
             }
-            
+
 
             Debug.LogWarning($"Не найден объект {id}");
             return null;
@@ -196,7 +196,7 @@ namespace TimeLine
                 }
 
                 manager.SetComponentEnabled<EntityActiveTag>(entity, true);
-                manager.SetComponentData(entity, new EntityActiveTag(){IsActive = true});
+                manager.SetComponentData(entity, new EntityActiveTag() { IsActive = true });
                 manager.AddComponent<ActivatingRequestTag>(entity);
             }
             else
@@ -208,7 +208,7 @@ namespace TimeLine
                 }
 
                 manager.SetComponentEnabled<EntityActiveTag>(entity, false);
-                manager.SetComponentData(entity, new EntityActiveTag(){IsActive = false});
+                manager.SetComponentData(entity, new EntityActiveTag() { IsActive = false });
                 manager.AddComponent<DeactivatingRequestTag>(entity);
             }
         }
@@ -339,10 +339,7 @@ namespace TimeLine
             foreach (var track in trackObjectDatas)
             {
                 track.components.Data.GroupOffsetTrack(trackObject);
-                trackObject.TrackObject.Rezise += (value) =>
-                {
-                    track.components.Data.GroupOffset(value);
-                };
+                trackObject.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
             }
 
             _composition.AddComposition(group);
@@ -451,6 +448,27 @@ namespace TimeLine
 
             //Debug.LogWarning($"[GetTrackObjectData] No TrackObjectData found for GameObject: {gObject.name}");
             return null;
+        }
+
+        /// <summary>
+        /// Возвращает абсолютно все TrackObjectPacket
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public List<TrackObjectPacket> GetAllTrackObjectPacket(TrackObjectGroup group)
+        {
+            List<TrackObjectPacket> childs = new List<TrackObjectPacket>();
+
+            childs.Add(group);
+            foreach (var VARIABLE in group.TrackObjectDatas)
+            {
+                childs.Add(VARIABLE);
+                if (VARIABLE is TrackObjectGroup trackObjectPacket)
+                {
+                    childs.AddRange(GetAllTrackObjectPacket(trackObjectPacket));
+                }
+            }
+            return childs;
         }
 
 
@@ -748,7 +766,7 @@ namespace TimeLine
                 {
                     if (data is TrackObjectGroup group)
                         remover.ListRemove(group);
-                    else 
+                    else
                         remover.SingleRemoveNoStorage(data);
                 }
 
@@ -808,13 +826,10 @@ namespace TimeLine
                 entityManager.GetComponentData<CompositionPositionOffsetData>(entity).Offset);
 
             components.TrackObject.Rezise = null;
-            
+
             foreach (var track in TrackObjectDatas)
             {
-                components.TrackObject.Rezise += (value) =>
-                {
-                    track.components.Data.GroupOffset(value);
-                };
+                components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
             }
         }
 

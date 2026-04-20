@@ -1,4 +1,6 @@
 ﻿using System;
+using EventBus;
+using TimeLine.EventBus.Events.Bezier;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Core.MusicData;
@@ -16,8 +18,8 @@ namespace TimeLine
         [SerializeField] private BezierPoint bezierPoint;
         [SerializeField] private BezierPointTangleLineDrawer bezierPointTangleLineDrawer;
         [Space] [SerializeField] private RectTransform rectTransform;
-        [SerializeField] private RectTransform tangentLeft;
-        [SerializeField] private RectTransform tangentRight;
+        [SerializeField] public RectTransform tangentLeft;
+        [SerializeField] public RectTransform tangentRight;
 
         private TimeLineKeyframeZoom _timeLineKeyframeZoom;
         private VerticalBezierZoom _verticalBezierZoom;
@@ -29,11 +31,13 @@ namespace TimeLine
         private BezierSelectPointsController _bezierSelectPointsController;
         private Main _main;
         private M_MusicData _musicData;
+        private ActionMap _actionMap;
 
         private Vector2 _startMousePosition;
         private Vector2 _startObjectPosition;
         private Action _sortKeyframes;
 
+        private GameEventBus _gameEventBus;
         private GridUI _gridUI;
         private bool _isDragging;
         private bool _isDraggingTangleLeft;
@@ -53,7 +57,7 @@ namespace TimeLine
             BezierController bezierController,
             TimeLineSettings timeLineSettings,
             Main main,
-            BezierSelectPointsController bezierSelectPointsController, M_MusicData musicData)
+            BezierSelectPointsController bezierSelectPointsController, M_MusicData musicData, GameEventBus gameEventBus, ActionMap actionMap)
         {
             _gridUI = gridUI;
             _mainObjects = mainObject;
@@ -62,10 +66,12 @@ namespace TimeLine
             _verticalBezierZoom = verticalBezierZoom;
             _bezierLineDrawer = bezierLineDrawer;
             _bezierController = bezierController;
+            _actionMap = actionMap;
             _timeLineSettings = timeLineSettings;
             _main = main;
             _bezierSelectPointsController = bezierSelectPointsController;
             _musicData = musicData;
+            _gameEventBus = gameEventBus;
         }
 
         public void Setup(Keyframe.Keyframe keyframe, Keyframe.Keyframe original, Action sortKeyframes)
@@ -99,14 +105,16 @@ namespace TimeLine
             _startMousePosition = GetMousePosition();
             _startObjectPosition = rectTransform.anchoredPosition;
         }
-
+        
         public void DragTangentLeftPoint(bool drag)
         {
+            _gameEventBus.Raise(new DragTangentEvent(drag));
             _isDraggingTangleLeft = drag;
         }
 
         public void DragTangentRightPoint(bool drag)
         {
+            _gameEventBus.Raise(new DragTangentEvent(drag));
             _isDraggingTangleRight = drag;
         }
 
@@ -178,75 +186,123 @@ namespace TimeLine
             // Внутри BezierDragPoint.Update()
             if (_isDraggingTangleRight)
             {
-                Vector2 localMousePos = GetMousePosition(rectTransform);
-                Vector2 newPosition = localMousePos; // Прямое позиционирование вместо сложных вычислений
-
-                // ===== ИСПРАВЛЕННЫЕ ОГРАНИЧЕНИЯ =====
-                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeZoom.Zoom;
-                float bpmFactor = _musicData.bpm / 60f;
-
-                // Минимальное смещение (0.1f) остаётся
-                newPosition.x = Mathf.Max(0.1f, newPosition.x);
-
-                // Максимальное смещение в пикселях для правого уса
-                double nextTimeSec = _timeLineConverter.TicksToSeconds(bezierPoint.NextKey.Ticks);
-                double currentTimeSec = _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
-                double deltaTimeSec = nextTimeSec - currentTimeSec;
-                float maxX = (float)(deltaTimeSec * pan * bpmFactor); // Правильный расчёт максимума
-
-                newPosition.x = Mathf.Min(maxX, newPosition.x);
-                tangentRight.anchoredPosition = newPosition;
-
-                // ===== ИСПРАВЛЕННЫЕ ВЫЧИСЛЕНИЯ =====
-                float outTimeOffset = newPosition.x / (pan * bpmFactor); // Время в секундах
-                float outValueOffset = newPosition.y / _verticalBezierZoom.Zoom; // Значение в юнитах
-
-                // Вес: отношение смещения к общему времени
-                _keyframe.OutWeight = Mathf.Clamp01((float)(outTimeOffset / deltaTimeSec));
-                _original.OutWeight = Mathf.Clamp01((float)(outTimeOffset / deltaTimeSec));
-
-                // Тангенс: отношение изменения значения ко времени
-                _keyframe.OutTangent = outValueOffset / outTimeOffset; // Без деления на deltaTime!
-                _original.OutTangent = outValueOffset / outTimeOffset;
-
-                // Обновление визуала
-                _bezierLineDrawer.UpdateBezierCurve();
-                bezierPointTangleLineDrawer.UpdatePosition();
+                UpdateTangent(tangentRight, bezierPoint.NextKey, true);
             }
 
             if (_isDraggingTangleLeft)
             {
-                Vector2 localMousePos = GetMousePosition(rectTransform);
-                Vector2 newPosition = localMousePos;
-
-                float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeZoom.Zoom;
-                float bpmFactor = _musicData.bpm / 60f;
-
-                // Для левого уса: координаты отрицательные
-                newPosition.x = Mathf.Min(-0.1f, newPosition.x); // Максимум -0.1f (ближе к нулю)
-
-                double prevTimeSec = _timeLineConverter.TicksToSeconds(bezierPoint.PrevKey.Ticks);
-                double currentTimeSec = _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
-                double deltaTimeSec = currentTimeSec - prevTimeSec;
-                float maxX = (float)(deltaTimeSec * pan * bpmFactor); // Максимальное смещение по модулю
-
-                newPosition.x = Mathf.Max(-maxX, newPosition.x); // Ограничение по модулю
-                tangentLeft.anchoredPosition = newPosition;
-
-                // ===== ОСОБЕННОСТИ ЛЕВОГО УСА =====
-                // В Setup(): x = -(inTimeOffset * pan * bpmFactor)
-                float inTimeOffset = -newPosition.x / (pan * bpmFactor); // Делаем положительным
-                float inValueOffset = -newPosition.y / _verticalBezierZoom.Zoom; // Знак зависит от направления
-
-                _keyframe.InWeight = Mathf.Clamp01((float)(inTimeOffset / deltaTimeSec));
-                _keyframe.InTangent = inValueOffset / inTimeOffset;
-                
-                _original.InWeight = Mathf.Clamp01((float)(inTimeOffset / deltaTimeSec));
-                _original.InTangent = inValueOffset / inTimeOffset;
-
-                _bezierLineDrawer.UpdateBezierCurve();
-                bezierPointTangleLineDrawer.UpdatePosition();
+                UpdateTangent(tangentLeft, bezierPoint.PrevKey, false);
             }
+        }
+        private void UpdateTangent(RectTransform tangentTransform, Keyframe.Keyframe goalKey,  bool isRight)
+        {
+            Vector2 localMousePos = GetMousePosition(rectTransform);
+            Vector2 newPosition = localMousePos;
+
+            float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeZoom.Zoom;
+            float bpmFactor = _musicData.bpm / 60f;
+            float unitsPerPixel = pan * bpmFactor;
+
+            // Расчет временных интервалов
+            double targetTimeSec = _timeLineConverter.TicksToSeconds(goalKey.Ticks);
+            double currentTimeSec = _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
+            double deltaTimeSec = Math.Abs(targetTimeSec - currentTimeSec);
+            float maxX = (float)(deltaTimeSec * unitsPerPixel);
+
+            // Ограничения и нормализация направления
+            if (isRight)
+            {
+                newPosition.x = Mathf.Clamp(newPosition.x, 0.1f, maxX);
+            }
+            else
+            {
+                newPosition.x = Mathf.Clamp(newPosition.x, -maxX, -0.1f);
+            }
+            
+            if(_actionMap.Editor.LeftShift.IsPressed())
+                _bezierController.TangleUpdate(tangentTransform.anchoredPosition-newPosition, this, isRight);
+            
+            tangentTransform.anchoredPosition = newPosition;
+
+            // Расчет смещений (делаем их абсолютными для времени, чтобы избежать путаницы со знаками)
+            float absTimeOffset = Mathf.Abs(newPosition.x) / unitsPerPixel;
+            float valueOffset = isRight ? newPosition.y : -newPosition.y; 
+            float verticalZoom = _verticalBezierZoom.Zoom;
+
+            float weight = Mathf.Clamp01((float)(absTimeOffset / deltaTimeSec));
+            float tangent = (valueOffset / verticalZoom) / absTimeOffset;
+
+            // Применяем значения
+            if (isRight)
+            {
+                _keyframe.OutWeight = _original.OutWeight = weight;
+                _keyframe.OutTangent = _original.OutTangent = tangent;
+            }
+            else
+            {
+                _keyframe.InWeight = _original.InWeight = weight;
+                _keyframe.InTangent = _original.InTangent = tangent;
+            }
+
+            // Обновление визуала
+            _bezierLineDrawer.UpdateBezierCurve();
+            bezierPointTangleLineDrawer.UpdatePosition();
+        }
+        
+        
+        public void UpdateTangent(RectTransform tangentTransform, Keyframe.Keyframe goalKey, bool isRight, Vector2 deltaTangent, BezierDragPoint self)
+        {
+            if(self == this) return;
+            
+            Vector2 newPosition = tangentTransform.anchoredPosition - deltaTangent;
+
+            float pan = _timeLineSettings.DistanceBetweenBeatLines + _timeLineKeyframeZoom.Zoom;
+            float bpmFactor = _musicData.bpm / 60f;
+            float unitsPerPixel = pan * bpmFactor;
+
+            Debug.Log(goalKey);
+            Debug.Log(goalKey.Ticks);
+            // Расчет временных интервалов
+            double targetTimeSec = _timeLineConverter.TicksToSeconds(goalKey.Ticks);
+            double currentTimeSec = _timeLineConverter.TicksToSeconds(_keyframe.Ticks);
+            double deltaTimeSec = Math.Abs(targetTimeSec - currentTimeSec);
+            float maxX = (float)(deltaTimeSec * unitsPerPixel);
+
+            // Ограничения и нормализация направления
+            if (isRight)
+            {
+                newPosition.x = Mathf.Clamp(newPosition.x, 0.1f, maxX);
+            }
+            else
+            {
+                newPosition.x = Mathf.Clamp(newPosition.x, -maxX, -0.1f);
+            }
+
+            tangentTransform.anchoredPosition = newPosition;
+
+            // Расчет смещений (делаем их абсолютными для времени, чтобы избежать путаницы со знаками)
+            float absTimeOffset = Mathf.Abs(newPosition.x) / unitsPerPixel;
+            float valueOffset = isRight ? newPosition.y : -newPosition.y; 
+            float verticalZoom = _verticalBezierZoom.Zoom;
+
+            float weight = Mathf.Clamp01((float)(absTimeOffset / deltaTimeSec));
+            float tangent = (valueOffset / verticalZoom) / absTimeOffset;
+
+            // Применяем значения
+            if (isRight)
+            {
+                _keyframe.OutWeight = _original.OutWeight = weight;
+                _keyframe.OutTangent = _original.OutTangent = tangent;
+            }
+            else
+            {
+                _keyframe.InWeight = _original.InWeight = weight;
+                _keyframe.InTangent = _original.InTangent = tangent;
+            }
+
+            // Обновление визуала
+            _bezierLineDrawer.UpdateBezierCurve();
+            bezierPointTangleLineDrawer.UpdatePosition();
         }
     }
 }

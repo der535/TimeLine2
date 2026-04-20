@@ -20,6 +20,8 @@ namespace TimeLine.LevelEditor.SpriteLoader
         private SpriteParameter _spriteParameter;
         private TextureData _textureData;
 
+        public string GetName() => name.text;
+
         [Inject]
         private void Constructor(GameEventBus gameEventBus)
         {

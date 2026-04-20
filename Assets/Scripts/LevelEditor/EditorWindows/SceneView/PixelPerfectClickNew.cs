@@ -1,16 +1,15 @@
-using System;
 using System.Collections.Generic;
-using System.Linq; // Добавлено для сортировки
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Zenject;
 using EventBus;
-using EventBus.Events;
 using TimeLine;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ECS.Components;
 using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using TimeLine.LevelEditor.TransformationSquare;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
@@ -28,22 +27,25 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
     private GameEventBus _gameEventBus;
     private EntityManager _entityManager;
     private EntityComponentController _entityComponentController;
+    private TransformationSquareController _transformationSquareController;
 
 
     // Поля для логики циклического выделения
-    private List<TrackObjectPacket> _hitsAtLastPosition = new List<TrackObjectPacket>();
+    private List<Entity> _hitsAtLastPosition = new List<Entity>();
     private int _lastSelectedIndex = -1;
 
     [Inject]
     void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController,
         GameEventBus gameEventBus, C_EditColliderState cEditColliderState,
-        EntityComponentController entityComponentController)
+        EntityComponentController entityComponentController,
+        TransformationSquareController transformationSquareController)
     {
         _trackObjectStorage = trackObjectStorage;
         _selectObjectController = selectObjectController;
         _gameEventBus = gameEventBus;
         _cEditColliderState = cEditColliderState;
         _entityComponentController = entityComponentController;
+        _transformationSquareController = transformationSquareController;
     }
 
     private void Start()
@@ -53,6 +55,10 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (_transformationSquareController._activeToll)
+        {
+            if(_transformationSquareController.CheckIsEditing()) return;
+        }
         if (selectBoxScene.gameObject.activeSelf || _cEditColliderState.GetState()) return;
         if (eventData.button != PointerEventData.InputButton.Left) return;
 
@@ -83,7 +89,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         // 3. Переводим координаты мыши в мировые
         mouseWorldPos.z = 0;
 
-        Entity selectedEntity = Entity.Null;
+        List<Entity> selectedEntity = new List<Entity>();
 
         // 4. Получаем доступ к запросу всех объектов с LocalToWorld
         // В MonoBehaviour мы используем EntityManager.GetAllEntities или EntityQuery
@@ -106,8 +112,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
             if (localMousePos.x >= -halfSize.x && localMousePos.x <= halfSize.x &&
                 localMousePos.y >= -halfSize.y && localMousePos.y <= halfSize.y)
             {
-                selectedEntity = entities[i];
-                break; // Нашли объект
+                selectedEntity.Add(entities[i]);
             }
         }
 
@@ -115,33 +120,83 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         entities.Dispose();
         transforms.Dispose();
 
-        if (selectedEntity != Entity.Null)
-        {
-            if (_entityComponentController.CheckComponentAvailability(selectedEntity, ComponentNames.SpriteRenderer))
-            {
-                Material currentMat = null;
-                if (_entityManager.HasComponent<MaterialMeshInfo>(selectedEntity))
-                {
-                    RenderMeshArray rma = _entityManager.GetSharedComponentManaged<RenderMeshArray>(selectedEntity);
-                    var meshInfo = _entityManager.GetComponentData<MaterialMeshInfo>(selectedEntity);
+        SortList(selectedEntity);
 
-                    // Получаем текущий материал  
-                    currentMat = rma.GetMaterial(meshInfo);
-                    if (IsPixelOpaque(selectedEntity, mouseWorldPos, (Texture2D)currentMat.mainTexture))
-                    {
-                        foreach (var VARIABLE in _trackObjectStorage.GetAllActiveTrackData())
-                        {
-                            if (VARIABLE.entity == selectedEntity)
-                            {
-                                _selectObjectController.SelectMultiple(VARIABLE);
-                            }
-                        }
-                        
-                        Debug.Log($"текстура: {selectedEntity}");
-                    }
-                }
-            }
+        if (selectedEntity.Count <= 0)
+        {
+            _selectObjectController.DeselectAll(); //Снимает все выделения
+            _hitsAtLastPosition.Clear();
+            return;
         }
+
+        bool isOneEntitySelected = false;
+
+        Debug.Log(selectedEntity.Count);
+
+        foreach (var entity in selectedEntity)
+        {
+            Entity parent = GetAllParents(em, entity);
+            
+            if (_hitsAtLastPosition.Contains(parent)) continue; // Проверяем начилие MaterialMeshInfo
+            if (!em.HasComponent(parent, typeof(EntityActiveTag))) continue; // Проверяем начилие EntityActiveTag
+            if (em.GetComponentData<EntityActiveTag>(parent).IsActive == false) continue; // Проверяем активность существа
+            if (!_entityComponentController.CheckComponentAvailability(entity, ComponentNames.SpriteRenderer)) continue; // Проверяем начилие SpriteRenderer
+            if (!_entityManager.HasComponent<MaterialMeshInfo>(entity)) continue; // Проверяем начилие MaterialMeshInfo
+
+            Material currentMat = null;
+            RenderMeshArray rma = _entityManager.GetSharedComponentManaged<RenderMeshArray>(entity);
+            var meshInfo = _entityManager.GetComponentData<MaterialMeshInfo>(entity);
+            currentMat = rma.GetMaterial(meshInfo);
+
+            if (!IsPixelOpaque(entity, mouseWorldPos, (Texture2D)currentMat.mainTexture)) continue; // Проверяем попадаем ли мы в непрозрачный пиксель
+
+            Debug.Log(_trackObjectStorage.GetTrackObjectData(entity).branch.Name);
+
+            
+
+            _selectObjectController.SelectMultiple(_trackObjectStorage.GetTrackObjectData(parent));
+            _hitsAtLastPosition.Add(parent);
+            isOneEntitySelected = true;
+            break;
+        }
+
+        if (isOneEntitySelected == false)
+        {
+            _selectObjectController.DeselectAll(); //Снимает все выделения
+            _hitsAtLastPosition.Clear();
+        }
+    }
+
+    public Entity GetAllParents(EntityManager entityManager, Entity entity)
+    {
+        Entity parent = entity;
+
+        // Проверяем, есть ли у сущности компонент Parent
+        while (entityManager.HasComponent<Parent>(entity))
+        {
+            // Получаем родителя
+            entity = entityManager.GetComponentData<Parent>(entity).Value;
+
+            Debug.Log(entityManager.HasComponent(entity, typeof(EntityActiveTag)));
+
+            parent = entity;
+        }
+
+
+        return parent;
+    }
+
+    public void SortList(List<Entity> entities)
+    {
+        EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+        // Сортируем по возрастанию Z
+        entities.Sort((a, b) =>
+        {
+            float zA = entityManager.GetComponentData<LocalToWorld>(a).Position.z;
+            float zB = entityManager.GetComponentData<LocalToWorld>(b).Position.z;
+            return zA.CompareTo(zB);
+        });
     }
 
     public bool IsPixelOpaque(Entity entity, float3 worldPos, Texture2D tex)

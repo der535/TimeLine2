@@ -18,7 +18,7 @@ namespace TimeLine
 
         [FormerlySerializedAs("timeLineKeyframeScroll")] [SerializeField]
         private TimeLineKeyframeZoom timeLineKeyframeZoom;
-        
+
         private GameEventBus _gameEventBus;
         private TimeLineSettings _timeLineSettings;
         private TrackObjectData _trackObjectData;
@@ -35,9 +35,13 @@ namespace TimeLine
         private void Awake()
         {
             _gameEventBus.SubscribeTo<TickSmoothTimeEvent>(OnTimeChangedSmoothTicks);
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
+            {
+                if(data.UpdateVisual)
+                    OnSelectTrackObject(data.Tracks[^1]);
+            });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
-
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => { _trackObjectData = null;});
             _gameEventBus.SubscribeTo<DragTrackObjectEvent>(OnDragTrackObject);
             _gameEventBus.SubscribeTo(
                 (ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent data) =>

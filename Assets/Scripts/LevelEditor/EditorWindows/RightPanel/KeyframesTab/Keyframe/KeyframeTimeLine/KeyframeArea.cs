@@ -22,6 +22,7 @@ namespace TimeLine
         private MainObjects _mainObjects;
 
         private float _oldPan;
+        private TrackObjectPacket _savedTrackObjectPacket;
 
         [Inject]
         private void Construct(TimeLineSettings settings,
@@ -35,7 +36,12 @@ namespace TimeLine
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => OnSelectTrackObject(data.Tracks[^1]));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
+            {
+                if(data.UpdateVisual)
+                    OnSelectTrackObject(data.Tracks[^1]);
+            });
+            _gameEventBus.SubscribeTo((ref TrackObjectChangeDuractionEvent data) => OnSelectTrackObject(_savedTrackObjectPacket));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
             _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => OnSelectTrackObject(_selectedTrackObjectPacket));
             
@@ -46,14 +52,16 @@ namespace TimeLine
         public void OnSelectTrackObject(TrackObjectPacket trackObjectPacket)
         {
             if (trackObjectPacket == null) return;
+            
             _selectedTrackObjectPacket = trackObjectPacket;
-          
+            _savedTrackObjectPacket = trackObjectPacket;
 
             UpdateArea((float)(trackObjectPacket.components.Data.TimeDurationInTicks / TimeLineConverter.TICKS_PER_BEAT));
         }
 
         private void Clear()
         {
+            _savedTrackObjectPacket = null;
             _selectedTrackObjectPacket = null;
             UpdateArea(0);
         }

@@ -21,6 +21,7 @@ using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Keyfra
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeTimeLine.KeyframeSelect;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.KeyframeType;
 using TimeLine.LevelEditor.EditorWindows.SceneView.Outline;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.GeneralEditor;
 using TimeLine.LevelEditor.InspectorTab.Components.EdgeCollider;
@@ -141,6 +142,7 @@ namespace TimeLine.LevelEditor.Core
         private void InstallUI()
         {
             Container.BindInstance(ui.ScrollTimeLineKeyframe).AsSingle();
+            Container.BindInstance(ui.TabStorage).AsSingle();
             Container.BindInstance(ui.SaveButtonAnimation).AsSingle();
             Container.BindInstance(ui.LoadingScreenController).AsSingle();
             Container.BindInstance(ui.TreeViewUI).AsSingle();
@@ -265,6 +267,7 @@ namespace TimeLine.LevelEditor.Core
     public class UIReferences
     {
         public ScrollTimeLineKeyframe ScrollTimeLineKeyframe;
+        public TabStorage TabStorage;
         public SaveButtonAnimation SaveButtonAnimation;
         public LoadingScreenController LoadingScreenController;
         public TreeViewUI TreeViewUI;

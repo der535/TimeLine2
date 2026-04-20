@@ -91,7 +91,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Components
                 {
                     // Получаем буфер (массив) детей
                     DynamicBuffer<Child> children = entityManager.GetBuffer<Child>(_selectedEntity);
-                    Debug.Log(children.Length);
+                    // Debug.Log(children.Length);
 
                     ObjectPositionOffsetData offsetData =
                         entityManager

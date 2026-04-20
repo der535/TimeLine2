@@ -182,7 +182,7 @@ namespace TimeLine.LevelEditor.Core
         }
 
         internal (Vector2 position, bool isInside) GetMousePosition(RectTransform rectTransformParentObject,
-            Camera camera)
+            UnityEngine.Camera camera)
         {
             Vector2 mousePos = UnityEngine.Input.mousePosition;
 

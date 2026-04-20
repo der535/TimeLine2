@@ -18,6 +18,7 @@ using TimeLine.LevelEditor.ValueEditor.Save;
 using TimeLine.LevelEditor.ValueEditor.Test;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 using Zenject;
 
 namespace TimeLine
@@ -29,6 +30,7 @@ namespace TimeLine
         [FormerlySerializedAs("keyframeSelectStorage")] [SerializeField]
         private KeyframeSelectController keyframeSelectController;
 
+        [SerializeField] private TabButton tabButton;
         [SerializeField] private KeyframeTrackStorage trackStorage;
         [SerializeField] private WindowsFocus windowsFocus;
 
@@ -45,6 +47,7 @@ namespace TimeLine
         private DiContainer _container;
         private KeyframeTrackStorage _keyframeTrackStorage;
         private EntityComponentController _entityComponentController;
+        private TabStorage _tabStorage;
 
         private List<(KeyframeSaveData, Track)> copyKeyframes = new();
         private double minTime;
@@ -54,7 +57,7 @@ namespace TimeLine
             KeyframeSelectedStorage selectedKeyframesStorage, KeyframeVizualizer keyframeVizualizer,
             M_KeyframeActiveTypeData mKeyframeActiveTypeData, SaveNodes saveNodes,
             TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController, DiContainer container,
-            KeyframeTrackStorage keyframeTrackStorage, EntityComponentController entityComponentController)
+            KeyframeTrackStorage keyframeTrackStorage, EntityComponentController entityComponentController, TabStorage tabStorage)
         {
             _mKeyframeActiveTypeData = mKeyframeActiveTypeData;
             _gameEventBus = eventBus;
@@ -67,6 +70,7 @@ namespace TimeLine
             _container = container;
             _keyframeTrackStorage = keyframeTrackStorage;
             _entityComponentController = entityComponentController;
+            _tabStorage = tabStorage;
         }
 
         private void Start()
@@ -108,6 +112,9 @@ namespace TimeLine
 
             _actionMap.Editor.V.started += _ =>
             {
+                Debug.Log(tabButton);
+                Debug.Log(_tabStorage.GetActiveTab().tabButton);
+                if (tabButton == _tabStorage.GetActiveTab().tabButton) return;
                 if (_actionMap.Editor.LeftCtrl.IsPressed() &&
                     windowsFocus.IsFocused &&
                     _trackObjectStorage.selectedObject != null &&
@@ -116,7 +123,7 @@ namespace TimeLine
                 {
                     CheckComponents();
                     CheckBranch();
-                    
+
                     foreach (var keyframe in copyKeyframes)
                     {
                         Paste(keyframe.Item1, keyframe.Item2, _trackObjectStorage.selectedObject.components.Data, minTime);
@@ -128,7 +135,7 @@ namespace TimeLine
         private void CheckComponents()
         {
             foreach (var keyframe in copyKeyframes)
-            { 
+            {
                 ComponentNames name = Keyframe.Keyframe.CreateEntityAnimationData(keyframe.Item1.DataType)
                     .GetComponentType();
 

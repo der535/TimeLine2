@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.SpriteLoader;

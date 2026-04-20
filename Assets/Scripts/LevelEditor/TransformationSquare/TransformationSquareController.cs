@@ -10,10 +10,12 @@ using TimeLine.LevelEditor.ECS;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TransformationSquare.Service;
+using TMPro;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 namespace TimeLine.LevelEditor.TransformationSquare
@@ -22,6 +24,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
     {
         [SerializeField] private TransformationSquareView view;
         private TransformationSquareData _data = new();
+        public RawImage mapImage;
 
         private TransformationSquareMouseDistanceCheck _mouseDistanceCheck;
         private TransformationSquareMousePosition _mousePosition;
@@ -33,13 +36,28 @@ namespace TimeLine.LevelEditor.TransformationSquare
         private CameraReferences _cameraReferences;
         private CursorController _cursorController;
         private ActionMap _actionMap;
-        private List<Entity> _selectedEntits = new List<Entity>();
+        private List<Entity> _selectedEntits = new();
+
+        public bool isEditing;
 
         public Action OnStopPositionY;
         public Action OnStopPositionX;
         public Action OnStopScaleX;
         public Action OnStopScaleY;
         public Action OnStopRotation;
+
+        public bool _activeToll = false;
+
+        /// <summary>
+        /// Делается упор на то что метод будет вызываться в момент отжатия мыши и так как isEditing будет true он никогда не будет false пока дважды не сделаешь проверку
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckIsEditing()
+        {
+            var saved = isEditing;
+            isEditing = false;
+            return saved;
+        }
 
         [Inject]
         private void Construct(SceneToRawImageConverter sceneToRawImageConverter, GameEventBus eventBus,
@@ -54,6 +72,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
         private void Awake()
         {
+            view.SetActive(false);
             _mousePosition = new TransformationSquareMousePosition(view, _cameraReferences);
             _mouseDistanceCheck =
                 new TransformationSquareMouseDistanceCheck(_mousePosition, _data, _sceneToRawImageConverter);
@@ -65,29 +84,42 @@ namespace TimeLine.LevelEditor.TransformationSquare
         {
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
-                _selectedEntits = data.Tracks.Select(x => x.entity).ToList();
-                _updateSquare.UpdateGroupOBB(data.Tracks.Select(x => x.entity).ToList());
+                if (data.UpdateVisual)
+                {
+                    if(_activeToll) view.SetActive(true);
+                    _selectedEntits = data.Tracks.Select(x => x.entity).ToList();
+                    _updateSquare.UpdateGroupOBB(data.Tracks.Select(x => x.entity).ToList());
+                    _mouseClick.UpdateSelectedEntities(_selectedEntits);
+                }
+
             });
-            
+
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
             {
                 _selectedEntits = data.SelectedObjects.Select(x => x.entity).ToList();
                 _updateSquare.UpdateGroupOBB(data.SelectedObjects.Select(x => x.entity).ToList());
+                _mouseClick.UpdateSelectedEntities(_selectedEntits);
             });
 
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
             {
+                view.SetActive(false);
                 _selectedEntits.Clear();
+                _mouseClick.UpdateSelectedEntities(_selectedEntits);
             });
-            
+
             _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) =>
             {
                 _updateSquare.UpdateGroupOBB(_data._selectedEntities.Select(x => x.Entity).ToList(), true);
             });
 
-            _actionMap.Editor.MouseLeft.started += context =>
+            _actionMap.Editor.MouseLeft.started += _ =>
             {
+                _mouseClick.UpdateSelectedEntities(_selectedEntits);
+
                 _mouseClick.Click(_selectedEntits);
+
+                if (_data.GetIsEditingObject()) isEditing = true;
             };
 
             _actionMap.Editor.MouseLeft.canceled += _ =>
@@ -128,21 +160,40 @@ namespace TimeLine.LevelEditor.TransformationSquare
                         OnStopRotation?.Invoke();
                     }
                 }
-                
+
                 _data.IsResizingRight = false;
                 _data.IsResizingLeft = false;
                 _data.IsResizingUp = false;
                 _data.IsResizingDown = false;
                 _data.IsRotating = false;
                 _data.IsDragging = false;
-                
+
                 _updateSquare.UpdateGroupOBB(_selectedEntits);
             };
+
+            _mouseClick.UpdateSelectedEntities(_selectedEntits);
         }
 
 
         private void Update()
         {
+            if (view.GetActive() == false) return;
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    mapImage.rectTransform, UnityEngine.Input.mousePosition, _cameraReferences.editUICamera,
+                    out Vector2 localPoint))
+                return;
+
+// Проверяем, попадает ли точка в фактический размер прямоугольника
+            if (!mapImage.rectTransform.rect.Contains(localPoint) && !_data.GetIsEditingObject())
+            {
+                // Мышь за пределами границ картинки
+                return;
+            }
+
+// Если дошли сюда — мышь внутри!
+
+
             if (_mouseDistanceCheck.RightLine() || _mouseDistanceCheck.LeftLine())
                 _cursorController.SetResizeHorizontal();
             else if (_mouseDistanceCheck.UpBorder() || _mouseDistanceCheck.MouseInResizeAreaDown())
@@ -249,8 +300,11 @@ namespace TimeLine.LevelEditor.TransformationSquare
                     float3 newWorldPos = snap.InitialWorldPos + moveDelta;
 
                     var lt = em.GetComponentData<LocalTransform>(snap.Entity);
-                    lt.Position = newWorldPos;
+                    var pd = em.GetComponentData<PositionData>(snap.Entity);
+                    lt.Position = new float3(newWorldPos.x, newWorldPos.y, lt.Position.z);
+                    pd.Position = new float2(newWorldPos.x, newWorldPos.y);
                     em.SetComponentData(snap.Entity, lt);
+                    em.SetComponentData(snap.Entity, pd);
                 }
 
                 // ВАЖНО: Прибавление moveDelta к центру должно быть после коррекции
@@ -363,6 +417,18 @@ namespace TimeLine.LevelEditor.TransformationSquare
             }
 
             _updateSquare.UpdateGroupOBB(_selectedEntits, false);
+        }
+
+        public void EnableTool()
+        {
+            _activeToll = true;
+            view.SetActive(true);
+        }
+
+        public void DisableTool()
+        {
+            _activeToll = false;
+            view.SetActive(false);
         }
     }
 }

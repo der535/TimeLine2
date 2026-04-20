@@ -41,11 +41,15 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.Outline
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
-                Clear();
-                foreach (var track in data.Tracks)
+                if (data.UpdateVisual)
                 {
-                    DrawOutline(track.entity);
+                    Clear();
+                    foreach (var track in data.Tracks)
+                    {
+                        DrawOutline(track.entity);
+                    }
                 }
+                
             });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
             {

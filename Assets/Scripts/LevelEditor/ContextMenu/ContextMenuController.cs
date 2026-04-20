@@ -16,7 +16,7 @@ namespace TimeLine.LevelEditor.ContextMenu
         private RectTransform rootContent;
 
         [SerializeField] private CanvasScaler canvas;
-        [FormerlySerializedAs("camera")] [SerializeField] private Camera _camera;
+        [FormerlySerializedAs("camera")] [SerializeField] private UnityEngine.Camera _camera;
         [SerializeField] private ContextMenuItemData contextMenuButton;
 
         private List<ContextMenuItemData> _buttons = new();

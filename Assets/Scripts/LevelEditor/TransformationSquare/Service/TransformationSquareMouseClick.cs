@@ -35,23 +35,14 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
 
             return center / entities.Count;
         }
-        
-        public void Click(List<Entity> selectedEntity)
+
+        public void UpdateSelectedEntities(List<Entity> entities)
         {
-            if( selectedEntity == null) return;
-            
-            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            
-            
-            float3 mouseWorld = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
-            // Угол от центра группы до мышки
-            _data.InitialMouseAngle = math.atan2(mouseWorld.y - _data.GroupCenter.y, mouseWorld.x - _data.GroupCenter.x);
-
-            _data.LastMousePosition = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
-
             _data._selectedEntities.Clear();
             
-            foreach (var entity in selectedEntity)
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            foreach (var entity in entities)
             {
                 var lt = entityManager.GetComponentData<LocalTransform>(entity);
                 var ptm = entityManager.GetComponentData<PostTransformMatrix>(entity);
@@ -67,6 +58,22 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
                     InitialRotation = lt.Rotation
                 });
             }
+        }
+        
+        public void Click(List<Entity> selectedEntity)
+        {
+            if( selectedEntity == null) return;
+            
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            
+            
+            float3 mouseWorld = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
+            // Угол от центра группы до мышки
+            _data.InitialMouseAngle = math.atan2(mouseWorld.y - _data.GroupCenter.y, mouseWorld.x - _data.GroupCenter.x);
+
+            _data.LastMousePosition = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
+            
+            // UpdateSelectedEntities(selectedEntity);
             
             _data.InitialBoxSize = _data.CurrentLocalMax - _data.CurrentLocalMin;
             _data.InitialBoxLocalMin = _data.CurrentLocalMin;

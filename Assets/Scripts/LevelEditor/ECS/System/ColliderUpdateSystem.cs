@@ -62,13 +62,17 @@ public partial struct UpdateColliderSystem : ISystem
                 filter = CollisionFilter.Default;
             }
             
+            if (colliderRef.ValueRO.Value.IsCreated)
+            {
+                colliderRef.ValueRW.Value.Dispose();
+            }
+            
             // Создаем новый. 
             // УДАЛЯЕМ ручной .Dispose() старого colliderRef.ValueRO.Value!
             // Unity сама очистит память, когда вы перезапишете ссылку ниже.
             var newCollider = BoxCollider.Create(geometry, filter, material);
-
-            // Присваиваем новую ссылку
             colliderRef.ValueRW.Value = newCollider;
+            
 
             // Логика тега опасности
             bool hasTag = SystemAPI.HasComponent<DangerousObjectTag>(entity);
@@ -127,12 +131,17 @@ public partial struct UpdateCircleColliderSystem : ISystem
             {
                 filter = CollisionFilter.Default;
             }
-            // 1. Создаем НОВЫЙ BlobAsset
+            
+            if (colliderRef.ValueRO.Value.IsCreated)
+            {
+                colliderRef.ValueRW.Value.Dispose();
+            }
+
             var newCollider = Unity.Physics.SphereCollider.Create(geometry, filter, material);
-
-
-            // 3. Присваиваем новый
             colliderRef.ValueRW.Value = newCollider;
+
+
+
             
             bool hasTag = SystemAPI.HasComponent<DangerousObjectTag>(entity);
             if (circleColliderTag.ValueRO.isDangerous && !hasTag)
@@ -167,17 +176,20 @@ public partial struct UpdatePolygonColliderSystem : ISystem
                 collider.ValueRW.Value.Dispose();
             }
 
-            var points = tag.ValueRO.PointsReference.Value.Points.ToArray();
-            float3[] scaledPoints = new float3[points.Length];
+            ref var pointsBlob = ref tag.ValueRO.PointsReference.Value.Points;
+            int pointsCount = pointsBlob.Length;
 
-            for (int i = 0; i < points.Length; i++)
+// Создаем Native массивы на 1 кадр (Temp аллокатор очень быстрый и не трогает GC)
+            var scaledPoints = new NativeArray<float3>(pointsCount, Allocator.Temp);
+            var triangles = new NativeList<int>(Allocator.Temp); // Используем NativeList для результата
+
+            for (int i = 0; i < pointsCount; i++)
             {
-                scaledPoints[i] = new float3(points[i].x * scale.x, points[i].y * scale.y, 0);
+                scaledPoints[i] = new float3(pointsBlob[i].x * scale.x, pointsBlob[i].y * scale.y, 0);
             }
 
-            // ВАЖНО: Здесь вам нужно получить индексы треугольников (триангуляция).
-            // Это массив индексов точек из scaledPoints, которые образуют треугольники (по 3 на каждый).
-            int[] triangles = TriangulatePolygon(scaledPoints);
+// Передаем Native коллекции
+            TriangulatePolygon(scaledPoints, ref triangles);
 
             
             
@@ -202,13 +214,20 @@ public partial struct UpdatePolygonColliderSystem : ISystem
                 ecb.AddComponent<DangerousObjectTag>(entity);
             else if (!tag.ValueRO.IsDangerous && hasTag)
                 ecb.RemoveComponent<DangerousObjectTag>(entity);
+            
+            scaledPoints.Dispose();
+            triangles.Dispose();
         }
         
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
     }
 
-    public BlobAssetReference<Collider> InstallConcaveMesh(float3[] points, int[] triangles2D, bool isTrigger, CollisionFilter colliderFilter)
+    public BlobAssetReference<Collider> InstallConcaveMesh(
+        NativeArray<float3> points, 
+        NativeList<int> triangles2D, 
+        bool isTrigger, 
+        CollisionFilter colliderFilter)
     {
         int pointCount = points.Length;
         int triangleCount2D = triangles2D.Length / 3;
@@ -289,58 +308,50 @@ public partial struct UpdatePolygonColliderSystem : ISystem
         return newCollider;
     }
 
-    private int[] TriangulatePolygon(float3[] points)
+    private void TriangulatePolygon(NativeArray<float3> points, ref NativeList<int> indices)
     {
-        List<int> indices = new List<int>();
         int n = points.Length;
-        if (n < 3) return indices.ToArray();
+        if (n < 3) return;
 
-        // Создаем список индексов точек
-        List<int> indexList = new List<int>();
+        // Используем NativeList с Allocator.Temp. Обертка using сама вызовет Dispose().
+        using var indexList = new NativeList<int>(n, Allocator.Temp);
         for (int i = 0; i < n; i++) indexList.Add(i);
 
-        // Проверяем направление обхода (нужно CCW или CW для корректной логики)
         bool isClockwise = IsPolygonClockwise(points);
 
         int iterations = 0;
-        while (indexList.Count > 3)
+        while (indexList.Length > 3)
         {
             bool earFound = false;
 
-            for (int i = 0; i < indexList.Count; i++)
+            for (int i = 0; i < indexList.Length; i++)
             {
-                int prev = indexList[(i + indexList.Count - 1) % indexList.Count];
+                int prev = indexList[(i + indexList.Length - 1) % indexList.Length];
                 int curr = indexList[i];
-                int next = indexList[(i + 1) % indexList.Count];
+                int next = indexList[(i + 1) % indexList.Length];
 
                 if (IsEar(prev, curr, next, points, indexList, isClockwise))
                 {
-                    // Нашли ухо — записываем треугольник
                     indices.Add(prev);
                     indices.Add(curr);
                     indices.Add(next);
 
-                    // Удаляем вершину уха
                     indexList.RemoveAt(i);
                     earFound = true;
                     break;
                 }
             }
 
-            // Страховка от бесконечного цикла (если геометрия сломана)
             iterations++;
             if (!earFound || iterations > n * n) break;
         }
 
-        // Добавляем последний оставшийся треугольник
         indices.Add(indexList[0]);
         indices.Add(indexList[1]);
         indices.Add(indexList[2]);
-
-        return indices.ToArray();
     }
 
-    private bool IsEar(int p, int c, int n, float3[] points, List<int> indexList, bool isClockwise)
+    private bool IsEar(int p, int c, int n, NativeArray<float3> points, NativeList<int> indexList, bool isClockwise)
     {
         float2 a = points[p].xy;
         float2 b = points[c].xy;
@@ -353,7 +364,7 @@ public partial struct UpdatePolygonColliderSystem : ISystem
         if (!isConvex) return false;
 
         // 2. Проверяем, нет ли других точек внутри этого треугольника
-        for (int i = 0; i < indexList.Count; i++)
+        for (int i = 0; i < indexList.Length; i++)
         {
             int index = indexList[i];
             if (index == p || index == c || index == n) continue;
@@ -372,7 +383,7 @@ public partial struct UpdatePolygonColliderSystem : ISystem
         return s > 0 && t > 0 && (1 - s - t) > 0;
     }
 
-    private bool IsPolygonClockwise(float3[] points)
+    private bool IsPolygonClockwise(NativeArray<float3> points)
     {
         float sum = 0;
         for (int i = 0; i < points.Length; i++)

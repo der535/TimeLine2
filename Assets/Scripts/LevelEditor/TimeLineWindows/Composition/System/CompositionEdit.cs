@@ -88,6 +88,7 @@ namespace TimeLine
 
             compositionUpdater.UpdateCompositions(trackObjectGroup.compositionID);
             _gameEventBus.Raise(new EndCompositionEdit());
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
     }
 }

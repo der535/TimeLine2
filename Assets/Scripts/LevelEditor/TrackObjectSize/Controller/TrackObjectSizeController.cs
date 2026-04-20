@@ -25,7 +25,8 @@ namespace TimeLine.LevelEditor.TrackObjectSize.Controller
             _data.SetTicks(TimeLineConverter.TICKS_PER_BEAT);
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
-                _data.SetTicks(data.Tracks[^1].components.Data.TimeDurationInTicks);
+               if(data.UpdateVisual) 
+                    _data.SetTicks(data.Tracks[^1].components.Data.TimeDurationInTicks);
             });
         }
     }

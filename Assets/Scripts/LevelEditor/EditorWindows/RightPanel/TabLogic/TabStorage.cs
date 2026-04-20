@@ -24,6 +24,7 @@ namespace TimeLine
            }
            tabs[0].tabButton.Selected();
            tabs[0].tabPanel.SetActive(true);
+           _currentTab = tabs[0];
        }
 
        private void Setup(TabData tabData)
@@ -37,6 +38,7 @@ namespace TimeLine
                }
                tabData.tabButton.Selected();
                tabData.tabPanel.SetActive(true);
+               _currentTab = tabData;
            });
        }
 

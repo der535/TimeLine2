@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Core;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Rendering;
+using Unity.Transforms;
 using UnityEngine;
 using Zenject;
 
@@ -25,6 +29,7 @@ namespace TimeLine.LevelEditor.SelectBox
         private M_SelectBoxState _state = new();
         private M_SelectBoxDelta _delta = new();
 
+        private HashSet<TrackObjectPacket> _ignoredPacketsDuringCurrentDrag = new HashSet<TrackObjectPacket>();
 
         [Inject]
         private void Constructor(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
@@ -93,15 +98,88 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private void StartMove()
         {
-            // Только инициализируем данные, но рамку пока не включаем
             _state.CursorIsInside = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).isInside;
+            if (!_state.CursorIsInside) return; // Если клик вне рабочей зоны, ничего не делаем
 
             _state.IsDragging = true;
             _state.HasExceededDeadZone = false;
             _state.StartPosition = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
-            _delta.startDelta = _sceneToRawImageConverter.ScreenPointToWorldScene(_state.StartPosition);
+    
+            // Позиция клика в мировых координатах сцены
+            Vector2 worldClickPos = _sceneToRawImageConverter.ScreenPointToWorldScene(UnityEngine.Input.mousePosition);
+            startPositionOnScene = worldClickPos;
 
-            startPositionOnScene = _sceneToRawImageConverter.ScreenPointToWorldScene(UnityEngine.Input.mousePosition);
+            // Очищаем старые игнорируемые объекты
+            _ignoredPacketsDuringCurrentDrag.Clear();
+
+            // Находим все объекты, в которые мы "попали" при клике
+            var allActiveObjects = _trackObjectStorage.GetAllActiveSceneObjects();
+            FillIgnoreList(allActiveObjects, worldClickPos);
+        }
+        // Рекурсивно ищем, по кому мы кликнули в самом начале
+        private void FillIgnoreList(List<TrackObjectPacket> list, Vector3 worldPos)
+        {
+            foreach (var packet in list)
+            {
+                if (packet is TrackObjectGroup group)
+                {
+                    // Если мы кликнули хотя бы в одного ребенка группы, 
+                    // вся группа должна быть проигнорирована
+                    bool clickedInsideGroup = false;
+                    foreach (var child in group.TrackObjectDatas)
+                    {
+                        if (CheckIsPointInside(child.entity, worldPos))
+                        {
+                            clickedInsideGroup = true;
+                            break;
+                        }
+                    }
+            
+                    if (clickedInsideGroup)
+                        _ignoredPacketsDuringCurrentDrag.Add(group);
+                    else 
+                        FillIgnoreList(group.TrackObjectDatas, worldPos); // Идем глубже, если группа большая
+                }
+                else
+                {
+                    if (CheckIsPointInside(packet.entity, worldPos))
+                    {
+                        _ignoredPacketsDuringCurrentDrag.Add(packet);
+                    }
+                }
+            }
+        }
+        
+        private bool CheckIsPointInside(Entity entity, float3 worldPos)
+        {
+            EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
+            if (!em.HasComponent<LocalToWorld>(entity)) return false;
+
+            var ltw = em.GetComponentData<LocalToWorld>(entity).Value;
+            float4x4 worldToLocal = math.inverse(ltw);
+            float3 localPos = math.transform(worldToLocal, worldPos);
+
+            // Проверка границ (0.5f - стандартный размер)
+            if (localPos.x < -0.5f || localPos.x > 0.5f || localPos.y < -0.5f || localPos.y > 0.5f)
+                return false;
+
+            // Проверка альфа-канала (опционально, но лучше оставить для точности)
+            if (em.HasComponent<MaterialMeshInfo>(entity))
+            {
+                RenderMeshArray rma = em.GetSharedComponentManaged<RenderMeshArray>(entity);
+                var meshInfo = em.GetComponentData<MaterialMeshInfo>(entity);
+                Material mat = rma.GetMaterial(meshInfo);
+                Texture2D tex = mat.mainTexture as Texture2D;
+
+                if (tex != null)
+                {
+                    float u = localPos.x + 0.5f;
+                    float v = localPos.y + 0.5f;
+                    return tex.GetPixel((int)(u * tex.width), (int)(v * tex.height)).a > 0.1f;
+                }
+            }
+
+            return true;
         }
 
         private void EndMove()
@@ -109,6 +187,10 @@ namespace TimeLine.LevelEditor.SelectBox
             selectBox.gameObject.SetActive(false);
             _state.IsDragging = false;
             _state.HasExceededDeadZone = false;
+    
+            // Очищаем список после завершения выделения
+            _ignoredPacketsDuringCurrentDrag.Clear();
+            _selectObjectController.UpdateSelection();
         }
 
         private void SelectBoxCalculate()
@@ -123,100 +205,212 @@ namespace TimeLine.LevelEditor.SelectBox
                                           TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera)
                                               .position) / 2;
         }
-
-        private void UpdateSelection() //Логика подсчёта выделенных объектов
+        
+        private void UpdateSelection()
         {
-            Check(_trackObjectStorage.GetAllActiveSceneObjects());
-        }
+            // Получаем все корневые объекты сцены (верхний уровень)
+            var allObjects = _trackObjectStorage.GetAllActiveSceneObjects();
 
-        private void Check(List<TrackObjectPacket> list, TrackObjectPacket parentGroup = null)
-        {
-            foreach (var data in list)
+            foreach (var topLevelObject in allObjects)
             {
-                if (data is TrackObjectGroup group)
+                // Спрашиваем: пересекается ли этот объект ИЛИ любой из его потомков с рамкой?
+                bool isHit = IsPacketIntersecting(topLevelObject);
+
+                if (isHit)
                 {
-                    Check(group.TrackObjectDatas, parentGroup ?? group);
+                    // Если пересекается, и еще не выделен — выделяем
+                    if (!_selectObjectController.SelectObjects.Contains(topLevelObject))
+                    {
+                        _selectObjectController.DeselectVihoutEvent(topLevelObject);
+                    }
                 }
                 else
                 {
-                    var targetObject = parentGroup ?? data;
-                    if (CheckIsSelected(data.sceneObject, selectBox))
+                    // Если не пересекается НИ ОДИН элемент группы, и группа была выделена — снимаем выделение
+                    if (_selectObjectController.SelectObjects.Contains(topLevelObject))
                     {
-                        if (!_selectObjectController.SelectObjects.Contains(targetObject))
-                        {
-                            // print("group S");
-
-                            _selectObjectController.SelectNoClear(targetObject);
-                            if(parentGroup != null) break;
-                        }
-                    }
-                    else
-                    {
-                        if (_selectObjectController.SelectObjects.Contains(targetObject))
-                        {
-                            // print("group D");
-                            _selectObjectController.Deselect(targetObject);
-                        }
+                        _selectObjectController.Deselect(topLevelObject);
                     }
                 }
             }
         }
 
-        private bool CheckIsSelected(GameObject target, RectTransform selectionBox)
+// Рекурсивный метод: возвращает true, если сам объект или хотя бы один его "ребенок" попал в рамку
+        private bool IsPacketIntersecting(TrackObjectPacket packet)
         {
-            // 1. Получаем Renderer объекта (SpriteRenderer для 2D)
-            if (!target.TryGetComponent<SpriteRenderer>(out var renderer))
+            // ГЛАВНОЕ ИЗМЕНЕНИЕ: Если этот пакет в списке игнора, мы его "не видим"
+            if (_ignoredPacketsDuringCurrentDrag.Contains(packet))
             {
-                print(false);
                 return false;
             }
 
-            Renderer targetRenderer = renderer;
-
-            // 2. Получаем границы объекта в мировом 3D/2D пространстве
-            Bounds worldBounds = targetRenderer.bounds;
-
-            // 3. Находим крайние точки (Min и Max) в координатах UI
-            // Мы берем 8 углов для 3D или 4 угла для 2D, чтобы точно вычислить проекцию
-            Vector3 minWorld = worldBounds.min;
-            Vector3 maxWorld = worldBounds.max;
-
-            // Углы прямоугольника объекта в 2D мире
-            Vector3[] worldCorners = new Vector3[]
+            if (packet is TrackObjectGroup group)
             {
-                new Vector3(minWorld.x, minWorld.y, minWorld.z),
-                new Vector3(minWorld.x, maxWorld.y, minWorld.z),
-                new Vector3(maxWorld.x, minWorld.y, minWorld.z),
-                new Vector3(maxWorld.x, maxWorld.y, minWorld.z)
+                foreach (var child in group.TrackObjectDatas)
+                {
+                    if (IsPacketIntersecting(child)) return true;
+                }
+                return false;
+            }
+            else
+            {
+                return CheckIsSelected(packet.entity, selectBox);
+            }
+        }
+
+        private bool CheckIsSelected(Entity entity, RectTransform selectionBox)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            // Проверяем наличие матрицы трансформации (позиция, поворот, масштаб)
+            if (!entityManager.HasComponent<LocalToWorld>(entity)) return false;
+
+            var ltw = entityManager.GetComponentData<LocalToWorld>(entity).Value;
+
+            // 1. Получаем 4 угла Entity в его локальных координатах (как в 1-м скрипте, считаем размер 0.5f)
+            float2 halfSize = new float2(0.5f, 0.5f);
+            float3[] localCorners =
+            {
+                new float3(-halfSize.x, -halfSize.y, 0),
+                new float3(halfSize.x, -halfSize.y, 0),
+                new float3(halfSize.x, halfSize.y, 0),
+                new float3(-halfSize.x, halfSize.y, 0)
             };
 
-            float minX = float.MaxValue;
-            float maxX = float.MinValue;
-            float minY = float.MaxValue;
-            float maxY = float.MinValue;
-
-            // Проецируем каждый угол в UI пространство timeLineArea
-            foreach (var corner in worldCorners)
+            // 2. Переводим углы Entity в UI координаты пространства timeLineArea
+            Vector2[] entityUICorners = new Vector2[4];
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 uiPos = _sceneToRawImageConverter.WorldToUIAnchoredPosition(corner, timeLineArea);
-                if (uiPos.x < minX) minX = uiPos.x;
-                if (uiPos.x > maxX) maxX = uiPos.x;
-                if (uiPos.y < minY) minY = uiPos.y;
-                if (uiPos.y > maxY) maxY = uiPos.y;
+                float3 worldPos = math.transform(ltw, localCorners[i]);
+                entityUICorners[i] = _sceneToRawImageConverter.WorldToUIAnchoredPosition(worldPos, timeLineArea);
             }
 
-            // Создаем Rect, описывающий объект в пространстве UI
-            Rect objectRectInUI = new Rect(minX, minY, maxX - minX, maxY - minY);
-
-            // 4. Получаем Rect самой рамки выделения
+            // 3. Получаем Rect рамки выделения
             Rect selectionRect = selectionBox.rect;
             selectionRect.x += selectionBox.anchoredPosition.x;
             selectionRect.y += selectionBox.anchoredPosition.y;
 
-            // 5. Проверяем пересечение двух прямоугольников (Overlaps)
-            // Это вернет true, если рамка хотя бы краем задела объект
-            // print(selectionRect.Overlaps(objectRectInUI));
-            return selectionRect.Overlaps(objectRectInUI);
+            // 4. Проверяем точное пересечение (с учетом вращения) с помощью SAT
+            if (!IsPolygonIntersectingRect(entityUICorners, selectionRect))
+                return false;
+
+            // 5. Если геометрия пересекается, проверяем альфа-канал
+            return CheckAlphaInSelectionBox(entity, entityManager, selectionRect, ltw);
+        }
+
+        // --- Вспомогательный метод 1: Проверка пересечения с учетом вращения (SAT) ---
+        private bool IsPolygonIntersectingRect(Vector2[] poly, Rect rect)
+        {
+            // Шаг 1: Быстрая проверка по AABB рамки (Оси X и Y)
+            float polyMinX = float.MaxValue, polyMaxX = float.MinValue;
+            float polyMinY = float.MaxValue, polyMaxY = float.MinValue;
+
+            foreach (var p in poly)
+            {
+                if (p.x < polyMinX) polyMinX = p.x;
+                if (p.x > polyMaxX) polyMaxX = p.x;
+                if (p.y < polyMinY) polyMinY = p.y;
+                if (p.y > polyMaxY) polyMaxY = p.y;
+            }
+
+            // Если даже прямые границы не пересекаются, значит объекты точно далеко друг от друга
+            if (polyMaxX < rect.xMin || polyMinX > rect.xMax) return false;
+            if (polyMaxY < rect.yMin || polyMinY > rect.yMax) return false;
+
+            // Углы нашей UI рамки
+            Vector2[] rectCorners =
+            {
+                new Vector2(rect.xMin, rect.yMin),
+                new Vector2(rect.xMax, rect.yMin),
+                new Vector2(rect.xMax, rect.yMax),
+                new Vector2(rect.xMin, rect.yMax)
+            };
+
+            // Шаг 2: Проверка по локальным осям повернутого объекта
+            Vector2[] axes =
+            {
+                poly[1] - poly[0], // Ось X объекта
+                poly[2] - poly[1] // Ось Y объекта
+            };
+
+            foreach (var axis in axes)
+            {
+                // Перпендикуляр к оси
+                Vector2 normal = new Vector2(-axis.y, axis.x);
+
+                float minPoly = float.MaxValue, maxPoly = float.MinValue;
+                foreach (var p in poly)
+                {
+                    float proj = Vector2.Dot(normal, p);
+                    if (proj < minPoly) minPoly = proj;
+                    if (proj > maxPoly) maxPoly = proj;
+                }
+
+                float minRect = float.MaxValue, maxRect = float.MinValue;
+                foreach (var p in rectCorners)
+                {
+                    float proj = Vector2.Dot(normal, p);
+                    if (proj < minRect) minRect = proj;
+                    if (proj > maxRect) maxRect = proj;
+                }
+
+                // Если проекции не наслаиваются, значит есть "зазор" и объекты не пересекаются
+                if (maxPoly < minRect || minPoly > maxRect) return false;
+            }
+
+            return true;
+        }
+
+// --- Вспомогательный метод 2: Оптимизированная проверка альфа-канала ---
+        private bool CheckAlphaInSelectionBox(Entity entity, EntityManager em, Rect selectionRect, float4x4 ltw)
+        {
+            // Проверяем наличие нужных компонентов для текстуры
+            if (!em.HasComponent<MaterialMeshInfo>(entity)) return true; // Если нет материала, считаем выделенным по геометрии
+
+            RenderMeshArray rma = em.GetSharedComponentManaged<RenderMeshArray>(entity);
+            var meshInfo = em.GetComponentData<MaterialMeshInfo>(entity);
+            Material currentMat = rma.GetMaterial(meshInfo);
+
+            Texture2D tex = currentMat.mainTexture as Texture2D;
+            if (tex == null) return true;
+
+            // Настройка качества сэмплирования (количество точек). 
+            // 10 означает проверку 11x11 = 121 точки на спрайте. Этого достаточно для точного выделения.
+            int steps = 10;
+
+            for (int x = 0; x <= steps; x++)
+            {
+                for (int y = 0; y <= steps; y++)
+                {
+                    // UV координаты (от 0 до 1)
+                    float u = x / (float)steps;
+                    float v = y / (float)steps;
+
+                    // Вычисляем позицию пикселя в текстуре
+                    int pixelX = (int)(u * (tex.width - 1));
+                    int pixelY = (int)(v * (tex.height - 1));
+
+                    // Читаем альфу (ВАЖНО: текстура должна быть Read/Write Enabled в настройках импорта)
+                    if (tex.GetPixel(pixelX, pixelY).a > 0.1f)
+                    {
+                        // Если пиксель непрозрачный, переводим его позицию в UI и смотрим, внутри ли он рамки
+                        float localX = -0.5f + u; // от -0.5 до 0.5
+                        float localY = -0.5f + v;
+
+                        float3 worldPos = math.transform(ltw, new float3(localX, localY, 0));
+                        Vector2 uiPos = _sceneToRawImageConverter.WorldToUIAnchoredPosition(worldPos, timeLineArea);
+
+                        // Если непрозрачная точка попала в рамку — объект выделен!
+                        if (selectionRect.Contains(uiPos))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // Если рамка пересеклась только с прозрачной областью
+            return false;
         }
 
 

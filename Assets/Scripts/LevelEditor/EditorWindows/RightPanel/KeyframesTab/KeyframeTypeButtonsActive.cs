@@ -30,6 +30,7 @@ namespace TimeLine
             
             _gameEventBus.SubscribeTo((ref SelectObjectEvent ev) =>
             {
+              if( ev.UpdateVisual) 
                 foreach (var button in buttons)
                 {
                     button.enabled = true;

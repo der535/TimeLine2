@@ -5,6 +5,7 @@ using EventBus;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.Drawers;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
@@ -57,7 +58,11 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) => Draw(data.Tracks[^1].entity));
+            _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
+            {
+                if(data.UpdateVisual)
+                    Draw(data.Tracks[^1].entity);
+            });
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => Draw(data.SelectedObjects[^1].entity));
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
             _gameEventBus.SubscribeTo((ref AddComponentEvent data) => { StartCoroutine(Redraw()); }, -1);

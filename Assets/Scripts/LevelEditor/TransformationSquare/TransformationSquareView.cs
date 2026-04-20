@@ -12,5 +12,16 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public RectTransform circleLeftBottom;
         [Space] public RectTransform canvas;
         public RectTransform parentRect;
+
+        public bool GetActive() => lineRenderer.enabled;
+
+        public void SetActive(bool active)
+        {
+            lineRenderer.enabled = active;
+            circleLeftTop.gameObject.SetActive(active);
+            circleRightTop.gameObject.SetActive(active);
+            circleRightBottom.gameObject.SetActive(active);
+            circleLeftBottom.gameObject.SetActive(active);
+        }
     }
 }

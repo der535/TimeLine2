@@ -3,23 +3,29 @@ using EventBus;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position;
+using TimeLine.LevelEditor.TransformationSquare;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools
 {
     public class ToolsController : MonoBehaviour
     {
         [SerializeField] private GameObject positionTool;
         [SerializeField] private GameObject rotateTool;
         [SerializeField] private GameObject scaleTool;
-        [Space] [SerializeField] private Button positionButton;
+        [SerializeField] private GameObject squareTransformationTool;
+        [Space] 
+        [SerializeField] private Button positionButton;
         [SerializeField] private Button rotateButton;
         [SerializeField] private Button scaleButton;
-        [Space] [SerializeField] private PositionController positionController;
+        [SerializeField] private Button squareTransformationButton;
+        [Space] 
+        [SerializeField] private PositionController positionController;
         [SerializeField] private RotationController rotationController;
         [SerializeField] private ScaleController scaleController;
+        [SerializeField] private TransformationSquareController transformationSquare;
         [SerializeField] private SelectLock selectLock;
 
         public ActiveTool _activeTool;
@@ -37,7 +43,8 @@ namespace TimeLine
         {
             Position,
             Rotate,
-            Scale
+            Scale,
+            TransformationSquare,
         }
 
         [Inject]
@@ -66,12 +73,19 @@ namespace TimeLine
             rotationController.OnStopRotation += () => OnStopRotation?.Invoke();
             scaleController.OnStopScaleX += () => OnStopScaleX?.Invoke();
             scaleController.OnStopScaleY += () => OnStopScaleY?.Invoke();
+            
+            transformationSquare.OnStopPositionX+= () => OnStopPositionX?.Invoke();
+            transformationSquare.OnStopPositionY+= () => OnStopPositionY?.Invoke();
+            transformationSquare.OnStopRotation+= () => OnStopRotation?.Invoke();
+            transformationSquare.OnStopScaleX+= () => OnStopScaleX?.Invoke();
+            transformationSquare.OnStopScaleY+= () => OnStopScaleY?.Invoke();
 
 
 
             positionButton.onClick.AddListener(() => ChangeTool(ActiveTool.Position));
             rotateButton.onClick.AddListener(() => ChangeTool(ActiveTool.Rotate));
             scaleButton.onClick.AddListener(() => ChangeTool(ActiveTool.Scale));
+            squareTransformationButton.onClick.AddListener(() => ChangeTool(ActiveTool.TransformationSquare));
 
             _activeTool = ActiveTool.Position;
             _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => { SetActiveTool(); });
@@ -111,6 +125,9 @@ namespace TimeLine
                     scaleTool.SetActive(true);
                     scaleController.EnableTool();
                     break;
+                case ActiveTool.TransformationSquare:
+                    transformationSquare.EnableTool();
+                    break;
             }
         }
 
@@ -119,6 +136,7 @@ namespace TimeLine
             positionTool.SetActive(false);
             rotateTool.SetActive(false);
             scaleTool.SetActive(false);
+            transformationSquare.DisableTool();
             selectLock.IsLocked = false;
         }
     }

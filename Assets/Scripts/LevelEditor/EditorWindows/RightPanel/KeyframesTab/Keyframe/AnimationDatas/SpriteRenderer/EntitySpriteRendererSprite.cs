@@ -136,9 +136,9 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.An
                 currentMat = rma.GetMaterial(meshInfo);  
             }
 
-            Debug.Log((string)o);
+            // Debug.Log((string)o);
             
-            Debug.Log(GetSpriteName.Instance.GetSpriteFromName((string)o).texture);
+            // Debug.Log(GetSpriteName.Instance.GetSpriteFromName((string)o).texture);
             currentMat.mainTexture = GetSpriteName.Instance.GetSpriteFromName((string)o).texture;
         }
     }

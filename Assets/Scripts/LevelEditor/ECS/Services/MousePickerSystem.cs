@@ -7,7 +7,7 @@ namespace TimeLine.LevelEditor.ECS.Services
 {
     public partial class MousePickerSystem : SystemBase
     {
-        [SerializeField] private Camera mapCamera;
+        [SerializeField] private UnityEngine.Camera mapCamera;
         
         protected override void OnUpdate()
         {
@@ -15,7 +15,7 @@ namespace TimeLine.LevelEditor.ECS.Services
             if (!UnityEngine.Input.GetMouseButtonDown(0)) return;
 
             // 2. Переводим координаты мыши в мировые (для 2D)
-            float3 mouseWorldPos = Camera.main.ScreenToWorldPoint(UnityEngine.Input.mousePosition);
+            float3 mouseWorldPos = UnityEngine.Camera.main.ScreenToWorldPoint(UnityEngine.Input.mousePosition);
             mouseWorldPos.z = 0; // Обнуляем Z, так как мы в 2D
 
             Entity selectedEntity = Entity.Null;

@@ -58,7 +58,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _state.StartMouseXLocal = mousePos.x;
             _state.IsDragging = true;
             _state.DeathZonePass = false;
-            _select.StartMultipleMove(_trackObject);
+            _select.StartMultipleMove(null);
         }
 
         public void SetResizeRight(bool isResizing)
