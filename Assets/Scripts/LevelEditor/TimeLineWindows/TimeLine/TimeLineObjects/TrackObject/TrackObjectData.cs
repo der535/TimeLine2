@@ -26,10 +26,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public double StartTimeInTicks;
         public double TimeDurationInTicks;
         public double ReducedLeft;
-        public double ReducedRight;
+
+        public double ReducedRight { get; set; }
+
         public bool IsActive = true;
 
-        public TrackObjectComponents offsetObject;
+        public TrackObjectComponents OffsetObject;
         public Action<double> OnChangeDuration;
 
         public void ChangeDurationInTicks(double durationInTicks)
@@ -46,18 +48,18 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         internal void GroupOffsetTrack(TrackObjectComponents track)
         {
-            offsetObject = track;
+            OffsetObject = track;
         }
 
         internal double GetKeyframeTrackOffset()
         {
-            var current = offsetObject;
+            var current = OffsetObject;
             int depth = 0;
             const int maxDepth = 50; // защита от зависания
 
             while (current != null && depth < maxDepth)
             {
-                current = current.Data.offsetObject;
+                current = current.Data.OffsetObject;
                 depth++;
             }
 
@@ -67,16 +69,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             // Debug.Log(GetGlobalTicksPosition());
             // Debug.Log(
                 // (offsetObject != null ? offsetObject.Data.GetKeyframeTrackOffset() : 0));
-            return (offsetObject != null ? offsetObject.Data.GetKeyframeTrackOffset() : 0);
+            return (OffsetObject != null ? OffsetObject.Data.GetKeyframeTrackOffset() : 0);
         }
 
         internal double GetGlobalTicksPosition()
         {
             var start = StartTimeInTicks;
-            if (offsetObject != null)
+            if (OffsetObject != null)
             {
                 // Начинаем цепочку логов
-                double offsetResult = offsetObject.Data.GetReducedLeft(100);
+                double offsetResult = OffsetObject.Data.GetReducedLeft(100);
                 double finalResult = Math.Round(start + offsetResult);
 
                 // Debug.Log($"[Root] StartTime: {start} | OffsetResult: {offsetResult} | Final (Rounded): {finalResult}");
@@ -97,10 +99,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             // Текущие значения этого звена
             double currentLayerValue = StartTimeInTicks + ReducedLeft;
 
-            if (offsetObject != null)
+            if (OffsetObject != null)
             {
                 // Рекурсивный вызов
-                double nextLayerValue = offsetObject.Data.GetReducedLeft(depthLimit - 1);
+                double nextLayerValue = OffsetObject.Data.GetReducedLeft(depthLimit - 1);
                 double total = currentLayerValue + nextLayerValue;
 
                 // Debug.Log($"[Depth {depthLimit}] Object: {this.GetType().Name} | " +

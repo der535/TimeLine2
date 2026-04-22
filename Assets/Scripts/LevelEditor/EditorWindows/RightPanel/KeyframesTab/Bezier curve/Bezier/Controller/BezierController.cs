@@ -116,7 +116,10 @@ namespace TimeLine
                 _activeBezierPoints.Value.Clear();
                 Build();
             });
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => UpdatePositions());
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) =>
+            {
+                UpdatePositions();
+            });
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ScrollBezier _) => UpdatePositions());
             _gameEventBus.SubscribeTo((ref ZoomBezier _) => UpdatePositions());

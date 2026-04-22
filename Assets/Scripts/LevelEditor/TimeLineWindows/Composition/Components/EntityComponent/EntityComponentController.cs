@@ -59,21 +59,24 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 ComponentNames.BoxCollider, new ComponentType[]
                 {
                     typeof(PhysicsCollider),
-                    typeof(BoxColliderData)
+                    typeof(BoxColliderData),
+                    typeof(ColliderTag)
                 }
             },
             {
                 ComponentNames.CircleCollider, new ComponentType[]
                 {
                     typeof(PhysicsCollider),
-                    typeof(CircleColliderData)
+                    typeof(CircleColliderData),
+                    typeof(ColliderTag)
                 }
             },
             {
                 ComponentNames.PolygonCollider, new ComponentType[]
                 {
                     typeof(PhysicsCollider),
-                    typeof(PolygonColliderData)
+                    typeof(PolygonColliderData),
+                    typeof(ColliderTag)
                 }
             },
             {
@@ -160,15 +163,46 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             List<ComponentNames> componentNames = new List<ComponentNames>();
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             using NativeArray<ComponentType> types = entityManager.GetComponentTypes(entity);
+
             foreach (var component in _componentTypes)
             {
-                if (!CheckIfComponentTypeInList.Check(types.ToList(), component.Value.ToList()))
+                // 1. Проверяем, нет ли уже такого же компонента
+                bool alreadyHas = CheckIfComponentTypeInList.Check(types.ToList(), component.Value.ToList());
+        
+                // 2. Проверяем на конфликты (например, ColliderTag)
+                bool hasConflict = IsConflict(component.Key, types);
+
+                if (!alreadyHas && !hasConflict)
                 {
                     componentNames.Add(component.Key);
                 }
             }
 
             return componentNames;
+        }
+        
+        // Пример логики исключения
+        private bool IsConflict(ComponentNames componentToAdd, NativeArray<ComponentType> existingTypes)
+        {
+            // Список всех типов коллайдеров
+            var colliderTypes = new List<ComponentNames> { 
+                ComponentNames.BoxCollider, 
+                ComponentNames.PolygonCollider, 
+                ComponentNames.CircleCollider 
+            };
+
+            // Если мы пытаемся добавить коллайдер
+            if (colliderTypes.Contains(componentToAdd))
+            {
+                // Проверяем, есть ли уже на сущности какой-либо коллайдер или ColliderTag
+                foreach (var type in existingTypes)
+                {
+                    string typeName = type.GetManagedType().Name;
+                    // Если в списке компонентов есть ColliderTag или любой из коллайдеров
+                    if (typeName.Contains("Collider")) return true; 
+                }
+            }
+            return false;
         }
 
         internal bool CheckComponentAvailability(Entity entity, ComponentNames componentNames)

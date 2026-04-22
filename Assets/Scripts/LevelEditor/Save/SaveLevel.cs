@@ -169,7 +169,7 @@ namespace TimeLine.LevelEditor.Save
 
             sw.Stop();
 
-            Debug.Log($"Время выполнения: {sw.ElapsedMilliseconds} мс ({sw.ElapsedTicks} тиков)");
+            // Debug.Log($"Время выполнения: {sw.ElapsedMilliseconds} мс ({sw.ElapsedTicks} тиков)");
             
             // 2. Загружаем корневые ГРУППЫ в правильном порядке
             foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)

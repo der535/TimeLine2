@@ -57,6 +57,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             {
                 Value = 0
             });
+            entityManager.AddComponent<ColliderTag>(entity);
+
         }
 
         public void Remove(Entity entity)
@@ -68,6 +70,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 entityManager.RemoveComponent<PhysicsCollider>(entity);
                 entityManager.RemoveComponent<CircleColliderData>(entity);
                 entityManager.RemoveComponent<PhysicsWorldIndex>(entity);
+                entityManager.RemoveComponent<ColliderTag>(entity);
             }
         }
     }

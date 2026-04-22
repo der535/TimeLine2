@@ -51,6 +51,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             {
                 Value = 0
             });
+            entityManager.AddComponent<ColliderTag>(entity);
+
         }
 
         public BlobAssetReference<PolygonPointsBlob> CreateBlobFromPoints(NativeArray<float2> points)
@@ -101,6 +103,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
 
                 entityManager.RemoveComponent<PhysicsCollider>(entity);
             }
+
+            entityManager.RemoveComponent<ColliderTag>(entity);
         }
     }
 }

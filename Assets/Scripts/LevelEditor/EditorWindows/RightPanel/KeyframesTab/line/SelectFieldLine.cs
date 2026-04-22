@@ -1,5 +1,6 @@
 using EventBus;
 using TimeLine.EventBus.Events.Grid;
+using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.line;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -31,9 +32,9 @@ namespace TimeLine
 
         public void Deselect()
         {
-            print( image.color);
-            print( image.color);
-            print(image);
+            // print( image.color);
+            // print( image.color);
+            // print(image);
             if(image==null) return;
             image.color = deselectedColor;
         }

@@ -33,12 +33,7 @@ namespace TimeLine.Keyframe
 
         void Awake()
         {
-            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) =>
-            {
-
-                    Evaluate(data.Time);
-                
-            });
+            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) => { Evaluate(data.Time); });
         }
 
         internal List<TrackData> GetTracks() => tracks;
@@ -108,7 +103,7 @@ namespace TimeLine.Keyframe
         public void AddTrack(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId, bool updateTreeUI)
         {
             tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
-           if(updateTreeUI) _gameEventBus.Raise(new AddTrackEvent(track));
+            if (updateTreeUI) _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
         public Track GetTrack(TreeNode treeNode)
@@ -126,10 +121,8 @@ namespace TimeLine.Keyframe
             Track track = GetTrack(treeNode);
             _gameEventBus.Raise(new AddKeyframeEvent(track.AddKeyframe(time, data)));
         }
-
-       
     }
-    
+
     public class TrackData
     {
         public TrackData(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId)

@@ -19,7 +19,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             
             entityManager.AddComponentData(entity, new BoxColliderData()
             {
-                boxSize = new float3(1,1,100)
+                boxSize = new float3(1,1,1)
             });
 
             // Сделаем коробку потолще по Z для тестов (например, 1.0f)
@@ -49,6 +49,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             {
                 Value = 0
             });
+            entityManager.AddComponent<ColliderTag>(entity);
 
         }
 
@@ -95,6 +96,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
             {
                 Value = 0
             });
+            entityManager.AddComponent<ColliderTag>(entity);
 
         }
 
@@ -107,6 +109,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
                 entityManager.RemoveComponent<PhysicsCollider>(entity);
                 entityManager.RemoveComponent<BoxColliderData>(entity);
                 entityManager.RemoveComponent<PhysicsWorldIndex>(entity);
+                entityManager.RemoveComponent<ColliderTag>(entity);
             }
         }
     }

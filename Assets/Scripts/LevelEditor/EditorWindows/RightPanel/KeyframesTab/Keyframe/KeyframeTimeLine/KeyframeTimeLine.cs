@@ -46,6 +46,7 @@ namespace TimeLine
             _gameEventBus.SubscribeTo(
                 (ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent data) =>
                 {
+                    
                     if (_trackObjectData != null)
                         UpdatePosition(TimeLineConverter.Instance.TicksCurrentTime(), _trackObjectData);
                 });

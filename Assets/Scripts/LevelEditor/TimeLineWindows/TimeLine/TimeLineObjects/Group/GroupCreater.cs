@@ -105,8 +105,14 @@ namespace TimeLine
             if (_selectObjectController.SelectObjects.Count <= 0)
                 return; // Если не выбран не один объект, то группу не создаём
 
+            var minLine = int.MaxValue;
+            foreach (var objectPacket in _selectObjectController.SelectObjects)
+            {
+                if(minLine > objectPacket.components.Data.TrackLineIndex) minLine = objectPacket.components.Data.TrackLineIndex;
+            }
+            
             GameObject trackObject = _container
-                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[0].RectTransform); // Создём трекобжект группы
+                .InstantiatePrefab(trackPrefab, _trackStorage.TrackLines[minLine].RectTransform); // Создём трекобжект группы
 
             TrackObjectComponents components = new TrackObjectComponents(); // Создаём класс компонентов группы
             _container.Inject(components);
@@ -114,8 +120,8 @@ namespace TimeLine
             var (minTime, maxTime) =
                 CalculateMinAndMaxTime(_selectObjectController
                     .SelectObjects); // Cчитаем стартовое время группы и конечное время группы
-
-            TrackObjectData data = new TrackObjectData(maxTime - minTime, groupName, 0, string.Empty, minTime,
+            
+            TrackObjectData data = new TrackObjectData(maxTime - minTime, groupName, minLine, string.Empty, minTime,
                 0, 0, true); //Создаём класс данных группы
 
             components.Setup(data, trackObject.GetComponent<TrackObjectView>(),

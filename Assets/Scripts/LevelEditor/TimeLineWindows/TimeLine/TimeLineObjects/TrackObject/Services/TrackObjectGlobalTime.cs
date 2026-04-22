@@ -20,9 +20,9 @@
         private double GetGlobalTime(TrackObjectComponents trackObject)
         {
             double realTime;
-            if (_trackObjectData.offsetObject != null)
+            if (_trackObjectData.OffsetObject != null)
             {
-                realTime = trackObject.Data.StartTimeInTicks + GetGlobalTime(_trackObjectData.offsetObject);
+                realTime = trackObject.Data.StartTimeInTicks + GetGlobalTime(_trackObjectData.OffsetObject);
             }
             else
             {

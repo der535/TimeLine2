@@ -99,7 +99,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
 
             // Рассчитываем целевой масштаб по горизонтали (пикселей на бит):
             // Доступная ширина = общая ширина области - отступы - ширина левой панели
-            var targetWidth = (_keyframeReferences.rootPoints.rect.width - focusBorderSpacing -
+            var targetWidth = (_keyframeReferences.generalPart.rect.width - focusBorderSpacing -
                                _keyframeReferences.treePanelAnimations.sizeDelta.x) /
                               timeDelta;
             var result = targetWidth;
@@ -122,8 +122,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Bezier_curv
             var positionOffset = positionTwo - positionOne;
 
             // Применяем вычисленные масштабы и позиции:
+            Debug.Log($"Width: {_keyframeReferences.rootPoints.rect.width}, " +
+                      $"Panel: {_keyframeReferences.treePanelAnimations.sizeDelta.x}, " +
+                      $"Delta: {timeDelta}");
+            Debug.Log(result);
             _timeLineKeyframeZoom.SetZoom(result); // Горизонтальный масштаб (время)
             _scrollTimeLineKeyframe.SetPosition(-(offset / 2 + one)); // Горизонтальное смещение (центрирование)
+            
             _verticalBezierZoom.SetZoom(targetHeight); // Вертикальный масштаб (значения)
             _bezierVerticalPosition.SetPosition(-(positionOffset / 2 + positionOne)); // Вертикальное смещение
         }

@@ -149,6 +149,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         {
             _state.StartResizingDuractionInTicks = _data.TimeDurationInTicks;
             _state.StartResizingTimeInTicks = _data.StartTimeInTicks;
+            _state.StartReduceRight = _data.ReducedRight;
+            _state.StartReduceLeft = _data.ReducedLeft;
+            // Debug.Log(_state.StartResizingDuractionInTicks);
+            // Debug.Log(_state.StartResizingTimeInTicks);
         }
 
         public void MultipleRightResize(double deltaTicks)
@@ -206,21 +210,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                     double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
                     double roundedChange = roundedProposedDuration - _state.StartResizingDuractionInTicks;
 
-                    // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
-                    if (_data.EnableResizeLimits && _data.ReducedRight + roundedChange > 0)
-                    {
-                        double maxAllowedChange = -_data.ReducedRight;
-                        double clampedDuration = _state.StartResizingDuractionInTicks + maxAllowedChange;
-                        double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
-
-                        _selectObjectController.MultipleResizingRight(this, maxAllowedChange);
-                        _data.ChangeDurationInTicks(Math.Max(roundedClampedDuration, 1));
-                        return;
-                    }
-
-                    _selectObjectController.MultipleResizingRight(this, deltaTicks);
-
-                    _data.ChangeDurationInTicks(Math.Max(roundedProposedDuration, 1));
+                    
+                    _selectObjectController.MultipleResizingRight(null, RoundTicksToGrid(deltaTicks));
+                    
                 }
                 else
                 {
@@ -233,33 +225,38 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                     double roundedProposedDuration = RoundTicksToGrid(proposedDuration);
                     double roundedChange = roundedProposedDuration - _state.StartResizingDuractionInTicks;
 
-                    // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
-                    if (_data.EnableResizeLimits && _data.ReducedLeft + roundedChange > 0)
-                    {
-                        double maxAllowedChange = -_data.ReducedLeft;
-                        double clampedDuration = _state.StartResizingDuractionInTicks + maxAllowedChange;
-                        double clampedStartTime = _state.StartResizingTimeInTicks - maxAllowedChange;
+                    _selectObjectController.MultipleResizingLeft(null, deltaTicks);
+                    
+                    // // ✅ Проверяем флаг: если лимиты отключены — пропускаем проверку
+                    // if (_data.EnableResizeLimits && _data.ReducedLeft + roundedChange > 0)
+                    // {
+                    //     double maxAllowedChange = -_data.ReducedLeft;
+                    //     double clampedDuration = _state.StartResizingDuractionInTicks + maxAllowedChange;
+                    //     double clampedStartTime = _state.StartResizingTimeInTicks - maxAllowedChange;
+                    //
+                    //     double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
+                    //     double roundedClampedStartTime = RoundTicksToGrid(clampedStartTime);
+                    //
+                    //     _selectObjectController.MultipleResizingLeft(this, maxAllowedChange);
+                    //     Rezise?.Invoke(roundedClampedStartTime - _data.StartTimeInTicks);
+                    //     _data.StartTimeInTicks = roundedClampedStartTime;
+                    //     _data.ChangeDurationInTicks(roundedClampedDuration);
+                    //     return;
+                    // }
+                    // else
+                    // {
+                    //     _selectObjectController.MultipleResizingLeft(this, deltaTicks);
+                    //     double newStartTimeInTicks = _state.StartResizingTimeInTicks - deltaTicks;
+                    //     double newDurationInTicks = _state.StartResizingDuractionInTicks + deltaTicks;
+                    //
+                    //     newStartTimeInTicks = RoundTicksToGrid(newStartTimeInTicks);
+                    //     newDurationInTicks = RoundTicksToGrid(newDurationInTicks);
+                    //
+                    //     Rezise?.Invoke(newStartTimeInTicks - _data.StartTimeInTicks);
+                    //     _data.StartTimeInTicks = newStartTimeInTicks;
+                    //     _data.ChangeDurationInTicks(newDurationInTicks);
+                    // }
 
-                        double roundedClampedDuration = RoundTicksToGrid(clampedDuration);
-                        double roundedClampedStartTime = RoundTicksToGrid(clampedStartTime);
-
-                        _selectObjectController.MultipleResizingLeft(this, maxAllowedChange);
-                        Rezise?.Invoke(roundedClampedStartTime - _data.StartTimeInTicks);
-                        _data.StartTimeInTicks = roundedClampedStartTime;
-                        _data.ChangeDurationInTicks(roundedClampedDuration);
-                        return;
-                    }
-
-                    _selectObjectController.MultipleResizingLeft(this, deltaTicks);
-                    double newStartTimeInTicks = _state.StartResizingTimeInTicks - deltaTicks;
-                    double newDurationInTicks = _state.StartResizingDuractionInTicks + deltaTicks;
-
-                    newStartTimeInTicks = RoundTicksToGrid(newStartTimeInTicks);
-                    newDurationInTicks = RoundTicksToGrid(newDurationInTicks);
-
-                    Rezise?.Invoke(newStartTimeInTicks - _data.StartTimeInTicks);
-                    _data.StartTimeInTicks = newStartTimeInTicks;
-                    _data.ChangeDurationInTicks(newDurationInTicks);
                 }
             }
             else if (_state.WasResizing)
@@ -297,7 +294,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         {
             if (!_state.IsDragging) return;
 
-
             //Проверка если transform.parent у трек обжекта (то есть на какой линии в редакторе находится) не равняется той которая записана в данных то меняем парент линии
             if (_trackObjectView.GetParent() != _trackStorage.GetTrackLineByIndex(_data.TrackLineIndex).RectTransform)
             {
@@ -331,7 +327,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                 _selectObjectController.MultipleChangeTrackLine(this, oldIndex - newIndex);
 
             _selectObjectController.MultipleMove(null, deltaTicks);
-            var targetPosition = _state.StartTrackObjectTicks + deltaTicks;
+            // var targetPosition = _state.StartTrackObjectTicks + deltaTicks;
 
 
             // _data.StartTimeInTicks = PositionBinding(targetPosition, _data);
@@ -399,6 +395,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _data.StartTimeInTicks = RoundTicksToGrid(_state.StartTrackObjectTicks + deltaTicks);
             _trackObjectStorage.UpdatePositionSelectedTrackObject();
             CalculatePosition();
+            SaveResizingData();
         }
 
         internal void AddLineTrackIndex(int addedIndex)

@@ -65,7 +65,7 @@ namespace TimeLine
         {
             if (!keyframe.Any())
                 throw new InvalidOperationException("No keyframes selected.");
-            return keyframe.Min(k => (double)k.Ticks);
+            return keyframe.Min(k => k.Ticks);
         }
 
         public double GetMaxTimeSelectedKeyframe()
@@ -127,8 +127,10 @@ namespace TimeLine
 
                 Build();
             });
-            // _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => Build());
-            _gameEventBus.SubscribeTo((ref KeyframeZoomEvent _) => PoseKeyframes());
+            _gameEventBus.SubscribeTo((ref KeyframeZoomEvent _) =>
+            {
+                PoseKeyframes();
+            }, -2);
             _gameEventBus.SubscribeTo((ref ScrollTimeLineKeyframeEvent _) =>
                 PoseKeyframes());
 
@@ -285,10 +287,16 @@ namespace TimeLine
                 float positionX =
                     _timeLineConverter.TicksToPositionX(keyframe.Keyframe.Ticks, timeLineKeyframeZoom.Zoom) +
                     xOffset;
+                
+               
+                
                 keyframe.RectTransform.anchoredPosition = new Vector2(
                     positionX,
                     keyframe.RectTransform.anchoredPosition.y);
+               
             }
+            
+         
         }
 
         private void Clear()

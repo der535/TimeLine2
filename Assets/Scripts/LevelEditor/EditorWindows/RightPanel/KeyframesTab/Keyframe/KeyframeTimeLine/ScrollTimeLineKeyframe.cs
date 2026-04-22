@@ -40,7 +40,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
                 float curPos = (float)_timeLineConverter.GetCursorBeatPosition(_oldPan,0, content, panel);
                 SetPosition(-(_timeLineConverter.GetAnchorPositionFromBeatPosition(curPos, zoom.Zoom) -
                               _timeLineConverter.CursorPosition(panel).x));
-            }, 1);
+            }, 5);
         }
         
         /// <summary>
@@ -51,6 +51,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.Ke
         {
             content.offsetMin = new Vector2(position, 0); //Left
             content.offsetMax = new Vector2(position, 0); //Right
+            _gameEventBus.Raise(new ScrollTimeLineKeyframeEvent());
         }
         /// <summary>
         /// Прибавляет к текущей позиции

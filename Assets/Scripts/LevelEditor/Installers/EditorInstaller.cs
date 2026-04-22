@@ -392,6 +392,10 @@ namespace TimeLine.LevelEditor.Core
         /// </summary>
         public RectTransform rootPoints;
         /// <summary>
+        /// Объект content в котором находится основная часть окна ключевых кадров
+        /// </summary>
+        public RectTransform generalPart;
+        /// <summary>
         /// Родительский объект внутри которого маркеры времени (горизонтальные), текущее время, и треки к
         /// </summary>
         public RectTransform rootObjects;

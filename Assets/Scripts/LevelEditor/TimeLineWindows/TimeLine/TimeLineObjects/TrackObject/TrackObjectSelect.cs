@@ -75,12 +75,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             {
                 if (_data.EnableResizeLimits)
                 {
-                    
-                    _data.ReducedRight = Math.Round(Math.Min(_data.ReducedRight +
-                                                             _gridUI.RoundTicksToGrid(
-                                                                 _state.StartResizingDuractionInTicks +
-                                                                 _state.DeltaticksRight) -
-                                                             _state.StartResizingDuractionInTicks, 0));
+                    // _data.ReducedRight = Math.Round(Math.Min(_data.ReducedRight +
+                    //                                          _gridUI.RoundTicksToGrid(
+                    //                                              _state.StartResizingDuractionInTicks +
+                    //                                              _state.DeltaticksRight) -
+                    //                                          _state.StartResizingDuractionInTicks, 0));
                 }
             }
 
@@ -117,11 +116,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
                 ApplyKeyframeOffset();
                 if (_data.EnableResizeLimits)
                 {
-                    _data.ReducedLeft = Math.Round(Math.Min(_data.ReducedLeft +
-                                                            _gridUI.RoundTicksToGrid(
-                                                                _state.StartResizingDuractionInTicks +
-                                                                _state.DeltaticksLeft) -
-                                                            _state.StartResizingDuractionInTicks, 0));
+                    // _data.ReducedLeft = Math.Round(Math.Min(_data.ReducedLeft +
+                    //                                         _gridUI.RoundTicksToGrid(
+                    //                                             _state.StartResizingDuractionInTicks +
+                    //                                             _state.DeltaticksLeft) -
+                    //                                         _state.StartResizingDuractionInTicks, 0));
                 }
             }
 

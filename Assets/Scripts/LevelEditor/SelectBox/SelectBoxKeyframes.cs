@@ -215,7 +215,7 @@ namespace TimeLine.LevelEditor.SelectBox
                         {
                             _keyframeSelectController.SelectNoClear(keyfrmae.BezierDragPoint._original);
                             _ignoreSelfRaiseEvent = true;
-                            print(keyfrmae.BezierDragPoint._original);
+                            // print(keyfrmae.BezierDragPoint._original);
                             _gameEventBus.Raise(new SelectKeyframeEvent(keyfrmae.BezierDragPoint._original));
                         }
                     }

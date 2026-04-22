@@ -43,7 +43,10 @@ namespace TimeLine
             });
             _gameEventBus.SubscribeTo((ref TrackObjectChangeDuractionEvent data) => OnSelectTrackObject(_savedTrackObjectPacket));
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) => OnSelectTrackObject(data.SelectedObjects[^1]));
-            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) => OnSelectTrackObject(_selectedTrackObjectPacket));
+            _gameEventBus.SubscribeTo((ref EventBus.Events.KeyframeTimeLine.KeyframeZoomEvent _) =>
+            {
+                OnSelectTrackObject(_selectedTrackObjectPacket);
+            });
             
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
 
