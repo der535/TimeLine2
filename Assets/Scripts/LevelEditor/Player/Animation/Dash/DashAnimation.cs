@@ -8,7 +8,6 @@ namespace TimeLine
     public class DashAnimation : MonoBehaviour
     {
         [SerializeField] private DashCircleAnimation _dashCircleAnimation;
-        [SerializeField] private DashParticleAnimation _dashParticleAnimation;
         [SerializeField] private PlayerMoveScale _playerMoveScale;
         [SerializeField] private DashPlayerColor _dashPlayerColor;
 
@@ -16,7 +15,6 @@ namespace TimeLine
         {
             _playerMoveScale.SetDashScale();
             _dashCircleAnimation.Play();
-            _dashParticleAnimation.Play();
             _dashPlayerColor.Play();
         }
 

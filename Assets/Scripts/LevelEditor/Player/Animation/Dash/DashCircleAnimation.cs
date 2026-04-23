@@ -1,10 +1,6 @@
-using System;
 using DG.Tweening;
-using NaughtyAttributes;
 using TimeLine.LevelEditor.Player;
-using Unity.Entities;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Zenject;
 
 namespace TimeLine
@@ -26,7 +22,7 @@ namespace TimeLine
         [SerializeField] private Color _endColor = Color.blue;
         
         private PlayerComponents _playerComponents;
-        Sequence sequence;
+        private Sequence _sequence;
 
         [Inject]
         private void Construct(PlayerComponents playerComponents)
@@ -38,42 +34,38 @@ namespace TimeLine
         {
             SetupSequence();
         }
-        [Button]
+
         private void SetupSequence()
         {
             DOTween.Init();
-    
-            // Подготовка материала
+            
             dashCircleMaterial.SetFloat("_Radius", 0);
             dashCircleMaterial.SetFloat("_Thickness", 0.5f);
             dashCircleMaterial.SetColor("_MainColor", _startColor);
     
-            sequence = DOTween.Sequence();
+            _sequence = DOTween.Sequence();
     
-            sequence.Append(DOVirtual.Float(_startRadius, 0.5f, _RadiusDuraction, (value) =>
+            _sequence.Append(DOVirtual.Float(_startRadius, 0.5f, _RadiusDuraction, (value) =>
             {
                 dashCircleMaterial.SetFloat("_Radius", value);
             }));
-            sequence.Insert(startColorAnimation, DOVirtual.Color(_startColor, _endColor, colorDuraction, (value) =>
+            _sequence.Insert(startColorAnimation, DOVirtual.Color(_startColor, _endColor, colorDuraction, (value) =>
             {
                 dashCircleMaterial.SetColor("_MainColor", value);
             }));
-            sequence.Insert(startThicknessAnimation, DOVirtual.Float(0.5f, 0, _ThicknessDuraction, (value) =>
+            _sequence.Insert(startThicknessAnimation, DOVirtual.Float(0.5f, 0, _ThicknessDuraction, (value) =>
             {
                 dashCircleMaterial.SetFloat("_Thickness", value);
             }));
 
             // ВАЖНО: Запрещаем самоудаление и ставим на паузу, чтобы не сработало само при старте
-            sequence.SetAutoKill(false).Pause();
+            _sequence.SetAutoKill(false).Pause();
         }
-
-        [Button]
+        
         public void Play()
         {
             dashCircle.transform.position = _playerComponents.GetPosition();
-    
-            // Используем Restart, чтобы сбросить таймлайн в 0 и проиграть заново
-            sequence.Restart();
+            _sequence.Restart();
         }
     }
 }

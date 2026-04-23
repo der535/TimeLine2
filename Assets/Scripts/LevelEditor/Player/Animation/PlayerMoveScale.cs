@@ -16,7 +16,7 @@ namespace TimeLine
         [SerializeField] private float dashScale = 0.1f;
         
         private float3 _baseScale = float3.zero;
-        private float currentScale;
+        private float _currentScale;
         
         private PlayerComponents _playerComponents;
         private ActionMap _actionMap;
@@ -29,23 +29,23 @@ namespace TimeLine
             _playerComponents = playerComponents;
             _gameEventBus = gameEventBus;
         }
-        
-        public void SetNormalScale() => currentScale = moveScale;
-        public void SetDashScale() => currentScale = dashScale;
 
         private void Start()
         {
-            _gameEventBus.SubscribeTo<LevelLoadedEvent>((ref LevelLoadedEvent data) =>
+            // Записываем базовый скейл после загрузки уровня
+            _gameEventBus.SubscribeTo((ref LevelLoadedEvent data) =>
             {
                 EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-                // entityManager.AddComponent<PostTransformMatrix>(_playerComponents.Player);
                 PostTransformMatrix postTransformMatrix = entityManager.GetComponentData<PostTransformMatrix>(_playerComponents.Player);
                 float3 nonUniformScale =
                     new float3(postTransformMatrix.Value.c0.x, postTransformMatrix.Value.c1.y, postTransformMatrix.Value.c2.z);
                 _baseScale = nonUniformScale;
             }, -1);
         }
-
+        
+        public void SetNormalScale() => _currentScale = moveScale;
+        public void SetDashScale() => _currentScale = dashScale;
+        
         public void Update()
         {
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -54,12 +54,9 @@ namespace TimeLine
             var postMatrix = entityManager.GetComponentData<PostTransformMatrix>(_playerComponents.Player);
             if (moveInput.x != 0 || moveInput.y != 0)
             {
-                PostTransformMatrix postTransformMatrix = entityManager.GetComponentData<PostTransformMatrix>(_playerComponents.Player);
-                float3 scale = GetScaleFromMatrix.Get(postTransformMatrix.Value); 
-
                 var newScale = _baseScale;
-                newScale.x -= currentScale;
-                newScale.y += currentScale;
+                newScale.x -= _currentScale;
+                newScale.y += _currentScale;
                 postMatrix.Value = float4x4.Scale(newScale);
                 entityManager.SetComponentData(_playerComponents.Player, postMatrix);
             }

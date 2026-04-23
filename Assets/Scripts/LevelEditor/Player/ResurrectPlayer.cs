@@ -11,8 +11,7 @@ namespace TimeLine.LevelEditor.Player
         private GameEventBus _gameEventBus;
         private ActionMap _actionMap; 
         private PlayerComponents _playerComponents;
-
-        // Внедрение зависимостей
+        
         [Inject]
         private void Constructor(GameEventBus gameEventBus, ActionMap actionMap, PlayerComponents playerComponents)
         {
@@ -34,7 +33,7 @@ namespace TimeLine.LevelEditor.Player
             playerTransform.Position = new Vector3(0, 0, playerTransform.Position.z);
             entityManager.SetComponentData(_playerComponents.Player, playerTransform);
             _playerComponents.SetActive(true);
-            _actionMap.Player.Enable(); // Включаем управление
+            _actionMap.Player.Enable();
         }
     }
 }

@@ -25,10 +25,8 @@ namespace TimeLine
             
             Vector2 moveInput = _actionMap.Player.PlayerMove.ReadValue<Vector2>();
 
-            if (moveInput.sqrMagnitude > 0.01f) // Проверка, что стик не в покое
+            if (moveInput.sqrMagnitude > 0.01f)
             {
-                // Atan2 принимает (y, x). Результат в радианах.
-                
                 float3 eulerRadians = math.Euler(Quaternion.identity);
                 float3 eulerDegrees = math.degrees(eulerRadians);
                 float angle = Mathf.Atan2(moveInput.y, moveInput.x) * Mathf.Rad2Deg-90;

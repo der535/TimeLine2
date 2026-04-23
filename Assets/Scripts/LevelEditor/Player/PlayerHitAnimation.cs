@@ -1,12 +1,11 @@
 using System;
-using System.Collections;
 using EventBus;
 using Unity.Entities;
 using Unity.Rendering;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.Player
 {
     public class PlayerHitAnimation : ITickable
     {

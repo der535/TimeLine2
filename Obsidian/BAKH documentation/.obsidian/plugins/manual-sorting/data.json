@@ -26,6 +26,7 @@
     "Описание скриптов": {
       "children": [
         "Описание скриптов/ШАБЛОН.md",
+        "Описание скриптов/LevelEditor",
         "Описание скриптов/Editor",
         "Описание скриптов/General"
       ],
@@ -48,8 +49,70 @@
     },
     "Описание скриптов/General/FontController": {
       "children": [
+        "Описание скриптов/General/FontController/Описание папки.md",
         "Описание скриптов/General/FontController/FontStorage.md",
         "Описание скриптов/General/FontController/FontSetter.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/Описание папки.md",
+        "Описание скриптов/LevelEditor/Player/Animation",
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew",
+        "Описание скриптов/LevelEditor/Player/PlayerComponents.md",
+        "Описание скриптов/LevelEditor/Player/PlayerAuthoring.md",
+        "Описание скриптов/LevelEditor/Player/PlayerDeath.md",
+        "Описание скриптов/LevelEditor/Player/PlayerHealth.md",
+        "Описание скриптов/LevelEditor/Player/PlayerHitAnimation.md",
+        "Описание скриптов/LevelEditor/Player/PlayerHitController.md",
+        "Описание скриптов/LevelEditor/Player/PlayerInvulnerable.md",
+        "Описание скриптов/LevelEditor/Player/ResurrectPlayer.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player/Animation": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/Animation/Описание папки.md",
+        "Описание скриптов/LevelEditor/Player/Animation/Dash",
+        "Описание скриптов/LevelEditor/Player/Animation/PlayerMoveRotate.md",
+        "Описание скриптов/LevelEditor/Player/Animation/PlayerMoveScale.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player/Animation/Dash": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/Animation/Dash/Описание папки.md",
+        "Описание скриптов/LevelEditor/Player/Animation/Dash/DashAnimation.md",
+        "Описание скриптов/LevelEditor/Player/Animation/Dash/DashCircleAnimation.md",
+        "Описание скриптов/LevelEditor/Player/Animation/Dash/DashPlayerColor.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки 1.md",
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove",
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerInputView.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/View",
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/PlayerMover.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/View": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/View/PlayerTrailContoller.md"
       ],
       "sortOrder": "custom"
     }

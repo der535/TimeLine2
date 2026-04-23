@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ПРОЧИТАТЬ.md",
+                "file": "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ПРОЧИТАТЬ"
+              "title": "Описание папки"
             }
           }
         ]
@@ -183,17 +183,34 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "631df1f2eb1e9318",
+  "active": "68ad6c4b93d0ed80",
   "lastOpenFiles": [
-    "Описание скриптов/General/FontController/FontSetter.md",
-    "Описание скриптов/General/FontController/FontStorage.md",
+    "Описание скриптов/ШАБЛОН.md",
+    "Описание скриптов/LevelEditor/Player/PlayerAuthoring.md",
+    "Описание скриптов/LevelEditor/Player/PlayerComponents.md",
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/View/PlayerTrailContoller.md",
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки.md",
+    "Описание скриптов/LevelEditor/Player/Animation/Dash/Описание папки.md",
+    "Описание скриптов/LevelEditor/Player/Описание папки.md",
+    "Описание скриптов/LevelEditor/Player/Animation/Описание папки.md",
+    "Описание скриптов/LevelEditor/Player/Animation/PlayerMoveRotate.md",
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerInputView.md",
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/PlayerMover.md",
+    "Описание скриптов/LevelEditor/Player/Animation/PlayerMoveScale.md",
+    "Описание скриптов/LevelEditor/Player/Animation/Dash/DashAnimation.md",
+    "Описание скриптов/LevelEditor/Player/ResurrectPlayer.md",
+    "Описание скриптов/General/FontController/Описание папки.md",
     "Описание скриптов/General/SceneField.md",
     "Описание скриптов/General/Описание папки.md",
-    "Описание скриптов/Editor/AddFontSetterTool.md",
-    "Описание скриптов/ШАБЛОН.md",
-    "Оглавление.md",
+    "Описание скриптов/General/FontController/FontStorage.md",
     "ПРОЧИТАТЬ.md",
-    "Описание скриптов/Editor/Описание папки.md",
+    "Описание скриптов/LevelEditor/Player/PlayerDeath.md",
+    "Описание скриптов/LevelEditor/Player/PlayerHealth.md",
+    "Описание скриптов/LevelEditor/Player/PlayerHitAnimation.md",
+    "Описание скриптов/LevelEditor/Player/PlayerInvulnerable.md",
+    "Описание скриптов/LevelEditor/Player/PlayerHitController.md",
+    "Описание скриптов/LevelEditor/Player/Animation/Dash/DashCircleAnimation.md",
+    "Описание скриптов/LevelEditor/Player/Animation/Dash/DashParticleAnimation.md",
     "Архив/539 (2026.01.19) (18.08.26) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",
     "Архив/543 (2026.01.19) (18.29.22) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",
     "Архив/542 (2026.01.19) (18.27.55) (SceneField_-_BAKH_documentation_-_Obsidian_v1.11.4) 1.png",
@@ -202,13 +219,10 @@
     "Архив/540 (2026.01.19) (18.26.07) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",
     "Архив/530 (2026.01.16) (23.26.59) (FontSetter_Tool).png",
     "Архив/529 (2026.01.16) (23.25.19) (TimeLine2_-_Editor_-_Windows,_Mac,_Linux_-_Unity_6).png",
-    "ㅤ.md",
     "Архив",
-    "AddFontSetterTool.md",
     "Описание скриптов/Editor",
     "Описание скриптов/General/FontController",
     "Описание скриптов/General",
-    "Описание скриптов",
-    "Welcome.md"
+    "Описание скриптов"
   ]
 }
