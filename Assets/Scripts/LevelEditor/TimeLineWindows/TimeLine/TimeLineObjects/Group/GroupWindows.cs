@@ -1,3 +1,9 @@
+using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
+using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,27 +18,34 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.Group
         [SerializeField] private Button _createButton;
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button _cancelButton;
-        
+
         private ActionMap _actionMap;
         private GroupCreater _groupCreater;
         private string _outputName;
+        private SelectObjectController _selectObjectController;
+        private SaveLevel _saveLevel;
+        private TrackObjectRemover _trackObjectRemover;
+        private FacadeObjectSpawner _facadeObjectSpawner;
+        private TrackObjectStorage _trackObjectStorage;
+        private SaveComposition _saveComposition;
 
         [Inject]
-        private void Construct(ActionMap actionMap)
+        private void Construct(ActionMap actionMap, SelectObjectController selectObjectController, SaveLevel saveLevel,
+            TrackObjectRemover trackObjectRemover, FacadeObjectSpawner facadeObjectSpawner, TrackObjectStorage trackObjectStorage, SaveComposition saveComposition)
         {
             _actionMap = actionMap;
+            _selectObjectController = selectObjectController;
+            _saveLevel = saveLevel;
+            _trackObjectRemover = trackObjectRemover;
+            _facadeObjectSpawner = facadeObjectSpawner;
+            _trackObjectStorage = trackObjectStorage;
+            _saveComposition = saveComposition;
         }
 
         private void Awake()
         {
-            _closeButton.onClick.AddListener(() =>
-            {
-                ClosePanel();
-            });
-            _cancelButton.onClick.AddListener(() =>
-            {
-                ClosePanel();
-            });
+            _closeButton.onClick.AddListener(() => { ClosePanel(); });
+            _cancelButton.onClick.AddListener(() => { ClosePanel(); });
             StringInputValidator stringInputValidator = new StringInputValidator(_inputField, s =>
             {
                 _outputName = s;
@@ -69,7 +82,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.Group
         private void Create()
         {
             _actionMap.Editor.Enable();
-            _groupCreater.Create(_outputName);
+            CommandHistory.ExecuteCommand(new CreateCompositionCommand(
+                _saveLevel,
+                _saveComposition,
+                _trackObjectRemover,
+                _facadeObjectSpawner,
+                _trackObjectStorage,
+                _groupCreater,
+                _outputName,
+                _selectObjectController.SelectObjects,
+                ""));
         }
     }
 }

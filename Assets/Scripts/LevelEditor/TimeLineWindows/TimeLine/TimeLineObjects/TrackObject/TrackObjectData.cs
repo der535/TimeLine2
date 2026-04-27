@@ -6,7 +6,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
     public class TrackObjectData
     {
         public TrackObjectData(double ticksLifeTime, string name, int trackLineIndex, string parentID,
-            double startTimeInTicks, double reducedLeft, double reducedRight,
+            double startTimeInTicks, double reduceLeft, double reducedRight,
             bool enableResizeLimits = false)
         {
             TimeDurationInTicks = ticksLifeTime;
@@ -14,7 +14,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             TrackLineIndex = trackLineIndex;
             ParentID = parentID;
             StartTimeInTicks = startTimeInTicks;
-            ReducedLeft = reducedLeft;
+            ReduceLeft = reduceLeft;
             ReducedRight = reducedRight;
             EnableResizeLimits = enableResizeLimits;
         }
@@ -25,7 +25,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public int TrackLineIndex;
         public double StartTimeInTicks;
         public double TimeDurationInTicks;
-        public double ReducedLeft;
+        public double ReduceLeft;
 
         public double ReducedRight { get; set; }
 
@@ -42,7 +42,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         internal void UpdateDuraction(double newDuractionInTicks)
         {
-            var delta = newDuractionInTicks - (TimeDurationInTicks - ReducedRight - ReducedLeft);
+            var delta = newDuractionInTicks - (TimeDurationInTicks - ReducedRight - ReduceLeft);
             ReducedRight -= delta;
         }
 
@@ -97,7 +97,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             }
 
             // Текущие значения этого звена
-            double currentLayerValue = StartTimeInTicks + ReducedLeft;
+            double currentLayerValue = StartTimeInTicks + ReduceLeft;
 
             if (OffsetObject != null)
             {

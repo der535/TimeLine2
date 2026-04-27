@@ -3,7 +3,11 @@ using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.Keyframe;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.Components;
+using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -21,6 +25,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         private ActionMap _actionMap;
         private GameEventBus _gameEventBus;
         private EntityManager _entityManager;
+        private SaveLevel _saveLevel;
+        private FacadeObjectSpawner _facadeObjectSpawner;
 
         [Inject]
         private void Construct(
@@ -28,13 +34,17 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
             KeyframeTrackStorage keyframeTrackStorage,
             SelectObjectController selectObjectController,
             ActionMap actionMap,
-            GameEventBus gameEventBus)
+            GameEventBus gameEventBus,
+            SaveLevel saveLevel,
+            FacadeObjectSpawner facadeObjectSpawner)
         {
             _trackObjectStorage = trackObjectStorage;
             _keyframeTrackStorage = keyframeTrackStorage;
             _selectObjectController = selectObjectController;
             _actionMap = actionMap;
             _gameEventBus = gameEventBus;
+            _saveLevel = saveLevel;
+            _facadeObjectSpawner = facadeObjectSpawner;
         }
 
         private void Start()
@@ -45,9 +55,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         private void Remove()
         {
-            if (!windowsFocus.IsFocused) return;
+            if (!windowsFocus.IsFocused || _selectObjectController.SelectObjects.Count <= 0) return;
+            
+            CommandHistory.ExecuteCommand(new DeleteObjectCommand(_saveLevel,_facadeObjectSpawner,this,_selectObjectController.SelectObjects,""));
+        }
 
-            foreach (var select in _selectObjectController.SelectObjects)
+        internal void RemoveList(List<TrackObjectPacket> target)
+        {
+            foreach (var select in target)
             {
                 if (select is TrackObjectGroup group)
                 {
@@ -64,15 +79,12 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         internal void SingleRemove(TrackObjectPacket select)
         {
-            // Disassemble(select.sceneObject);
-
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
             }
-
-
-// Если они разные, удаление не сработает!
+            
+            // Если они разные, удаление не сработает!
             
             select.components.Dispose();
             _entityManager.DestroyEntity(select.entity);
@@ -82,8 +94,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
         internal void SingleRemoveNoStorage(TrackObjectPacket select)
         {
-            // if(disassemble) Disassemble(select.sceneObject);
-
             foreach (var nodes in select.branch.Nodes)
             {
                 _keyframeTrackStorage.RemoveTrack(nodes);
@@ -91,7 +101,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
 
             select.components.Dispose();
             _entityManager.DestroyEntity(select.entity);
-
         }
 
 
@@ -114,10 +123,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
                 if (item is TrackObjectGroup group)
                 {
                     ListRemove(group);
-                    
                 }
                 
-                // Debug.Log($"remove {item.entity.Version}:{item.entity.Index}");
                 SingleRemove(item);
             }
 

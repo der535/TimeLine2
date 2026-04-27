@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using EventBus;
 using TimeLine.EventBus.Events.Misc;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.Core;
 using UnityEngine;
 using Zenject;
@@ -29,6 +32,8 @@ namespace TimeLine.LevelEditor.SelectBox
         private List<TrackObjectPacket> allObjects;
         private List<TrackObjectPacket> selectedObjects = new List<TrackObjectPacket>();
 
+        private List<TrackObjectPacket> _savedState;
+
         [Inject]
         private void Constructor(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
             DeselectObject deselectObject, SelectObjectController selectObjectController)
@@ -41,23 +46,28 @@ namespace TimeLine.LevelEditor.SelectBox
 
         private void Awake()
         {
-            _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => { _state.IsActive = false; });
-            _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => { _state.IsActive = true; });
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => { _state.IsActive = true; });
-            _gameEventBus.SubscribeTo((ref TrackObjectResizing all) => { _state.IsActive = all.IsResizing == false && _state.IsActive; });
+            
+            // _gameEventBus.SubscribeTo((ref SelectObjectEvent _) => { _state.IsActive = false; });
+            // _gameEventBus.SubscribeTo((ref DeselectObjectEvent _) => { _state.IsActive = true; });
+            // _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => { _state.IsActive = true; });
+            // _gameEventBus.SubscribeTo((ref TrackObjectResizing all) => { _state.IsActive = all.IsResizing == false && _state.IsActive; });
+        }
+
+        public void SetActiveBox(bool active)
+        {
+            _state.IsActive = active;
         }
 
         private void Update()
         {
-            if (_state.IsActive == false && _state.IsDragging == false)
-            {
-                return;
-            }
+            if (_state.IsActive == false && _state.IsDragging == false) return;
 
             if (UnityEngine.Input.GetMouseButtonDown(0))
             {
                 StartMove();
             }
+
+
 
             if (UnityEngine.Input.GetMouseButtonUp(0))
             {
@@ -67,11 +77,11 @@ namespace TimeLine.LevelEditor.SelectBox
 
             if (_state.IsDragging && _state.CursorIsInside)
             {
-                Vector2 currentMousePos = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
-
                 // Проверка мертвой зоны, если она еще не пройдена
                 if (!_state.HasExceededDeadZone)
                 {
+                    Vector2 currentMousePos = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
+
                     if (Vector2.Distance(_state.StartPosition, currentMousePos) > deadZoneDistance)
                     {
                         _state.HasExceededDeadZone = true;
@@ -95,9 +105,12 @@ namespace TimeLine.LevelEditor.SelectBox
             // Только инициализируем данные, но рамку пока не включаем
             _state.CursorIsInside = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).isInside;
 
+            _savedState = _selectObjectController.SelectObjects.ToList();
+
             _state.IsDragging = true;
             _state.HasExceededDeadZone = false;
             _state.StartPosition = TimeLineConverter.Instance.GetMousePosition(timeLineArea, timeLineCamera).position;
+
             _delta.startDelta.x = timeMarkerContent.offsetMin.x;
             _delta.startDelta.y = trackObjectsContent.anchoredPosition.y;
         }
@@ -106,8 +119,10 @@ namespace TimeLine.LevelEditor.SelectBox
         {
             selectBox.gameObject.SetActive(false);
             _state.IsDragging = false;
+            if(_state.HasExceededDeadZone)CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, _selectObjectController, _savedState.ToList(), selectedObjects.ToList(), ""));
             _state.HasExceededDeadZone = false;
-            _selectObjectController.SelectMultiple(selectedObjects);
+
+            // _selectObjectController.SelectMultiple(selectedObjects);
             _selectObjectController.UpdateSelection();
         }
 
@@ -129,13 +144,13 @@ namespace TimeLine.LevelEditor.SelectBox
             selectedObjects.Clear();
             // Кэшируем данные, чтобы не обращаться к свойствам в каждой итерации
             var currentSelection = _selectObjectController.SelectObjectsHash;
-            
+
             // Если selectBox вычисляется динамически, лучше сохранить его в переменную
             var box = selectBox;
 
             allObjects = _trackObjectStorage.GetAllActiveTrackData();
 
-            
+
             // Получаем 4 угла рамки выделения в мировых координатах
             box.GetWorldCorners(_selectionCorners);
 
@@ -148,13 +163,14 @@ namespace TimeLine.LevelEditor.SelectBox
                 if (isInside && !isAlreadySelected)
                 {
                     selectedObjects.Add(trackObject);
-                    // trackObject.components.View.SetColor(Color.yellow);
-                    _selectObjectController.SelectNoClearNoEvent(trackObject);
+                    trackObject.components.View.SetColor(Color.yellow);
+                    // _selectObjectController.SelectNoClearNoEvent(trackObject);
                 }
                 else if (!isInside && isAlreadySelected)
                 {
                     selectedObjects.Remove(trackObject);
-                    _selectObjectController.DeselectVihoutEvent(trackObject);
+                    trackObject.components.View.SetColor(Color.gray);
+                    // _selectObjectController.DeselectVihoutEvent(trackObject);
                 }
             }
         }

@@ -69,10 +69,10 @@ namespace TimeLine.LevelEditor.CutTrackObject
                     if (trackObject is TrackObjectGroup _)
                     {
                         var realStartPosition = trackObject.components.Data.StartTimeInTicks +
-                                                trackObject.components.Data.ReducedLeft;
+                                                trackObject.components.Data.ReduceLeft;
                         Debug.Log(realStartPosition);
                         var realDuraction = trackObject.components.Data.TimeDurationInTicks +
-                                            math.abs(trackObject.components.Data.ReducedLeft);
+                                            math.abs(trackObject.components.Data.ReduceLeft);
                         Debug.Log(realDuraction);
                         Debug.Log($"min {realStartPosition}");
                         Debug.Log($"min {realStartPosition + realDuraction - 1}");
@@ -81,7 +81,7 @@ namespace TimeLine.LevelEditor.CutTrackObject
                         Debug.Log(setNewTimeClamped);
 
                         trackObject.components.TrackObject.LeftResize(setNewTimeClamped);
-                        trackObject.components.Data.ReducedLeft = -setNewTimeClamped + realStartPosition;
+                        trackObject.components.Data.ReduceLeft = -setNewTimeClamped + realStartPosition;
                     }
                     else
                     {
@@ -147,10 +147,10 @@ namespace TimeLine.LevelEditor.CutTrackObject
                             if (trackObject is TrackObjectGroup _)
                             {
                                 var realStartPosition = trackObject.components.Data.StartTimeInTicks +
-                                                        trackObject.components.Data.ReducedLeft;
+                                                        trackObject.components.Data.ReduceLeft;
                                 Debug.Log(realStartPosition);
                                 var realDuraction = trackObject.components.Data.TimeDurationInTicks +
-                                                    math.abs(trackObject.components.Data.ReducedLeft);
+                                                    math.abs(trackObject.components.Data.ReduceLeft);
                                 Debug.Log(realDuraction);
                                 Debug.Log($"min {realStartPosition}");
                                 Debug.Log($"min {realStartPosition + realDuraction - 1}");
@@ -159,7 +159,7 @@ namespace TimeLine.LevelEditor.CutTrackObject
                                 Debug.Log(setNewTimeClamped);
 
                                 trackObject.components.TrackObject.LeftResize(setNewTimeClamped);
-                                trackObject.components.Data.ReducedLeft = -setNewTimeClamped + realStartPosition;
+                                trackObject.components.Data.ReduceLeft = -setNewTimeClamped + realStartPosition;
                             }
                             else
                             {

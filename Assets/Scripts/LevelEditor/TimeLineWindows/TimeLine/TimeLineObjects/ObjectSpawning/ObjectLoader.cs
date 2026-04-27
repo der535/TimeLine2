@@ -507,7 +507,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             _main.SetTimeInTicks(groupTrackObject.components.Data
                 .StartTimeInTicks); //Ставим время тамйлайна на старт группы что бы ничего не сьехало
 
-            groupTrackObject.components.Data.ReducedLeft = data.reduceLeft;
+            groupTrackObject.components.Data.ReduceLeft = data.reduceLeft;
             groupTrackObject.components.Data.ReducedRight = data.reduceRight;
 
             groupTrackObject.components.Data.EnableResizeLimits = true;

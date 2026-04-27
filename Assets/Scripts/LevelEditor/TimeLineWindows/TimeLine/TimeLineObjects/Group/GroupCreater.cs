@@ -80,33 +80,14 @@ namespace TimeLine
             return (minTime, maxTime);
         }
 
-        public static (double minTime, double maxTime) CalculateMinAndMaxTime(List<GameObjectSaveData> trackObjectData)
+        public TrackObjectGroup Create(string groupName, List<TrackObjectPacket> targetObjects)
         {
-            double minTime = double.MaxValue;
-            double maxTime = double.MinValue;
-
-            foreach (var selectObject in trackObjectData)
-            {
-                double startTime = selectObject.startTime;
-                double endTime = startTime + selectObject.duractionTime;
-
-                if (startTime < minTime)
-                    minTime = startTime;
-
-                if (endTime > maxTime)
-                    maxTime = endTime;
-            }
-
-            return (minTime, maxTime);
-        }
-
-        public void Create(string groupName)
-        {
-            if (_selectObjectController.SelectObjects.Count <= 0)
-                return; // Если не выбран не один объект, то группу не создаём
+            // if (_selectObjectController.SelectObjects.Count <= 0)
+            if (targetObjects.Count <= 0)
+                return null; // Если не выбран не один объект, то группу не создаём
 
             var minLine = int.MaxValue;
-            foreach (var objectPacket in _selectObjectController.SelectObjects)
+            foreach (var objectPacket in targetObjects)
             {
                 if(minLine > objectPacket.components.Data.TrackLineIndex) minLine = objectPacket.components.Data.TrackLineIndex;
             }
@@ -135,14 +116,18 @@ namespace TimeLine
                 minTime); //Устанавливаем текущее время в начало группы что бы ничего не съхало при паренте
 
             // GameObject sceneObject = _container.InstantiatePrefab(scenePrefab, root);
-            var entity = _factory.CreateSceneObject(groupName);
+            var entity = _factory.SpawnSingle(groupName);
 
             _entityManager.AddComponent<CompositionPositionOffsetData>(entity);
+            
+            Debug.Log(_entityManager.HasComponent(entity, typeof(ObjectPositionOffsetData)));
+            Debug.Log( entity.Index);
+            Debug.Log( entity.Version);
 
-            EntityName.SetupName(entity, groupName);
+            // EntityName.SetupName(entity, groupName);
             // sceneObject.AddComponent<CompositionOffset>();
 
-            foreach (var selectObject in _selectObjectController.SelectObjects)
+            foreach (var selectObject in targetObjects)
             {
                 // selectObject.components.Data.GroupOffset(minTime);
                 selectObject.components.Data.GroupOffsetNew(minTime);
@@ -162,14 +147,7 @@ namespace TimeLine
 // Для родителя (обязательно!)
                     if (!_entityManager.HasComponent<LocalToWorld>(entity)) 
                         _entityManager.AddComponent<LocalToWorld>(entity);
-                    
-                    // var position = selectObject.sceneObject.transform.localPosition;
-                    // var rotation = selectObject.sceneObject.transform.rotation;
-                    // var scale = selectObject.sceneObject.transform.localScale;
-                    // selectObject.sceneObject.transform.SetParent(sceneObject.transform);
-                    // selectObject.sceneObject.transform.localPosition = position;
-                    // selectObject.sceneObject.transform.localRotation = rotation;
-                    // selectObject.sceneObject.transform.localScale = scale;
+
                 }
 
                 foreach (var node in selectObject.branch.Nodes)
@@ -183,10 +161,12 @@ namespace TimeLine
 
             Branch branch = _branchCollection.AddBranch(UniqueIDGenerator.GenerateUniqueID(), groupName);
 
-            _trackObjectStorage.AddGroup(null, entity, components, branch, _selectObjectController.SelectObjects,
+            var group = _trackObjectStorage.AddGroup(null, entity, components, branch, targetObjects,
                 UniqueIDGenerator.GenerateUniqueID(), UniqueIDGenerator.GenerateUniqueID(), String.Empty);
 
             _main.SetTimeInTicks(currentTime);
+            
+            return group;
         }
 
         public TrackObjectGroup Create(List<TrackObjectPacket> trackObjects, string compositionID = null)
@@ -212,9 +192,7 @@ namespace TimeLine
 
             var  entity = _factory.CreateSceneObject(scenePrefab.name);
 
-
-            // sceneObject.AddComponent<CompositionOffset>();
-
+            
             foreach (var selectObject in trackObjects)
             {
                 selectObject.components.Data.GroupOffsetNew(minTime);

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject;
 
-namespace TimeLine.Input
+namespace TimeLine.LevelEditor.TimeLineWindows.Input
 {
     public class KeyframeMoveTimeLine : MonoBehaviour
     {

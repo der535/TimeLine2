@@ -24,20 +24,18 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         private SelectObjectController _selectController;
         private TrackObjectStorage _trackObjectStorage;
         private KeyframeTrackStorage _keyframeTrackStorage;
-        private GridUI _gridUI;
         private CursorController _cursorController;
 
         [Inject]
         private void Construct(SelectObjectController state, MainObjects mainObjects, GameEventBus eventBus,
             TrackObjectStorage trackObjectStorage,
-            KeyframeTrackStorage keyframeTrackStorage, GridUI gridUI, CursorController cursorController)
+            KeyframeTrackStorage keyframeTrackStorage,  CursorController cursorController)
         {
             _select = state;
             _eventBus = eventBus;
             _mainObjects = mainObjects;
             _trackObjectStorage = trackObjectStorage;
             _keyframeTrackStorage = keyframeTrackStorage;
-            _gridUI = gridUI;
             _selectController = state;
             _cursorController = cursorController;
         }
@@ -52,13 +50,21 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         public void OnMouseDown()
         {
+            _trackObjectStorage.SelectObjectTrackObject(_trackObject);
+
             _state.StartTrackObjectTicks = _data.StartTimeInTicks;
             Vector2 mousePos =
                 MousePosition.GetMousePosition(_mainObjects.CanvasRectTransform, _mainObjects.MainCamera);
             _state.StartMouseXLocal = mousePos.x;
             _state.IsDragging = true;
             _state.DeathZonePass = false;
-            _select.StartMultipleMove(null);
+            _select.StartMultipleMove();
+        }
+        
+        public void OnMouseUp()
+        {
+            _state.IsDragging = false;
+            _select.StopMultipleMove();
         }
 
         public void SetResizeRight(bool isResizing)
@@ -91,9 +97,11 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             {
                 _state.WasResizing = true;
             }
+            
 
+            if(!isResizing) _selectController.SaveResizeToHistory(_trackObjectStorage.GetTrackObjectData(_trackObject));
             _eventBus.Raise(new TrackObjectResizing(isResizing));
-            _selectController.SaveResizingData(_trackObject);
+            _selectController.SaveResizingData(_trackObjectStorage.GetTrackObjectData(_trackObject));
         }
 
         public void SetResizeCursor(bool isResizing)
@@ -132,7 +140,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             }
 
             
-            _selectController.SaveResizingData(_trackObject);
+            if(!isResizing) _selectController.SaveResizeToHistory(_trackObjectStorage.GetTrackObjectData(_trackObject));
+            _selectController.SaveResizingData(_trackObjectStorage.GetTrackObjectData(_trackObject));
         }
 
         private void ApplyKeyframeOffset()
@@ -150,11 +159,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             }
         }
         
-        public void Select()
-        {
-            _trackObjectStorage.SelectObjectTrackObject(_trackObject);
-        }
-
         /// <summary>
         /// Устанавливает цвет выделения трек обжекту
         /// </summary>
@@ -173,9 +177,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         
 
-        public void OnMouseUp()
-        {
-            _state.IsDragging = false;
-        }
+
     }
 }

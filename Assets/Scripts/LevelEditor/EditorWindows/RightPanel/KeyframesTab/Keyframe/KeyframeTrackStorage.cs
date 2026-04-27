@@ -7,7 +7,10 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.GeneralEditor;
+using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
+using Unity.Entities;
 using UnityEngine;
 using Zenject;
 
@@ -37,26 +40,7 @@ namespace TimeLine.Keyframe
         }
 
         internal List<TrackData> GetTracks() => tracks;
-
-        [Button]
-        void PrintTracks()
-        {
-            curve.ClearKeys();
-            foreach (var k in tracks[0].Track.Keyframes)
-            {
-                UnityEngine.Keyframe key = new UnityEngine.Keyframe();
-                key.weightedMode = WeightedMode.Both;
-                key.outTangent = (float)k.OutTangent;
-                key.inTangent = (float)k.InTangent;
-                key.inWeight = (float)k.InWeight;
-                key.outWeight = (float)k.OutWeight;
-                if (k.GetEntityData().GetValue() is float value)
-                    key.value = value;
-                key.time = (float)TimeLineConverter.Instance.TicksToSeconds(k.Ticks);
-                curve.AddKey(key);
-            }
-        }
-
+        
         internal void Evaluate(double time)
         {
             foreach (var variable in tracks)
@@ -132,7 +116,7 @@ namespace TimeLine.Keyframe
             Track = track;
             TrackObjectData = trackObjectData;
         }
-
+        
         public string BranchId;
         public TreeNode TreeNode;
         public Track Track;

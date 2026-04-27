@@ -840,6 +840,9 @@ namespace TimeLine
 
             foreach (var childEntity in children)
             {
+               Debug.Log( entityManager.HasComponent(childEntity, typeof(ObjectPositionOffsetData)));
+               Debug.Log( childEntity.Index);
+               Debug.Log( childEntity.Version);
                 ObjectPositionOffsetData
                     offsetData =
                         entityManager

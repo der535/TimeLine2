@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 using EventBus;
 using TimeLine.LevelEditor;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.LevelJson;
 using TimeLine.LevelEditor.Save;
@@ -159,7 +161,7 @@ namespace TimeLine
                     spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID, true, startTime: TimeLineConverter.Instance.TicksCurrentTime());
                     
                 },
-                () => { compositionEdit.Edit(FindCompositionDataById(data.compositionID)); }, () =>
+                () => { CommandHistory.ExecuteCommand(new StartEditCompositionCommand(compositionEdit,this, data.compositionID, "")); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
                     renameComposition.Setup(data.compositionID, data.branch.Name);
@@ -191,6 +193,11 @@ namespace TimeLine
             }
 
             compositionUpdater.UpdateCompositions(group.compositionID);
+        }
+
+        public void DeleteComposition(string compositionID)
+        {
+            DeleteComposition(FindCompositionDataById(compositionID));
         }
 
         public void AddComposition(GroupGameObjectSaveData group)

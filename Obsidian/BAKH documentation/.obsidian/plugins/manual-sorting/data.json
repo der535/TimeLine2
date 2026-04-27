@@ -97,7 +97,7 @@
     },
     "Описание скриптов/LevelEditor/Player/PlayerMoveNew": {
       "children": [
-        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки 1.md",
+        "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки.md",
         "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove",
         "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerInputView.md"
       ],

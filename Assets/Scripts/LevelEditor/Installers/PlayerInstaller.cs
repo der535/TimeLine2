@@ -2,10 +2,9 @@
 using TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Zenject;
 
-namespace TimeLine.LevelEditor.Core
+namespace TimeLine.LevelEditor.Installers
 {
     public class PlayerInstaller : MonoInstaller
     {

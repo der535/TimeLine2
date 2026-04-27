@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки.md",
+                "file": "ПРОЧИТАТЬ.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Описание папки"
+              "title": "ПРОЧИТАТЬ"
             }
           }
         ]
@@ -183,15 +183,16 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "68ad6c4b93d0ed80",
+  "active": "631df1f2eb1e9318",
   "lastOpenFiles": [
-    "Описание скриптов/ШАБЛОН.md",
+    "Оглавление.md",
     "Описание скриптов/LevelEditor/Player/PlayerAuthoring.md",
     "Описание скриптов/LevelEditor/Player/PlayerComponents.md",
-    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/View/PlayerTrailContoller.md",
-    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки.md",
-    "Описание скриптов/LevelEditor/Player/Animation/Dash/Описание папки.md",
     "Описание скриптов/LevelEditor/Player/Описание папки.md",
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/Описание папки.md",
+    "Описание скриптов/ШАБЛОН.md",
+    "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerFreeMove/View/PlayerTrailContoller.md",
+    "Описание скриптов/LevelEditor/Player/Animation/Dash/Описание папки.md",
     "Описание скриптов/LevelEditor/Player/Animation/Описание папки.md",
     "Описание скриптов/LevelEditor/Player/Animation/PlayerMoveRotate.md",
     "Описание скриптов/LevelEditor/Player/PlayerMoveNew/PlayerInputView.md",
@@ -210,7 +211,6 @@
     "Описание скриптов/LevelEditor/Player/PlayerInvulnerable.md",
     "Описание скриптов/LevelEditor/Player/PlayerHitController.md",
     "Описание скриптов/LevelEditor/Player/Animation/Dash/DashCircleAnimation.md",
-    "Описание скриптов/LevelEditor/Player/Animation/Dash/DashParticleAnimation.md",
     "Архив/539 (2026.01.19) (18.08.26) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",
     "Архив/543 (2026.01.19) (18.29.22) (ПРОЧИТАТЬ_-_BAKH_documentation_-_Obsidian_v1.11.4).png",
     "Архив/542 (2026.01.19) (18.27.55) (SceneField_-_BAKH_documentation_-_Obsidian_v1.11.4) 1.png",

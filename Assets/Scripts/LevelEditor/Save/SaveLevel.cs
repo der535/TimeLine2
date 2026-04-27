@@ -203,20 +203,9 @@ namespace TimeLine.LevelEditor.Save
                 EntityComponents = new(),
                 tracks = new List<TrackSaveData>()
             };
-
-            // var parameterComponents = trackObject.sceneObject.GetComponents<IParameterComponent>();
+            
             var data = _entityComponentController.Save(trackObject.entity);
             saveData.EntityComponents = data;
-            // foreach (var component in parameterComponents)
-            // {
-            // var compData = new ComponentData
-            // {
-            // ComponentType = component.GetComponentTypeName(),
-            // Parameters = component.GetParameterData(),
-            // id = component.GetID()
-            // };
-            // saveData.Components.Add(compData);
-            // }
 
             SaveKeyframeTrack(trackObject.branch.Root, saveData);
             return saveData;
@@ -265,7 +254,7 @@ namespace TimeLine.LevelEditor.Save
 
 
             groupData.reduceRight = group.components.Data.ReducedRight;
-            groupData.reduceLeft = group.components.Data.ReducedLeft;
+            groupData.reduceLeft = group.components.Data.ReduceLeft;
 
             if (saveGroupID == false)
             {
@@ -312,7 +301,7 @@ namespace TimeLine.LevelEditor.Save
             };
 
             groupData.reduceRight = group.components.Data.ReducedRight;
-            groupData.reduceLeft = group.components.Data.ReducedLeft;
+            groupData.reduceLeft = group.components.Data.ReduceLeft;
             
             // Debug.Log(groupData.reduceRight);
             // Debug.Log(groupData.reduceLeft);
@@ -433,13 +422,7 @@ namespace TimeLine.LevelEditor.Save
         }
     }
 
-    [System.Serializable]
-    public class ComponentData
-    {
-        public string ComponentType;
-        public string id;
-        public Dictionary<string, ParameterPacket> Parameters;
-    }
+
 
     [System.Serializable]
     public class TreeNodeSaveData

@@ -10,30 +10,30 @@ namespace TimeLine
     
     public class PlayerAuthoring : MonoBehaviour
     {
-        // Теперь Unity увидит этот Baker и применит его 
-        // ДОПОЛНИТЕЛЬНО к тому, что она сама делает с компонентами типа PhysicsBody
+        // Unity увидит этот Baker и применит его
         private class PlayerBaker : Baker<PlayerAuthoring>
         {
             public override void Bake(PlayerAuthoring authoring)
             {
-                // 1. Создаем Entity
+                // 1. Создаем Entity с флагами динамического трансформа.
+                // Unity САМА добавит компонент LocalTransform и запишет туда масштаб из объекта!
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
 
-                // 2. В Baker мы берем данные напрямую из authoring (GameObject)
-                // Unity сама сконвертирует Transform объекта в LocalTransform сущности.
-                // Но если вам нужны значения прямо сейчас для расчетов:
-                float scale = authoring.transform.localScale.x; 
-
-                // 3. Добавляем компоненты
-                AddComponent<PostTransformMatrix>(entity);
+                // 2. Добавляем только наш тэг. 
+                // Больше никаких дублирующихся PostTransformMatrix!
                 AddComponent<PlayerTag>(entity);
-        
-                // 4. Устанавливаем значения
-                SetComponent(entity, new PostTransformMatrix
-                {
-                    // Используем масштаб из authoring
-                    Value = float4x4.Scale(new float3(scale, scale, scale))
-                });
+                
+                // 💡 Полезная заметка:
+                // Если вам ВДРУГ позарез нужно жестко переписать масштаб кодом именно в бейкере, 
+                // правильнее делать это через изменение LocalTransform, а не PostTransformMatrix:
+                /*
+                var transform = LocalTransform.FromPositionRotationScale(
+                    authoring.transform.position,
+                    authoring.transform.rotation,
+                    authoring.transform.localScale.x
+                );
+                AddComponent(entity, transform);
+                */
             }
         }
     }

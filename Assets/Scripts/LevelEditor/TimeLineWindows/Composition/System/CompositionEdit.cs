@@ -4,6 +4,8 @@ using EventBus;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSpawning;
@@ -30,17 +32,19 @@ namespace TimeLine
         private SetPositionInTimeline _setPositionInTimeline;
 
         private GameEventBus _gameEventBus;
+        private SaveComposition _saveComposition;
         private EventBinder _eventBinder;
         private string _compositionID;
         private string _savedName;
 
-        List<TrackObjectPacket> editObjects = new List<TrackObjectPacket>();
+        List<TrackObjectPacket> _editObjects = new();
 
         [Inject]
-        void Construct(GameEventBus gameEventBus, SetPositionInTimeline setPositionInTimeline)
+        void Construct(GameEventBus gameEventBus, SetPositionInTimeline setPositionInTimeline, SaveComposition saveComposition)
         {
             _gameEventBus = gameEventBus;
             _setPositionInTimeline = setPositionInTimeline;
+            _saveComposition = saveComposition;
         }
 
         internal void Edit(GroupGameObjectSaveData compositionData)
@@ -51,44 +55,69 @@ namespace TimeLine
             _savedName = compositionData.gameObjectName;
             trackObjectStorage.HideAll();
 
-            editObjects = facadeObjectSpawner.LoadObjects(compositionData.children);
+            
+
+            _editObjects = facadeObjectSpawner.LoadObjects(compositionData.children);
             
             double sum = 0;
 
-            foreach (var VARIABLE in editObjects)
+            foreach (var variable in _editObjects)
             {
-                sum += VARIABLE.components.Data.GetGlobalTicksPosition();
+                sum += variable.components.Data.GetGlobalTicksPosition();
             }
 
-            sum /= editObjects.Count;
+            sum /= _editObjects.Count;
 
             _eventBinder = new EventBinder();
-            _eventBinder.Add(_gameEventBus, (ref AddTrackObjectDataEvent data) => editObjects.Add(data.TrackObjectPacket));
-            _eventBinder.Add(_gameEventBus, (ref RemoveTrackObjectDataEvent data) => editObjects.Remove(data.TrackObjectPacket));
-
-
+            _eventBinder.Add(_gameEventBus, (ref AddTrackObjectDataEvent data) => _editObjects.Add(data.TrackObjectPacket));
+            _eventBinder.Add(_gameEventBus, (ref RemoveTrackObjectDataEvent data) => _editObjects.Remove(data.TrackObjectPacket));
+            
             _setPositionInTimeline.SetPosition((float)sum);
         }
 
+        public void CancelEdit()
+        {
+            _eventBinder.Dispose();
+
+            foreach (var ob in trackObjectStorage.GetAllActiveTrackData())
+            {
+                trackObjectRemover.SingleRemove(ob);
+            }
+
+            trackObjectStorage.ShowAll();
+            
+            _gameEventBus.Raise(new EndCompositionEdit());
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
+        }
+
+        public void EndEditCommand()
+        {
+           CommandHistory.ExecuteCommand(new EndEditCompositionCommand(this, _saveComposition, _compositionID, "")); 
+        }
+        
         public void EndEdit()
         {
             _eventBinder.Dispose();
             TrackObjectGroup trackObjectGroup =
-                groupCreater.Create(editObjects, _compositionID);
+                groupCreater.Create( trackObjectStorage.GetAllActiveTrackData(), _compositionID);
             // trackObjectGroup.sceneObject.GetComponent<NameComponent>().Name.Value = _savedName;
-            trackObjectStorage.ShowAll();
             GroupGameObjectSaveData data = saveLevel.SaveGroup(trackObjectGroup);
             data.gameObjectName = _savedName;
             composition.EditComposition(data, trackObjectGroup.compositionID);
             trackObjectRemover.ListRemove(trackObjectGroup);
-            foreach (var ob in editObjects)
+            foreach (var ob in  trackObjectStorage.GetAllActiveTrackData())
             {
                 trackObjectRemover.SingleRemove(ob);
             }
 
             compositionUpdater.UpdateCompositions(trackObjectGroup.compositionID);
+            
+            trackObjectStorage.ShowAll();
+
             _gameEventBus.Raise(new EndCompositionEdit());
             _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
+        
+        
     }
 }

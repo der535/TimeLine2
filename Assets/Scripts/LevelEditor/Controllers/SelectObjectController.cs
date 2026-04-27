@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
-using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using Zenject;
@@ -15,14 +16,14 @@ namespace TimeLine.EventBus.Events.TrackObject
     {
         [SerializeField] private SelectLock _selectLock;
         private GameEventBus _gameEventBus;
-        private List<TrackObjectPacket> _trackObjects = new();
+        private readonly List<TrackObjectPacket> _trackObjects = new();
         private TrackObjectStorage _trackObjectStorage;
         private TimeLineSettings _timeLineSettings;
         private TimeLineScroll _timeLineScroll;
         private ActionMap _actionMap;
 
-        public List<TrackObjectPacket> SelectObjects => this._trackObjects;
-        public HashSet<TrackObjectPacket> SelectObjectsHash => this._trackObjects.ToHashSet();
+        public List<TrackObjectPacket> SelectObjects => _trackObjects;
+        public HashSet<TrackObjectPacket> SelectObjectsHash => _trackObjects.ToHashSet();
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
@@ -37,7 +38,10 @@ namespace TimeLine.EventBus.Events.TrackObject
 
         void Start()
         {
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => { _trackObjects.Clear(); });
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) =>
+            {
+                _trackObjects.Clear();
+            });
         }
 
         public void UpdateSelection()
@@ -52,33 +56,27 @@ namespace TimeLine.EventBus.Events.TrackObject
 
             if (_selectLock.IsLocked) return;
 
-            var changed = false;
-
             if (isMultiple)
             {
                 if (!_trackObjects.Contains(trackObject))
                 {
-                    _trackObjects.Add(trackObject);
-                    changed = true;
+                    List<TrackObjectPacket> newState = _trackObjects.ToList();
+                    newState.Add(trackObject);
+                    CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), newState, ""));
                 }
                 else
                 {
-                    Deselect(trackObject);
+                    List<TrackObjectPacket> newState = _trackObjects.ToList();
+                    newState.Remove(trackObject);
+                    Debug.Log(_trackObjects.Count);
+                    Debug.Log(newState.Count);
+                    CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), newState, ""));
                 }
             }
             else
             {
                 if (!_trackObjects.Contains(trackObject))
-                {
-                    _trackObjects.Clear();
-                    _trackObjects.Add(trackObject);
-                    changed = true;
-                }
-            }
-
-            if (changed)
-            {
-                _gameEventBus.Raise(new SelectObjectEvent(_trackObjects, true));
+                    CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), new List<TrackObjectPacket>() { trackObject }, ""));
             }
         }
 
@@ -91,6 +89,7 @@ namespace TimeLine.EventBus.Events.TrackObject
                 if (!_trackObjects.Contains(trackObject))
                 {
                     _trackObjects.Add(trackObject);
+                    Debug.Log(trackObject.sceneObjectID);
                     changed = true;
                 }
                 else
@@ -105,20 +104,21 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
-        /// <summary>
-        /// Метод который выделяет объекты без вызова евента иза которого могло лагать
-        /// </summary>
-        /// <param name="trackObject"></param>
-        public void SelectNoClearNoEvent(TrackObjectPacket trackObject)
-        {
-            if (_selectLock.IsLocked) return;
 
-            if (!_trackObjects.Contains(trackObject))
-            {
-                _trackObjects.Add(trackObject);
-                _gameEventBus.Raise(new SelectObjectEvent(_trackObjects, false));
-            }
+        /// <summary>
+        /// Этот метод вызывается только из команды выделения
+        /// </summary>
+        /// <param name="trackObjects"></param>
+        public void SelectMultipleCommand(List<TrackObjectPacket> trackObjects)
+        {
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
+            _trackObjects.AddRange(trackObjects);
+            if (_trackObjects.Count > 0)
+                _gameEventBus.Raise(new SelectObjectEvent(_trackObjects, true));
+            else
+                _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
+
 
         /// <summary>
         /// Метод который снимант выделение с объектов без вызова евента иза которого могло лагать
@@ -146,32 +146,43 @@ namespace TimeLine.EventBus.Events.TrackObject
 
         public void DeselectAll()
         {
-            _trackObjects.Clear();
-            _gameEventBus.Raise(new DeselectAllObjectEvent());
+            CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), new List<TrackObjectPacket>(), ""));
         }
 
-        public void StartMultipleMove(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
+        List<TrackObjectPacket> _savedTrackObjectsMove = new();
+
+        public void StartMultipleMove()
         {
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
+            Debug.Log(SelectObjects.Count);
+            _savedTrackObjectsMove = SelectObjects.ToList();
+
+
+            foreach (var trackObjectData in _trackObjects)
             {
                 trackObjectData.components.TrackObject.SavePosition();
             }
         }
 
+        public void StopMultipleMove()
+        {
+            if (_savedTrackObjectsMove.Count > 0)
+            {
+                var previousPositions = _savedTrackObjectsMove.Select(x => (x.components.State.StartTrackObjectTicks, x.components.State.TrackLineIndex)).ToList();
+                var newPosition = _savedTrackObjectsMove.Select(x => (x.components.Data.StartTimeInTicks, x.components.Data.TrackLineIndex)).ToList();
 
-        public void MultipleMove(global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self,
-            double ticks)
+                CommandHistory.ExecuteCommand(new MoveTrackObjectCommand(_trackObjectStorage,_savedTrackObjectsMove, previousPositions, newPosition, ""));
+            }
+        }
+
+
+        public void MultipleMove(double ticks)
         {
             if (_trackObjects.Count <= 0 || ticks == 0) return;
 
-            List<TrackObjectPacket> trackObjectPackets = _trackObjects.Where(variable => variable.components.TrackObject != self).ToList();
+            List<TrackObjectPacket> trackObjectPackets = _trackObjects.ToList();
 
-
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
-            {
+            foreach (var trackObjectData in _trackObjects)
                 trackObjectData.components.TrackObject.AddTicksMove(PositionBinding(ticks, trackObjectPackets));
-            }
         }
 
         internal double PositionBinding(double delta, List<TrackObjectPacket> exclusion)
@@ -259,28 +270,63 @@ namespace TimeLine.EventBus.Events.TrackObject
             }
         }
 
+        public List<TrackObjectPacket> savedReziseObjects = new();
+        public List<(double Duraction, double startTime, double ReduceRight, double ReduceLeft)> oldResizeData = new();
+
         public void SaveResizingData(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self)
+            TrackObjectPacket self)
         {
-            self.SaveResizingData();
+            self.components.TrackObject.SaveResizingData();
             foreach (var trackObjectData in _trackObjects)
             {
                 trackObjectData.components.TrackObject.SaveResizingData();
             }
+            
+            savedReziseObjects = _trackObjects.ToList();
+
+            oldResizeData = _trackObjects.Select(x => (
+                Duraction: x.components.Data.TimeDurationInTicks,
+                startTime: x.components.Data.StartTimeInTicks,
+                ReduceRight: x.components.Data.ReducedRight,
+                ReduceLeft: x.components.Data.ReduceLeft
+            )).ToList();
+
+            if (!_trackObjects.Contains(self))
+            {
+                savedReziseObjects.Add(self);
+                oldResizeData.Add((self.components.Data.TimeDurationInTicks, self.components.Data.StartTimeInTicks, self.components.Data.ReducedRight, self.components.Data.ReduceLeft));
+            }
         }
 
-        public void MultipleResizingRight(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, double ticks)
+        public void SaveResizeToHistory(TrackObjectPacket self)
         {
-            List<TrackObjectPacket> trackObjectPackets = _trackObjects.Where(variable => variable.components.TrackObject != self).ToList();
-
-
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
+            var newResizeData = _trackObjects.Select(x => (
+                Duraction: x.components.Data.TimeDurationInTicks,
+                startTime: x.components.Data.StartTimeInTicks,
+                ReduceRight: x.components.Data.ReducedRight,
+                ReduceLeft: x.components.Data.ReduceLeft
+            )).ToList();
+            
+            if (!_trackObjects.Contains(self))
             {
-                // Debug.Log(PositionBindingRight(ticks, trackObjectPackets));
-
-                trackObjectData.components.TrackObject.MultipleRightResize(PositionBindingRight(ticks, trackObjectPackets));
+                newResizeData.Add((self.components.Data.TimeDurationInTicks, self.components.Data.StartTimeInTicks, self.components.Data.ReducedRight, self.components.Data.ReduceLeft));
             }
+            
+            CommandHistory.ExecuteCommand(new ResizeTrackObjectCommand(_trackObjectStorage, savedReziseObjects, oldResizeData, newResizeData, ""));
+        }
+
+        public void MultipleResizingRight(TrackObjectPacket self, double ticks)
+        {
+            List<TrackObjectPacket> trackObjectPackets = _trackObjects.ToList();
+
+            if (!_trackObjects.Contains(self))
+            {
+                var delta = PositionBindingRight(ticks, new List<TrackObjectPacket>() { self });
+                self.components.TrackObject.MultipleRightResize(delta);
+            }
+            else
+                foreach (var trackObjectData in _trackObjects)
+                    trackObjectData.components.TrackObject.MultipleRightResize(PositionBindingRight(ticks, trackObjectPackets));
         }
 
         internal double PositionBindingRight(double delta, List<TrackObjectPacket> exclusion)
@@ -375,14 +421,15 @@ namespace TimeLine.EventBus.Events.TrackObject
         }
 
         public void MultipleResizingLeft(
-            global::TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject.TrackObject self, double ticks)
+            TrackObjectPacket self, double ticks)
         {
-            List<TrackObjectPacket> trackObjectPackets = _trackObjects.Where(variable => variable.components.TrackObject != self).ToList();
+            List<TrackObjectPacket> trackObjectPackets = _trackObjects.ToList();
 
-            foreach (var trackObjectData in _trackObjects.Where(variable => variable.components.TrackObject != self))
-            {
-                trackObjectData.components.TrackObject.MultipleLeftResize(PositionBindingLeft(ticks, trackObjectPackets));
-            }
+            if (!trackObjectPackets.Contains(self))
+                self.components.TrackObject.MultipleLeftResize(PositionBindingLeft(ticks, new List<TrackObjectPacket>() { self }));
+            else
+                foreach (var trackObjectData in _trackObjects)
+                    trackObjectData.components.TrackObject.MultipleLeftResize(PositionBindingLeft(ticks, trackObjectPackets));
         }
 
 
@@ -479,7 +526,7 @@ namespace TimeLine.EventBus.Events.TrackObject
             {
                 if (movingPacket.components.Data.EnableResizeLimits)
                 {
-                    movingPacket.components.Data.ReducedLeft = movingPacket.components.State.StartReduceLeft + finalDelta;
+                    movingPacket.components.Data.ReduceLeft = movingPacket.components.State.StartReduceLeft + finalDelta;
 
                     // double newStartTimeInTicks = movingPacket.components.State.StartResizingTimeInTicks - finalDelta;
                     // double newDurationInTicks = movingPacket.components.State.StartResizingDuractionInTicks + finalDelta;

@@ -1,5 +1,6 @@
 ﻿using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Keyframe;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using Unity.Entities;
 using UnityEngine;
@@ -12,20 +13,23 @@ namespace TimeLine.Components
         private GameEventBus _eventBus;
         private InitializedComponentController _initializedComponent;
         private EntityComponentController _entityComponentController;
+        private KeyframeTrackStorage _keyframeTrackStorage;
 
         [Inject]
-        private void Construct(GameEventBus eventBus, InitializedComponentController initializedComponent, EntityComponentController entityComponentController)
+        private void Construct(GameEventBus eventBus, InitializedComponentController initializedComponent,
+            EntityComponentController entityComponentController, KeyframeTrackStorage keyframeTrackStorage)
         {
             _eventBus = eventBus;
             _initializedComponent = initializedComponent;
             _entityComponentController = entityComponentController;
+            _keyframeTrackStorage = keyframeTrackStorage;
         }
 
         private void Start()
         {
             _eventBus.SubscribeTo((ref RemoveComponentEvent data) =>
             {
-                _entityComponentController.RemoveComponent(data.Component, data.TrackObjectPacket.entity);
+                _entityComponentController.RemoveComponent(data.Component, _keyframeTrackStorage, data.TrackObjectPacket.entity);
             }, 1);
         }
     }
