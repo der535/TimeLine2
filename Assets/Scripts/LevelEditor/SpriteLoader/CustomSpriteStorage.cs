@@ -217,7 +217,7 @@ namespace TimeLine.LevelEditor.SpriteLoader
 
                 // Обновляем все зарегистрированные SpriteRenderers
                 UpdateAllRenderersForKey(textureData, newSprite);
-                _outlineBuffer.UpdateOutline(newSprite);
+                // _outlineBuffer.UpdateOutline(newSprite);
                 _outlineController.ReDrawOutline();
             }));
         }

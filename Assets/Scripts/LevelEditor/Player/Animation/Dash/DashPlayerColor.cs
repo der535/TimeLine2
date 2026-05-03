@@ -7,7 +7,7 @@ namespace TimeLine.LevelEditor.Player.Animation.Dash
     public class DashPlayerColor : MonoBehaviour
     {
         [SerializeField] private Material _playerMaterial;
-        [SerializeField] private TrailRenderer _trailRenderer;
+        // [SerializeField] private TrailRenderer _trailRenderer;
         [Space] 
         [SerializeField] private Color startColor;
         [SerializeField] private Color endColor;
@@ -18,8 +18,8 @@ namespace TimeLine.LevelEditor.Player.Animation.Dash
             DOVirtual.Color(startColor, endColor, animationDuration, value =>
             {
                 _playerMaterial.SetColor("_BaseColor", value);
-                _trailRenderer.colorGradient.colorKeys[0].color = value;
-                _trailRenderer.colorGradient.colorKeys[1].color = value;
+                // _trailRenderer.colorGradient.colorKeys[0].color = value;
+                // _trailRenderer.colorGradient.colorKeys[1].color = value;
             });
         }
     }

@@ -1,5 +1,6 @@
 using EventBus;
-using TimeLine.Player;
+using TimeLine.EventBus.Events.Player;
+using TimeLine.LevelEditor.Player;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -41,10 +42,10 @@ namespace TimeLine
             _currentHealth = maxHealth;
 
             // Подписка на события
-            _gameEventBus.SubscribeTo((ref PlayerTakeDamageEvent _) =>
+            _gameEventBus.SubscribeTo((ref PlayerHitEvent _) =>
             {
                 TakeDamage();
-            });
+            }, 5);
             _gameEventBus.SubscribeTo((ref TurnToPlayModeEvent _) =>
             {
                 RestoreHealth();
@@ -61,14 +62,20 @@ namespace TimeLine
             hit.Play(); // Проигрываем звук
 
             // Проверка режима игры
-            if (!playModeController.IsPlaying) return;
+            if (playModeController.IsPlaying)
+            {
+                // Уменьшение здоровья
+                _currentHealth--;
+            }
 
-            // Уменьшение здоровья
-            _currentHealth--;
             if (_currentHealth <= 0)
             {
                 _currentHealth = 0;
                 _gameEventBus.Raise(new PlayerDeathEvent()); // Вызываем событие смерти
+            }
+            else
+            {
+                _gameEventBus.Raise(new PlayerInvulnerabilityStartedEvent());
             }
             healthSlider.value = _currentHealth; // Обновляем UI
         }

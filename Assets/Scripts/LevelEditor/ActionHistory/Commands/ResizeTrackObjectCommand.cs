@@ -44,6 +44,9 @@ namespace TimeLine.LevelEditor.ActionHistory.Commands
                 _trackObjects[i].components.Data.StartTimeInTicks = newSize[i].startTime;
                 _trackObjects[i].components.Data.ReducedRight = newSize[i].ReduceRight;
                 _trackObjects[i].components.Data.ReduceLeft = newSize[i].ReduceLeft;
+                
+                Debug.Log(_trackObjects[i].components.Data.TimeDurationInTicks);
+                Debug.Log(_trackObjects[i].sceneObjectID);
                 _trackObjects[i].components.TrackObject.UpdateVisuals();
             }
         }
@@ -51,7 +54,6 @@ namespace TimeLine.LevelEditor.ActionHistory.Commands
         public void Undo()
         {
             RestoreTrackObjectPackets.RestoreLink(_trackObjectStorage, _trackObjects, _ids);
-
             MultipleLeftResize(_previousSize);
         }
     }

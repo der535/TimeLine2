@@ -12,6 +12,8 @@ namespace TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove
         public event Action<Vector2> OnMovePerformed;
         public event Action OnSpacePerformed;
         public event Action OnSpaceCanceled;
+        public event Action<bool> OnInputChange;
+        public bool InputActive { get; private set; }
 
         [Inject]
         private void Construct(ActionMap actionMap)
@@ -19,22 +21,26 @@ namespace TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove
             _actionMap = actionMap;
         }
 
-        private void OnEnable()
+        public void OnEnable()
         {
             _actionMap.Player.Enable();
 
             _actionMap.Player.PlayerMove.performed += HandleMove;
             _actionMap.Player.Space.performed += HandleSpace;
             _actionMap.Player.Space.canceled += HandleCancelSpace;
+            InputActive = true;
+            OnInputChange?.Invoke(true);
         }
 
-        private void OnDisable()
+        public void OnDisable()
         {
             _actionMap.Player.PlayerMove.performed -= HandleMove;
             _actionMap.Player.Space.performed -= HandleSpace;
             _actionMap.Player.Space.canceled -= HandleCancelSpace;
 
             _actionMap.Player.Disable();
+            InputActive = false;
+            OnInputChange?.Invoke(false);
         }
         
         private void HandleMove(InputAction.CallbackContext context)

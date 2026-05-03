@@ -263,7 +263,7 @@ namespace TimeLine.LevelEditor.Save
                     if (child is TrackObjectGroup childGroup)
                     {
                         var data = SaveGroup(childGroup, true);
-                        print(data.sceneObjectID);
+                        // print(data.sceneObjectID);
                         groupData.children.Add(data);
                     }
                     else
@@ -274,8 +274,7 @@ namespace TimeLine.LevelEditor.Save
                     }
                 }
             }
-
-
+            
             return groupData;
         }
 

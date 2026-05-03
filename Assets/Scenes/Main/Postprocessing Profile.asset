@@ -12,26 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2db86121404754db890f4c8dfe81b2, type: 3}
   m_Name: Bloom
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   skipIterations:
     m_OverrideState: 0
     m_Value: 1
   threshold:
-    m_OverrideState: 0
-    m_Value: 1.09
+    m_OverrideState: 1
+    m_Value: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 7.55
+    m_Value: 1
   scatter:
     m_OverrideState: 0
-    m_Value: 0.7
+    m_Value: 0.588
   clamp:
     m_OverrideState: 0
-    m_Value: 65472
+    m_Value: 65471.61
   tint:
     m_OverrideState: 0
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 1, g: 0, b: 0, a: 1}
   highQualityFiltering:
+    m_OverrideState: 0
+    m_Value: 1
+  filter:
     m_OverrideState: 0
     m_Value: 0
   downscale:
@@ -47,7 +50,7 @@ MonoBehaviour:
   dirtIntensity:
     m_OverrideState: 0
     m_Value: 0
---- !u!114 &-2441303066011585936
+--- !u!114 &-2275011688158618932
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -56,14 +59,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a60842ddcb2e1624dbdb53afcaf8c3c9, type: 3}
-  m_Name: CustomVolumeComponent
-  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 838c2ab9918d060429de367c946db23a, type: 3}
+  m_Name: NewPostProcessEffectVolumeComponent
+  m_EditorClassIdentifier: Assembly-CSharp::NewPostProcessEffectVolumeComponent
   active: 1
-  horizontalBlur:
-    m_OverrideState: 1
-    m_Value: 0
-  verticalBlur:
+  intensity:
     m_OverrideState: 1
     m_Value: 0
 --- !u!114 &11400000
@@ -80,4 +80,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   components:
   - {fileID: -3571432554226828989}
-  - {fileID: -2441303066011585936}
+  - {fileID: -2275011688158618932}

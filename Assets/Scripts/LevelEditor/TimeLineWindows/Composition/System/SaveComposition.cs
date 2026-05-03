@@ -161,7 +161,7 @@ namespace TimeLine
                     spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID, true, startTime: TimeLineConverter.Instance.TicksCurrentTime());
                     
                 },
-                () => { CommandHistory.ExecuteCommand(new StartEditCompositionCommand(compositionEdit,this, data.compositionID, "")); }, () =>
+                () => { CommandHistory.AddCommand(new StartEditCompositionCommand(compositionEdit,this, data.compositionID, ""), true); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
                     renameComposition.Setup(data.compositionID, data.branch.Name);
@@ -327,6 +327,15 @@ namespace TimeLine
             print($"Rename {data.gameObjectName} --> {changedName}");
             data.gameObjectName = changedName;
             data.branch.Name = changedName;
+        }
+
+        internal void RemoveAll()
+        {
+            foreach (var card in _cards)
+            {
+                Destroy(card.gameObject);
+            }
+            _cards.Clear();
         }
     }
 }

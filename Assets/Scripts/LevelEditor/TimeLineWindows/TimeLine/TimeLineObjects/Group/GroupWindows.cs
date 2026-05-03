@@ -82,7 +82,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.Group
         private void Create()
         {
             _actionMap.Editor.Enable();
-            CommandHistory.ExecuteCommand(new CreateCompositionCommand(
+            CommandHistory.AddCommand(new CreateCompositionCommand(
                 _saveLevel,
                 _saveComposition,
                 _trackObjectRemover,
@@ -91,7 +91,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.Group
                 _groupCreater,
                 _outputName,
                 _selectObjectController.SelectObjects,
-                ""));
+                ""), true);
         }
     }
 }

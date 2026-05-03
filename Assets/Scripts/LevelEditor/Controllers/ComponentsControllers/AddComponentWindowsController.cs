@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using EventBus;
 using TimeLine.EventBus.Events.TrackObject;
+using TimeLine.Keyframe;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using Unity.Entities;
 using UnityEngine;
@@ -20,11 +23,14 @@ namespace TimeLine.Components
         private GameEventBus _gameEventBus;
         private TrackObjectStorage _trackObjectStorage;
         private EntityComponentController _controller;
+        private KeyframeTrackStorage _keyframeTrackStorage;
+        
 
         [Inject]
         private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
-            EntityComponentController entityComponentController)
+            EntityComponentController entityComponentController, KeyframeTrackStorage keyframeTrackStorage)
         {
+            _keyframeTrackStorage = keyframeTrackStorage;
             _controller = entityComponentController;
             _gameEventBus = gameEventBus;
             _trackObjectStorage = trackObjectStorage;
@@ -56,10 +62,12 @@ namespace TimeLine.Components
                 AddComponent(component.ToString(), () =>
                 {
                     componentWindow.gameObject.SetActive(false);
-                    _controller.AddComponentSafely(component, _target);
-                    _gameEventBus.Raise(new AddComponentEvent(_trackObjectStorage.GetTrackObjectData(_target),
-                        component, _target));
-                    UpdateComponents(_selected);
+                    CommandHistory.AddCommand(new AddComponentCommand(_controller, _gameEventBus, this, _trackObjectStorage, _keyframeTrackStorage, component, _target, ""), true);
+                    
+                    // _controller.AddComponentSafely(component, _target);
+                    // _gameEventBus.Raise(new AddComponentEvent(_trackObjectStorage.GetTrackObjectData(_target),
+                        // component, _target));
+                    // UpdateComponents(_selected);
                 });
             }
         }

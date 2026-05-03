@@ -57,7 +57,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects
         {
             if (!windowsFocus.IsFocused || _selectObjectController.SelectObjects.Count <= 0) return;
             
-            CommandHistory.ExecuteCommand(new DeleteObjectCommand(_saveLevel,_facadeObjectSpawner,this,_selectObjectController.SelectObjects,""));
+            CommandHistory.AddCommand(new DeleteObjectCommand(_saveLevel,_facadeObjectSpawner,this,_selectObjectController.SelectObjects,""), true);
         }
 
         internal void RemoveList(List<TrackObjectPacket> target)

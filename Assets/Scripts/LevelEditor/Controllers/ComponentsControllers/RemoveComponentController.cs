@@ -29,6 +29,8 @@ namespace TimeLine.Components
         {
             _eventBus.SubscribeTo((ref RemoveComponentEvent data) =>
             {
+                Debug.Log(data.Component);
+                Debug.Log(data.TrackObjectPacket.sceneObjectID);
                 _entityComponentController.RemoveComponent(data.Component, _keyframeTrackStorage, data.TrackObjectPacket.entity);
             }, 1);
         }

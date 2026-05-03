@@ -29,7 +29,6 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public Vector2[] UIPoints = new Vector2[4];
 
         public Vector2 LastMousePosition;
-        public float LastAngle;
         
         public float3 GroupCenter;
         
@@ -56,6 +55,6 @@ namespace TimeLine.LevelEditor.TransformationSquare
         }
 
 // При клике (started) сохраняйте данные для всех выделенных объектов
-        public List<SelectedEntityData> _selectedEntities = new List<SelectedEntityData>();
+        public List<SelectedEntityData> _selectedEntities = new();
     }
 }

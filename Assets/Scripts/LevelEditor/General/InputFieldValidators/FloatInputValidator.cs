@@ -13,10 +13,10 @@ namespace TimeLine
         private readonly float _minValue;
         private readonly bool _hasMinValue;
 
-            /// <summary>
-            /// Флаг означающие вызывать ли _onValidValueChanged при изменение значения в ипут филде
-            /// </summary>
-        public bool isReadChanges = true;
+        /// <summary>
+        /// Флаг означающие вызывать ли _onValidValueChanged при изменение значения в ипут филде
+        /// </summary>
+        private bool isReadChanges = true;
 
         public FloatInputValidator(TMP_InputField inputField, Action<float> onValidValueChanged, float? minValue = null)
         {
@@ -26,7 +26,14 @@ namespace TimeLine
             _minValue = minValue ?? 0f;
 
             _inputField.onValueChanged.AddListener(OnInputValueChanged);
-            _inputField.onEndEdit.AddListener(OnInputEndEdit);
+            // _inputField.onEndEdit.AddListener(OnInputEndEdit);
+        }
+
+        public void SetValueWithoutNotify(float value)
+        {
+            isReadChanges = false;
+            _inputField.text = value.ToString(CultureInfo.InvariantCulture);
+            isReadChanges = true;
         }
 
         private void OnInputValueChanged(string input)
@@ -65,7 +72,7 @@ namespace TimeLine
                 _inputField.text = fallback.ToString(CultureInfo.InvariantCulture);
             }
         }
-        
+
         public void Dispose()
         {
             if (_inputField != null)

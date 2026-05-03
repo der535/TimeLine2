@@ -8,24 +8,8 @@ using Zenject;
 
 public class BranchCollection : MonoBehaviour
 {
-    public List<Branch> Branches { get; } = new List<Branch>();
+    public List<Branch> Branches { get; } = new ();
 
-    private GameEventBus _gameEventBus;
-
-    [Inject]
-    private void Constructor(GameEventBus gameEventBus)
-    {
-        _gameEventBus = gameEventBus;
-    }
-    
-    [Button]
-    public void printTree()
-    {
-        foreach (var branch in Branches)
-        {
-            branch.PrintTree();
-        }
-    }
 
     public Branch AddBranch(string id, string name)
     {
@@ -45,7 +29,8 @@ public class BranchCollection : MonoBehaviour
     {
         return Branches.FirstOrDefault(branch => branch.ID == id);
     }
-
+    
+    
     public TreeNode AddNodeToBranch(string branchId, string branchName, string path)
     {
         foreach (var branch in Branches)

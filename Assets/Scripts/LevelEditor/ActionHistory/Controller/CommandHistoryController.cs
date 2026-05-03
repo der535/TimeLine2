@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Zenject;
 
 namespace TimeLine.LevelEditor.ActionHistory
 {
@@ -7,33 +9,44 @@ namespace TimeLine.LevelEditor.ActionHistory
     /// </summary>
     public class CommandHistoryController : MonoBehaviour
     {
-        private void Update()
+        ActionMap _actionMap;
+        [Inject]
+        private void Construct(ActionMap actionMap)
         {
-            // Обработка горячей клавиши для отмены (Undo) - F2
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F2))
+            _actionMap = actionMap;
+        }
+
+        private void Start()
+        {
+            _actionMap.Editor.Z.started += context =>
             {
-                // Временное отключение записи команд в историю
-                CommandHistory.IsRecording = false;
+                if (_actionMap.Editor.LeftCtrl.IsPressed())
+                {
+                    // Временное отключение записи команд в историю
+                    CommandHistory.IsRecording = false;
 
-                // Выполнение операции отмены
-                CommandHistory.Undo();
+                    // Выполнение операции отмены
+                    CommandHistory.Undo();
 
-                // Восстановление записи команд
-                CommandHistory.IsRecording = true;
-            }
-
-            // Обработка горячей клавиши для повтора (Redo) - F3
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F3))
+                    // Восстановление записи команд
+                    CommandHistory.IsRecording = true;
+                }
+            };
+            
+            _actionMap.Editor.Y.started += context =>
             {
-                // Временное отключение записи команд в историю
-                CommandHistory.IsRecording = false;
+                if (_actionMap.Editor.LeftCtrl.IsPressed())
+                {
+                    // Временное отключение записи команд в историю
+                    CommandHistory.IsRecording = false;
 
-                // Выполнение операции повтора
-                CommandHistory.Redo();
+                    // Выполнение операции повтора
+                    CommandHistory.Redo();
 
-                // Восстановление записи команд
-                CommandHistory.IsRecording = true;
-            }
+                    // Восстановление записи команд
+                    CommandHistory.IsRecording = true;
+                }
+            };
         }
     }
 }

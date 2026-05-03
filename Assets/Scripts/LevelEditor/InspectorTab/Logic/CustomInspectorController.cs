@@ -76,7 +76,6 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _componentDrawers.Add(new CircleCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new CapsuleCollider2DDrawer());
             _componentDrawers.Add(new EdgeCollider2DDrawer());
-            _componentDrawers.Add(new ShakeDrawer());
             _componentDrawers.Add(new PolygonCollider2DDrawer(_colliderDrawer));
             _componentDrawers.Add(new RadialSunburstDrawer());
             _componentDrawers.Add(new ShakeCameraDrawer());

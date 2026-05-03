@@ -23,32 +23,17 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.FieldUI
         private FloatParameter _floatParameter;
 
         private TrackObjectStorage _trackObjectStorage;
-        private float _previousValue;
-
-
-        public void Setup(TrackObjectPacket trackObjectPacket, BaseParameterComponent component, FloatParameter floatParameter, string gameObjectID, Action createKeyframe, string fieldID)
-        {
-            _parameter.Setup(trackObjectPacket, fieldID);
-            _floatParameter = floatParameter;
-            parameterName.text = floatParameter.Name;
-            inputField.text = floatParameter.Value.ToString(CultureInfo.InvariantCulture);
-            _previousValue = _floatParameter.Value;
-
-            _inputValidator = new FloatInputValidator(inputField,
-                value =>
-                {
-                    // CommandHistory.ExecuteCommand(new FloatParameterChangeCommand(_trackObjectStorage, floatParameter,
-                    //     floatParameter.Name, gameObjectID, _previousValue, value));
-                    _previousValue = _floatParameter.Value;
-                });
-
-            floatParameter.OnValueChanged += () =>
-                inputField.text = _floatParameter.Value.ToString(CultureInfo.InvariantCulture);
-
-            UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe);
-        }
         
-        public void Setup(float value, string parameretName, Action createKeyframe, Action<float> onValueChanged, TrackObjectPacket trackObjectPacket,  string fieldID,  FloatParameter onValueChangedSub = null)
+        public float GetFieldHeight() => fieldRect.sizeDelta.y;
+
+        public void Setup(
+            float value,
+            string parameretName,
+            Action createKeyframe, 
+            Action<float> onValueChanged, 
+            TrackObjectPacket trackObjectPacket, 
+            string fieldID,
+            FloatParameter onValueChangedSub = null)
         {
             _parameter.Setup(trackObjectPacket, fieldID);
 
@@ -62,20 +47,17 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.FieldUI
             {
                 onValueChangedSub.OnValueChanged += () =>
                 {
-                    _inputValidator.isReadChanges = false;
-                    inputField.text = onValueChangedSub.Value.ToString(CultureInfo.InvariantCulture);
-                    _inputValidator.isReadChanges = true;
+                    inputField.onEndEdit.Invoke(inputField.text);
+                    _inputValidator.SetValueWithoutNotify(onValueChangedSub.Value);
                 };
             }
-
-            
 
             UIUtils.AddPointerListener(createKeyframeButton, EventTriggerType.PointerUp, createKeyframe);
         }
 
-        public float GetFieldHeight()
+        private void OnDestroy()
         {
-            return fieldRect.sizeDelta.y;
+            _inputValidator.Dispose();
         }
     }
 }

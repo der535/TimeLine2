@@ -15,7 +15,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
         [SerializeField] private Button button;
         private MapParameterComponen _mapParameterComponen;
         private GameEventBus _gameEventBus;
-        private EventBinder eventBinder;
+        private EventBinder _eventBinder;
         private TrackObjectPacket _trackObjectPacket;
 
         [Inject]
@@ -28,9 +28,9 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
         {
             button.onClick.AddListener(() => { Get(); });
             button.gameObject.SetActive(false);
-            eventBinder = new EventBinder();
-            eventBinder.Add(_gameEventBus, (ref ListeningParameterEvent _) => button.gameObject.SetActive(true));
-            eventBinder.Add(_gameEventBus, (ref StopListeningParameterEvent _) => button.gameObject.SetActive(false));
+            _eventBinder = new EventBinder();
+            _eventBinder.Add(_gameEventBus, (ref ListeningParameterEvent _) => button.gameObject.SetActive(true));
+            _eventBinder.Add(_gameEventBus, (ref StopListeningParameterEvent _) => button.gameObject.SetActive(false));
         }
 
         public void Setup(TrackObjectPacket trackObjectPacket, string parameterID)
@@ -48,7 +48,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
 
         private void OnDestroy()
         {
-            eventBinder.Dispose();
+            _eventBinder.Dispose();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using TimeLine.LevelEditor.ECS.Tags;
+﻿using TimeLine.EventBus.Events.Player;
+using TimeLine.LevelEditor.ECS.Tags;
 using TimeLine.LevelEditor.Player;
 using Unity.Entities;
 
@@ -15,7 +16,7 @@ namespace TimeLine.LevelEditor.ECS.System
             foreach (var (_, entity) in SystemAPI.Query<RefRO<HitEventTag>>().WithEntityAccess())
             {
                 if (PlayerInvulnerable.IsInvulnerable() == false)
-                    ECSServiceLocator.Instance.GameEventBus.Raise(new PlayerTakeDamageEvent());
+                    ECSServiceLocator.Instance.GameEventBus.Raise(new PlayerHitEvent());
 
                 // 2. Помечаем тег на удаление, чтобы анимация не срабатывала каждый кадр
                 ecb.RemoveComponent<HitEventTag>(entity);

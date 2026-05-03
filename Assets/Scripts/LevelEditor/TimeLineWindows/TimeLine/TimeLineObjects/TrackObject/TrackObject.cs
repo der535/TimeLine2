@@ -178,7 +178,10 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public void LeftResize(double startTime)
         {
             var endTime = _data.StartTimeInTicks + _data.TimeDurationInTicks;
+            if (endTime - startTime <= 0) startTime = endTime - 1;
+            
             var newDuraction = endTime - startTime;
+
             var duractionDelta = _data.TimeDurationInTicks - newDuraction;
 
             _data.StartTimeInTicks = startTime;

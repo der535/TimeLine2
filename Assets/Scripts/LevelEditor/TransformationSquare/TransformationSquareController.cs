@@ -15,6 +15,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Zenject;
 
@@ -46,7 +47,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public Action OnStopScaleY;
         public Action OnStopRotation;
 
-        public bool _activeToll = false;
+        [FormerlySerializedAs("_activeToll")]
+        public bool activeToll;
 
         /// <summary>
         /// Делается упор на то что метод будет вызываться в момент отжатия мыши и так как isEditing будет true он никогда не будет false пока дважды не сделаешь проверку
@@ -86,12 +88,11 @@ namespace TimeLine.LevelEditor.TransformationSquare
             {
                 if (data.UpdateVisual)
                 {
-                    if(_activeToll) view.SetActive(true);
+                    if (activeToll) view.SetActive(true);
                     _selectedEntits = data.Tracks.Select(x => x.entity).ToList();
                     _updateSquare.UpdateGroupOBB(data.Tracks.Select(x => x.entity).ToList());
                     _mouseClick.UpdateSelectedEntities(_selectedEntits);
                 }
-
             });
 
             _gameEventBus.SubscribeTo((ref DeselectObjectEvent data) =>
@@ -108,10 +109,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
                 _mouseClick.UpdateSelectedEntities(_selectedEntits);
             });
 
-            _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) =>
-            {
-                _updateSquare.UpdateGroupOBB(_data._selectedEntities.Select(x => x.Entity).ToList(), true);
-            });
+            _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) => { _updateSquare.UpdateGroupOBB(_data._selectedEntities.Select(x => x.Entity).ToList(), true); });
 
             _actionMap.Editor.MouseLeft.started += _ =>
             {
@@ -124,6 +122,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
             _actionMap.Editor.MouseLeft.canceled += _ =>
             {
+                if (!_data.GetIsEditingObject()) return;
+
                 foreach (var entity in _data._selectedEntities)
                 {
                     EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -133,24 +133,16 @@ namespace TimeLine.LevelEditor.TransformationSquare
                     var scale = GetScaleFromMatrix.Get(postTransform.Value);
 
                     if (!Mathf.Approximately(entity.InitialWorldPos.x, localTransform.Position.x))
-                    {
                         OnStopPositionX?.Invoke();
-                    }
 
                     if (!Mathf.Approximately(entity.InitialWorldPos.y, localTransform.Position.y))
-                    {
                         OnStopPositionY?.Invoke();
-                    }
 
                     if (!Mathf.Approximately(scale.x, entity.InitialScale.x))
-                    {
                         OnStopScaleX?.Invoke();
-                    }
 
                     if (!Mathf.Approximately(scale.y, entity.InitialScale.y))
-                    {
                         OnStopScaleY?.Invoke();
-                    }
 
                     if (!Mathf.Approximately(GetDegree.FromQuaternion(localTransform.Rotation).z,
                             GetDegree.FromQuaternion(entity.InitialRotation).z))
@@ -421,13 +413,13 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
         public void EnableTool()
         {
-            _activeToll = true;
+            activeToll = true;
             view.SetActive(true);
         }
 
         public void DisableTool()
         {
-            _activeToll = false;
+            activeToll = false;
             view.SetActive(false);
         }
     }

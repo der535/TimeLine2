@@ -63,6 +63,7 @@
     },
     "Описание скриптов/LevelEditor/Player": {
       "children": [
+        "Описание скриптов/LevelEditor/Player/PlayerHealth",
         "Описание скриптов/LevelEditor/Player/Описание папки.md",
         "Описание скриптов/LevelEditor/Player/Animation",
         "Описание скриптов/LevelEditor/Player/PlayerMoveNew",
@@ -92,6 +93,14 @@
         "Описание скриптов/LevelEditor/Player/Animation/Dash/DashAnimation.md",
         "Описание скриптов/LevelEditor/Player/Animation/Dash/DashCircleAnimation.md",
         "Описание скриптов/LevelEditor/Player/Animation/Dash/DashPlayerColor.md"
+      ],
+      "sortOrder": "custom"
+    },
+    "Описание скриптов/LevelEditor/Player/PlayerHealth": {
+      "children": [
+        "Описание скриптов/LevelEditor/Player/PlayerHealth/PlayerHealthModel.md",
+        "Описание скриптов/LevelEditor/Player/PlayerHealth/PlayerHealthPresenter.md",
+        "Описание скриптов/LevelEditor/Player/PlayerHealth/PlayerHealthView.md"
       ],
       "sortOrder": "custom"
     },

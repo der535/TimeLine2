@@ -73,40 +73,14 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
             parameter.Setup(stringParameter, parameterName, onValueChanged);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
-
-        public void CreateSelectComposition(CompositionParameter compositionParameter)
-        {
-            var parameter = _container.InstantiatePrefab(compositionField, _currentComponent.RootObject)
-                .GetComponent<CompositionFieldUI>();
-            parameter.Setup(compositionParameter);
-            _currentComponent.AddHeight(parameter.GetFieldHeight());
-        }
-
-        public void CreateKeyCode(KeyCodeParameter keyCodeParameter)
-        {
-            var parameter = _container.InstantiatePrefab(fieldUI, _currentComponent.RootObject)
-                .GetComponent<KeyCodeFieldUI>();
-            print(parameter);
-            parameter.Setup(keyCodeParameter, () => print("create keyframe (placeholder)"));
-            _currentComponent.AddHeight(parameter.GetFieldHeight());
-        }
-
+        
         public void CreateAddComponentButton(Entity target)
         {
             var parameter = _container.InstantiatePrefab(button, rootObject).GetComponent<AddComponentButton>();
             parameter.Setup(target);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
-
-        public void CreateFloatField(FloatParameter floatParameter, TrackObjectPacket trackObjectPacket,
-            BaseParameterComponent component, string gameObjectID, Action createKeyframe, string fieldId)
-        {
-            var parameter = _container.InstantiatePrefab(floatFieldUIPrefab, _currentComponent.RootObject)
-                .GetComponent<FloatFieldUI>();
-            parameter.Setup(trackObjectPacket, component, floatParameter, gameObjectID, createKeyframe, fieldId);
-            _currentComponent.AddHeight(parameter.GetFieldHeight());
-        }
-
+        
         public void CreateFloatField(float startValue, string parameterName, Action createKeyframe,
             Action<float> onValueChanged, TrackObjectPacket trackObjectPacket, string fieldID,
             FloatParameter onValueChangedSub = null)
@@ -117,14 +91,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
                 onValueChangedSub);
             _currentComponent.AddHeight(parameter.GetFieldHeight());
         }
-
-        public void CreateIntField(IntParameter intParameter, Action createKeyframe)
-        {
-            var parameter = Instantiate(intFieldUIPrefab, _currentComponent.RootObject);
-            parameter.Setup(intParameter, createKeyframe);
-            _currentComponent.AddHeight(parameter.GetFieldHeight());
-        }
-
+        
         public void CreateIntField(float startValue, string parameterName, Action<float> onValueChange,
             Action createKeyframe)
         {

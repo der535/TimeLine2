@@ -7,6 +7,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.Save;
 using UnityEngine;
@@ -23,6 +24,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
         private SaveComposition _saveComposition;
         private ObjectLoader _objectLoader;
         private SelectObjectController _selectObjectController;
+        private TrackObjectStorage _trackObjectStorage;
+        private TrackObjectRemover _trackObjectRemover;
 
         List<TrackObjectPacket> pastedObjects = new();
 
@@ -31,13 +34,17 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             Main main,
             SaveComposition saveComposition,
             ObjectLoader objectLoader,
-            SelectObjectController selectObjectController)
+            SelectObjectController selectObjectController,
+            TrackObjectStorage trackObjectStorage,
+            TrackObjectRemover trackObjectRemover)
         {
             _saveLevel = saveLevel;
             _main = main;
             _saveComposition = saveComposition;
             _objectLoader = objectLoader;
             _selectObjectController = selectObjectController;
+            _trackObjectStorage = trackObjectStorage;
+            _trackObjectRemover = trackObjectRemover;
         }
 
         internal void CopyObjectsWithSaving(List<TrackObjectPacket> selectedObjects)
@@ -72,40 +79,22 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             return gameObjectSaveData;
         }
 
-        internal void PasteObjectsFromSave(List<GameObjectSaveData> copydata, double startTime,
-            Action<List<TrackObjectPacket>> onCompleted = null, bool useCurrentTime = false)
+        internal List<TrackObjectPacket> PasteObjectsFromSave(List<GameObjectSaveData> copydata, double startTime,
+             bool useStartingPositionFromSave = false)
         {
             CommandHistory.IsRecording = false;
-            if (copydata == null) return;
+            if (copydata == null) return null;
             var minTime = GetMinTime(copydata);
-
-
-            CoroutineRunner.Instance.StartCoroutine(ProcessLargeData(copydata, minTime, startTime, list =>
-                {
-                    _selectObjectController.DeselectAll();
-                    _selectObjectController.SelectMultiple(pastedObjects);
-
-                    CommandHistory.IsRecording = true;
-                    onCompleted?.Invoke(list);
-                }));
-        }
-
-        IEnumerator ProcessLargeData(List<GameObjectSaveData> copydata, double minTime, double startTime, Action<List<TrackObjectPacket>> onCompleted, bool useCurrentTime = false)
-        {
+            
             pastedObjects = new();
             float maxTimePerFrame = 5f; // Бюджет 2мс
-
-            Stopwatch sw = new Stopwatch();
-    
-            sw.Start();
             
             foreach (var data in copydata)
             {
-               
                 // 1. Фиксируем время начала обработки ЭТОГО кадра
                 float frameStepStart = Time.realtimeSinceStartup;
 
-                if (useCurrentTime == false)
+                if (useStartingPositionFromSave == false)
                 {
                     // Здесь используем твою переменную startTime из параметров
                     data.startTime = data.startTime - minTime + startTime;
@@ -120,25 +109,18 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
                     pastedObjects.Add(_objectLoader
                         .LoadObject(data, generateNewSceneID: true, addToTitleCloneText: true).Item1);
                 }
-
-                // 2. Проверяем: сколько времени прошло с начала обработки ТЕКУЩЕГО кадра
-                if (Time.realtimeSinceStartup - frameStepStart > maxTimePerFrame)
-                {
-                    yield return null;
-                    // После возврата из yield выполнение продолжится отсюда в следующем кадре
-                }
             }
             
-            sw.Stop();
+            _selectObjectController.DeselectAll();
+            _selectObjectController.SelectMultiple(pastedObjects);
 
-            UnityEngine.Debug.Log($"Время выполнения: {sw.ElapsedMilliseconds} мс ({sw.ElapsedTicks} тиков)");
-    
-            onCompleted?.Invoke(pastedObjects);
+            CommandHistory.IsRecording = true;
+            return pastedObjects;
         }
-
+        
         internal void PasteObjects()
         {
-            PasteObjectsFromSave(dataCopy, TimeLineConverter.Instance.TicksCurrentTime());
+            CommandHistory.AddCommand(new PastObjectsCommand(this, _trackObjectStorage, _trackObjectRemover, dataCopy, ""), true);
         }
 
 

@@ -56,6 +56,7 @@ namespace TimeLine
 
         public void Play()
         {
+            Debug.Log("Play");
             _state.IsPlaying = true;
 
             if (_state.IsFirstPlaying)

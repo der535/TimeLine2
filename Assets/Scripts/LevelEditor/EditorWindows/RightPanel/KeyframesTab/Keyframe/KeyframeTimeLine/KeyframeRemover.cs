@@ -45,7 +45,7 @@ namespace TimeLine
             };
         }
 
-        void Remove(Track track, Keyframe.Keyframe keyframe)
+        public void Remove(Track track, Keyframe.Keyframe keyframe)
         {
             track.RemoveKeyframe(keyframe);
             if (track.Keyframes.Count == 0)

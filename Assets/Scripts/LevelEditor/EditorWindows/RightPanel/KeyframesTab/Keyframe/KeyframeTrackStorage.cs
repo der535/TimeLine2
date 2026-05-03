@@ -18,7 +18,7 @@ namespace TimeLine.Keyframe
 {
     public class KeyframeTrackStorage : MonoBehaviour
     {
-        private List<TrackData> tracks = new();
+        private readonly List<TrackData> _tracks = new();
 
         private GameEventBus _gameEventBus;
 
@@ -39,11 +39,11 @@ namespace TimeLine.Keyframe
             _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) => { Evaluate(data.Time); });
         }
 
-        internal List<TrackData> GetTracks() => tracks;
+        internal List<TrackData> GetTracks() => _tracks;
         
         internal void Evaluate(double time)
         {
-            foreach (var variable in tracks)
+            foreach (var variable in _tracks)
             {
                 if (variable.Active)
                 {
@@ -57,28 +57,26 @@ namespace TimeLine.Keyframe
 
         public void RemoveTrack(TreeNode treeNode)
         {
-            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            foreach (var track in _tracks.ToList().Where(track => track.TreeNode == treeNode))
             {
-                tracks.Remove(track);
+                _tracks.Remove(track);
             }
         }
 
         public void RemoveTrackWithNode(Track trackr)
         {
-            foreach (var track in tracks.ToList().Where(track => track.Track == trackr))
+            foreach (var track in _tracks.ToList().Where(track => track.Track == trackr))
             {
                 Branch branch = _branchCollection.GetBranch(track.BranchId);
                 branch.RemoveNode(track.TreeNode);
-                // _branchCollection.AddNodeToBranch()
-                // track.TreeNode
 
-                tracks.Remove(track);
+                _tracks.Remove(track);
             }
         }
 
         public void SetActiveTrack(TreeNode treeNode, bool active)
         {
-            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            foreach (var track in _tracks.ToList().Where(track => track.TreeNode == treeNode))
             {
                 track.Active = active;
             }
@@ -86,13 +84,13 @@ namespace TimeLine.Keyframe
 
         public void AddTrack(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId, bool updateTreeUI)
         {
-            tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
+            _tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
             if (updateTreeUI) _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
         public Track GetTrack(TreeNode treeNode)
         {
-            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            foreach (var track in _tracks.ToList().Where(track => track.TreeNode == treeNode))
             {
                 return track.Track;
             }

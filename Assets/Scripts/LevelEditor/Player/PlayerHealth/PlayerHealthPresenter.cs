@@ -1,56 +1,40 @@
+using System;
 using EventBus;
-using TimeLine.Player;
-using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.Player.PlayerHealth
 {
-    public class PlayerHealthPresenter : MonoBehaviour
+    public class PlayerHealthPresenter : IInitializable
     {
-        [SerializeField] private int maxHealth = 3; // Максимальное здоровье — теперь редактируется в инспекторе
-        [SerializeField] private PlayerDeath playerDeath; // Контроллер смерти
-        [SerializeField] private PlayModeController playModeController; // Контроллер режима игры
+        private const int MaxHealth = 3; // Максимальное здоровье — теперь редактируется в инспекторе
 
+        private PlayerDeath _playerDeath;
+        private PlayModeController _playModeController; // Контроллер режима игры
         private PlayerHealthModel _model;
         private PlayerHealthView _view;
         private GameEventBus _gameEventBus;
 
         // Внедрение зависимостей через Zenject
         [Inject]
-        private void Constructor(GameEventBus gameEventBus)
+        private void Constructor(
+            GameEventBus gameEventBus,
+            PlayModeController playModeController, 
+            PlayerDeath playerDeath,
+            PlayerHealthView playerHealthView)
         {
             _gameEventBus = gameEventBus;
-        }
-
-        private void Start()
-        {
-            // Создаём экземпляр Model с заданным maxHealth
-            _model = new PlayerHealthModel(maxHealth);
-            _view = GetComponent<PlayerHealthView>();
-
-            // Инициализируем компоненты
-            _model.Initialize();
-            _view.Initialize(_model.MaxHealth);
-
-            // Подписка на события
-            _gameEventBus.SubscribeTo((ref PlayerTakeDamageEvent _) =>
-            {
-                HandleTakeDamage();
-            });
-            _gameEventBus.SubscribeTo((ref TurnToPlayModeEvent _) =>
-            {
-                HandleRestoreHealth();
-            });
-            _gameEventBus.SubscribeTo((ref RestartGameEvent data) => { HandleRestoreHealth(); });
+            _playModeController = playModeController;
+            _playerDeath = playerDeath;
+            _view = playerHealthView;
         }
 
         // Обработка получения урона
         private void HandleTakeDamage()
         {
-            if (playerDeath.IsPlayerDeath) return;
+            if (_playerDeath.IsPlayerDeath) return;
             _view.PlayHitSound();
 
-            if (!playModeController.IsPlaying) return;
+            // if (!playModeController.IsPlaying) return;
 
             bool isDead = _model.TakeDamage();
             _view.UpdateHealthUI(_model.CurrentHealth);
@@ -66,6 +50,11 @@ namespace TimeLine
         {
             _model.RestoreHealth();
             _view.UpdateHealthUI(_model.CurrentHealth);
+        }
+
+        public void Initialize()
+        {
+            throw new NotImplementedException();
         }
     }
 }

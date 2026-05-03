@@ -55,7 +55,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (_transformationSquareController._activeToll)
+        if (_transformationSquareController.activeToll)
         {
             if(_transformationSquareController.CheckIsEditing()) return;
         }
@@ -176,9 +176,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         {
             // Получаем родителя
             entity = entityManager.GetComponentData<Parent>(entity).Value;
-
-            Debug.Log(entityManager.HasComponent(entity, typeof(EntityActiveTag)));
-
+            
             parent = entity;
         }
 

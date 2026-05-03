@@ -49,6 +49,7 @@ namespace TimeLine
 
         internal void Edit(GroupGameObjectSaveData compositionData)
         {
+            Debug.Log($"edit called {compositionData.compositionID}");
             _gameEventBus.Raise(new StartCompositionEdit(compositionData));
 
             _compositionID = compositionData.compositionID;
@@ -75,24 +76,25 @@ namespace TimeLine
             _setPositionInTimeline.SetPosition((float)sum);
         }
 
+        public void CancelEditCommand()
+        {
+            CommandHistory.AddCommand(new CancelCompositionCommand(this, _saveComposition, _compositionID, ""), true); 
+        }
+
         public void CancelEdit()
         {
+            _gameEventBus.Raise(new DeselectAllObjectEvent());
+            
             _eventBinder.Dispose();
-
-            foreach (var ob in trackObjectStorage.GetAllActiveTrackData())
-            {
-                trackObjectRemover.SingleRemove(ob);
-            }
-
+            trackObjectRemover.RemoveList( trackObjectStorage.GetAllActiveTrackData());
             trackObjectStorage.ShowAll();
             
             _gameEventBus.Raise(new EndCompositionEdit());
-            _gameEventBus.Raise(new DeselectAllObjectEvent());
         }
 
         public void EndEditCommand()
         {
-           CommandHistory.ExecuteCommand(new EndEditCompositionCommand(this, _saveComposition, _compositionID, "")); 
+           CommandHistory.AddCommand(new EndEditCompositionCommand(this, _saveComposition, _compositionID, ""), true); 
         }
         
         public void EndEdit()

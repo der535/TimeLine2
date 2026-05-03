@@ -64,16 +64,12 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
         {
             if( selectedEntity == null) return;
             
-            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            
             
             float3 mouseWorld = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
             // Угол от центра группы до мышки
             _data.InitialMouseAngle = math.atan2(mouseWorld.y - _data.GroupCenter.y, mouseWorld.x - _data.GroupCenter.x);
 
             _data.LastMousePosition = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
-            
-            // UpdateSelectedEntities(selectedEntity);
             
             _data.InitialBoxSize = _data.CurrentLocalMax - _data.CurrentLocalMin;
             _data.InitialBoxLocalMin = _data.CurrentLocalMin;

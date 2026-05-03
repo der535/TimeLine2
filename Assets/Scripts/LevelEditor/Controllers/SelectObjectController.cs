@@ -62,7 +62,7 @@ namespace TimeLine.EventBus.Events.TrackObject
                 {
                     List<TrackObjectPacket> newState = _trackObjects.ToList();
                     newState.Add(trackObject);
-                    CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), newState, ""));
+                    CommandHistory.AddCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), newState, ""), true);
                 }
                 else
                 {
@@ -70,13 +70,13 @@ namespace TimeLine.EventBus.Events.TrackObject
                     newState.Remove(trackObject);
                     Debug.Log(_trackObjects.Count);
                     Debug.Log(newState.Count);
-                    CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), newState, ""));
+                    CommandHistory.AddCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), newState, ""), true);
                 }
             }
             else
             {
                 if (!_trackObjects.Contains(trackObject))
-                    CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), new List<TrackObjectPacket>() { trackObject }, ""));
+                    CommandHistory.AddCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), new List<TrackObjectPacket>() { trackObject }, ""), true);
             }
         }
 
@@ -146,16 +146,14 @@ namespace TimeLine.EventBus.Events.TrackObject
 
         public void DeselectAll()
         {
-            CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), new List<TrackObjectPacket>(), ""));
+            CommandHistory.AddCommand(new SelectObjectCommand(_trackObjectStorage, this, _trackObjects.ToList(), new List<TrackObjectPacket>(), ""), true);
         }
 
         List<TrackObjectPacket> _savedTrackObjectsMove = new();
 
         public void StartMultipleMove()
         {
-            Debug.Log(SelectObjects.Count);
             _savedTrackObjectsMove = SelectObjects.ToList();
-
 
             foreach (var trackObjectData in _trackObjects)
             {
@@ -170,7 +168,7 @@ namespace TimeLine.EventBus.Events.TrackObject
                 var previousPositions = _savedTrackObjectsMove.Select(x => (x.components.State.StartTrackObjectTicks, x.components.State.TrackLineIndex)).ToList();
                 var newPosition = _savedTrackObjectsMove.Select(x => (x.components.Data.StartTimeInTicks, x.components.Data.TrackLineIndex)).ToList();
 
-                CommandHistory.ExecuteCommand(new MoveTrackObjectCommand(_trackObjectStorage,_savedTrackObjectsMove, previousPositions, newPosition, ""));
+                CommandHistory.AddCommand(new MoveTrackObjectCommand(_trackObjectStorage,_savedTrackObjectsMove, previousPositions, newPosition, ""), false);
             }
         }
 
@@ -312,7 +310,7 @@ namespace TimeLine.EventBus.Events.TrackObject
                 newResizeData.Add((self.components.Data.TimeDurationInTicks, self.components.Data.StartTimeInTicks, self.components.Data.ReducedRight, self.components.Data.ReduceLeft));
             }
             
-            CommandHistory.ExecuteCommand(new ResizeTrackObjectCommand(_trackObjectStorage, savedReziseObjects, oldResizeData, newResizeData, ""));
+            CommandHistory.AddCommand(new ResizeTrackObjectCommand(_trackObjectStorage, savedReziseObjects, oldResizeData, newResizeData, ""), false);
         }
 
         public void MultipleResizingRight(TrackObjectPacket self, double ticks)

@@ -24,8 +24,9 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: -3555484719484374845, guid: 57d7c4c16e2765b47a4d2069b311bffe, type: 3}
     probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures: []
-  m_RendererFeatureMap: 
+  m_RendererFeatures:
+  - {fileID: 3144585369998141642}
+  m_RendererFeatureMap: ca28a1b8bbcfa32b
   m_UseNativeRenderPass: 0
   m_LayerMask:
     serializedVersion: 2
@@ -101,6 +102,20 @@ MonoBehaviour:
   _shader: {fileID: 4800000, guid: 9a902e6d68fe8344890c5926c684e820, type: 3}
   _outlineMat: {fileID: 0}
   _step: {x: 0.0012678751, y: 0.002254, z: 0, w: 0}
+--- !u!114 &3144585369998141642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68c4208fe0a883643bb2ff6692e135c6, type: 3}
+  m_Name: NewPostProcessEffectRendererFeature
+  m_EditorClassIdentifier: Assembly-CSharp::NewPostProcessEffectRendererFeature
+  m_Active: 1
+  m_Material: {fileID: 2100000, guid: 78a08787ca30045abb69f6f7dd878e09, type: 2}
 --- !u!114 &6747970613115325806
 MonoBehaviour:
   m_ObjectHideFlags: 0

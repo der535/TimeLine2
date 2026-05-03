@@ -253,6 +253,24 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Z"",
+                    ""type"": ""Button"",
+                    ""id"": ""096c7b9d-e62d-41ba-9bf5-8621db7a84f6"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Y"",
+                    ""type"": ""Button"",
+                    ""id"": ""6967ad0b-4e54-4ef3-beb9-006fc37547a9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -475,6 +493,28 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""action"": ""CutHalf"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6c23d716-53a2-4bdf-a3f5-275c9c90d1a7"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Z"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""45fd8031-91ae-472e-a66a-8d6a711fbead"",
+                    ""path"": ""<Keyboard>/y"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Y"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -627,6 +667,8 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         m_Editor_CutRight = m_Editor.FindAction("CutRight", throwIfNotFound: true);
         m_Editor_CutLeft = m_Editor.FindAction("CutLeft", throwIfNotFound: true);
         m_Editor_CutHalf = m_Editor.FindAction("CutHalf", throwIfNotFound: true);
+        m_Editor_Z = m_Editor.FindAction("Z", throwIfNotFound: true);
+        m_Editor_Y = m_Editor.FindAction("Y", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_PlayerMove = m_Player.FindAction("PlayerMove", throwIfNotFound: true);
@@ -734,6 +776,8 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     private readonly InputAction m_Editor_CutRight;
     private readonly InputAction m_Editor_CutLeft;
     private readonly InputAction m_Editor_CutHalf;
+    private readonly InputAction m_Editor_Z;
+    private readonly InputAction m_Editor_Y;
     /// <summary>
     /// Provides access to input actions defined in input action map "Editor".
     /// </summary>
@@ -818,6 +862,14 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @CutHalf => m_Wrapper.m_Editor_CutHalf;
         /// <summary>
+        /// Provides access to the underlying input action "Editor/Z".
+        /// </summary>
+        public InputAction @Z => m_Wrapper.m_Editor_Z;
+        /// <summary>
+        /// Provides access to the underlying input action "Editor/Y".
+        /// </summary>
+        public InputAction @Y => m_Wrapper.m_Editor_Y;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Editor; }
@@ -897,6 +949,12 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @CutHalf.started += instance.OnCutHalf;
             @CutHalf.performed += instance.OnCutHalf;
             @CutHalf.canceled += instance.OnCutHalf;
+            @Z.started += instance.OnZ;
+            @Z.performed += instance.OnZ;
+            @Z.canceled += instance.OnZ;
+            @Y.started += instance.OnY;
+            @Y.performed += instance.OnY;
+            @Y.canceled += instance.OnY;
         }
 
         /// <summary>
@@ -962,6 +1020,12 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             @CutHalf.started -= instance.OnCutHalf;
             @CutHalf.performed -= instance.OnCutHalf;
             @CutHalf.canceled -= instance.OnCutHalf;
+            @Z.started -= instance.OnZ;
+            @Z.performed -= instance.OnZ;
+            @Z.canceled -= instance.OnZ;
+            @Y.started -= instance.OnY;
+            @Y.performed -= instance.OnY;
+            @Y.canceled -= instance.OnY;
         }
 
         /// <summary>
@@ -1344,6 +1408,20 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCutHalf(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Z" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnZ(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Y" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnY(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Player" which allows adding and removing callbacks.

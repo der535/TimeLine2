@@ -119,7 +119,7 @@ namespace TimeLine.LevelEditor.SelectBox
         {
             selectBox.gameObject.SetActive(false);
             _state.IsDragging = false;
-            if(_state.HasExceededDeadZone)CommandHistory.ExecuteCommand(new SelectObjectCommand(_trackObjectStorage, _selectObjectController, _savedState.ToList(), selectedObjects.ToList(), ""));
+            if(_state.HasExceededDeadZone)CommandHistory.AddCommand(new SelectObjectCommand(_trackObjectStorage, _selectObjectController, _savedState.ToList(), selectedObjects.ToList(), ""), true);
             _state.HasExceededDeadZone = false;
 
             // _selectObjectController.SelectMultiple(selectedObjects);

@@ -22,7 +22,7 @@ namespace TimeLine.LevelEditor.Player.PlayerMoveNew.PlayerFreeMove
         private PlayerComponents _playerComponents;
         private PlayerInputView _playerInputView;
         [SerializeField] DashAnimation _dashAnimation;
-        private Action<Vector2> _onMovePerformed;
+        public Action<Vector2> _onMovePerformed;
         private Vector2 _savedVelocity;
         private Vector2 _moveVector;
 
@@ -67,19 +67,26 @@ namespace TimeLine.LevelEditor.Player.PlayerMoveNew.PlayerFreeMove
                 entityManager.SetComponentData(_playerComponents.Player, localTransform);
             };
 
+            _playerInputView.OnInputChange += b =>
+            {
+                _onMovePerformed.Invoke(Vector2.zero);
+            };
+
             _playerInputView.OnMovePerformed += _onMovePerformed;
+            
         }
 
         private void Update()
         {
+            var moveVector = !_playerInputView.InputActive ? new float3(0) : new float3(_moveVector.x, _moveVector.y, 0);
+            
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
 
             if (entityManager.HasComponent<PhysicsVelocity>(_playerComponents.Player))
             {
                 entityManager.SetComponentData(_playerComponents.Player, new PhysicsVelocity
                 {
-                    Linear = new float3(_moveVector.x, _moveVector.y, 0),
+                    Linear = moveVector,
                     Angular = float3.zero
                 });
             }
