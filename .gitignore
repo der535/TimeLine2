@@ -73,3 +73,16 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Rider
+Assets/Plugins/Editor/JetBrains/
+Assets/Plugins/Editor/Rider/
+
+# Файлы ОС
+.DS_Store
+Thumbs.db
+
+# Бэкапы и архивы (они должны быть в LFS или внешнем хранилище)
+*.bak
+*.zip
+*.unitypackage
