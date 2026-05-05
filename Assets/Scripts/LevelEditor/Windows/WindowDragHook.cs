@@ -3,16 +3,21 @@ using UnityEngine.EventSystems;
 
 namespace TimeLine
 {
-    public class WindowDragHook : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
+    public class WindowDragHook : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerDownHandler
     {
         [SerializeField] private RectTransform _rectTransform;
-        [SerializeField] private Canvas _canvas;
+        private Canvas _canvas;
         private Vector2 _originalPosition;
+
+        private void Awake()
+        {
+            _canvas = GetComponentInParent<Canvas>();
+        }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
             _originalPosition = _rectTransform.anchoredPosition;
-            Debug.Log("1");
+            _rectTransform.SetAsLastSibling();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -23,6 +28,11 @@ namespace TimeLine
         public void OnEndDrag(PointerEventData eventData)
         {
             //
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            _rectTransform.SetAsLastSibling();
         }
     }
 }
