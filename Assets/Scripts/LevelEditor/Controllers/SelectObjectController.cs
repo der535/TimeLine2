@@ -42,6 +42,12 @@ namespace TimeLine.EventBus.Events.TrackObject
             {
                 _trackObjects.Clear();
             });
+            _gameEventBus.SubscribeTo((ref TurnToPlayModeEvent data) =>
+            {
+                CommandHistory.IsRecording = false;
+                DeselectAll();
+                CommandHistory.IsRecording = true;
+            });
         }
 
         public void UpdateSelection()

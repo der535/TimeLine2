@@ -7,7 +7,6 @@ public static class SpriteLoad
 {
     public static IEnumerator LoadSpriteFromPath(string filePath, TextureData textureData, System.Action<Sprite> callback)
     {
-
         using (UnityWebRequest request = UnityWebRequest.Get(filePath))
         {
             yield return request.SendWebRequest();
@@ -34,13 +33,15 @@ public static class SpriteLoad
 
             tex.filterMode = textureData.FilterMode;
 
+            tex.wrapMode = TextureWrapMode.Clamp;
+
             Rect rect = new Rect(0, 0, tex.width, tex.height);
             Vector2 pivot = new Vector2(0.5f, 0.5f);
             float pixelsPerUnit = textureData.PixelsPerUnit;
 
 
             Sprite sprite = Sprite.Create(tex, rect, pivot, pixelsPerUnit);
-            
+
             sprite.name = textureData.Id;
 
             if (sprite == null)

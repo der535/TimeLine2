@@ -29,7 +29,6 @@ using TimeLine.LevelEditor.InspectorTab.Logic;
 using TimeLine.LevelEditor.LevelEffects;
 using TimeLine.LevelEditor.LoadingScreen.Controllers;
 using TimeLine.LevelEditor.MaxObjectIndex.Controller;
-using TimeLine.LevelEditor.outline;
 using TimeLine.LevelEditor.Save;
 using TimeLine.LevelEditor.Select_composition;
 using TimeLine.LevelEditor.SpriteLoader;
@@ -162,7 +161,6 @@ namespace TimeLine.LevelEditor.Core
             Container.BindInstance(render.CursorBeatPosition).AsSingle();
             Container.BindInstance(render.keyframeVizualizer).AsSingle();
             Container.BindInstance(render.TimeLineMarkersController).AsSingle();
-            Container.BindInstance(render.SpriteOutlineBuffer).AsSingle();
             Container.BindInstance(render.VerticalBezierScroll).AsSingle();
         }
 
@@ -292,7 +290,6 @@ namespace TimeLine.LevelEditor.Core
         public CursorBeatPosition CursorBeatPosition;
         [FormerlySerializedAs("KeyfeameVizualizer")] public KeyframeVizualizer keyframeVizualizer;
         public TimeLineMarkersController TimeLineMarkersController;
-        public SpriteOutlineBuffer SpriteOutlineBuffer;
         public VerticalBezierScroll VerticalBezierScroll;
     }
 

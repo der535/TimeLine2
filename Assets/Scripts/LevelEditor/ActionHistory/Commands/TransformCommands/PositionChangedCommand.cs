@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using TimeLine.CustomInspector.UI.Drawers;
+using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
 using Unity.Mathematics;

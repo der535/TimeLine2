@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using EventBus;
 using NaughtyAttributes;
 using TimeLine.EventBus.Events.TrackObject;
-using TimeLine.LevelEditor.outline;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;

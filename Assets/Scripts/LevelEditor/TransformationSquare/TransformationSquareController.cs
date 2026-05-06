@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using EventBus;
@@ -41,6 +42,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
         public bool isEditing;
 
+        public Action OnValueChange;
+
         public Action OnStopPositionY;
         public Action OnStopPositionX;
         public Action OnStopScaleX;
@@ -50,16 +53,6 @@ namespace TimeLine.LevelEditor.TransformationSquare
         [FormerlySerializedAs("_activeToll")]
         public bool activeToll;
 
-        /// <summary>
-        /// Делается упор на то что метод будет вызываться в момент отжатия мыши и так как isEditing будет true он никогда не будет false пока дважды не сделаешь проверку
-        /// </summary>
-        /// <returns></returns>
-        public bool CheckIsEditing()
-        {
-            var saved = isEditing;
-            isEditing = false;
-            return saved;
-        }
 
         [Inject]
         private void Construct(SceneToRawImageConverter sceneToRawImageConverter, GameEventBus eventBus,
@@ -109,7 +102,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
                 _mouseClick.UpdateSelectedEntities(_selectedEntits);
             });
 
-            _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent data) => { _updateSquare.UpdateGroupOBB(_data._selectedEntities.Select(x => x.Entity).ToList(), true); });
+            _gameEventBus.SubscribeTo((ref EditorSceneCameraUpdateViewEvent _) => { _updateSquare.UpdateGroupOBB(_data._selectedEntities.Select(x => x.Entity).ToList(), true); });
 
             _actionMap.Editor.MouseLeft.started += _ =>
             {
@@ -117,12 +110,14 @@ namespace TimeLine.LevelEditor.TransformationSquare
 
                 _mouseClick.Click(_selectedEntits);
 
-                if (_data.GetIsEditingObject()) isEditing = true;
+                if (_data.GetIsEditingObject() && activeToll) isEditing = true;
             };
 
             _actionMap.Editor.MouseLeft.canceled += _ =>
             {
                 if (!_data.GetIsEditingObject()) return;
+
+                StartCoroutine(SetEditingStateFalse());
 
                 foreach (var entity in _data._selectedEntities)
                 {
@@ -144,11 +139,9 @@ namespace TimeLine.LevelEditor.TransformationSquare
                     if (!Mathf.Approximately(scale.y, entity.InitialScale.y))
                         OnStopScaleY?.Invoke();
 
-                    if (!Mathf.Approximately(GetDegree.FromQuaternion(localTransform.Rotation).z,
-                            GetDegree.FromQuaternion(entity.InitialRotation).z))
+                    if (!Mathf.Approximately(rotationData.RotateZ, entity.InitialRotation)) // Предполагая, что вы сохранили float в InitialRotationValue
                     {
-                        rotationData.RotateZ = GetDegree.FromQuaternion(localTransform.Rotation).z;
-                        manager.SetComponentData(entity.Entity, rotationData);
+                        // Мы не берем угол из трансформа! Он уже должен быть правильно записан в RotationData во время Update
                         OnStopRotation?.Invoke();
                     }
                 }
@@ -176,27 +169,39 @@ namespace TimeLine.LevelEditor.TransformationSquare
                     out Vector2 localPoint))
                 return;
 
-// Проверяем, попадает ли точка в фактический размер прямоугольника
             if (!mapImage.rectTransform.rect.Contains(localPoint) && !_data.GetIsEditingObject())
             {
                 // Мышь за пределами границ картинки
                 return;
             }
 
-// Если дошли сюда — мышь внутри!
 
+            // В начале блока проверки курсора
+            float currentRotation = GetDegree.FromQuaternion(_data.PivotToWorldMatrix.Rotation()).z;
 
+            WindowsCursorID nextState = WindowsCursorID.Arrow;
+
+// Проверка линий (Стороны)
             if (_mouseDistanceCheck.RightLine() || _mouseDistanceCheck.LeftLine())
-                _cursorController.SetResizeHorizontal();
+                nextState = GetRotatedSizeCursor(WindowsCursorID.SizeWE, currentRotation);
             else if (_mouseDistanceCheck.UpBorder() || _mouseDistanceCheck.MouseInResizeAreaDown())
-                _cursorController.SetResizeVertical();
-            else _cursorController.SetIdel();
+                nextState = GetRotatedSizeCursor(WindowsCursorID.SizeNS, currentRotation);
 
-            if (_mouseDistanceCheck.TopLeftCorner()) _cursorController.SetResizeDiagonallyLeft();
-            if (_mouseDistanceCheck.TopRightCorner()) _cursorController.SetResizeDiagonallyRight();
-            if (_mouseDistanceCheck.BottomRightCorner()) _cursorController.SetResizeDiagonallyLeft();
-            if (_mouseDistanceCheck.BottomLeftCorner()) _cursorController.SetResizeDiagonallyRight();
-            if (_mouseDistanceCheck.CheckMouseAllPointsDistanceToRotate()) _cursorController.SetHover();
+// Проверка углов
+            if (_mouseDistanceCheck.TopLeftCorner())
+                nextState = GetRotatedSizeCursor(WindowsCursorID.SizeNWSE, currentRotation);
+            else if (_mouseDistanceCheck.TopRightCorner())
+                nextState = GetRotatedSizeCursor(WindowsCursorID.SizeNESW, currentRotation);
+            else if (_mouseDistanceCheck.BottomRightCorner())
+                nextState = GetRotatedSizeCursor(WindowsCursorID.SizeNWSE, currentRotation);
+            else if (_mouseDistanceCheck.BottomLeftCorner())
+                nextState = GetRotatedSizeCursor(WindowsCursorID.SizeNESW, currentRotation);
+
+// Вращение и перемещение
+            if (_mouseDistanceCheck.CheckMouseAllPointsDistanceToRotate())
+                nextState = WindowsCursorID.Hand;
+
+            _cursorController.SetState(nextState);
 
             if (_data.IsResizingLeft && _data.IsResizingUp)
             {
@@ -309,33 +314,55 @@ namespace TimeLine.LevelEditor.TransformationSquare
                 EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
                 float3 mouseWorld = _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage();
 
-                // 1. Считаем угол относительно ТОГО ЖЕ центра, что и при клике
-                float currentMouseAngle =
-                    math.atan2(mouseWorld.y - _data.GroupCenter.y, mouseWorld.x - _data.GroupCenter.x);
-                float angleDelta = currentMouseAngle - _data.InitialMouseAngle;
-                quaternion rotationOffset = quaternion.AxisAngle(new float3(0, 0, 1), angleDelta);
+                // 1. Используем стабильный центр, который был зафиксирован ПРИ КЛИКЕ
+                // (Убедитесь, что вы сохранили его в _data.InitialGroupCenter при старте вращения)
+                float3 pivot = _data.GroupCenter;
+
+                // 2. Считаем текущий угол
+                float currentMouseAngle = math.atan2(mouseWorld.y - pivot.y, mouseWorld.x - pivot.x);
+
+                // 3. Считаем разницу относительно ПРЕДЫДУЩЕГО кадра
+                if (!_data.WasRotatingLastFrame) // Добавьте этот флаг в свой Data
+                {
+                    _data.LastMouseAngle = currentMouseAngle;
+                    _data.WasRotatingLastFrame = true;
+                }
+
+                float angleDelta = currentMouseAngle - _data.LastMouseAngle;
+
+                // 4. Нормализуем дельту (чтобы при переходе PI -> -PI дельта была 0.01, а не 6.28)
+                angleDelta = math.atan2(math.sin(angleDelta), math.cos(angleDelta));
+                float deltaDegrees = math.degrees(angleDelta);
 
                 foreach (var snap in _data._selectedEntities)
                 {
-                    // 2. Вращаем сохраненный "рычаг" (офсет)
-                    float3 rotatedOffset = math.rotate(rotationOffset, snap.RotationOffsetWorld);
-
-                    // 3. Новая позиция = Центр + повернутый рычаг
-                    float3 newWorldPos = _data.GroupCenter + rotatedOffset;
-
-                    // 4. Новый поворот самого объекта
-                    quaternion newWorldRot = math.mul(rotationOffset, snap.InitialRotation);
-
-                    // 5. Запись в ECS
                     var lt = em.GetComponentData<LocalTransform>(snap.Entity);
-                    lt.Position = newWorldPos;
-                    lt.Rotation = newWorldRot;
+                    var rd = em.GetComponentData<RotationData>(snap.Entity);
+
+                    // ВРАЩЕНИЕ ПОЗИЦИИ: теперь крутим текущую позицию на дельту
+                    float3 currentOffset = lt.Position - pivot;
+                    quaternion stepRotation = quaternion.AxisAngle(new float3(0, 0, 1), angleDelta);
+                    float3 rotatedOffset = math.rotate(stepRotation, currentOffset);
+
+                    lt.Position = pivot + rotatedOffset;
+
+                    // ВРАЩЕНИЕ ОБЪЕКТА: просто прибавляем дельту к текущему углу
+                    rd.RotateZ += deltaDegrees;
+                    // Опционально: держим в пределах 0..360, если это нужно для UI
+                    // rd.RotateZ = (rd.RotateZ + 360) % 360;
+
+                    lt.Rotation = GetDegree.FromEuler(new Vector3(0, 0, rd.RotateZ));
 
                     em.SetComponentData(snap.Entity, lt);
+                    em.SetComponentData(snap.Entity, rd);
                 }
 
-                // После вращения всех объектов обновляем рамку OBB
+                _data.LastMouseAngle = currentMouseAngle; // Сохраняем для следующего кадра
+
+                // Важно: вызываем UpdateGroupOBB только для визуальной рамки, 
+                // но НЕ меняем GroupCenter, используемый в расчетах выше, до конца драга.
                 _updateSquare.UpdateGroupOBB(_selectedEntits, false);
+                OnValueChange?.Invoke();
             }
         }
 
@@ -409,6 +436,7 @@ namespace TimeLine.LevelEditor.TransformationSquare
             }
 
             _updateSquare.UpdateGroupOBB(_selectedEntits, false);
+            OnValueChange?.Invoke();
         }
 
         public void EnableTool()
@@ -421,6 +449,59 @@ namespace TimeLine.LevelEditor.TransformationSquare
         {
             activeToll = false;
             view.SetActive(false);
+        }
+
+        IEnumerator SetEditingStateFalse()
+        {
+            yield return new WaitForEndOfFrame();
+            isEditing = false;
+        }
+
+        private WindowsCursorID GetRotatedSizeCursor(WindowsCursorID baseCursor, float rotationDegrees)
+        {
+            // Нормализуем угол в диапазон [0, 180)
+            float angle = rotationDegrees % 180;
+            if (angle < 0) angle += 180;
+
+            // Определяем сектор (шаг 45 градусов с порогом 22.5)
+            int sector = 0;
+            if (angle >= 22.5f && angle < 67.5f) sector = 1; // 45 градусов
+            else if (angle >= 67.5f && angle < 112.5f) sector = 2; // 90 градусов
+            else if (angle >= 112.5f && angle < 157.5f) sector = 3; // 135 градусов
+
+            // Обработка для прямых сторон (WE / NS)
+            if (baseCursor == WindowsCursorID.SizeWE || baseCursor == WindowsCursorID.SizeNS)
+            {
+                switch (sector)
+                {
+                    case 1: // 45 градусов
+                        return (baseCursor == WindowsCursorID.SizeNS) ? WindowsCursorID.SizeNWSE : WindowsCursorID.SizeNESW;
+                    case 2: // 90 градусов
+                        return (baseCursor == WindowsCursorID.SizeWE) ? WindowsCursorID.SizeNS : WindowsCursorID.SizeWE;
+                    case 3: // 135 градусов
+                        return (baseCursor == WindowsCursorID.SizeNS) ? WindowsCursorID.SizeNESW : WindowsCursorID.SizeNWSE;
+                    default: // 0 или 180 градусов
+                        return baseCursor;
+                }
+            }
+
+            // Обработка для углов (NWSE / NESW)
+            if (baseCursor == WindowsCursorID.SizeNWSE || baseCursor == WindowsCursorID.SizeNESW)
+            {
+                switch (sector)
+                {
+                    case 1: // 45 градусов
+                        return (baseCursor == WindowsCursorID.SizeNWSE) ? WindowsCursorID.SizeWE : WindowsCursorID.SizeNS;
+                    case 2: // 90 градусов
+                        return (baseCursor == WindowsCursorID.SizeNWSE) ? WindowsCursorID.SizeNESW : WindowsCursorID.SizeNWSE;
+                    case 3: // 135 градусов
+                        return (baseCursor == WindowsCursorID.SizeNWSE) ? WindowsCursorID.SizeNS : WindowsCursorID.SizeWE;
+                    default: // 0 или 180 градусов
+                        return baseCursor;
+                }
+            }
+
+            return baseCursor;
         }
     }
 }

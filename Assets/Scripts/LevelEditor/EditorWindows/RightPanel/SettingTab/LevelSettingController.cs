@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using EventBus;
 using TimeLine.EventBus.Events.Input;
@@ -9,7 +8,7 @@ using TMPro;
 using UnityEngine;
 using Zenject;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.EditorWindows.RightPanel.SettingTab
 {
     public class LevelSettingController : MonoBehaviour
     {
@@ -44,29 +43,6 @@ namespace TimeLine
                 {
                     _gameEventBus.Raise(new SetBPMEvent(value));
                 });
-                
-                //             
-                // _offset.onValueChanged.AddListener((string value) =>
-                // {
-                //     if (value == "-" || value == "." || string.IsNullOrEmpty(value)) return;
-                //
-                //     var calculated = Math.Abs(float.Parse(value)).ToString(CultureInfo.InvariantCulture);
-                //     var original = float.Parse(value);
-                //     if (original < 0) _offset.text = calculated;
-                //
-                //     _gameEventBus.Raise(new SetOffsetEvent(float.Parse(calculated)));
-                // });
-                //
-                // _bpm.onValueChanged.AddListener((string value) =>
-                // {
-                //     if (value == "-" || value == "." || string.IsNullOrEmpty(value)) return;
-                //
-                //     var calculated = Math.Abs(float.Parse(value)).ToString(CultureInfo.InvariantCulture);
-                //     var original = float.Parse(value);
-                //     if (original < 0) _offset.text = calculated;
-                //
-                //     _gameEventBus.Raise(new SetBPMEvent(float.Parse(calculated)));
-                // });
             });
 
         }

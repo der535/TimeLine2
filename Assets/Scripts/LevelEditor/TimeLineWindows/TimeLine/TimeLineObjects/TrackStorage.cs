@@ -63,28 +63,7 @@ namespace TimeLine
 
         internal TrackLine GetTrackLineByIndex(int index)
         {
-            while (index > trackLines.Count-1)
-            {
-                AddLine();
-            }
-            
-            return trackLines[index];
-        }
-
-        public int GetIndex(TrackLine trackLine)
-        {
-            for (int i = 0; i < trackLines.Count; i++)
-            {
-                if(trackLine == trackLines[i]) return i;
-            }
-
-            return -1;
-        }
-
-        public TrackLine GetTrackLine(int index)
-        {
             if (index < 0) return trackLines[0];
-            if (index >= trackLines.Count) return trackLines[^1];
             return trackLines[index];
         }
 

@@ -71,7 +71,7 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
                     _customInspectorDrawer.CreateFloatField(boxColliderData.boxSize.y, "Size/Y", null,
                         (value) =>
                         {
-                            boxColliderData.boxSize = new float3(boxColliderData.boxSize.y, value, 100);
+                            boxColliderData.boxSize = new float3(boxColliderData.boxSize.x, value, 100);
                             entityManager.SetComponentData(target, boxColliderData);
                         }, trackObjectPacket, "BoxCollider.Size.Y");
 

@@ -8,23 +8,21 @@ namespace TimeLine.LevelEditor.ECS
     {
         internal static Vector3 FromQuaternion(quaternion rotation)
         {
-            // Явно указываем, что используем UnityEngine.Quaternion
-            // Это превратит данные из ECS в формат, который понимает Transform
-            UnityEngine.Quaternion unityRot = rotation;
-
-            // Если IDE не видит .eulerAngles, значит есть проблема с ссылками на UnityEngine.CoreModule
-            // Но это свойство ЕСТЬ у каждого UnityEngine.Quaternion с 2005 года.
-            return unityRot.eulerAngles;
+            // Используем математику Unity.Mathematics для точности
+            // math.Euler возвращает радианы, переводим в градусы
+            float3 angles = math.degrees(math.Euler(rotation));
+            return new Vector3(angles.x, angles.y, angles.z);
         }
 
         internal static quaternion FromEuler(Vector3 euler)
         {
-            // 1. Конвертируем Vector3 (градусы) в float3 (радианы)
+            // Чтобы корректно задать поворот из ЛЮБЫХ градусов (даже -600 или 1000),
+            // переводим их в радианы и создаем кватернион.
+            // Математически он будет верным, хотя при чтении позже покажет 120.
             float3 radians = math.radians(new float3(euler.x, euler.y, euler.z));
-
-            // 2. Вызываем метод именно у структуры quaternion
-            // Используйте EulerZXY, так как это стандарт для Unity ECS
-            return quaternion.EulerZXY(radians); 
+            
+            // Используем Order ZXY, так как это стандарт для Unity
+            return quaternion.Euler(radians);
         }
     }
 }

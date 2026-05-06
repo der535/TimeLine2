@@ -153,24 +153,13 @@ namespace TimeLine.LevelEditor.Save
             string json = File.ReadAllText(path);
             var saveLevelDto = JsonConvert.DeserializeObject<SaveLevelDTO>(json);
             
-            // SaveDataRestorer.RestoreAllGraphs(saveLevelDto);
-            // Debug.Log("Восстановлено");
-            
-
-            Stopwatch sw = new Stopwatch();
-    
-            sw.Start();
-            
             // 1. Загружаем корневые НЕ-группы (обычные объекты) в правильном порядке
             foreach (var saveData in saveLevelDto.gameObjectSaveData)
             {
                 facadeObjectSpawner.LoadObject(saveData);
             }
 
-            sw.Stop();
 
-            // Debug.Log($"Время выполнения: {sw.ElapsedMilliseconds} мс ({sw.ElapsedTicks} тиков)");
-            
             // 2. Загружаем корневые ГРУППЫ в правильном порядке
             foreach (var groupBase in saveLevelDto.groupGameObjectSaveData)
             {
@@ -263,13 +252,11 @@ namespace TimeLine.LevelEditor.Save
                     if (child is TrackObjectGroup childGroup)
                     {
                         var data = SaveGroup(childGroup, true);
-                        // print(data.sceneObjectID);
                         groupData.children.Add(data);
                     }
                     else
                     {
                         var data = SaveGameObject(child, "");
-                        // print(data.sceneObjectID);
                         groupData.children.Add(data);
                     }
                 }
@@ -302,9 +289,6 @@ namespace TimeLine.LevelEditor.Save
             groupData.reduceRight = group.components.Data.ReducedRight;
             groupData.reduceLeft = group.components.Data.ReduceLeft;
             
-            // Debug.Log(groupData.reduceRight);
-            // Debug.Log(groupData.reduceLeft);
-
             foreach (var child in group.TrackObjectDatas)
             {
                 if (child is TrackObjectGroup childGroup)

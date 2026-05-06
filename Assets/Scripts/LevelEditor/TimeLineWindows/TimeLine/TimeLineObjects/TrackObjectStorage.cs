@@ -61,7 +61,7 @@ namespace TimeLine
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent x) => ActiveSceneObject(x.Time));
             _gameEventBus.SubscribeTo((ref LevelLoadedEvent _) =>
-                ActiveSceneObject(_playbackState.SmoothTimeInTicks));
+                ActiveSceneObject(_playbackState.SmoothTimeInTicks, true));
             _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => DeselectAllObject());
             _gameEventBus.SubscribeTo((ref SelectObjectEvent data) =>
             {
@@ -130,16 +130,17 @@ namespace TimeLine
         }
 
 
-        private void ActiveSceneObject(double time)
+        private void ActiveSceneObject(double time, bool forceUpdate = false)
         {
             for (int i = 0; i < _trackObjects.Count; i++)
             {
-                CheckActiveTrackObjects(_trackObjects[i], time);
+                CheckActiveTrackObjects(_trackObjects[i], time, forceUpdate);
             }
 
             for (int i = 0; i < _trackObjectGroups.Count; i++)
             {
-                CheckActiveGroup(_trackObjectGroups[i], time);
+                // Используем forceUpdate: forceUpdate
+                CheckActiveGroup(_trackObjectGroups[i], time, forceUpdate: forceUpdate); 
             }
         }
 
@@ -183,7 +184,7 @@ namespace TimeLine
             }
         }
 
-        public void ToggleEntity(Entity entity, bool active)
+        public void ToggleEntity(Entity entity, bool active, bool force = false)
         {
             var manager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
@@ -192,101 +193,111 @@ namespace TimeLine
                 if (manager.HasComponent<EntityActiveTag>(entity))
                 {
                     bool isActive = manager.IsComponentEnabled<EntityActiveTag>(entity);
-                    if (isActive == true) return;
+                    // Если не force, то выходим при совпадении состояний
+                    if (!force && isActive == true) return;
                 }
 
                 manager.SetComponentEnabled<EntityActiveTag>(entity, true);
                 manager.SetComponentData(entity, new EntityActiveTag() { IsActive = true });
-                manager.AddComponent<ActivatingRequestTag>(entity);
+
+                // Принудительно добавляем тег запроса, даже если сущность уже была активна
+                if (!manager.HasComponent<ActivatingRequestTag>(entity))
+                {
+                    manager.AddComponent<ActivatingRequestTag>(entity);
+                }
             }
             else
             {
                 if (manager.HasComponent<EntityActiveTag>(entity))
                 {
                     bool isActive = manager.IsComponentEnabled<EntityActiveTag>(entity);
-                    if (isActive == false) return;
+                    // Если не force, то выходим при совпадении состояний
+                    if (!force && isActive == false) return;
                 }
 
                 manager.SetComponentEnabled<EntityActiveTag>(entity, false);
                 manager.SetComponentData(entity, new EntityActiveTag() { IsActive = false });
-                manager.AddComponent<DeactivatingRequestTag>(entity);
+
+                // Принудительно добавляем тег запроса на деактивацию
+                if (!manager.HasComponent<DeactivatingRequestTag>(entity))
+                {
+                    manager.AddComponent<DeactivatingRequestTag>(entity);
+                }
             }
         }
 
-        private void CheckActiveTrackObjects(TrackObjectPacket trackObject, double time)
+        private void CheckActiveTrackObjects(TrackObjectPacket trackObject, double time, bool forceUpdate = false)
         {
-            if (trackObject.components.View.GetActive())
+            // Если мы НЕ форсим обновление и объект выключен во View — просто выключаем сущность (старая логика)
+            if (!forceUpdate && !trackObject.components.View.GetActive())
             {
-                bool shouldBeActive = trackObject.components.Data.GetGlobalTicksPosition() <= time &&
-                                      trackObject.components.Data.TimeDurationInTicks +
-                                      trackObject.components.Data.GetGlobalTicksPosition() > time;
-
-                // trackObject.activeObjectController?.Turn(trackObject.components.Data.IsActive && shouldBeActive);
-                ToggleEntity(trackObject.entity, shouldBeActive);
-            }
-            else
-            {
-                // trackObject.activeObjectController?.Turn(false);
                 ToggleEntity(trackObject.entity, false);
+                return;
             }
+
+
+            // Иначе — честный расчет по времени
+            double start = trackObject.components.Data.GetGlobalTicksPosition();
+            bool shouldBeActive = time >= start &&
+                                  time < start + trackObject.components.Data.TimeDurationInTicks;
+
+            ToggleEntity(trackObject.entity, shouldBeActive, forceUpdate);
         }
 
         private void CheckActiveGroup(TrackObjectGroup group, double time, bool enchanted = false,
-            bool activeGroup = true)
+            bool activeGroup = true, bool forceUpdate = false, int depth = 0) // Добавили depth для красоты логов
         {
-            // Debug.Log($" {group.components.Data.Name} --------------------------------------");
+            string indent = new string('-', depth * 2); // Визуальный отступ
             double groupStart = group.components.Data.GetGlobalTicksPosition();
             double groupEnd = groupStart + group.components.Data.TimeDurationInTicks;
             bool isGroupActive = time >= groupStart && time < groupEnd;
 
-            if ((!enchanted && !group.components.View.GetActive()) || activeGroup == false)
+            // Лог входа в группу
+            // Debug.Log($"{indent} [Group: {group.entity.Index}] Time: {time:F2}, Range: [{groupStart:F2}-{groupEnd:F2}], IsActive: {isGroupActive}, Force: {forceUpdate}");
+
+            if (!forceUpdate && (!enchanted && !group.components.View.GetActive()) || activeGroup == false)
             {
-                ToggleEntity(group.entity, false);
-                // group.activeObjectController.Turn(false);
+                // Debug.Log($"{indent} <color=red>Stopping Group {group.entity.Index}</color> (Reason: Not active or not enchanted)");
+                ToggleEntity(group.entity, false, forceUpdate);
 
                 foreach (var trackObject in group.TrackObjectDatas)
                 {
                     if (trackObject is TrackObjectGroup nestedGroup)
                     {
-                        CheckActiveGroup(nestedGroup, time, true, false);
+                        CheckActiveGroup(nestedGroup, time, true, false, forceUpdate, depth + 1);
                         continue;
                     }
 
-                    // trackObject.activeObjectController.Turn(false);
-                    ToggleEntity(trackObject.entity, false);
+                    ToggleEntity(trackObject.entity, false, forceUpdate);
                 }
 
                 return;
             }
 
-
-            ToggleEntity(group.entity, isGroupActive);
-            // group.activeObjectController.Turn(isGroupActive);
+            // Переключение самой группы
+            ToggleEntity(group.entity, isGroupActive, forceUpdate);
 
             foreach (var trackObject in group.TrackObjectDatas)
             {
                 if (!isGroupActive)
                 {
-                    // trackObject.activeObjectController.Turn(false);
-                    ToggleEntity(trackObject.entity, false);
+                    ToggleEntity(trackObject.entity, false, forceUpdate);
+                    // Если группа не активна, объекты внутри тоже гасим, но продолжаем рекурсию для вложенных групп
                 }
 
                 if (trackObject is TrackObjectGroup nestedGroup)
                 {
-                    CheckActiveGroup(nestedGroup, time, true, isGroupActive);
+                    CheckActiveGroup(nestedGroup, time, true, isGroupActive, forceUpdate, depth + 1);
                     continue;
                 }
-
-                // Debug.Log($" {trackObject.components.Data.Name} --------------------------------------");
 
                 double objStart = trackObject.components.Data.GetGlobalTicksPosition();
                 double objEnd = objStart + trackObject.components.Data.TimeDurationInTicks;
                 bool isObjectActive = time >= objStart && time < objEnd;
 
-                bool finalState = group.components.Data.IsActive && isObjectActive && isGroupActive;
+                bool finalState = (forceUpdate || group.components.Data.IsActive) && isObjectActive && isGroupActive;
 
-                // trackObject.activeObjectController.Turn(finalState);
-                ToggleEntity(trackObject.entity, finalState);
+                ToggleEntity(trackObject.entity, finalState, forceUpdate);
             }
         }
 
@@ -298,9 +309,7 @@ namespace TimeLine
                 new TrackObjectPacket(sceneObject, entity, selectedObject, branch, id);
             _gameEventBus.Raise(new AddTrackObjectDataEvent(trackObjectPacket));
             _trackObjects.Add(trackObjectPacket);
-            // sceneObject.GetComponent<SceneObjectLink>().trackObjectPacket = trackObjectPacket;
 
-            //Debug.Log($"[Add] TrackObject '{selectedObject.Name}' added to storage.");
             return trackObjectPacket;
         }
 
@@ -468,6 +477,7 @@ namespace TimeLine
                     childs.AddRange(GetAllTrackObjectPacket(trackObjectPacket));
                 }
             }
+
             return childs;
         }
 
@@ -840,9 +850,9 @@ namespace TimeLine
 
             foreach (var childEntity in children)
             {
-               Debug.Log( entityManager.HasComponent(childEntity, typeof(ObjectPositionOffsetData)));
-               Debug.Log( childEntity.Index);
-               Debug.Log( childEntity.Version);
+                Debug.Log(entityManager.HasComponent(childEntity, typeof(ObjectPositionOffsetData)));
+                Debug.Log(childEntity.Index);
+                Debug.Log(childEntity.Version);
                 ObjectPositionOffsetData
                     offsetData =
                         entityManager

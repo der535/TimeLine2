@@ -19,7 +19,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         public int TrackLineIndex;
         public Vector2 StartMousePosition;
         public double StartTrackObjectTicks;
-        public float StartMouseXLocal;
+        public Vector2 StartMouseLocal;
 
         public bool DeathZonePass;
     }

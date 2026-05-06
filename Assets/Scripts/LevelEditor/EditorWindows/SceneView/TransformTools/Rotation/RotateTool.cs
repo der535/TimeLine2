@@ -11,9 +11,10 @@ namespace TimeLine
         
         private bool isRotating;
         private Vector2 previousMousePosition;
-        public float currentRotation = 0f;
+        
+        // Это значение должно быть "чистым" накопленным углом
+        private float currentRotation = 0f; 
         public float rotationSpeed = 0.5f;
-        public float startRotation = 0f;
         
         public Action<float> onRotate;
         
@@ -28,10 +29,11 @@ namespace TimeLine
             _actionMap = actionMap;
         }
 
-
         private void Start()
         {
-            currentRotation = transform.eulerAngles.z;
+            // УБРАНО: currentRotation = transform.eulerAngles.z; 
+            // Мы не должны инициализировать это из eulerAngles, 
+            // так как там углы всегда 0..360.
         }
 
         void Update()
@@ -49,11 +51,15 @@ namespace TimeLine
 
         public void StartRotation()
         {
-            StartRotationAction.Invoke();
+            // 1. Сначала уведомляем контроллер, чтобы он зафиксировал StartRotation из RotationData
+            StartRotationAction.Invoke(); 
+            
             isRotating = true;
             previousMousePosition = UnityEngine.Input.mousePosition;
-            // Для внешнего использования сохраняем текущее видимое значение
-            startRotation = tool.eulerAngles.z;
+            
+            // 2. Инициализируем локальный счетчик текущим визуальным углом инструмента.
+            // Но важно: сам расчет дельты (accumulated_displacement) от этого не зависит.
+            currentRotation = tool.eulerAngles.z;
             accumulated_displacement = 0;
         }
 
@@ -62,19 +68,21 @@ namespace TimeLine
         private void ProcessRotation()
         {
             Vector2 currentMousePosition = UnityEngine.Input.mousePosition;
+            
+            // Считаем дельту мыши
             Vector2 mouseDelta = currentMousePosition - previousMousePosition;
         
-            // Вычисляем изменение угла
+            // Вычисляем изменение угла на основе движения мыши
             float rotationDelta = -mouseDelta.x * rotationSpeed;
             
-            // Обновляем накопленный угол (может быть любым, не только 0-360)
-            currentRotation += rotationDelta;
-            
+            // Накапливаем общее смещение с момента нажатия (deltaAngle для контроллера)
             accumulated_displacement += rotationDelta;
             
+            // Вызываем событие. Контроллер прибавит это к своему StartRotation (-600)
             onRotate?.Invoke(accumulated_displacement);
         
-            // Применяем поворот без ограничений
+            // Визуально поворачиваем гизмо
+            currentRotation += rotationDelta;
             tool.rotation = Quaternion.Euler(0, 0, currentRotation);
         
             previousMousePosition = currentMousePosition;
@@ -82,8 +90,9 @@ namespace TimeLine
 
         public void StopRotation()
         {
+            if (!isRotating) return;
             isRotating = false;
-            StopRotationAction.Invoke();
+            StopRotationAction?.Invoke();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TimeLine.LevelEditor.ECS.Services;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -55,7 +56,7 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
                     LocalPosInBox = math.transform(_data.WorldToPivotMatrix, lt.Position),
                     InitialWorldPos = lt.Position,
                     InitialScale = GetScaleFromMatrix.Get(ptm.Value),
-                    InitialRotation = lt.Rotation
+                    InitialRotation = entityManager.GetComponentData<RotationData>(entity).RotateZ
                 });
             }
         }

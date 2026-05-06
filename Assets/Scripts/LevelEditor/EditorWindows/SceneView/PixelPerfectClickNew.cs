@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -24,25 +25,22 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
     private TrackObjectStorage _trackObjectStorage;
     private SelectObjectController _selectObjectController;
     private C_EditColliderState _cEditColliderState;
-    private GameEventBus _gameEventBus;
     private EntityManager _entityManager;
     private EntityComponentController _entityComponentController;
     private TransformationSquareController _transformationSquareController;
 
 
     // Поля для логики циклического выделения
-    private List<Entity> _hitsAtLastPosition = new List<Entity>();
+    private readonly List<Entity> _hitsAtLastPosition = new();
     private int _lastSelectedIndex = -1;
 
     [Inject]
     void Construct(TrackObjectStorage trackObjectStorage, SelectObjectController selectObjectController,
-        GameEventBus gameEventBus, C_EditColliderState cEditColliderState,
-        EntityComponentController entityComponentController,
-        TransformationSquareController transformationSquareController)
+        C_EditColliderState cEditColliderState,
+        EntityComponentController entityComponentController, TransformationSquareController transformationSquareController)
     {
         _trackObjectStorage = trackObjectStorage;
         _selectObjectController = selectObjectController;
-        _gameEventBus = gameEventBus;
         _cEditColliderState = cEditColliderState;
         _entityComponentController = entityComponentController;
         _transformationSquareController = transformationSquareController;
@@ -55,12 +53,9 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (_transformationSquareController.activeToll)
-        {
-            if(_transformationSquareController.CheckIsEditing()) return;
-        }
         if (selectBoxScene.gameObject.activeSelf || _cEditColliderState.GetState()) return;
         if (eventData.button != PointerEventData.InputButton.Left) return;
+        if(_transformationSquareController.isEditing) return;
 
         if (IsOverlaidByOtherUI(eventData)) return;
 
@@ -78,21 +73,15 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         Vector3 worldPos = mapCamera.ViewportToWorldPoint(viewportPos);
 
         Check(worldPos);
-        // ProcessClickSelection(worldPos);
     }
 
     void Check(float3 mouseWorldPos)
     {
-        // 2. Получаем менеджер сущностей
         var em = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-        // 3. Переводим координаты мыши в мировые
         mouseWorldPos.z = 0;
 
         List<Entity> selectedEntity = new List<Entity>();
 
-        // 4. Получаем доступ к запросу всех объектов с LocalToWorld
-        // В MonoBehaviour мы используем EntityManager.GetAllEntities или EntityQuery
         var query = em.CreateEntityQuery(typeof(LocalToWorld));
         var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
         var transforms = query.ToComponentDataArray<LocalToWorld>(Unity.Collections.Allocator.Temp);
@@ -100,13 +89,9 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         for (int i = 0; i < entities.Length; i++)
         {
             float4x4 ltw = transforms[i].Value;
-
-            // Получаем инвертированную матрицу для локального пространства объекта
             float4x4 worldToLocal = math.inverse(ltw);
             float3 localMousePos = math.transform(worldToLocal, mouseWorldPos);
 
-            // Здесь 0.5f - это дефолтный размер. Если у тебя есть компонент с размером, 
-            // получи его через em.GetComponentData<MySizeComponent>(entities[i])
             float2 halfSize = new float2(0.5f, 0.5f);
 
             if (localMousePos.x >= -halfSize.x && localMousePos.x <= halfSize.x &&
@@ -116,53 +101,103 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
             }
         }
 
-        // Очистка памяти
         entities.Dispose();
         transforms.Dispose();
+        
+        if (_hitsAtLastPosition.Count > 0)
+        {
+            // Используем selectedEntity вместо entitiesInBoundingBox
+            var currentParentsInBox = selectedEntity.Select(e => GetAllParents(em, e)).Distinct().ToList();
+
+            // Удаляем из истории те сущности, которых нет под мышкой в данный момент
+            int removedCount = _hitsAtLastPosition.RemoveAll(hit => !currentParentsInBox.Contains(hit));
+
+            if (removedCount > 0)
+                Debug.Log($"[Selection] Из истории перебора удалено {removedCount} сущностей (вне зоны клика).");
+        }
 
         SortList(selectedEntity);
 
         if (selectedEntity.Count <= 0)
         {
-            _selectObjectController.DeselectAll(); //Снимает все выделения
+            Debug.Log("[Selection] Не найдено сущностей в границах клика (Bounding Box).");
+            _selectObjectController.DeselectAll();
             _hitsAtLastPosition.Clear();
             return;
         }
 
         bool isOneEntitySelected = false;
-
-        Debug.Log(selectedEntity.Count);
+        Debug.Log($"[Selection] Найдено потенциальных сущностей: {selectedEntity.Count}");
 
         foreach (var entity in selectedEntity)
         {
             Entity parent = GetAllParents(em, entity);
-            
-            if (_hitsAtLastPosition.Contains(parent)) continue; // Проверяем начилие MaterialMeshInfo
-            if (!em.HasComponent(parent, typeof(EntityActiveTag))) continue; // Проверяем начилие EntityActiveTag
-            if (em.GetComponentData<EntityActiveTag>(parent).IsActive == false) continue; // Проверяем активность существа
-            if (!_entityComponentController.CheckComponentAvailability(entity, ComponentNames.SpriteRenderer)) continue; // Проверяем начилие SpriteRenderer
-            if (!_entityManager.HasComponent<MaterialMeshInfo>(entity)) continue; // Проверяем начилие MaterialMeshInfo
+            string entityName = em.GetName(entity);
 
-            Material currentMat = null;
+            // 1. Проверка на повторное выделение
+            if (_hitsAtLastPosition.Contains(parent))
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: Родитель уже находится в списке последних хитов (циклическое выделение).");
+                continue;
+            }
+
+            // 2. Проверка EntityActiveTag
+            if (!em.HasComponent(parent, typeof(EntityActiveTag)))
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: У родителя отсутствует компонент EntityActiveTag.");
+                continue;
+            }
+
+            if (em.GetComponentData<EntityActiveTag>(parent).IsActive == false)
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: EntityActiveTag.IsActive == false.");
+                continue;
+            }
+
+            // 3. Проверка SpriteRenderer (через ваш контроллер)
+            if (!_entityComponentController.CheckComponentAvailability(entity, ComponentNames.SpriteRenderer))
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: Не пройдена проверка CheckComponentAvailability для SpriteRenderer.");
+                continue;
+            }
+
+            // 4. Проверка MaterialMeshInfo
+            if (!_entityManager.HasComponent<MaterialMeshInfo>(entity))
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: Отсутствует компонент MaterialMeshInfo.");
+                continue;
+            }
+
+            // 5. Получение материала и текстуры
             RenderMeshArray rma = _entityManager.GetSharedComponentManaged<RenderMeshArray>(entity);
             var meshInfo = _entityManager.GetComponentData<MaterialMeshInfo>(entity);
-            currentMat = rma.GetMaterial(meshInfo);
+            Material currentMat = rma.GetMaterial(meshInfo);
 
-            if (!IsPixelOpaque(entity, mouseWorldPos, (Texture2D)currentMat.mainTexture)) continue; // Проверяем попадаем ли мы в непрозрачный пиксель
+            if (currentMat == null || currentMat.mainTexture == null)
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: Материал или текстура не найдены.");
+                continue;
+            }
 
-            Debug.Log(_trackObjectStorage.GetTrackObjectData(entity).branch.Name);
+            // 6. Проверка прозрачности пикселя
+            if (!IsPixelOpaque(entity, mouseWorldPos, (Texture2D)currentMat.mainTexture))
+            {
+                Debug.Log($"[Selection] Пропуск {entityName}: Клик попал в прозрачную область текстуры.");
+                continue;
+            }
 
-            
-
+            // Если дошли сюда — объект успешно выделен
+            Debug.Log($"[Selection] УСПЕХ: Объект {entityName} (Parent: {parent.Index}) выделен.");
             _selectObjectController.SelectMultiple(_trackObjectStorage.GetTrackObjectData(parent));
             _hitsAtLastPosition.Add(parent);
             isOneEntitySelected = true;
             break;
         }
 
-        if (isOneEntitySelected == false)
+        if (!isOneEntitySelected)
         {
-            _selectObjectController.DeselectAll(); //Снимает все выделения
+            Debug.Log("[Selection] Ни одна сущность не прошла фильтры. Сброс выделения.");
+            _selectObjectController.DeselectAll();
             _hitsAtLastPosition.Clear();
         }
     }
@@ -176,7 +211,7 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         {
             // Получаем родителя
             entity = entityManager.GetComponentData<Parent>(entity).Value;
-            
+
             parent = entity;
         }
 
@@ -227,10 +262,10 @@ public class PixelPerfectClickNew : MonoBehaviour, IPointerClickHandler
         EventSystem.current.RaycastAll(eventData, results);
 
         // ВЫВОДИМ СПИСОК ВСЕХ, КТО ПОД МЫШКОЙ
-        foreach (var res in results)
-        {
-            // Debug.Log($"Под курсором: {res.gameObject.name} (Layer: {res.gameObject.layer})");
-        }
+        // foreach (var res in results)
+        // {
+        //     // Debug.Log($"Под курсором: {res.gameObject.name} (Layer: {res.gameObject.layer})");
+        // }
 
         if (results.Count > 0)
         {

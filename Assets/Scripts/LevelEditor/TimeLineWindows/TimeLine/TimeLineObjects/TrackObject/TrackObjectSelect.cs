@@ -55,7 +55,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             _state.StartTrackObjectTicks = _data.StartTimeInTicks;
             Vector2 mousePos =
                 MousePosition.GetMousePosition(_mainObjects.CanvasRectTransform, _mainObjects.MainCamera);
-            _state.StartMouseXLocal = mousePos.x;
+            _state.StartMouseLocal = mousePos;
             _state.IsDragging = true;
             _state.DeathZonePass = false;
             _select.StartMultipleMove();
@@ -106,8 +106,8 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
 
         public void SetResizeCursor(bool isResizing)
         {
-            if(isResizing) _cursorController.SetResizeHorizontal();
-            else _cursorController.SetIdel();
+            if(isResizing) _cursorController.SetState(WindowsCursorID.SizeWE);
+            else _cursorController.SetState(WindowsCursorID.Arrow);
         }
         
         public void SetResizeLeft(bool isResizing)
@@ -122,14 +122,14 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
             if (!isResizing)
             {
                 ApplyKeyframeOffset();
-                if (_data.EnableResizeLimits)
-                {
-                    // _data.ReducedLeft = Math.Round(Math.Min(_data.ReducedLeft +
-                    //                                         _gridUI.RoundTicksToGrid(
-                    //                                             _state.StartResizingDuractionInTicks +
-                    //                                             _state.DeltaticksLeft) -
-                    //                                         _state.StartResizingDuractionInTicks, 0));
-                }
+                // if (_data.EnableResizeLimits)
+                // {
+                //     // _data.ReducedLeft = Math.Round(Math.Min(_data.ReducedLeft +
+                //     //                                         _gridUI.RoundTicksToGrid(
+                //     //                                             _state.StartResizingDuractionInTicks +
+                //     //                                             _state.DeltaticksLeft) -
+                //     //                                         _state.StartResizingDuractionInTicks, 0));
+                // }
             }
 
             if (_state.IsResizing)

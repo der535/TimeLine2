@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.Installers;
 using TimeLine.LevelEditor.EditorWindows.SceneView.Outline;
-using TimeLine.LevelEditor.outline;
 using TimeLine.LevelEditor.Save;
 using TimeLine.Select_levels;
 using Unity.Rendering;
@@ -20,7 +19,6 @@ namespace TimeLine.LevelEditor.SpriteLoader
     {
         private SpriteLoadController _spriteLoadController;
         private GameEventBus _eventBus; 
-        private SpriteOutlineBuffer _outlineBuffer;
         private OutlineController _outlineController;
         
         // Теперь словарь хранит СПИСОК параметров для каждого TextureData
@@ -47,11 +45,10 @@ namespace TimeLine.LevelEditor.SpriteLoader
         }
 
         [Inject]
-        private void Constructor(GameEventBus eventBus, SpriteLoadController spriteLoadController, SpriteOutlineBuffer spriteOutlineBuffer, OutlineController outlineController)
+        private void Constructor(GameEventBus eventBus, SpriteLoadController spriteLoadController, OutlineController outlineController)
         {
             _eventBus = eventBus;
             _spriteLoadController = spriteLoadController;
-            _outlineBuffer = spriteOutlineBuffer;
             _outlineController = outlineController;
         }
 

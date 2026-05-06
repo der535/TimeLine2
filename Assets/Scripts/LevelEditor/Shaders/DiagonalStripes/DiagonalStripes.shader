@@ -1,4 +1,4 @@
-Shader "Custom/DiagonalLinesAlphaMask_DOTS"
+Shader "Custom/DiagonalStripes"
 {
     Properties
     {

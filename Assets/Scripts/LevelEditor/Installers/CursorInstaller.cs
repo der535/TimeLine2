@@ -7,7 +7,7 @@ namespace TimeLine.LevelEditor.Core
 {
     public class CursorInstaller : MonoInstaller
     {
-        [SerializeField] private CursorController cursorController;
+        [SerializeField] CursorController cursorController;
         public override void InstallBindings()
         {
             Container.Bind<CursorController>().FromInstance(cursorController).AsSingle();

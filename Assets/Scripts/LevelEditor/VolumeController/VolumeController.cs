@@ -1,10 +1,11 @@
 using System;
 using System.Globalization;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace TimeLine
+namespace TimeLine.LevelEditor.VolumeController
 {
     public class VolumeController : MonoBehaviour
     {
@@ -14,11 +15,22 @@ namespace TimeLine
 
         private void Start()
         {
-            volumeSlider.onValueChanged.AddListener(arg0 =>
+            volumeSlider.maxValue = 100;
+            int volume = PlayerPrefs.GetInt("Volume", 100);
+            SetVolume(volume);
+            volumeSlider.onValueChanged.AddListener((arg0 =>
             {
-                audioSource.volume = volumeSlider.value;
-                volumeText.text = Math.Round(volumeSlider.value * 100).ToString(CultureInfo.InvariantCulture);
-            } );
+                SetVolume(Mathf.RoundToInt(arg0));
+            }));
+        }
+
+        private void SetVolume(int volume)
+        {
+            volumeSlider.value = volume;
+            audioSource.volume = volume / 100f;
+            volumeText.text = $"Volume: {Math.Round(volumeSlider.value).ToString(CultureInfo.InvariantCulture)}%";
+            PlayerPrefs.SetInt("Volume", volume);
+            Debug.Log(PlayerPrefs.GetInt("Volume", 100));
         }
     }
 }

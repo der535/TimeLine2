@@ -523,13 +523,22 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             ""id"": ""94843c9b-cdaf-470e-bdc2-7c8183b977df"",
             ""actions"": [
                 {
-                    ""name"": ""PlayerMove"",
+                    ""name"": ""PlayerMoveWASD"",
                     ""type"": ""PassThrough"",
                     ""id"": ""46ccad50-a116-44f1-bc76-9a338743012e"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""PlayerMoveArrows"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""65e31d74-86c2-41fb-b0dd-3fc60dc8428b"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Space"",
@@ -539,6 +548,15 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GamePad"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""fffc4867-3dab-43ec-89e2-f529ce9ebec6"",
+                    ""expectedControlType"": ""Stick"",
+                    ""processors"": ""StickDeadzone"",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -549,7 +567,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""PlayerMove"",
+                    ""action"": ""PlayerMoveWASD"",
                     ""isComposite"": true,
                     ""isPartOfComposite"": false
                 },
@@ -560,7 +578,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""PlayerMove"",
+                    ""action"": ""PlayerMoveWASD"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -571,7 +589,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""PlayerMove"",
+                    ""action"": ""PlayerMoveWASD"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -582,7 +600,7 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""PlayerMove"",
+                    ""action"": ""PlayerMoveWASD"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -593,7 +611,62 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard"",
-                    ""action"": ""PlayerMove"",
+                    ""action"": ""PlayerMoveWASD"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""3c7946d6-5265-43de-81db-6eb281932955"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PlayerMoveArrows"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""e17226eb-8d2d-474f-a672-eecde4381897"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard"",
+                    ""action"": ""PlayerMoveArrows"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""d000563a-3b85-4ad2-82d3-9e968bc2c440"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard"",
+                    ""action"": ""PlayerMoveArrows"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""2f65b700-4f1f-48b3-b622-0dfc4bc0061b"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard"",
+                    ""action"": ""PlayerMoveArrows"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""db17502d-a45a-40ec-8e42-eb4cf5d64bfa"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard"",
+                    ""action"": ""PlayerMoveArrows"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -603,8 +676,30 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
+                    ""groups"": "";Keyboard"",
                     ""action"": ""Space"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ce8a77ce-3eae-48ba-8843-84944a000a26"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Space"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""398e2709-39e5-49b3-b8a4-227208ed76bb"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""GamePad"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -644,6 +739,11 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
             ""name"": ""Keyboard"",
             ""bindingGroup"": ""Keyboard"",
             ""devices"": []
+        },
+        {
+            ""name"": ""Gamepad"",
+            ""bindingGroup"": ""Gamepad"",
+            ""devices"": []
         }
     ]
 }");
@@ -671,8 +771,10 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         m_Editor_Y = m_Editor.FindAction("Y", throwIfNotFound: true);
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
-        m_Player_PlayerMove = m_Player.FindAction("PlayerMove", throwIfNotFound: true);
+        m_Player_PlayerMoveWASD = m_Player.FindAction("PlayerMoveWASD", throwIfNotFound: true);
+        m_Player_PlayerMoveArrows = m_Player.FindAction("PlayerMoveArrows", throwIfNotFound: true);
         m_Player_Space = m_Player.FindAction("Space", throwIfNotFound: true);
+        m_Player_GamePad = m_Player.FindAction("GamePad", throwIfNotFound: true);
         // LevelFinished
         m_LevelFinished = asset.FindActionMap("LevelFinished", throwIfNotFound: true);
         m_LevelFinished_CloseFinishScreen = m_LevelFinished.FindAction("CloseFinishScreen", throwIfNotFound: true);
@@ -1063,8 +1165,10 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     // Player
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
-    private readonly InputAction m_Player_PlayerMove;
+    private readonly InputAction m_Player_PlayerMoveWASD;
+    private readonly InputAction m_Player_PlayerMoveArrows;
     private readonly InputAction m_Player_Space;
+    private readonly InputAction m_Player_GamePad;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1077,13 +1181,21 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// </summary>
         public PlayerActions(@ActionMap wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Player/PlayerMove".
+        /// Provides access to the underlying input action "Player/PlayerMoveWASD".
         /// </summary>
-        public InputAction @PlayerMove => m_Wrapper.m_Player_PlayerMove;
+        public InputAction @PlayerMoveWASD => m_Wrapper.m_Player_PlayerMoveWASD;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/PlayerMoveArrows".
+        /// </summary>
+        public InputAction @PlayerMoveArrows => m_Wrapper.m_Player_PlayerMoveArrows;
         /// <summary>
         /// Provides access to the underlying input action "Player/Space".
         /// </summary>
         public InputAction @Space => m_Wrapper.m_Player_Space;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/GamePad".
+        /// </summary>
+        public InputAction @GamePad => m_Wrapper.m_Player_GamePad;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1110,12 +1222,18 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_PlayerActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_PlayerActionsCallbackInterfaces.Add(instance);
-            @PlayerMove.started += instance.OnPlayerMove;
-            @PlayerMove.performed += instance.OnPlayerMove;
-            @PlayerMove.canceled += instance.OnPlayerMove;
+            @PlayerMoveWASD.started += instance.OnPlayerMoveWASD;
+            @PlayerMoveWASD.performed += instance.OnPlayerMoveWASD;
+            @PlayerMoveWASD.canceled += instance.OnPlayerMoveWASD;
+            @PlayerMoveArrows.started += instance.OnPlayerMoveArrows;
+            @PlayerMoveArrows.performed += instance.OnPlayerMoveArrows;
+            @PlayerMoveArrows.canceled += instance.OnPlayerMoveArrows;
             @Space.started += instance.OnSpace;
             @Space.performed += instance.OnSpace;
             @Space.canceled += instance.OnSpace;
+            @GamePad.started += instance.OnGamePad;
+            @GamePad.performed += instance.OnGamePad;
+            @GamePad.canceled += instance.OnGamePad;
         }
 
         /// <summary>
@@ -1127,12 +1245,18 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// <seealso cref="PlayerActions" />
         private void UnregisterCallbacks(IPlayerActions instance)
         {
-            @PlayerMove.started -= instance.OnPlayerMove;
-            @PlayerMove.performed -= instance.OnPlayerMove;
-            @PlayerMove.canceled -= instance.OnPlayerMove;
+            @PlayerMoveWASD.started -= instance.OnPlayerMoveWASD;
+            @PlayerMoveWASD.performed -= instance.OnPlayerMoveWASD;
+            @PlayerMoveWASD.canceled -= instance.OnPlayerMoveWASD;
+            @PlayerMoveArrows.started -= instance.OnPlayerMoveArrows;
+            @PlayerMoveArrows.performed -= instance.OnPlayerMoveArrows;
+            @PlayerMoveArrows.canceled -= instance.OnPlayerMoveArrows;
             @Space.started -= instance.OnSpace;
             @Space.performed -= instance.OnSpace;
             @Space.canceled -= instance.OnSpace;
+            @GamePad.started -= instance.OnGamePad;
+            @GamePad.performed -= instance.OnGamePad;
+            @GamePad.canceled -= instance.OnGamePad;
         }
 
         /// <summary>
@@ -1273,6 +1397,19 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         {
             if (m_KeyboardSchemeIndex == -1) m_KeyboardSchemeIndex = asset.FindControlSchemeIndex("Keyboard");
             return asset.controlSchemes[m_KeyboardSchemeIndex];
+        }
+    }
+    private int m_GamepadSchemeIndex = -1;
+    /// <summary>
+    /// Provides access to the input control scheme.
+    /// </summary>
+    /// <seealso cref="UnityEngine.InputSystem.InputControlScheme" />
+    public InputControlScheme GamepadScheme
+    {
+        get
+        {
+            if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.FindControlSchemeIndex("Gamepad");
+            return asset.controlSchemes[m_GamepadSchemeIndex];
         }
     }
     /// <summary>
@@ -1431,12 +1568,19 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
     public interface IPlayerActions
     {
         /// <summary>
-        /// Method invoked when associated input action "PlayerMove" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "PlayerMoveWASD" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnPlayerMove(InputAction.CallbackContext context);
+        void OnPlayerMoveWASD(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "PlayerMoveArrows" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPlayerMoveArrows(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Space" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -1444,6 +1588,13 @@ public partial class @ActionMap: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSpace(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GamePad" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGamePad(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "LevelFinished" which allows adding and removing callbacks.

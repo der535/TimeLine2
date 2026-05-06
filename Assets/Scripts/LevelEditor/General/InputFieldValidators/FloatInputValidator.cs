@@ -78,7 +78,7 @@ namespace TimeLine
             if (_inputField != null)
             {
                 _inputField.onValueChanged.RemoveListener(OnInputValueChanged);
-                _inputField.onEndEdit.RemoveListener(OnInputEndEdit);
+                // _inputField.onEndEdit.RemoveListener(OnInputEndEdit);
             }
         }
     }

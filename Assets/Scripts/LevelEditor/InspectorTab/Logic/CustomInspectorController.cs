@@ -6,6 +6,7 @@ using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.Components.BoxCollider;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
@@ -42,10 +43,20 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
         private TimeLineRecorder _timeLineRecorder;
         private CustomSpriteStorage _customInspectorDrawer;
         private TransformationSquareController _transformationSquareController;
+        private PositionController _positionController;
+        private RotationController _rotationController;
 
         [Inject]
-        private void Construct(GameEventBus gameEventBus, TrackObjectStorage trackObjectStorage,
-            ColliderDrawer colliderDrawer, ToolsController toolsController, TimeLineRecorder timeLineRecorder, CustomSpriteStorage customSpriteStorage, TransformationSquareController transformationSquareController)
+        private void Construct(
+            GameEventBus gameEventBus, 
+            TrackObjectStorage trackObjectStorage,
+            ColliderDrawer colliderDrawer, 
+            ToolsController toolsController, 
+            TimeLineRecorder timeLineRecorder,
+            CustomSpriteStorage customSpriteStorage, 
+            TransformationSquareController transformationSquareController,
+            PositionController positionController,
+            RotationController rotationController)
         {
             _gameEventBus = gameEventBus;
             _selectedTransform = trackObjectStorage;
@@ -54,6 +65,8 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _timeLineRecorder = timeLineRecorder;
             _customInspectorDrawer = customSpriteStorage;
             _transformationSquareController = transformationSquareController;
+            _positionController = positionController;
+            _rotationController = rotationController;
         }
 
         private void Awake()
@@ -68,7 +81,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
             _gameEventBus.SubscribeTo((ref AddComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
             _gameEventBus.SubscribeTo((ref RemoveComponentEvent data) => { StartCoroutine(Redraw()); }, -1);
 
-            _componentDrawers.Add(new TransformComponentDrawer(_transformationSquareController));
+            _componentDrawers.Add(new TransformComponentDrawer(_transformationSquareController, _positionController, _rotationController));
             _componentDrawers.Add(new NameDrawer());
             _componentDrawers.Add(new SpriteRendererDrawer(_customInspectorDrawer));
             _componentDrawers.Add(new SunBurstMaterialDrawer());

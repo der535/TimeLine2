@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using TimeLine.CustomInspector.Logic.Parameter;
+using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.ActionHistory;
 using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Scale;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
+using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position;
 using TimeLine.LevelEditor.General;
-using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
@@ -18,7 +19,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace TimeLine.CustomInspector.UI.Drawers
+namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
 {
     public class TransformComponentDrawer : IComponentDrawer
     {
@@ -26,6 +27,8 @@ namespace TimeLine.CustomInspector.UI.Drawers
         private CustomInspectorDrawer _customInspectorDrawer;
         private TrackObjectStorage _trackObjectStorage;
         private TransformationSquareController _transformationSquareController;
+        private PositionController _positionController;
+        private RotationController _rotationController;
         private TimeLineRecorder _timeLineRecorder;
 
         public Action UpdateValues;
@@ -36,8 +39,14 @@ namespace TimeLine.CustomInspector.UI.Drawers
         public Action OnStopScaleX;
         public Action OnStopScaleY;
 
-        public TransformComponentDrawer(TransformationSquareController transformationSquareController)
+        public TransformComponentDrawer(
+            TransformationSquareController transformationSquareController,
+            PositionController positionController,
+            RotationController rotationController)
         {
+            _positionController = positionController;
+            _rotationController = rotationController;
+
             _transformationSquareController = transformationSquareController;
 
             _transformationSquareController.OnStopPositionX += () => OnStopPositionX?.Invoke();
@@ -48,8 +57,13 @@ namespace TimeLine.CustomInspector.UI.Drawers
         }
 
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+        public void Setup(
+            CustomInspectorDrawer customInspectorDrawer,
+            TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator,
+            ToolsController toolsController,
+            TimeLineRecorder timeLineRecorder
+        )
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
@@ -96,25 +110,22 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 scaleX.Value = scale.x;
                 scaleY.Value = scale.y;
             };
+            _positionController.OnValueChanged += UpdateValues;
+            _rotationController.OnValueChanged += UpdateValues;
+            _transformationSquareController.OnValueChange += UpdateValues;
 
 
             // --- POSITION ---
 
-            Action createKeyFramePositionX = () =>
-            {
-                LocalTransform transform2 = manager.GetComponentData<LocalTransform>(target);
-                _keyframeCreator.CreateKeyframeCommand(new EntityXPositionData(transform2.Position.x), target, "Position/X",
-                    Color.red,
-                    "Transform", ComponentNames.Transform);
-            };
 
             _customInspectorDrawer.CreateFloatField(transform.Position.x, "Position/X",
-                createKeyFramePositionX, (newValue) =>
+                () => CreateKeyFramePositionX(target), (newValue) =>
                 {
                     PositionData positionData = manager.GetComponentData<PositionData>(target);
                     CommandHistory.AddCommand(new PositionChangedCommand("", new float2(newValue, positionData.Position.y), this, _trackObjectStorage.GetTrackObjectData(target), _trackObjectStorage), true);
 
-                    if (_timeLineRecorder.IsRecording()) createKeyFramePositionX.Invoke();
+
+                    if (_timeLineRecorder.IsRecording()) CreateKeyFramePositionX(target);
                 }, trackObjectPacket, "Transform.Position.X", posX);
 
 
@@ -219,8 +230,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
             OnStopPositionX = null;
             OnStopPositionX += () =>
             {
-                if (_timeLineRecorder.IsRecording())
-                    createKeyFramePositionX.Invoke();
+                if (_timeLineRecorder.IsRecording()) CreateKeyFramePositionX(target);
             };
 
             OnStopPositionY = null;
@@ -250,6 +260,15 @@ namespace TimeLine.CustomInspector.UI.Drawers
                 if (_timeLineRecorder.IsRecording())
                     createKeyFrameScaleY.Invoke();
             };
+        }
+
+        public void CreateKeyFramePositionX(Entity target)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            LocalTransform transform2 = entityManager.GetComponentData<LocalTransform>(target);
+            _keyframeCreator.CreateKeyframeCommand(new EntityXPositionData(transform2.Position.x), target, "Position/X",
+                Color.red,
+                "Transform", ComponentNames.Transform);
         }
     }
 }

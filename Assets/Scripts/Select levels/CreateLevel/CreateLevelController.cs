@@ -12,12 +12,13 @@ using Zenject;
 
 namespace TimeLine
 {
-    public class CreateLevel : MonoBehaviour
+    public class CreateLevelController : MonoBehaviour
     {
         [SerializeField] private TMP_InputField _name;
         [SerializeField] private TMP_InputField _bpm;
         [SerializeField] private TextMeshProUGUI _textOnButtonLoadSong;
         [SerializeField] private Button _createButton;
+        [SerializeField] private Button _detectBPMButton;
         [SerializeField] private FileBrowserSelectAudio _audioSelectAudio;
 
         [FormerlySerializedAs("createScreen")] [Space] [SerializeField]
@@ -40,6 +41,7 @@ namespace TimeLine
         private void Start()
         {
             _createButton.interactable = false;
+            _detectBPMButton.interactable = false;
             _name.onValueChanged.AddListener(_ => CheckFields());
             _bpm.onValueChanged.AddListener(_ => CheckFields());
         }
@@ -82,6 +84,8 @@ namespace TimeLine
                     overwrite: true);
             
                 CheckFields();
+                
+                _detectBPMButton.interactable = true;
             });
         }
 
@@ -128,6 +132,11 @@ namespace TimeLine
     
             createLevelScreen.gameObject.SetActive(false);
             selectLevelScreen.gameObject.SetActive(true);
+            
+            _name.text = string.Empty;
+            _bpm.text = string.Empty;
+            
+            _detectBPMButton.interactable = false;
         }
     }
 }

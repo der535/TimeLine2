@@ -31,8 +31,6 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
 
         public bool IsMouseInsideBox()
         {
-            
-            
             float3 mouseLocal = math.transform(_data.WorldToPivotMatrix,
                 new float3(_sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage().x, _sceneToRawImageConverter.GetWorldPositionFromMouseOnRawImage().y, 0f));
             return mouseLocal.x >= _data.CurrentLocalMin.x && mouseLocal.x <= _data.CurrentLocalMax.x &&

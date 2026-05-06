@@ -26,7 +26,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
 
         private void Start()
         {
-            button.onClick.AddListener(() => { Get(); });
+            button.onClick.AddListener(Get);
             button.gameObject.SetActive(false);
             _eventBinder = new EventBinder();
             _eventBinder.Add(_gameEventBus, (ref ListeningParameterEvent _) => button.gameObject.SetActive(true));
@@ -48,7 +48,7 @@ namespace TimeLine.LevelEditor.InspectorTab.Parameter
 
         private void OnDestroy()
         {
-            _eventBinder.Dispose();
+            _eventBinder?.Dispose();
         }
     }
 }

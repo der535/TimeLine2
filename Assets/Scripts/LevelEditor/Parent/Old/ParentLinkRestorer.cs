@@ -93,7 +93,7 @@ namespace TimeLine.Parent
 
                 if (item.sceneObject == null)
                 {
-                    Debug.LogWarning($"  SceneObject равен null для ветки: {item.branch?.Name ?? "Неизвестно"}");
+                    // Debug.LogWarning($"  SceneObject равен null для ветки: {item.branch?.Name ?? "Неизвестно"}");
                     nullSceneObjectsSkipped++;
                     continue;
                 }
@@ -103,7 +103,7 @@ namespace TimeLine.Parent
                 // Проверяем trackObject на null
                 if (item.components == null)
                 {
-                    Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
+                    // Debug.LogWarning($"  TrackObject равен null! Пропускаем установку родителя.");
                     continue;
                 }
 
@@ -115,10 +115,10 @@ namespace TimeLine.Parent
                     // Проверка на циклическую ссылку (объект ссылается сам на себя)
                     if (parentId == item.sceneObjectID)
                     {
-                        Debug.LogError(
-                            $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
+                        // Debug.LogError(
+                            // $"  ОШИБКА: Объект '{item.sceneObject.name}' пытается стать родителем самому себе!");
                         selfParentAttempts++;
-                        print($"  Очистка некорректного parentID...");
+                        // print($"  Очистка некорректного parentID...");
                         item.components.Data.ParentID = string.Empty;
                         continue;
                     }

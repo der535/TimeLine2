@@ -267,10 +267,9 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         internal void UpdatePosition()
         {
             Vector2 currentMousePos = GetMousePosition();
-            float currentMouseXLocal = currentMousePos.x;
-            float mouseDeltaXLocal = currentMouseXLocal - _state.StartMouseXLocal;
-            double deltaTicks = RoundTicksToGrid(AnchorPositionDeltaToTicks(mouseDeltaXLocal));
-            if (Mathf.Abs(mouseDeltaXLocal) < _deathZone && _state.DeathZonePass == false)
+            Vector2 mouseDeltaLocal = currentMousePos - _state.StartMouseLocal;
+            double deltaTicks = RoundTicksToGrid(AnchorPositionDeltaToTicks(mouseDeltaLocal.x));
+            if (Mathf.Abs(mouseDeltaLocal.x) < _deathZone && Mathf.Abs(mouseDeltaLocal.y) < _deathZone && _state.DeathZonePass == false)
             {
                 return;
             }
