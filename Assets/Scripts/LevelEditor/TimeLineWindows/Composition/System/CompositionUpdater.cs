@@ -28,34 +28,46 @@ namespace TimeLine
         private LoadGraphLogic _loadGraphLogic;
         private SaveNodes _saveNodes;
         private MainObjects _mainObjects;
+        private SaveComposition _saveComposition;
 
         [Inject]
-        private void Construct(MainObjects mainObjects, SaveNodes saveNodes, LoadGraphLogic loadGraphLogic)
+        private void Construct(MainObjects mainObjects, SaveNodes saveNodes, LoadGraphLogic loadGraphLogic, SaveComposition saveComposition)
         {
             _mainObjects = mainObjects;
             _saveNodes = saveNodes;
             _loadGraphLogic = loadGraphLogic;
+            _saveComposition = saveComposition;
         }
 
         [Button]
         public void UpdateCompositions(string compositionID)
         {
-            foreach (var group in trackObjectStorage.TrackObjectGroups.ToList())
+            foreach (var group in trackObjectStorage.TrackObjectGroups.ToList()) //переборка все композиций на сцене
             {
-                bool updateSelf = compositionID == group.compositionID;
+                bool updateSelf = compositionID == group.compositionID; //переключатель обновлять ли себя
 
-                GroupGameObjectSaveData data = composition.FindCompositionDataById(group.compositionID);
-                List<TrackObjectPacket> trackObjectDatas = new List<TrackObjectPacket>();
-                List<Track> tracks = new List<Track>();
+                GroupGameObjectSaveData data = composition.FindCompositionDataById(group.compositionID); //ищем обновлённую композицию из хранилища
+                List<TrackObjectPacket> trackObjectDatas = new List<TrackObjectPacket>(); //Создаём список объектов
+                List<Track> tracks = new List<Track>(); //Создаём список треков что бы у них потом обновить логику в ключевых кадрах
 
-                foreach (var child in data.children)
+                foreach (var child in data.children) //Перебирает детей из обновлённой композиции взятой их хранилища
                 {
-                    if (child is GroupGameObjectSaveData groupChild)
+                    if (child is GroupGameObjectSaveData groupChild) //Если ребёнок тоже композиция
                     {
-                        if (updateSelf == false && compositionID != groupChild.compositionID)
+
+                        // if ()
+                        // {
+                        //     Debug.Log(_saveComposition.TestCheckAvailabilityComposition(group.compositionID,  groupChild.compositionID));
+                        //     continue;
+                        // }
+                        
+                        if (!_saveComposition.TestCheckAvailabilityComposition(group.compositionID,  groupChild.compositionID) && updateSelf == false && compositionID != groupChild.compositionID) //Если это не целевая композиция и обновлять себя не надо то скип
                         {
                             continue;
                         }
+                        
+                        // Debug.Log(_saveComposition.TestCheckAvailabilityComposition(group.compositionID,  groupChild.compositionID));
+                       
 
                         GroupGameObjectSaveData groupChildData =
                             composition.FindCompositionDataById(groupChild.compositionID);

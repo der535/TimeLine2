@@ -23,15 +23,18 @@ namespace TimeLine
 
         private Vector3 _lastMousePosition;
         private GameEventBus _gameEventBus;
+        private PositionTool _positionTool;
 
         private MainObjects _mainObjects;
         private bool _isDragging = false;
 
         [Inject]
-        private void Constructor(GameEventBus gameEventBus, MainObjects mainObjects)
+        private void Constructor(GameEventBus gameEventBus, MainObjects mainObjects, PositionTool positionTool)
         {
             _gameEventBus = gameEventBus;
             _mainObjects = mainObjects;
+            _positionTool = positionTool;
+            
         }
 
         private void Update()
@@ -107,6 +110,7 @@ namespace TimeLine
 
         private void HandlePan()
         {
+            if(_positionTool.IsMoving()) return;
             // 1. Проверяем условия нажатия клавиш
             bool panKeyPressed = UnityEngine.Input.GetMouseButton(2) ||
                                  (UnityEngine.Input.GetKey(KeyCode.LeftAlt) && UnityEngine.Input.GetMouseButton(0));

@@ -103,6 +103,7 @@ namespace TimeLine
             File.WriteAllText($"{Application.persistentDataPath}/Levels/{_name.text}/LevelBaseInfo.json", info);
             _gameEventBus.Raise(new OpenEditorEvent(levelInfo));
             levels.gameObject.SetActive(false);
+            _gameEventBus.Raise(new LevelLoadedEvent());
         }
 
         public void Cancel()

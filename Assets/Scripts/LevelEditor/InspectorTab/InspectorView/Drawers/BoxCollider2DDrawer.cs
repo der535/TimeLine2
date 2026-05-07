@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EventBus;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
@@ -23,6 +24,7 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
         private CustomInspectorDrawer _customInspectorDrawer = null;
         private TrackObjectStorage _trackObjectStorage;
         private ColliderDrawer _colliderDrawer;
+        private GameEventBus _gameEventBus;
 
         public BoxCollider2DDrawer(ColliderDrawer colliderDrawer)
         {
@@ -30,11 +32,12 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
         }
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder, GameEventBus gameEventBus)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
             _trackObjectStorage = trackObjectStorage;
+            _gameEventBus = gameEventBus;
         }
 
         public bool GetComponent(List<ComponentType> component)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.CustomInspector.UI.Drawers;
+using TimeLine.EventBus.Events.TimeLine;
 using TimeLine.LevelEditor.ActionHistory;
 using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.ECS.Services;
@@ -30,6 +32,7 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
         private PositionController _positionController;
         private RotationController _rotationController;
         private TimeLineRecorder _timeLineRecorder;
+        private GameEventBus _gameEventBus;
 
         public Action UpdateValues;
 
@@ -62,14 +65,23 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
             TrackObjectStorage trackObjectStorage,
             KeyframeCreator keyframeCreator,
             ToolsController toolsController,
-            TimeLineRecorder timeLineRecorder
+            TimeLineRecorder timeLineRecorder,
+            GameEventBus gameEventBus
         )
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
             _trackObjectStorage = trackObjectStorage;
             _timeLineRecorder = timeLineRecorder;
+            _gameEventBus = gameEventBus;
+            
+            _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent _) =>
+            {
+                UpdateValues.Invoke();
+            });
         }
+
+
 
         public bool GetComponent(List<ComponentType> component)
         {
@@ -81,8 +93,10 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
 
         public void Draw(Entity target)
         {
-            _customInspectorDrawer.CreateComponent(ComponentNames.Transform, target, false);
             var manager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            // Debug.Log(manager.Exists(target));
+            
+            _customInspectorDrawer.CreateComponent(ComponentNames.Transform, target, false);
 
             LocalTransform transform = manager.GetComponentData<LocalTransform>(target);
             RotationData rotationData = manager.GetComponentData<RotationData>(target);
@@ -94,7 +108,9 @@ namespace TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers
             var scaleX = new FloatParameter("scaleX", 0, Color.white);
             var scaleY = new FloatParameter("scaleY", 0, Color.white);
 
-
+            _positionController.OnValueChanged -= UpdateValues;
+            _rotationController.OnValueChanged -= UpdateValues;
+            _transformationSquareController.OnValueChange -= UpdateValues;
             UpdateValues = null;
             UpdateValues += () =>
             {

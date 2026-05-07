@@ -50,6 +50,8 @@ namespace TimeLine
         {
             _mainObjects = mainObjects;
         }
+        
+        public bool IsMoving() => _isMovingY || _isMovingX || _isFreeMoving;
 
         private void Awake()
         {
@@ -112,6 +114,7 @@ namespace TimeLine
 
         public void SetMoveY(bool isMovingY)
         {
+            
             if (!isMovingY && _isMovingY)
             {
                 OnDragEndY?.Invoke(); // Вызываем при отпускании

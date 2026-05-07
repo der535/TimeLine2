@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EventBus;
 using TimeLine.LevelEditor.ECS.Services;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe.AnimationDatas.TransformComponent.Position;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
@@ -21,6 +22,7 @@ namespace TimeLine.CustomInspector.UI.Drawers
         private CustomInspectorDrawer _customInspectorDrawer = null;
         private KeyframeCreator _keyframeCreator = null;
         private TrackObjectStorage _trackObjectStorage = null;
+        private GameEventBus _gameEventBus = null;
 
         private CustomSpriteStorage CustomSpriteStorage;
 
@@ -30,11 +32,12 @@ namespace TimeLine.CustomInspector.UI.Drawers
         }
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder, GameEventBus gameEventBus)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
             _trackObjectStorage = trackObjectStorage;
+            _gameEventBus = gameEventBus;
         }
 
         public bool GetComponent(List<ComponentType> component)

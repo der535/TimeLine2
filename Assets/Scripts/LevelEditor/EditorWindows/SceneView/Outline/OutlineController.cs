@@ -58,7 +58,7 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.Outline
                     DrawOutline(track.entity);
                 }
             });
-            _gameEventBus.SubscribeTo((ref SelectedNewSpriteEvent data) =>
+            _gameEventBus.SubscribeTo((ref SelectedNewSpriteEvent _) =>
             {
                 Clear();
                 foreach (var track in _selectObjectController.SelectObjects)
@@ -67,7 +67,7 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.Outline
                 }
             });
         
-            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent data) => Clear());
+            _gameEventBus.SubscribeTo((ref DeselectAllObjectEvent _) => Clear());
         }
 
         private void DrawOutline(Entity selectedObject)
@@ -129,7 +129,7 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.Outline
             // 1. Создаем новую сущность (ребенка)
             Entity childEntity = _entityManager.CreateEntity();
 
-            _addAnEntitySprite.SetupSpriteRender(childEntity, texture, outlineMaterial);
+            _addAnEntitySprite.SetupSpriteRender(childEntity, texture, new Material(outlineMaterial));
 
             // 2. Добавляем LocalTransform (локальные координаты относительно родителя)
             _entityManager.AddComponentData(childEntity, LocalTransform.FromPosition(new float3(0, 0, 0)));

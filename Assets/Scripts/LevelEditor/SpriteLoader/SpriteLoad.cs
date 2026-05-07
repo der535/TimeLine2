@@ -22,8 +22,8 @@ public static class SpriteLoad
                 yield break;
             }
 
-
-            Texture2D tex = new Texture2D(2, 2);
+            // Замените инициализацию текстуры на эту:
+            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
             bool loadSuccess = tex.LoadImage(request.downloadHandler.data);
             if (!loadSuccess)
             {

@@ -122,6 +122,23 @@ namespace TimeLine
 
             return false;
         }
+        
+        public bool TestCheckAvailabilityComposition(string currentCompositionID, string targetCompositionID)
+        {
+           var data = FindCompositionDataById(currentCompositionID);
+
+           foreach (var child in data.children)
+           {
+               if (child is GroupGameObjectSaveData group)
+               {
+                   if(group.compositionID == targetCompositionID) return true;
+                   
+                   return TestCheckAvailabilityComposition(group.compositionID, targetCompositionID);
+               }
+           }
+            
+           return false;
+        }
 
         public void LockCompositionCard()
         {
@@ -302,15 +319,6 @@ namespace TimeLine
         public bool HasCompositionWithId(string id)
         {
             return !string.IsNullOrEmpty(id) && _compositionData.Any(data => data.compositionID == id);
-        }
-
-        private void Update()
-        {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F5))
-            {
-                _actionMap.Dispose();
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
         }
 
         public GroupGameObjectSaveData FindCompositionDataById(string id)

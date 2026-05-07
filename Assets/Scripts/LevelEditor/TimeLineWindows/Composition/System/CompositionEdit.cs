@@ -49,7 +49,7 @@ namespace TimeLine
 
         internal void Edit(GroupGameObjectSaveData compositionData)
         {
-            Debug.Log($"edit called {compositionData.compositionID}");
+            // Debug.Log($"edit called {compositionData.compositionID}");
             _gameEventBus.Raise(new StartCompositionEdit(compositionData));
 
             _compositionID = compositionData.compositionID;

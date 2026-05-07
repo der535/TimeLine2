@@ -120,9 +120,9 @@ namespace TimeLine
 
             _entityManager.AddComponent<CompositionPositionOffsetData>(entity);
             
-            Debug.Log(_entityManager.HasComponent(entity, typeof(ObjectPositionOffsetData)));
-            Debug.Log( entity.Index);
-            Debug.Log( entity.Version);
+            // Debug.Log(_entityManager.HasComponent(entity, typeof(ObjectPositionOffsetData)));
+            // Debug.Log( entity.Index);
+            // Debug.Log( entity.Version);
 
             // EntityName.SetupName(entity, groupName);
             // sceneObject.AddComponent<CompositionOffset>();

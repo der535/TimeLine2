@@ -166,7 +166,7 @@ namespace TimeLine
 
         private void Select(List<TrackObjectPacket> data)
         {
-            Debug.Log("Select");
+            // Debug.Log("Select");
             // 2. Очищаем список
             _selectedObjects.Clear();
 

@@ -116,8 +116,13 @@ namespace TimeLine.LevelEditor.InspectorTab.Logic
                 var checkResult = drawer.GetComponent(types.ToList());
                 if (checkResult)
                 {
-                    drawer.Setup(inspectorDrawer, _selectedTransform, keyframeCreator, _toolsController,
-                        _timeLineRecorder);
+                    drawer.Setup(
+                        inspectorDrawer, 
+                        _selectedTransform,
+                        keyframeCreator,
+                        _toolsController,
+                        _timeLineRecorder,
+                        _gameEventBus);
                     drawer.Draw(target);
                 }
             }

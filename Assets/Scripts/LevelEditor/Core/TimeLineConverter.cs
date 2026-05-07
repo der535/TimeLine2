@@ -50,9 +50,15 @@ namespace TimeLine.LevelEditor.Core
         }
 
         [Inject]
-        private void Construct(MainObjects mainObjects, Main main, TimeLineScroll timeLineScroll,
-            TimeLineSettings timeLineSettings, M_MusicData mMusicData, M_MusicOffsetData mMusicOffsetData,
-            M_PlaybackState state, CurrentTimeMarkerRenderer currentTimeMarkerRenderer,
+        private void Construct(
+            MainObjects mainObjects,
+            Main main, 
+            TimeLineScroll timeLineScroll,
+            TimeLineSettings timeLineSettings, 
+            M_MusicData mMusicData,
+            M_MusicOffsetData mMusicOffsetData,
+            M_PlaybackState state, 
+            CurrentTimeMarkerRenderer currentTimeMarkerRenderer,
             M_AudioPlaybackService audioPlaybackService)
         {
             _mainObjects = mainObjects;
@@ -83,10 +89,7 @@ namespace TimeLine.LevelEditor.Core
 
             for (int i = 0; i < count; i++)
             {
-                // Передняя грань (индексы 0 .. count-1)
                 vertices[i] = new float3(points[i].x, points[i].y, 0.05f);
-
-                // Задняя грань (индексы count .. 2*count-1)
                 vertices[i + count] = new float3(points[i].x, points[i].y, -0.05f);
             }
 
@@ -273,6 +276,9 @@ namespace TimeLine.LevelEditor.Core
             float t,
             Keyframe.Keyframe.InterpolationType interpolationType)
         {
+            if(Math.Abs(current.Ticks - t) < 0.01f) return start;
+            if(Math.Abs(next.Ticks - t) < 0.01f) return end;
+            
             switch (interpolationType)
             {
                 case Keyframe.Keyframe.InterpolationType.Hold:

@@ -140,7 +140,7 @@ namespace TimeLine
             for (int i = 0; i < _trackObjectGroups.Count; i++)
             {
                 // Используем forceUpdate: forceUpdate
-                CheckActiveGroup(_trackObjectGroups[i], time, forceUpdate: forceUpdate); 
+                CheckActiveGroup(_trackObjectGroups[i], time, forceUpdate: forceUpdate);
             }
         }
 
@@ -755,6 +755,8 @@ namespace TimeLine
                 // Ищем композиции которые надо обновить и удаляем старые версии
                 foreach (var VARIABLE in TrackObjectDatas.ToList())
                 {
+
+                    
                     if (VARIABLE is TrackObjectGroup group)
                     {
                         if (group.compositionID == compositionUpdateID)
@@ -763,6 +765,13 @@ namespace TimeLine
                             remover.ListRemove(group);
                             TrackObjectDatas.Remove(VARIABLE);
                         }
+                        else if (saveComposition.TestCheckAvailabilityComposition(group.compositionID, compositionUpdateID))
+                        {
+                            remover.ListRemove(group);
+                            TrackObjectDatas.Remove(VARIABLE);
+                        }
+                        Debug.Log(saveComposition.TestCheckAvailabilityComposition(group.compositionID, compositionUpdateID));
+
                     }
                 }
 
@@ -836,12 +845,13 @@ namespace TimeLine
                 entityManager.GetComponentData<CompositionPositionOffsetData>(entity).Offset);
 
             components.TrackObject.Rezise = null;
-
-            foreach (var track in TrackObjectDatas)
-            {
-                components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
-            }
+            //
+            // foreach (var track in TrackObjectDatas)
+            // {
+            //     components.TrackObject.Rezise += (value) => { track.components.Data.GroupOffset(value); };
+            // }
         }
+
 
         private void GetChildrenExample(List<Entity> children, float2 newOffset)
         {
@@ -850,9 +860,9 @@ namespace TimeLine
 
             foreach (var childEntity in children)
             {
-                Debug.Log(entityManager.HasComponent(childEntity, typeof(ObjectPositionOffsetData)));
-                Debug.Log(childEntity.Index);
-                Debug.Log(childEntity.Version);
+                // Debug.Log(entityManager.HasComponent(childEntity, typeof(ObjectPositionOffsetData)));
+                // Debug.Log(childEntity.Index);
+                // Debug.Log(childEntity.Version);
                 ObjectPositionOffsetData
                     offsetData =
                         entityManager
