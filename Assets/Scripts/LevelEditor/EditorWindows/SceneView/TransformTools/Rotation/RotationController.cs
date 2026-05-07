@@ -33,13 +33,12 @@ namespace TimeLine
 
         [SerializeField] private RectTransform toolCanvas;
 
-        private Action _toolFollowingObject;
         private GameEventBus _gameEventBus;
         private GridScene _gridScene;
         private SceneToRawImageConverter _sceneToRawImageConverter;
         private CoordinateSystem _coordinateSystem;
 
-        private List<RotationToolData> _selectedObjects = new List<RotationToolData>();
+        private List<RotationToolData> _selectedObjects = new();
         private Vector2 _groupCenter;
         private EntityManager _entityManager;
 
@@ -69,36 +68,28 @@ namespace TimeLine
                 _selectedObjects = new List<RotationToolData>();
             });
 
-            // Логика перемещения инструмента за объектами
-            _toolFollowingObject = UpdateToolUI;
-
             rotateTool.onRotate = (deltaAngle) =>
             {
                 if (_selectedObjects.Count == 0) return;
 
                 if (_selectedObjects.Count == 1)
                 {
-                    // Одиночный объект: просто меняем ZRotation
                     var obj = _selectedObjects[0];
                     LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(obj.Entity);
                     RotationData rotationData = _entityManager.GetComponentData<RotationData>(obj.Entity);
 
-
                     float newZ = _gridScene.RotateSnapToGrid(obj.StartRotation + deltaAngle);
+        
+                    // ЛОГ 1: Что мы насчитали
+
                     rotationData.RotateZ = newZ;
-
-                    var objectRotation = GetDegree.FromQuaternion(localTransform.Rotation);
-
-
-                    localTransform.Rotation =
-                        GetDegree.FromEuler(new Vector3(objectRotation.x, objectRotation.y, rotationData.RotateZ));
+                    localTransform.Rotation = GetDegree.FromEuler(new Vector3(0, 0, rotationData.RotateZ));
 
                     _entityManager.SetComponentData(obj.Entity, localTransform);
                     _entityManager.SetComponentData(obj.Entity, rotationData);
                 }
                 else
                 {
-                    // Групповое вращение
                     RotateGroup(deltaAngle);
                 }
 
@@ -116,7 +107,7 @@ namespace TimeLine
                     LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(item.Entity);
                     RotationData rotationData = _entityManager.GetComponentData<RotationData>(item.Entity);
                     item.StartPosition = new Vector2(localTransform.Position.x, localTransform.Position.y);
-                    item.StartRotation = rotationData.RotateZ;
+                    item.StartRotation = rotationData.RotateZ; // Тут теперь честное значение
                 }
             };
 
@@ -164,9 +155,8 @@ namespace TimeLine
             // Опционально: если гизмо вращения должно визуально отражать поворот объекта в Local режиме
             if (!_coordinateSystem.IsGlobal)
             {
-                tool.rotation = Quaternion.Euler(0, 0,
-                    GetDegree.FromQuaternion(_entityManager
-                        .GetComponentData<LocalTransform>(_selectedObjects[^1].Entity).Rotation.value).z);
+                var rotData = _entityManager.GetComponentData<RotationData>(_selectedObjects[^1].Entity);
+                tool.rotation = Quaternion.Euler(0, 0, rotData.RotateZ);
             }
             else
             {
@@ -176,6 +166,7 @@ namespace TimeLine
 
         private void Select(List<TrackObjectPacket> data)
         {
+            // Debug.Log("Select");
             // 2. Очищаем список
             _selectedObjects.Clear();
 
@@ -206,44 +197,40 @@ namespace TimeLine
 
         public void RotateGroup(float deltaAngle)
         {
-            // 1. Снапим САМ УГОЛ. 
-            // Теперь вся группа будет поворачиваться только на разрешенные углы (например, 0, 45, 90...)
             float snappedDeltaAngle = _gridScene.RotateSnapToGrid(deltaAngle);
-
-            // 2. Создаем кватернион на основе заснапленного угла
             Quaternion rotation = Quaternion.Euler(0, 0, snappedDeltaAngle);
 
             foreach (var item in _selectedObjects)
             {
-                // 3. Вычисляем позицию на основе заснапленного поворота
-                // Мы используем StartPosition, поэтому деформации не будет
-                Vector3 direction = (Vector3)item.StartPosition - (Vector3)_groupCenter;
-                Vector3 rotatedDirection = rotation * direction;
+                LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(item.Entity);
+                RotationData rotationData = _entityManager.GetComponentData<RotationData>(item.Entity);
 
-                // 4. Применяем позиции БЕЗ SnapToGrid (потому что снап уже заложен в угле)
-                // Если применить здесь SnapToGrid, объекты начнут "дрожать" и съезжаться к центру
+                // --- 1. Позиция (Global) ---
                 if (_coordinateSystem.IsGlobal)
                 {
+                    Vector3 direction = (Vector3)item.StartPosition - (Vector3)_groupCenter;
+                    Vector3 rotatedDirection = rotation * direction;
                     Vector3 newPosition = (Vector3)_groupCenter + rotatedDirection;
-                    LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(item.Entity);
+
                     localTransform.Position.x = newPosition.x;
                     localTransform.Position.y = newPosition.y;
 
-                    PositionData positionData = new PositionData();
-                    positionData.Position = new float2(localTransform.Position.x, localTransform.Position.y);
-                    _entityManager.SetComponentData(item.Entity, positionData);
-
-                    _entityManager.SetComponentData(item.Entity, localTransform);
+                    _entityManager.SetComponentData(item.Entity, new PositionData { 
+                        Position = new float2(newPosition.x, newPosition.y) 
+                    });
                 }
 
-
-                var obj = item;
-                LocalTransform localTransform2 = _entityManager.GetComponentData<LocalTransform>(obj.Entity);
-                Vector3 currentEuler = GetDegree.FromQuaternion(localTransform2.Rotation);
+                // --- 2. Вращение (Критически важно!) ---
+                // ИСПОЛЬЗУЕМ ТОЛЬКО StartRotation. Никаких FromQuaternion!
                 float newZ = item.StartRotation + snappedDeltaAngle;
-                currentEuler.z = newZ;
-                localTransform2.Rotation = GetDegree.FromEuler(currentEuler);
-                _entityManager.SetComponentData(obj.Entity, localTransform2);
+        
+                rotationData.RotateZ = newZ;
+                // Передаем чистый Z в FromEuler. X и Y обычно 0 для 2D, 
+                // если нет - используйте значения из RotationData, но не из трансформа.
+                localTransform.Rotation = GetDegree.FromEuler(new Vector3(0, 0, rotationData.RotateZ));
+
+                _entityManager.SetComponentData(item.Entity, rotationData);
+                _entityManager.SetComponentData(item.Entity, localTransform);
             }
         }
 

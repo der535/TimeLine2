@@ -17,6 +17,8 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public bool IsResizingDown;
         public bool IsRotating;
         public bool IsDragging;
+        
+        public bool WasRotatingLastFrame;
 
         public bool GetIsEditingObject()
         {
@@ -29,13 +31,12 @@ namespace TimeLine.LevelEditor.TransformationSquare
         public Vector2[] UIPoints = new Vector2[4];
 
         public Vector2 LastMousePosition;
-        public float LastAngle;
         
         public float3 GroupCenter;
         
+        public float LastMouseAngle;
         public float InitialMouseAngle;
-        
-        
+     
         public float3 InitialBoxSize;
         public float3 InitialBoxLocalMin;
         public float3 InitialBoxLocalMax;
@@ -52,10 +53,10 @@ namespace TimeLine.LevelEditor.TransformationSquare
             public float3 InitialWorldPos;
             public float3 InitialScale;
             
-            public quaternion InitialRotation;
+            public float InitialRotation;
         }
 
 // При клике (started) сохраняйте данные для всех выделенных объектов
-        public List<SelectedEntityData> _selectedEntities = new List<SelectedEntityData>();
+        public List<SelectedEntityData> _selectedEntities = new();
     }
 }

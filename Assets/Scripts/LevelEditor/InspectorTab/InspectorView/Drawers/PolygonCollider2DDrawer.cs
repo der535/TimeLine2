@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EventBus;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
@@ -19,6 +20,7 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         private KeyframeCreator _keyframeCreator;
         private CustomInspectorDrawer _customInspectorDrawer = null;
         private ColliderDrawer _colliderDrawer = null;
+        private GameEventBus gameEventBus;
 
         public PolygonCollider2DDrawer(ColliderDrawer colliderDrawer)
         {
@@ -26,10 +28,11 @@ namespace TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers
         }
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder, GameEventBus gameEventBus)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
+            this.gameEventBus = gameEventBus;
         }
 
         public bool GetComponent(List<ComponentType> component)

@@ -124,6 +124,7 @@ namespace TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools.Position
 
         private void OnGridPositionChanged(float newStepSize)
         {
+            if(!_entityManager.Exists(_transformComponent)) return;
             LocalTransform localTransform = _entityManager.GetComponentData<LocalTransform>(_transformComponent);
 
             // ⭐⭐⭐ ОСНОВНОЕ ИЗМЕНЕНИЕ: Получаем ТЕКУЩУЮ мировую позицию объекта

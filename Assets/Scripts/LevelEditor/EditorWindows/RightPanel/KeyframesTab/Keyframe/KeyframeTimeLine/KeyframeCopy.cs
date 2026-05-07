@@ -112,9 +112,7 @@ namespace TimeLine
 
             _actionMap.Editor.V.started += _ =>
             {
-                // Debug.Log(tabButton);
-                // Debug.Log(_tabStorage.GetActiveTab().tabButton);
-                if (tabButton == _tabStorage.GetActiveTab().tabButton) return;
+                if (tabButton != _tabStorage.GetActiveTab().tabButton) return;
                 if (_actionMap.Editor.LeftCtrl.IsPressed() &&
                     windowsFocus.IsFocused &&
                     _trackObjectStorage.selectedObject != null &&

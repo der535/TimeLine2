@@ -62,5 +62,14 @@ namespace TimeLine.LevelEditor.SpriteLoader
             
             SortCardsAlphabetically();
         }
+
+        public void RemoveAllCards()
+        {
+            foreach (var card in cards)
+            {
+                Destroy(card.gameObject);
+            }
+            cards.Clear();
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EventBus;
 using TimeLine.CustomInspector.Logic.Parameter;
 using TimeLine.CustomInspector.UI.Drawers;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
@@ -24,6 +25,7 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         private TrackObjectStorage _trackObjectStorage = null;
         private ColliderDrawer _colliderDrawer;
         private ToolsController _toolsController;
+        private GameEventBus _gameEventBus;
 
         public CircleCollider2DDrawer(ColliderDrawer colliderDrawer)
         {
@@ -31,12 +33,13 @@ namespace TimeLine.LevelEditor.EditorWindows.RightPanel.InspectorTab.InspectorVi
         }
 
         public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder, GameEventBus gameEventBus)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _keyframeCreator = keyframeCreator;
             _trackObjectStorage = trackObjectStorage;
             _toolsController = toolsController;
+            _gameEventBus = gameEventBus;
         }
 
 

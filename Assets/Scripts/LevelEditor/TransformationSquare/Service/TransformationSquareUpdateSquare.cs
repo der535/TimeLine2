@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using TimeLine.LevelEditor.ECS;
 using TimeLine.LevelEditor.ECS.Services;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -27,13 +29,32 @@ namespace TimeLine.LevelEditor.TransformationSquare.Service
             EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
             if(!em.Exists(_selectedEntities[^1])) return;
             
+            Entity lastEntity = _selectedEntities[^1];
             LocalTransform activeLT = em.GetComponentData<LocalTransform>(_selectedEntities[^1]);
 
-            // Создаем матрицу, которая "обнуляет" поворот для расчетов
-            // Мы берем позицию центра активного объекта и его поворот
-            var pivotToWorldMatrix = float4x4.TRS(activeLT.Position, activeLT.Rotation, new float3(1));
-            var worldToPivotMatrix  = math.inverse(pivotToWorldMatrix);
+            // ДОБАВЛЯЕМ ЭТО: Берем честный угол вместо кватерниона
+            float rotationZ = 0; 
+            if (em.HasComponent<RotationData>(lastEntity))
+            {
+                rotationZ = em.GetComponentData<RotationData>(lastEntity).RotateZ;
+            }
+            else 
+            {
+                // Если компонента нет, достаем угол правильно, а не через .value.x
+                rotationZ = GetDegree.FromQuaternion(activeLT.Rotation).z;
+            }
             
+            if (em.HasComponent<RotationData>(lastEntity))
+            {
+                rotationZ = em.GetComponentData<RotationData>(lastEntity).RotateZ;
+            }
+
+            // Создаем матрицу, используя честный угол через Euler
+            // Используем math.radians, так как в RotationData у нас градусы
+            quaternion honestRotation = quaternion.EulerZXY(0, 0, math.radians(rotationZ));
+    
+            var pivotToWorldMatrix = float4x4.TRS(activeLT.Position, honestRotation, new float3(1));
+            var worldToPivotMatrix = math.inverse(pivotToWorldMatrix);
             
             float3 min = new float3(float.MaxValue);
             float3 max = new float3(float.MinValue);

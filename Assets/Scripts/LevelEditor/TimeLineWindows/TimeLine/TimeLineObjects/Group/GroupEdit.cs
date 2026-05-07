@@ -15,7 +15,7 @@ namespace TimeLine
         private GroupCreater _groupCreater;
         private GameEventBus _gameEventBus;
 
-        List<TrackObjectPacket> trackObjects = new();
+        private List<TrackObjectPacket> _trackObjects = new();
 
         private bool _isEditing;
 
@@ -31,11 +31,10 @@ namespace TimeLine
 
         private void Start()
         {
-            _gameEventBus.SubscribeTo(((ref AddTrackObjectDataEvent data) =>
+            _gameEventBus.SubscribeTo((ref AddTrackObjectDataEvent data) =>
             {
-                if(_isEditing)
-                    trackObjects.Add(data.TrackObjectPacket);
-            }));
+                if(_isEditing) _trackObjects.Add(data.TrackObjectPacket);
+            });
         }
 
         public void Edit()
@@ -54,13 +53,13 @@ namespace TimeLine
                 _trackObjectStorage.HideAll();
                 if (_selectObjectController.SelectObjects[0] is TrackObjectGroup group)
                 {
-                    trackObjects = group.TrackObjectDatas;
+                    _trackObjects = group.TrackObjectDatas;
                     groupSeparate.Separate(group);
                 }
             }
             else
             {
-                _groupCreater.Create(trackObjects);
+                _groupCreater.Create(_trackObjects);
                 _trackObjectStorage.ShowAll();
             }
         }

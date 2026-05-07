@@ -36,32 +36,32 @@ namespace TimeLine.LevelEditor.CameraBoundaries
             if (_references?.playCamera == null) return;
 
             Camera cam = _references.editSceneCamera;
-            
-            // 1. Вычисляем ширину линии в 1 пиксель
-            // Используем pixelHeight камеры. Если камера рендерит в RenderTexture, 
-            // cam.pixelHeight вернет высоту этой текстуры.
-            float unitPerPixel = (cam.orthographicSize * 2f) / cam.pixelHeight;
+            Camera playCam = _references.playCamera;
 
-            lineRenderer.transform.position = _references.playCamera.transform.position;
-            
-            // Устанавливаем толщину линии
+            // 1. Вычисляем размер пикселя для корректной толщины линии
+            float unitPerPixel = (cam.orthographicSize * 2f) / cam.pixelHeight;
+    
+            lineRenderer.transform.position = playCam.transform.position;
             lineRenderer.startWidth = unitPerPixel;
             lineRenderer.endWidth = unitPerPixel;
 
-            float height = _references.playCamera.orthographicSize;
-            float width = height * _references.playCamera.aspect;
-            Vector3 center = _references.playCamera.transform.position;
-
-            // Смещение на пол-пикселя (0.5f * unitPerPixel), чтобы рамка шла 
-            // строго по краю или чуть снаружи/внутри
+            // 2. ФИКСИРУЕМ АСПЕКТ
+            // Вместо playCam.aspect используем жестко заданное соотношение
+            float targetAspect = 16f / 9f;
+    
+            float height = playCam.orthographicSize;
+            float width = height * targetAspect; // Теперь ширина всегда 16/9 от высоты
+    
+            Vector3 center = playCam.transform.position;
             float halfPixel = unitPerPixel * 0.5f;
 
-            // Вычисляем углы с учетом рассчитанной толщины
-            Vector3 topLeft     = center + new Vector3(-width - halfPixel,  height + halfPixel, -center.z);
-            Vector3 topRight    = center + new Vector3( width + halfPixel,  height + halfPixel, -center.z);
-            Vector3 bottomRight = center + new Vector3( width + halfPixel, -height - halfPixel, -center.z);
-            Vector3 bottomLeft  = center + new Vector3(-width - halfPixel, -height - halfPixel, -center.z);
+            // Вычисляем углы (Z обнуляем относительно камеры, если нужно в 2D)
+            Vector3 topLeft     = new Vector3(-width - halfPixel,  height + halfPixel, 0);
+            Vector3 topRight    = new Vector3( width + halfPixel,  height + halfPixel, 0);
+            Vector3 bottomRight = new Vector3( width + halfPixel, -height - halfPixel, 0);
+            Vector3 bottomLeft  = new Vector3(-width - halfPixel, -height - halfPixel, 0);
 
+            // Устанавливаем позиции локально, так как мы привязали LineRenderer к позиции камеры
             lineRenderer.SetPosition(0, topLeft);
             lineRenderer.SetPosition(1, topRight);
             lineRenderer.SetPosition(2, bottomRight);

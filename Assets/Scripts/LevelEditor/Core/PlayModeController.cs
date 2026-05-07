@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using EventBus;
+using TimeLine.EventBus.Events.Grid;
+using TimeLine.LevelEditor.EscInput;
 using TimeLine.LevelEditor.Player;
 using TimeLine.LevelEditor.Player.PlayerMove.PlayerFreeMove;
 using UnityEngine;
@@ -23,16 +25,14 @@ namespace TimeLine
         
         private Main _main;
         internal bool IsPlaying;
-        private ActionMap _actionMap;
 
         private GameEventBus _gameEventBus;
         
         [Inject]
-        private void Construct(Main main, GameEventBus gameEventBus, ActionMap actionMap)
+        private void Construct(Main main, GameEventBus gameEventBus)
         {
             _main = main;
             _gameEventBus = gameEventBus;
-            _actionMap = actionMap;
         }
 
         private void Start()
@@ -41,9 +41,13 @@ namespace TimeLine
             {
                 _main.SetTimeInTicks((float)trackObjectStorage.GetMinTime());
                 Invoke(nameof(Play), 0.3f);
-            });
+            }, 1);
             
-            _actionMap.Editor.ESC.started += _ => ExitPlayMode();
+            
+            _gameEventBus.SubscribeTo((ref EscapePressedEvent data) =>
+            {
+                ExitPlayMode();
+            }, -1);
         }
         
         public void TurnToPlayMode()

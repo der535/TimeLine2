@@ -248,6 +248,22 @@ MonoBehaviour:
   highlightsEnd:
     m_OverrideState: 1
     m_Value: 1
+--- !u!114 &-4618190734254593840
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 838c2ab9918d060429de367c946db23a, type: 3}
+  m_Name: NewPostProcessEffectVolumeComponent
+  m_EditorClassIdentifier: Assembly-CSharp::NewPostProcessEffectVolumeComponent
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 1
 --- !u!114 &-4210620904635426390
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -320,6 +336,9 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   highQualityFiltering:
+    m_OverrideState: 1
+    m_Value: 0
+  filter:
     m_OverrideState: 1
     m_Value: 0
   downscale:
@@ -506,7 +525,7 @@ MonoBehaviour:
   - {fileID: -8186968272690591729}
   - {fileID: -3978695733392391637}
   - {fileID: -1083910812058648046}
-  - {fileID: 4725304083624605021}
+  - {fileID: -4618190734254593840}
 --- !u!114 &156332030701414761
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -529,6 +548,22 @@ MonoBehaviour:
   gain:
     m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
+--- !u!114 &506031728772349060
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 797f0f37aa3b0f4499cafc11047e1fd7, type: 3}
+  m_Name: FisheyeVolume
+  m_EditorClassIdentifier: Assembly-CSharp::FisheyeVolume
+  active: 1
+  strength:
+    m_OverrideState: 1
+    m_Value: 0
 --- !u!114 &1247868777620691934
 MonoBehaviour:
   m_ObjectHideFlags: 3

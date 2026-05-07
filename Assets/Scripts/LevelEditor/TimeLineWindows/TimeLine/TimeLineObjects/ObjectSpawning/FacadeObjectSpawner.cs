@@ -64,8 +64,6 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.ObjectSp
             {
                 if (saveData is GroupGameObjectSaveData group)
                 {
-                    Debug.Log("is group");
-                    
                     trackObjects.Add(LoadComposition(group, group.compositionID, false, compositionData:_saveComposition.FindCompositionDataById(group.compositionID)).Item1);
                 }
                 else

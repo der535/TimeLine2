@@ -167,6 +167,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Z",
+                    "type": "Button",
+                    "id": "096c7b9d-e62d-41ba-9bf5-8621db7a84f6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Y",
+                    "type": "Button",
+                    "id": "6967ad0b-4e54-4ef3-beb9-006fc37547a9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -389,6 +407,28 @@
                     "action": "CutHalf",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6c23d716-53a2-4bdf-a3f5-275c9c90d1a7",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Z",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "45fd8031-91ae-472e-a66a-8d6a711fbead",
+                    "path": "<Keyboard>/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Y",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -397,13 +437,22 @@
             "id": "94843c9b-cdaf-470e-bdc2-7c8183b977df",
             "actions": [
                 {
-                    "name": "PlayerMove",
+                    "name": "PlayerMoveWASD",
                     "type": "PassThrough",
                     "id": "46ccad50-a116-44f1-bc76-9a338743012e",
-                    "expectedControlType": "",
+                    "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "PlayerMoveArrows",
+                    "type": "PassThrough",
+                    "id": "65e31d74-86c2-41fb-b0dd-3fc60dc8428b",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 },
                 {
                     "name": "Space",
@@ -413,6 +462,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "GamePad",
+                    "type": "PassThrough",
+                    "id": "fffc4867-3dab-43ec-89e2-f529ce9ebec6",
+                    "expectedControlType": "Stick",
+                    "processors": "StickDeadzone",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -423,7 +481,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "PlayerMove",
+                    "action": "PlayerMoveWASD",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
@@ -434,7 +492,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "PlayerMove",
+                    "action": "PlayerMoveWASD",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -445,7 +503,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "PlayerMove",
+                    "action": "PlayerMoveWASD",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -456,7 +514,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "PlayerMove",
+                    "action": "PlayerMoveWASD",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -467,7 +525,62 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard",
-                    "action": "PlayerMove",
+                    "action": "PlayerMoveWASD",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "2D Vector",
+                    "id": "3c7946d6-5265-43de-81db-6eb281932955",
+                    "path": "2DVector",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PlayerMoveArrows",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "up",
+                    "id": "e17226eb-8d2d-474f-a672-eecde4381897",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard",
+                    "action": "PlayerMoveArrows",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "down",
+                    "id": "d000563a-3b85-4ad2-82d3-9e968bc2c440",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard",
+                    "action": "PlayerMoveArrows",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "left",
+                    "id": "2f65b700-4f1f-48b3-b622-0dfc4bc0061b",
+                    "path": "<Keyboard>/leftArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard",
+                    "action": "PlayerMoveArrows",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "right",
+                    "id": "db17502d-a45a-40ec-8e42-eb4cf5d64bfa",
+                    "path": "<Keyboard>/rightArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard",
+                    "action": "PlayerMoveArrows",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -477,8 +590,30 @@
                     "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Keyboard",
                     "action": "Space",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ce8a77ce-3eae-48ba-8843-84944a000a26",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Space",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "398e2709-39e5-49b3-b8a4-227208ed76bb",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "GamePad",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -517,6 +652,11 @@
         {
             "name": "Keyboard",
             "bindingGroup": "Keyboard",
+            "devices": []
+        },
+        {
+            "name": "Gamepad",
+            "bindingGroup": "Gamepad",
             "devices": []
         }
     ]

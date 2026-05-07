@@ -23,7 +23,7 @@ namespace TimeLine
         
         private GameEventBus _gameEventBus;
         
-        private TimeLineSpeedController TimeLineSpeedController;
+        private TimeLineSpeedController _timeLineSpeedController;
 
         [Inject]
         private void Construct(
@@ -39,7 +39,7 @@ namespace TimeLine
             _gameEventBus = gameEventBus;
             _timeLineConverter = timeLineConverter;
             _currentTimeMarkerRenderer  = currentTimeMarkerRenderer;
-            TimeLineSpeedController = timeLineSpeedController;
+            _timeLineSpeedController = timeLineSpeedController;
             _musicOffsetData = musicOffsetData;
             _audioPlaybackService = audioPlaybackService;
             _state = playbackState;
@@ -109,8 +109,6 @@ namespace TimeLine
              
             if (!_state.IsPlaying) return;
             
-            // if(audioSource.time >= audioSource.clip.length) Pause();
-
             if (_state.SmoothTimeInTicks + _timeLineConverter.SecondsToTicks(_musicOffsetData.Value)  >= 0)
             {
                 if (!_audioPlaybackService.IsPlaying) _audioPlaybackService.Play();
@@ -120,7 +118,7 @@ namespace TimeLine
                 double visualOffsetTicks = TimeLineConverter.Instance.SecondsToTicks(_musicOffsetData.Value);
 
                 // Update smooth time using Time.deltaTime
-                _state.SmoothTimeInTicks += TimeLineConverter.Instance.SecondsToTicks(Time.deltaTime) * TimeLineSpeedController.CurrentSpeed;
+                _state.SmoothTimeInTicks += TimeLineConverter.Instance.SecondsToTicks(Time.deltaTime) * _timeLineSpeedController.CurrentSpeed;
                 _state.SmoothTimeInTicksReal = _state.SmoothTimeInTicks - visualOffsetTicks;
 
                 // Apply offset to get the visual position
@@ -141,7 +139,7 @@ namespace TimeLine
             else
             {
                 // Update smooth time using Time.deltaTime
-                _state.SmoothTimeInTicks += TimeLineConverter.Instance.SecondsToTicks(Time.deltaTime) * TimeLineSpeedController.CurrentSpeed;
+                _state.SmoothTimeInTicks += TimeLineConverter.Instance.SecondsToTicks(Time.deltaTime) * _timeLineSpeedController.CurrentSpeed;
                 _state.ExactTimeInTicks = _state.SmoothTimeInTicks;
 
                 // Apply offset to get the visual position

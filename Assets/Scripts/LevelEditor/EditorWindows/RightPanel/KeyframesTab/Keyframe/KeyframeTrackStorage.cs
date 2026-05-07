@@ -7,7 +7,10 @@ using TimeLine.EventBus.Events.TrackObject;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.EditorWindows.RightPanel.KeyframesTab.Keyframe;
 using TimeLine.LevelEditor.GeneralEditor;
+using TimeLine.LevelEditor.Save;
+using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObject;
+using Unity.Entities;
 using UnityEngine;
 using Zenject;
 
@@ -15,7 +18,7 @@ namespace TimeLine.Keyframe
 {
     public class KeyframeTrackStorage : MonoBehaviour
     {
-        private List<TrackData> tracks = new();
+        private readonly List<TrackData> _tracks = new();
 
         private GameEventBus _gameEventBus;
 
@@ -36,30 +39,11 @@ namespace TimeLine.Keyframe
             _gameEventBus.SubscribeTo((ref TickSmoothTimeEvent data) => { Evaluate(data.Time); });
         }
 
-        internal List<TrackData> GetTracks() => tracks;
-
-        [Button]
-        void PrintTracks()
-        {
-            curve.ClearKeys();
-            foreach (var k in tracks[0].Track.Keyframes)
-            {
-                UnityEngine.Keyframe key = new UnityEngine.Keyframe();
-                key.weightedMode = WeightedMode.Both;
-                key.outTangent = (float)k.OutTangent;
-                key.inTangent = (float)k.InTangent;
-                key.inWeight = (float)k.InWeight;
-                key.outWeight = (float)k.OutWeight;
-                if (k.GetEntityData().GetValue() is float value)
-                    key.value = value;
-                key.time = (float)TimeLineConverter.Instance.TicksToSeconds(k.Ticks);
-                curve.AddKey(key);
-            }
-        }
-
+        internal List<TrackData> GetTracks() => _tracks;
+        
         internal void Evaluate(double time)
         {
-            foreach (var variable in tracks)
+            foreach (var variable in _tracks)
             {
                 if (variable.Active)
                 {
@@ -73,28 +57,26 @@ namespace TimeLine.Keyframe
 
         public void RemoveTrack(TreeNode treeNode)
         {
-            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            foreach (var track in _tracks.ToList().Where(track => track.TreeNode == treeNode))
             {
-                tracks.Remove(track);
+                _tracks.Remove(track);
             }
         }
 
         public void RemoveTrackWithNode(Track trackr)
         {
-            foreach (var track in tracks.ToList().Where(track => track.Track == trackr))
+            foreach (var track in _tracks.ToList().Where(track => track.Track == trackr))
             {
                 Branch branch = _branchCollection.GetBranch(track.BranchId);
                 branch.RemoveNode(track.TreeNode);
-                // _branchCollection.AddNodeToBranch()
-                // track.TreeNode
 
-                tracks.Remove(track);
+                _tracks.Remove(track);
             }
         }
 
         public void SetActiveTrack(TreeNode treeNode, bool active)
         {
-            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            foreach (var track in _tracks.ToList().Where(track => track.TreeNode == treeNode))
             {
                 track.Active = active;
             }
@@ -102,13 +84,13 @@ namespace TimeLine.Keyframe
 
         public void AddTrack(TreeNode treeNode, Track track, TrackObjectData trackObjectData, string branchId, bool updateTreeUI)
         {
-            tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
+            _tracks.Add(new TrackData(treeNode, track, trackObjectData, branchId));
             if (updateTreeUI) _gameEventBus.Raise(new AddTrackEvent(track));
         }
 
         public Track GetTrack(TreeNode treeNode)
         {
-            foreach (var track in tracks.ToList().Where(track => track.TreeNode == treeNode))
+            foreach (var track in _tracks.ToList().Where(track => track.TreeNode == treeNode))
             {
                 return track.Track;
             }
@@ -132,7 +114,7 @@ namespace TimeLine.Keyframe
             Track = track;
             TrackObjectData = trackObjectData;
         }
-
+        
         public string BranchId;
         public TreeNode TreeNode;
         public Track Track;

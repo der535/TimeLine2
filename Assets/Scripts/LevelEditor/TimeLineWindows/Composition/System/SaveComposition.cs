@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 using EventBus;
 using TimeLine.LevelEditor;
+using TimeLine.LevelEditor.ActionHistory;
+using TimeLine.LevelEditor.ActionHistory.Commands;
 using TimeLine.LevelEditor.Core;
 using TimeLine.LevelEditor.LevelJson;
 using TimeLine.LevelEditor.Save;
@@ -120,6 +122,23 @@ namespace TimeLine
 
             return false;
         }
+        
+        public bool TestCheckAvailabilityComposition(string currentCompositionID, string targetCompositionID)
+        {
+           var data = FindCompositionDataById(currentCompositionID);
+
+           foreach (var child in data.children)
+           {
+               if (child is GroupGameObjectSaveData group)
+               {
+                   if(group.compositionID == targetCompositionID) return true;
+                   
+                   return TestCheckAvailabilityComposition(group.compositionID, targetCompositionID);
+               }
+           }
+            
+           return false;
+        }
 
         public void LockCompositionCard()
         {
@@ -159,7 +178,7 @@ namespace TimeLine
                     spawner.LoadComposition(FindCompositionDataById(data.compositionID), data.compositionID, true, startTime: TimeLineConverter.Instance.TicksCurrentTime());
                     
                 },
-                () => { compositionEdit.Edit(FindCompositionDataById(data.compositionID)); }, () =>
+                () => { CommandHistory.AddCommand(new StartEditCompositionCommand(compositionEdit,this, data.compositionID, ""), true); }, () =>
                 {
                     renameComposition.RenameCompositionPanel.gameObject.SetActive(true);
                     renameComposition.Setup(data.compositionID, data.branch.Name);
@@ -191,6 +210,11 @@ namespace TimeLine
             }
 
             compositionUpdater.UpdateCompositions(group.compositionID);
+        }
+
+        public void DeleteComposition(string compositionID)
+        {
+            DeleteComposition(FindCompositionDataById(compositionID));
         }
 
         public void AddComposition(GroupGameObjectSaveData group)
@@ -297,15 +321,6 @@ namespace TimeLine
             return !string.IsNullOrEmpty(id) && _compositionData.Any(data => data.compositionID == id);
         }
 
-        private void Update()
-        {
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F5))
-            {
-                _actionMap.Dispose();
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
-        }
-
         public GroupGameObjectSaveData FindCompositionDataById(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -320,6 +335,15 @@ namespace TimeLine
             print($"Rename {data.gameObjectName} --> {changedName}");
             data.gameObjectName = changedName;
             data.branch.Name = changedName;
+        }
+
+        internal void RemoveAll()
+        {
+            foreach (var card in _cards)
+            {
+                Destroy(card.gameObject);
+            }
+            _cards.Clear();
         }
     }
 }

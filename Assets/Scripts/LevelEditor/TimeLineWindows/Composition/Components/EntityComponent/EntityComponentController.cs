@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TimeLine.Keyframe;
 using TimeLine.LevelEditor.InspectorTab.InspectorView.Drawers;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.Components;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent.EntityComponentInstaller;
@@ -228,9 +229,16 @@ namespace TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComp
         /// Удаляет компонент
         /// </summary>
         /// <param name="componentNames">Название компонента</param>
+        /// <param name="keyframeTrackStorage">Необходимый клайсс для удаления ключевых кадров связанные с этим компонентом</param>
         /// <param name="entity">Сущность в котором компонент будет удалён</param>
-        internal void RemoveComponent(ComponentNames componentNames, Entity entity)
+        internal void RemoveComponent(ComponentNames componentNames, KeyframeTrackStorage keyframeTrackStorage,  Entity entity)
         {
+            foreach (var track in keyframeTrackStorage.GetTracks().ToList())
+            {
+                if(track.Track.ComponentNames == componentNames)
+                    keyframeTrackStorage.RemoveTrackWithNode(track.Track);
+            }
+            
             foreach (var componentInstaller in _componentInstallers)
             {
                 if (componentInstaller.GetComponentName() == componentNames)

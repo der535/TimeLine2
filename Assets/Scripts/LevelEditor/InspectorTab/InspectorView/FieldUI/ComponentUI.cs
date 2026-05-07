@@ -1,6 +1,7 @@
 using EventBus;
 using NaughtyAttributes;
 using TimeLine.LevelEditor.CopyComponent;
+using TimeLine.LevelEditor.InspectorTab.Logic;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
 using TMPro;
 using Unity.Entities;

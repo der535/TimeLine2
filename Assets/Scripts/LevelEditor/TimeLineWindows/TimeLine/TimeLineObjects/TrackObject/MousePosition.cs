@@ -15,7 +15,7 @@ namespace TimeLine.LevelEditor.TimeLineWindows.TimeLine.TimeLineObjects.TrackObj
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 rectTransform,
-                Mouse.current.position.ReadValue(),
+                UnityEngine.Input.mousePosition,
                 camera,
                 out var currentLocalPosition);
             return currentLocalPosition;

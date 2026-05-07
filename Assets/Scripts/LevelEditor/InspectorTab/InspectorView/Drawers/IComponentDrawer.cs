@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EventBus;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.Tabs.InspectorTab.CustomInspector.UI.Drawers;
@@ -10,7 +11,13 @@ namespace TimeLine.CustomInspector.UI.Drawers
 {
     public interface IComponentDrawer
     {
-        public void Setup(CustomInspectorDrawer drawer, TrackObjectStorage trackObjectStorage, KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder);
+        public void Setup(
+            CustomInspectorDrawer drawer, 
+            TrackObjectStorage trackObjectStorage, 
+            KeyframeCreator keyframeCreator, 
+            ToolsController toolsController, 
+            TimeLineRecorder timeLineRecorder, 
+            GameEventBus gameEventBus);
         /// <summary>
         /// Проверка есть ли в переденных компонентах тот компонент который необходим для отрисовки
         /// </summary>

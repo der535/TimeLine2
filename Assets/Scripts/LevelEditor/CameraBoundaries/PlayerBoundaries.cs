@@ -12,20 +12,20 @@ using Zenject;
 
 namespace TimeLine.LevelEditor.CameraBoundaries
 {
-    public class PlayerBoundaries : MonoBehaviour
+   public class PlayerBoundaries : MonoBehaviour
     {
         private CameraReferences _references;
-        
         private BoxColliderInstaller _boxColliderInstaller;
         private SpriteRendererInstaller _spriteRendererInstaller;
 
-        private const float borderWitdh = 1;
+        private const float borderWitdh = 1f;
+        private const float fixedAspect = 16f / 9f; // Фиксируем аспект
 
         private Entity borderTop;
         private Entity borderRight;
-        private Entity borderBotton;
+        private Entity borderBottom; // Исправил опечатку Botton -> Bottom
         private Entity borderLeft;
-        
+
         [Inject]
         private void Construct(CameraReferences cameraReferences, BoxColliderInstaller boxColliderInstaller, SpriteRendererInstaller spriteRendererInstaller)
         {
@@ -36,18 +36,66 @@ namespace TimeLine.LevelEditor.CameraBoundaries
 
         void Start()
         {
-            // Настройка LineRenderer для замыкания рамки
+            // Создаем сущности один раз при старте
+            // Позиции и масштабы инициализируем нулевыми, UpdateBounds все поправит
+            borderTop = CreateSceneObject(new float3(1, 1, 1), new float3(0, 0, 0));
+            borderBottom = CreateSceneObject(new float3(1, 1, 1), new float3(0, 0, 0));
+            borderRight = CreateSceneObject(new float3(1, 1, 1), new float3(0, 0, 0));
+            borderLeft = CreateSceneObject(new float3(1, 1, 1), new float3(0, 0, 0));
+            
             UpdateBounds();
-            
-            float height = _references.playCamera.orthographicSize;
-            float width = height * _references.playCamera.aspect;
-            
-            borderTop = CreateSceneObject(new float3(width*2, borderWitdh, 100), new float3(0, height + borderWitdh/2, 0));
-            borderBotton = CreateSceneObject(new float3(width*2, borderWitdh, 100), new float3(0, -height - borderWitdh/2, 0));
-            borderRight = CreateSceneObject(new float3(borderWitdh, height*2, 100), new float3(width + borderWitdh/2, 0, 0));
-            borderLeft = CreateSceneObject(new float3(borderWitdh, height*2, 100), new float3(-width - borderWitdh/2, 0, 0));
+        }
 
+        private void Update()
+        {
+            UpdateBounds();
+        }
+
+        private void UpdateBounds()
+        {
+            if (_references?.playCamera == null) return;
+
+            // Используем фиксированный аспект вместо _references.playCamera.aspect
+            float height = _references.playCamera.orthographicSize;
+            float width = height * fixedAspect; 
             
+            Vector3 center = _references.playCamera.transform.position;
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            // Обновляем каждую границу
+            UpdateEntityTransform(entityManager, borderTop, 
+                new float3(width * 2, borderWitdh, 10f), 
+                new float3(center.x, center.y + height + borderWitdh / 2f, 0));
+
+            UpdateEntityTransform(entityManager, borderBottom, 
+                new float3(width * 2, borderWitdh, 10f), 
+                new float3(center.x, center.y - height - borderWitdh / 2f, 0));
+
+            UpdateEntityTransform(entityManager, borderRight, 
+                new float3(borderWitdh, height * 2, 10f), 
+                new float3(center.x + width + borderWitdh / 2f, center.y, 0));
+
+            UpdateEntityTransform(entityManager, borderLeft, 
+                new float3(borderWitdh, height * 2, 10f), 
+                new float3(center.x - width - borderWitdh / 2f, center.y, 0));
+        }
+
+        // Вспомогательный метод для обновления позиции и масштаба сущности
+        private void UpdateEntityTransform(EntityManager em, Entity entity, float3 scale, float3 position)
+        {
+            if (entity == Entity.Null || !em.Exists(entity)) return;
+
+            em.SetComponentData(entity, new LocalTransform 
+            { 
+                Position = position, 
+                Rotation = quaternion.identity, 
+                Scale = 1f // Используем 1, так как реальный размер задаем через Matrix
+            });
+
+            em.SetComponentData(entity, new PostTransformMatrix
+            {
+                Value = float4x4.Scale(scale)
+            });
         }
 
         internal Entity CreateSceneObject(float3 scale, float3 position)
@@ -58,63 +106,13 @@ namespace TimeLine.LevelEditor.CameraBoundaries
             entityManager.AddComponent<EntityActiveTag>(entity);
             entityManager.AddComponent<LocalTransform>(entity);
             entityManager.AddComponent<PostTransformMatrix>(entity);
-    
-            // ДОБАВЬТЕ ЭТУ СТРОКУ:
             entityManager.AddComponent<LocalToWorld>(entity);
 
-            var transform = LocalTransform.Identity;
-            entityManager.SetComponentData(entity, transform);
-
-            entityManager.SetComponentData(entity, new PostTransformMatrix
-            {
-                Value = float4x4.Scale(scale)
-            });
-
             _boxColliderInstaller.Install(entity);
-    
-            // Теперь это можно безболезненно комментировать
-            // _spriteRendererInstaller.Install(entity);
-    
-            LocalTransform localTransform = entityManager.GetComponentData<LocalTransform>(entity);
-            localTransform.Position = position;
-            entityManager.SetComponentData(entity, localTransform);
+            
+            UpdateEntityTransform(entityManager, entity, scale, position);
 
             return entity;
-        }
-
-        private void Update()
-        {
-            UpdateBounds();
-        }
-
-
-        private void UpdateBounds()
-        {
-            if (_references?.playCamera == null) return;
-
-            Camera cam = _references.editSceneCamera;
-            
-            // 1. Вычисляем ширину линии в 1 пиксель
-            // Используем pixelHeight камеры. Если камера рендерит в RenderTexture, 
-            // cam.pixelHeight вернет высоту этой текстуры.
-            float unitPerPixel = (cam.orthographicSize * 2f) / cam.pixelHeight;
-
-
-            float height = _references.playCamera.orthographicSize;
-            float width = height * _references.playCamera.aspect;
-            Vector3 center = _references.playCamera.transform.position;
-
-            // Смещение на пол-пикселя (0.5f * unitPerPixel), чтобы рамка шла 
-            // строго по краю или чуть снаружи/внутри
-            float halfPixel = unitPerPixel * 0.5f;
-
-            // Вычисляем углы с учетом рассчитанной толщины
-            Vector3 topLeft     = center + new Vector3(-width - halfPixel,  height + halfPixel, -center.z);
-            Vector3 topRight    = center + new Vector3( width + halfPixel,  height + halfPixel, -center.z);
-            Vector3 bottomRight = center + new Vector3( width + halfPixel, -height - halfPixel, -center.z);
-            Vector3 bottomLeft  = center + new Vector3(-width - halfPixel, -height - halfPixel, -center.z);
-
-
         }
     }
 }

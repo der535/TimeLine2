@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EventBus;
 using TimeLine.LevelEditor.EditorWindows.SceneView.TransformTools;
 using TimeLine.LevelEditor.General;
 using TimeLine.LevelEditor.InspectorTab.Components;
@@ -14,12 +15,19 @@ namespace TimeLine.CustomInspector.UI.Drawers
     {
         private CustomInspectorDrawer _customInspectorDrawer;
         private TrackObjectStorage _trackObjectStorage;
+        private GameEventBus _gameEventBus;
 
-        public void Setup(CustomInspectorDrawer customInspectorDrawer, TrackObjectStorage trackObjectStorage,
-            KeyframeCreator keyframeCreator, ToolsController toolsController, TimeLineRecorder timeLineRecorder)
+        public void Setup(
+            CustomInspectorDrawer customInspectorDrawer, 
+            TrackObjectStorage trackObjectStorage,
+            KeyframeCreator keyframeCreator, 
+            ToolsController toolsController, 
+            TimeLineRecorder timeLineRecorder, 
+            GameEventBus gameEventBus)
         {
             _customInspectorDrawer = customInspectorDrawer;
             _trackObjectStorage = trackObjectStorage;
+            _gameEventBus = gameEventBus;
         }
 
         public bool GetComponent(Component component)

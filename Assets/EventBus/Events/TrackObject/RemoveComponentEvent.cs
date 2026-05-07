@@ -1,5 +1,6 @@
 using EventBus;
 using TimeLine.LevelEditor.TimeLineWindows.Composition.Components.EntityComponent;
+using UnityEngine;
 
 namespace TimeLine.EventBus.Events.TrackObject
 {
@@ -10,6 +11,7 @@ namespace TimeLine.EventBus.Events.TrackObject
 
         public RemoveComponentEvent(TrackObjectPacket trackObjectPacket, ComponentNames component)
         {
+            Debug.Log("remove");
             TrackObjectPacket = trackObjectPacket;
             Component = component;
         }

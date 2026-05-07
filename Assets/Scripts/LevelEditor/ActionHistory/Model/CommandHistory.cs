@@ -20,10 +20,10 @@ namespace TimeLine.LevelEditor.ActionHistory
         /// Выполняет команду и записывает её в историю, если запись включена
         /// </summary>
         /// <param name="command">Команда для выполнения</param>
-        public static void ExecuteCommand(ICommand command)
+        public static void AddCommand(ICommand command, bool execute)
         {
             // Выполняем команду
-            command.Execute();
+            if(execute) command.Execute();
 
             // Если запись в историю включена, сохраняем команду
             if (IsRecording)

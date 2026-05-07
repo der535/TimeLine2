@@ -37,14 +37,14 @@ Material:
     - _DstBlend: 0
     - _Hardness: 0.495
     - _InnerRadius: 0.047
-    - _Radius: 0.5
+    - _Radius: 0
     - _Smoothness: 0.0067
     - _SrcBlend: 1
     - _Surface: 0
-    - _Thickness: 0
+    - _Thickness: 0.5
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _MainColor: {r: 0, g: 0.5176471, b: 0.9960785, a: 0.1490196}
+    - _MainColor: {r: 0.514151, g: 0.7666394, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

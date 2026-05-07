@@ -13,6 +13,7 @@ namespace TimeLine
         [SerializeField] private GameObject saveButton;
         [SerializeField] private TextMeshProUGUI textEditionComposition;
         [SerializeField] private GameObject endEditComposition;
+        [SerializeField] private GameObject cancelEditComposition;
 
         private GameEventBus _gameEventBus;
         public string EditionCompositionID;
@@ -38,6 +39,7 @@ namespace TimeLine
             saveButton.gameObject.SetActive(false);
             
             endEditComposition.SetActive(true);
+            cancelEditComposition.SetActive(true);
             textEditionComposition.text = $"Edition: {compositionEdit.gameObjectName}";
             textEditionComposition.gameObject.SetActive(true);
         }
@@ -49,6 +51,7 @@ namespace TimeLine
             saveButton.gameObject.SetActive(true);
             
             endEditComposition.gameObject.SetActive(false);
+            cancelEditComposition.gameObject.SetActive(false);
             textEditionComposition.gameObject.SetActive(false);
         }
     }

@@ -14,7 +14,7 @@ namespace TimeLine
         [SerializeField] private GameObject focusObject;
         
         private ActionMap _actionMap;
-        private MainObjects _mainObjects;
+        public Action<bool> _changeActive;
 
         private bool _active;
 
@@ -24,7 +24,6 @@ namespace TimeLine
         private void Construct(ActionMap actionMap, MainObjects mainObjects)
         {
             _actionMap = actionMap;
-            _mainObjects = mainObjects;
         }
         
         private void Start()
@@ -32,7 +31,9 @@ namespace TimeLine
             focusObject.SetActive(false);
             _actionMap.Editor.MouseLeft.started += _ =>
             {
+                var lastActive = _active;
                 _active = CheckMouseInWindow();
+                if(lastActive != _active) _changeActive?.Invoke(_active);
                 focusObject.SetActive(_active);
             };
         }
@@ -56,7 +57,7 @@ namespace TimeLine
                 // Проверяем, принадлежит ли самый верхний объект нашей панели
                 return topObject == focusPanel.gameObject || topObject.transform.IsChildOf(focusPanel);
             }
-
+            
             return false;
         }
     }
